@@ -1,0 +1,29 @@
+# Directories
+.vs/
+.vscode/
+Binaries/
+
+# Files
+*.vcxproj
+*.vcxproj.user
+*.vcxproj.filters
+*.sln
+*.log
+Makefile
+
+# Exclude
+Vendor/Binaries/
+Roms/
+INLretro/
+winlib/
+INLretro.zip
+GUI/fonts/binary_to_compressed_c.exe
+Core/include/Readme.txt
+Core/include/_libusb.h
+Core/include/___libusb.h
+Core/include/___libusb (original).h
+External/SDL2/x64/
+External/SDL2/SDL2.dll
+External/libusb/include/libusb.h
+External/libusb/MinGW32/
+External/libusb/MinGW64/
