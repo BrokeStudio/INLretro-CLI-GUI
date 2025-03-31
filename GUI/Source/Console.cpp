@@ -12,7 +12,7 @@
 
 using namespace std::placeholders; // for `_1`, `_2`
 
-std::vector<Console*> Console::list;
+std::vector<Console *> Console::list;
 
 /**
  * @brief Add a console to the list
@@ -30,7 +30,7 @@ void Console::add(Console *console)
  */
 void Console::clear_list()
 {
-  for (auto& console : Console::list)
+  for (auto &console : Console::list)
   {
     delete console;
   }
@@ -253,7 +253,6 @@ void Console::render_rom_write()
       }
     }
 
-
     // Sizes
     if (this->name == "nes" || this->name == "famicom" || this->name == "fc")
     {
@@ -282,12 +281,34 @@ void Console::render_rom_write()
     }
 
     // Additional options
+    float w = ImGui::GetContentRegionAvail().x - 40.0f;
+    if (ImGui::BeginPopupContextItem("rom_write_options_popup"))
+    {
+      if (ImGui::Selectable("force_wram_test"))
+        rom_write_INLOptions.additional_opts = "force_wram_test " + rom_write_INLOptions.additional_opts;
+      if (ImGui::Selectable("force_flash_test"))
+        rom_write_INLOptions.additional_opts = "force_flash_test " + rom_write_INLOptions.additional_opts;
+      if (ImGui::Selectable("bank_table"))
+        rom_write_INLOptions.additional_opts = "bank_table=0x0000 " + rom_write_INLOptions.additional_opts;
+      ImGui::Separator();
+      if (ImGui::Selectable("Clear"))
+        rom_write_INLOptions.additional_opts = "";
+      ImGui::EndPopup();
+    }
+
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
     ImGui::TextUnformatted("Additional Options");
     ImGui::TableSetColumnIndex(1);
-    ImGui::SetNextItemWidth(-FLT_MIN);
+    // ImGui::SetNextItemWidth(-FLT_MIN);
+    ImGui::SetNextItemWidth(w);
     ImGui::InputText("##rom_write_additional_opts", &rom_write_INLOptions.additional_opts);
+    ImGui::SameLine();
+    // Back to square one: manually open the same popup.
+    if (ImGui::Button(" + "))
+    {
+      ImGui::OpenPopup("rom_write_options_popup");
+    }
 
     // Verify
     ImGui::TableNextRow();
@@ -318,12 +339,13 @@ void Console::render_rom_write()
   }
   ImGui::EndDisabled();
 
-  if (Flasher::list.size() > 1) {
+  if (Flasher::list.size() > 1)
+  {
     if (ImGui::BeginTable("rom_dump_table", Flasher::list.size(), ImGuiTableFlags_SizingStretchSame))
     {
       ImGui::TableNextRow();
       int i = 0;
-      for (auto& flasher : Flasher::list)
+      for (auto &flasher : Flasher::list)
       {
         ImGui::TableSetColumnIndex(i);
         ImGui::BeginDisabled(flasher->isFlashing);
@@ -342,7 +364,6 @@ void Console::render_rom_write()
   }
 
   ImGui::EndChild(); // ConsoleContent
-
 }
 
 /**
@@ -358,7 +379,6 @@ void Console::render_ram_dump()
   ImGui::BeginChild("ConsoleContent");
 
   ImGui::BeginDisabled(isFlashing);
-
 
   if (ImGui::BeginTable("ram_dump_table", 2, ImGuiTableFlags_SizingStretchProp))
   {
@@ -510,7 +530,6 @@ void Console::render_ram_write()
         ImGui::EndCombo();
       }
     }
-
 
     // Size
     ImGui::TableNextRow();
