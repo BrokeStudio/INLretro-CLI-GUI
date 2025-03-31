@@ -3,6 +3,7 @@
 #define LOG_H
 #include <string>
 #include <vector>
+#include <shared_mutex>
 
 #define LOG_BUF_SIZE 2048
 #define LOG_SPINNER_SIZE 256
@@ -40,6 +41,14 @@ class Log
 {
 private:
   std::vector<LogMessage> Items;
+  std::shared_mutex itemsMutex;
+
+  std::vector<LogMessage> getCopy()
+  {
+    std::shared_lock<std::shared_mutex> lock(itemsMutex);
+    return Items;
+  }
+
   bool showSpinner;
   char spinner[LOG_SPINNER_SIZE];
 

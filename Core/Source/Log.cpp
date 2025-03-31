@@ -50,6 +50,7 @@ void Log::add(LogTypes type, const std::string &message)
 {
   if (!cliOutput)
   {
+    std::unique_lock<std::shared_mutex> lock(itemsMutex); // Bloque toutes les lectures pendant l'écriture
     Items.push_back(LogMessage({type, message}));
   }
   else

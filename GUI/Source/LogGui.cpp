@@ -76,7 +76,10 @@ void Log::render()
     if (copyToClipboard)
       ImGui::LogToClipboard();
 
-    for (const LogMessage item : Items)
+    // make a safe copy of Items
+    std::vector<LogMessage> ItemsCopy = getCopy();
+
+    for (const LogMessage item : ItemsCopy)
     {
       ImVec4 color = LogColors[item.type];
       std::string symbol = LogSymbols[item.type];
