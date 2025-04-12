@@ -95,6 +95,11 @@ filter "system:linux"
   linkoptions "-lGL `sdl2-config --libs`"
   links { "usb-1.0", "pthread" }
 
+filter "system:macosx"
+  buildoptions "`sdl2-config --cflags`"
+  linkoptions "-framework OpenGL `sdl2-config --libs`"
+  links { "usb-1.0", "pthread" }
+
 filter "configurations:Debug"
   kind "ConsoleApp"
   defines { "_DEBUG" }

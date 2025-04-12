@@ -192,7 +192,7 @@ void Flasher::detect_all()
   clear_list();
 
   // try to detect INL Retro-Prog flasher
-  // if (detect("g"))
+  if (detect("g"))
   {
     list.push_back(new Flasher("g", true));
     APP_LOG(LogTypes_Success, "[SYS] Flasher 'INLretroprog' detected");

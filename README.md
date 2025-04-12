@@ -1,3 +1,11 @@
+# INLretro GUI
+
+GUI interface for INLretro Dumper-Programmer
+
+Original code by Paul Molloy (InfiniteNesLives): [https://gitlab.com/InfiniteNesLives/INL-retro-progdump](https://gitlab.com/InfiniteNesLives/INL-retro-progdump)
+
+## linux
+
 sudo apt-get install clang
 sudo apt-get install libc6-dev (???)
 sudo apt-get install libc6-dev-i386

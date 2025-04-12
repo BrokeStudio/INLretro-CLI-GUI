@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include <fstream>
 #include <list>
 #include <sstream>
@@ -34,8 +36,9 @@ namespace Ini
    */
   bool load()
   {
+#define LINE_SIZE 256
     bool inSection = false;
-    char line[256];
+    char line[LINE_SIZE];
     std::string sLine;
     t_Section section;
     section.clear();
@@ -53,14 +56,25 @@ namespace Ini
 
     while (!file.eof())
     {
-      file.getline(line, 256);
+
+      // Windows: CRLF (\r\n)
+      // Linux: LF
+      // Mac OS X >= 10.0: LF
+      // Mac OS X < 10.0: CR
+
+      file.getline(line, LINE_SIZE);
+
+      if (line[strlen(line) - 1] == '\r')
+      {
+        line[strlen(line) - 1] = 0;
+      }
+
       sLine = std::string(line);
-      // std::remove(sLine.begin(), sLine.end(), ' ');
       trim(sLine, ' ', false);
       if (sLine == "")
         continue; // ignore empty lines
       else if (sLine.front() == '#')
-        continue;                                           // ignor comments
+        continue;                                           // ignore comments
       else if (sLine.front() == '[' && sLine.back() == ']') // section
       {
         if (inSection)

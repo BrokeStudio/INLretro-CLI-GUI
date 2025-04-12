@@ -62,6 +62,9 @@ filter "system:windows"
 filter "system:linux"
   links { "usb-1.0", "pthread" }
 
+filter "system:macosx"
+  links { "usb-1.0", "pthread" }
+
 filter "configurations:Debug"
   kind "ConsoleApp"
   defines { "_DEBUG" }

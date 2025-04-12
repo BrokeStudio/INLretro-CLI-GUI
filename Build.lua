@@ -13,7 +13,7 @@ workspace "INLretro"
   filter "system:linux"
     architecture "x64"
 
-  filter "system:macos"
+  filter "system:macosx"
     architecture "x64"
 
 OutputDir = "%{cfg.system}-%{cfg.architecture}/%{cfg.buildcfg}"
