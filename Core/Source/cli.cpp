@@ -7,6 +7,7 @@
 #else
 #include <getopt.h>
 #endif
+#include "trim.h"
 #include "INLOptions.h"
 // #include "Flasher.h"
 
@@ -365,6 +366,7 @@ std::string get_cli(t_INLoptions_std INLoptions)
   }
 
   // additional options?
+  trim(INLoptions.additional_opts);
   if (INLoptions.additional_opts != "")
   {
     cli += " -o \"" + INLoptions.additional_opts + "\"";

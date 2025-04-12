@@ -9,6 +9,7 @@
 #include "Console.h"
 #include "Dialog.h"
 #include "Flasher.h"
+#include "trim.h"
 
 using namespace std::placeholders; // for `_1`, `_2`
 
@@ -184,6 +185,7 @@ void Console::render_rom_dump()
   ImGui::BeginDisabled(Flasher::count_flashing() == Flasher::list.size());
   if (ImGui::Button(ICON_FA_DOWNLOAD " Dump", ImVec2(-FLT_MIN, 50)))
   {
+    trim(rom_write_INLOptions.additional_opts);
     Flasher::exec_all(rom_dump_INLOptions);
   }
   ImGui::EndDisabled();
@@ -284,12 +286,16 @@ void Console::render_rom_write()
     float w = ImGui::GetContentRegionAvail().x - 40.0f;
     if (ImGui::BeginPopupContextItem("rom_write_options_popup"))
     {
+      trim(rom_write_INLOptions.additional_opts);
       if (ImGui::Selectable("force_wram_test"))
-        rom_write_INLOptions.additional_opts = "force_wram_test " + rom_write_INLOptions.additional_opts;
+        rom_write_INLOptions.additional_opts +=  ",force_wram_test";
       if (ImGui::Selectable("force_flash_test"))
-        rom_write_INLOptions.additional_opts = "force_flash_test " + rom_write_INLOptions.additional_opts;
+        rom_write_INLOptions.additional_opts += ",force_flash_test";
       if (ImGui::Selectable("bank_table"))
-        rom_write_INLOptions.additional_opts = "bank_table=0x0000 " + rom_write_INLOptions.additional_opts;
+        rom_write_INLOptions.additional_opts += ",bank_table=0x0000";
+      trim(rom_write_INLOptions.additional_opts);
+      if (rom_write_INLOptions.additional_opts != "" && rom_write_INLOptions.additional_opts.at(0) == ',')
+        rom_write_INLOptions.additional_opts.erase(0, 1);
       ImGui::Separator();
       if (ImGui::Selectable("Clear"))
         rom_write_INLOptions.additional_opts = "";
@@ -335,6 +341,7 @@ void Console::render_rom_write()
   sprintf(this->buf, ICON_FA_UPLOAD " Write");
   if (ImGui::Button(buf, ImVec2(-FLT_MIN, 50)))
   {
+    trim(rom_write_INLOptions.additional_opts);
     Flasher::exec_all(rom_write_INLOptions);
   }
   ImGui::EndDisabled();
@@ -461,6 +468,7 @@ void Console::render_ram_dump()
   ImGui::BeginDisabled(Flasher::count_flashing() == Flasher::list.size());
   if (ImGui::Button(ICON_FA_DOWNLOAD " Dump", ImVec2(-FLT_MIN, 50)))
   {
+    trim(rom_write_INLOptions.additional_opts);
     Flasher::exec_all(ram_dump_INLOptions);
   }
 
@@ -565,6 +573,7 @@ void Console::render_ram_write()
   sprintf(this->buf, ICON_FA_UPLOAD " Write");
   if (ImGui::Button(buf, ImVec2(-FLT_MIN, 50)))
   {
+    trim(rom_write_INLOptions.additional_opts);
     Flasher::exec_all(ram_write_INLOptions);
   }
   ImGui::EndDisabled();
