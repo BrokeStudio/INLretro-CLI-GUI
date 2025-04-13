@@ -97,7 +97,7 @@ filter "system:linux"
 
 filter "system:macosx"
   buildoptions "`sdl2-config --cflags`"
-  linkoptions "-framework OpenGL `sdl2-config --libs`"
+  linkoptions "-framework OpenGL -framework CoreFoundation `sdl2-config --libs`"
   links { "usb-1.0", "pthread" }
 
 filter "configurations:Debug"
@@ -123,7 +123,7 @@ filter "configurations:Release"
     "{COPYDIR} \"../Roms\" \"%{cfg.targetdir}/roms\""
   }
 
-filter "configurations:Dist"
+filter { "configurations:Dist", "system:windows or linux" }
   kind "WindowedApp"
   defines { "_DIST" }
   runtime "Release"
@@ -135,3 +135,25 @@ filter "configurations:Dist"
     "{COPYDIR} \"../INLretro-files\" \"%{cfg.targetdir}\"",
   }
 
+filter { "configurations:Dist", "system:macosx" }
+  kind "ConsoleApp"
+  defines { "_DIST" }
+  runtime "Release"
+  optimize "On"
+  symbols "Off"
+  targetdir("../Binaries/" .. OutputDir .. "/INLretro")
+  -- prebuildcommands
+  -- {
+  --   "{COPYDIR} \"../INLretro-files\" \"%{cfg.targetdir}\"",
+  -- }
+  postbuildcommands
+  {
+    "{MKDIR} \"%{cfg.targetdir}/INLretroGUI.app\"",
+    "{MKDIR} \"%{cfg.targetdir}/INLretroGUI.app/Contents\"",
+    "{MKDIR} \"%{cfg.targetdir}/INLretroGUI.app/Contents/MacOS\"",
+    "{MKDIR} \"%{cfg.targetdir}/INLretroGUI.app/Contents/Resources\"",
+    "{COPY} \"../macOS/info.plist\" \"%{cfg.targetdir}/INLretroGUI.app/Contents\"",
+    "{COPY} \"%{cfg.targetdir}/INLretroGUI\" \"%{cfg.targetdir}/INLretroGUI.app/Contents/MacOS\"",
+    "{COPY} \"../macOS/icon.icns\" \"%{cfg.targetdir}/INLretroGUI.app/Contents/Resources\"",
+    "{COPYDIR} \"../INLretro-files/\" \"%{cfg.targetdir}/INLretroGUI.app/Contents/Resources\"",
+  }
