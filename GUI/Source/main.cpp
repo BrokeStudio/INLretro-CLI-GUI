@@ -269,7 +269,7 @@ int main(int argc, char **argv)
         char label[64];
         char spinner[2] = "";
         spinner[0] = flasher->isFlashing ? "|/-\\"[(int)(ImGui::GetTime() / 0.05f) & 3] : 0;
-        sprintf(label, "INL Retro-Pro%s [%s] %s", flasher->id.c_str(), flasher->isFlashing ? "Processing" : "Done", spinner);
+        snprintf(label, 64, "INL Retro-Pro%s [%s] %s", flasher->id.c_str(), flasher->isFlashing ? "Processing" : "Done", spinner);
         ImGui::BeginChild(label, child_size, ImGuiChildFlags_Border);
         ImGui::SeparatorText(label);
         flasher->log.render();
