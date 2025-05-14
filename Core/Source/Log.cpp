@@ -23,10 +23,14 @@ void Log::clear(void)
 
 void Log::add(const char *fmt, ...)
 {
+  // FIXME-OPT
+  char buf[LOG_BUF_SIZE];
   va_list args;
   va_start(args, fmt);
-  add(LogTypes_None, fmt, args);
+  vsnprintf(buf, LOG_BUF_SIZE, fmt, args);
+  buf[LOG_BUF_SIZE - 1] = 0;
   va_end(args);
+  add(LogTypes_None, std::string(buf));
 }
 
 void Log::add(const std::string &message)

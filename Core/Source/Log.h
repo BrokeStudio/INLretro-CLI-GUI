@@ -59,7 +59,7 @@ public:
   ~Log(void);
 
   void clear(void);
-  void add(const char *fmt, ...);
+  void add(const char* fmt, ...);
   void add(const std::string &message);
   void add(LogTypes type, const char *fmt, ...);
   void add(LogTypes type, const std::string &message);
