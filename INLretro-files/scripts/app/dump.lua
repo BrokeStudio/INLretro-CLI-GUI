@@ -5,7 +5,7 @@ local dump = {}
 -- import required modules
 local dict = require "scripts.app.dict"
 local buffers = require "scripts.app.buffers"
-local snes = require "scripts.app.snes"
+-- local snes = require "scripts.app.snes"
 
 -- file constants and global variables
 
@@ -113,7 +113,7 @@ local function dumptocallback( callback, sizeKB, map, mem, debug )
     if ( (i % (4*2024*1024/buff_size/16)) == 0) then
       local tdelta = os.clock() - tlast
       if debug then print("time delta:", tdelta, "seconds, speed:", (1024/16/tdelta), "KBps") end
-      --print("dumped part:", i/1024, "of 16 \n") 
+      --print("dumped part:", i/1024, "of 16 \n")
       if debug then print("dumped part:", i/(4*1024), "of 4 \n") end
       tlast = os.clock()
     end
@@ -131,10 +131,10 @@ local function dumptocallback( callback, sizeKB, map, mem, debug )
   --so end result is buff0 will get sent off to dump extra data that's not needed
   --but we never call payload on it, so buff1 never moves from USB_UNLOADING
   --but it has to be done unloading if we sent a subsequent setup packet
-  --buffers.status_wait({buff0, buff1}, {"DUMPED","USB_UNLOADING"}) 
+  --buffers.status_wait({buff0, buff1}, {"DUMPED","USB_UNLOADING"})
   --in reality I don't think this wait is needed.  Because we've already gotten our data if
   --we're at this point..
-  --what we really need to do is set the buffer's status' to a reset state 
+  --what we really need to do is set the buffer's status' to a reset state
   --that way we can give them new instructions before restarting DUMP of CHR portion
   --best way can think of doing this is a operation "RESET" which updates buffer status,
   --without deallocating them.  In reality should be able to do this by setting operation to reset.
@@ -152,6 +152,7 @@ local function dumptofile( file, sizeKB, map, mem, debug )
   )
 end
 
+--[[
 --//main collected as much data about cart as possible without reading roms
 --//now it's time to start running CRC's to try and finalize mapper/config
 --//Once final mapper is known store header data in rom file and start dumping!
@@ -171,11 +172,11 @@ local function dump_nes( file, debug )
 --	check( (cart->console != UNKNOWN), "cartridge not detected, must provide console if autodetection is off");
 --
 --	if ( rom->console != UNKNOWN ) {
---		check( rom->console == cart->console, 
+--		check( rom->console == cart->console,
 --			"request system dump doesn't match detected cartridge");
 --	}
 --	if ( (cart->mapper != UNKNOWN) && (rom->mapper != UNKNOWN) ) {
---		check( rom->mapper == cart->mapper,	
+--		check( rom->mapper == cart->mapper,
 --			"request mapper dump doesn't match detected mapper");
 --	}
 --
@@ -192,7 +193,7 @@ local function dump_nes( file, debug )
 --	//need to allocate some buffers for dumping
 --	//2x 128Byte buffers
   local num_buffers = 2
-  local buff_size = 128	
+  local buff_size = 128
   print("allocating buffers")
   assert(buffers.allocate( num_buffers, buff_size ), "fail to allocate buffers")
 
@@ -257,7 +258,7 @@ local function dump_nes( file, debug )
 --	tstart = clock();
 --
   --wait for first buffer to finish dumping before calling payload
-  buffers.status_wait({buff0}, {"DUMPED"}) 
+  buffers.status_wait({buff0}, {"DUMPED"})
 --	//now just need to call series of payload IN transfers to retrieve data
   --for i=1, (1024*1024/buff_size) do
   for i=1, (32*1024/buff_size) do
@@ -290,10 +291,10 @@ local function dump_nes( file, debug )
   --so end result is buff0 will get sent off to dump extra data that's not needed
   --but we never call payload on it, so buff1 never moves from USB_UNLOADING
   --but it has to be done unloading if we sent a subsequent setup packet
-  --buffers.status_wait({buff0, buff1}, {"DUMPED","USB_UNLOADING"}) 
+  --buffers.status_wait({buff0, buff1}, {"DUMPED","USB_UNLOADING"})
   --in reality I don't think this wait is needed.  Because we've already gotten our data if
   --we're at this point..
-  --what we really need to do is set the buffer's status' to a reset state 
+  --what we really need to do is set the buffer's status' to a reset state
   --that way we can give them new instructions before restarting DUMP of CHR portion
   --best way can think of doing this is a operation "RESET" which updates buffer status,
   --without deallocating them.  In reality should be able to do this by setting operation to reset.
@@ -304,7 +305,7 @@ local function dump_nes( file, debug )
 --	//need to allocate some buffers for dumping
 --	//2x 128Byte buffers
   num_buffers = 2
-  buff_size = 128	
+  buff_size = 128
   print("allocating buffers")
   assert(buffers.allocate( num_buffers, buff_size ), "fail to allocate buffers")
 
@@ -345,10 +346,10 @@ local function dump_nes( file, debug )
 --	dict.buffer("RAW_BUFFER_RESET")
 --	print("reallocate buffers")
 --	assert(buffers.allocate( num_buffers, buff_size ), "fail to allocate buffers")
-  
+
   --wait for first buffer to finish dumping prior to calling payload
-  buffers.status_wait({buff0}, {"DUMPED"}) 
-  
+  buffers.status_wait({buff0}, {"DUMPED"})
+
   for i=1, (8*1024/buff_size) do
     --cur_buff_status = dict.buffer("GET_CUR_BUFF_STATUS")
     --while (cur_buff_status ~= op_buffer["DUMPED"]) do
@@ -401,7 +402,7 @@ local function dump_snes( file, mapping, debug )
   --need to allocate some buffers for dumping
   --2x 128Byte buffers
   local num_buffers = 2
-  local buff_size = 128	
+  local buff_size = 128
   print("allocating buffers")
   assert(buffers.allocate( num_buffers, buff_size ), "fail to allocate buffers")
 
@@ -416,7 +417,7 @@ local function dump_snes( file, mapping, debug )
 
   --set multiple and add_mult only when flashing
   --set mapper, map_var, and function to designate read/write algo
-  
+
   print("setting map n mapvar")
   dict.buffer("SET_MAP_N_MAPVAR", (op_buffer[mapping]<<8 | op_buffer["NOVAR"]), buff0 )
   dict.buffer("SET_MAP_N_MAPVAR", (op_buffer[mapping]<<8 | op_buffer["NOVAR"]), buff1 )
@@ -430,7 +431,7 @@ local function dump_snes( file, mapping, debug )
 
   --need these calls to delay things a bit to let first buffer dump complete..
   --wait for first buffer to finish dumping before calling payload
-  --buffers.status_wait({buff0}, {"DUMPED"}) 
+  --buffers.status_wait({buff0}, {"DUMPED"})
 
   local tstart = os.clock()
   local tlast = tstart
@@ -441,15 +442,15 @@ local function dump_snes( file, mapping, debug )
   --for i=1, (1024*1024/buff_size) do	--dump buff0 then buff1
   --for i=1, (32*1024/buff_size) do	--dump buff0 then buff1
     --stm adapter had trouble dumping
-    --same buffer was getting sent twice, so I think 
+    --same buffer was getting sent twice, so I think
     --buffer mangager wasn't getting enough time to update
     --to point to next buffer and last buffer was redumped
     --that doesn't quite make sense, but something like that is going on
     --need to setup buffer manager to nak anytime something like this happens
     --the following setup slows down everything due to status waits..
---		buffers.status_wait({buff0}, {"DUMPED"}) 
+--		buffers.status_wait({buff0}, {"DUMPED"})
 --		file:write( dict.buffer_payload_in( buff_size ))
---		buffers.status_wait({buff1}, {"DUMPED"}) 
+--		buffers.status_wait({buff1}, {"DUMPED"})
 
     --stm adapter having issues with race situation..
     --can't dump as fast as host is requesting
@@ -462,7 +463,7 @@ local function dump_snes( file, mapping, debug )
     end
     file:write( dict.buffer_payload_in( buff_size ))
   --	print("dumped page:", i)
-    
+
     --if ( (i % (1024*1024/buff_size/16)) == 0) then
     if ( (i % (4*2024*1024/buff_size/16)) == 0) then
       local tdelta = os.clock() - tlast
@@ -485,10 +486,10 @@ local function dump_snes( file, mapping, debug )
   --so end result is buff0 will get sent off to dump extra data that's not needed
   --but we never call payload on it, so buff1 never moves from USB_UNLOADING
   --but it has to be done unloading if we sent a subsequent setup packet
-  --buffers.status_wait({buff0, buff1}, {"DUMPED","USB_UNLOADING"}) 
+  --buffers.status_wait({buff0, buff1}, {"DUMPED","USB_UNLOADING"})
   --in reality I don't think this wait is needed.  Because we've already gotten our data if
   --we're at this point..
-  --what we really need to do is set the buffer's status' to a reset state 
+  --what we really need to do is set the buffer's status' to a reset state
   --that way we can give them new instructions before restarting DUMP of CHR portion
   --best way can think of doing this is a operation "RESET" which updates buffer status,
   --without deallocating them.  In reality should be able to do this by setting operation to reset.
@@ -504,6 +505,7 @@ local function dump_snes( file, mapping, debug )
 
   return true
 end
+--]]
 
 -- global variables so other modules can use them
 
@@ -512,8 +514,8 @@ end
 
 
 -- functions other modules are able to call
-dump.dump_nes = dump_nes
-dump.dump_snes = dump_snes
+-- dump.dump_nes = dump_nes
+-- dump.dump_snes = dump_snes
 dump.dumptofile = dumptofile
 dump.dumptocallback = dumptocallback
 

@@ -226,6 +226,8 @@ namespace Ini
         else
         {
           APP_LOG(LogTypes_Warning, L_INI "Console '" + console.name + "' unknown");
+          Console::add(new Console(console));
+          APP_LOG(LogTypes_Warning, L_INI "Console '" + console.name + "' added with basic support only");
         }
       }
       else if (section.name == "[Settings]")

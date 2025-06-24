@@ -85,7 +85,13 @@ local LogTypes = {
 
 local function _print(text)
   if text == nil then text = "" end
-  io.write(text .. "\n")
+  if (opts.gui == nil or opts.gui == false) then
+    -- CLI
+    io.write(text .. "\n")
+  else
+    -- GUI
+    gui_log_add(text);
+  end
 end
 
 local function section(...)

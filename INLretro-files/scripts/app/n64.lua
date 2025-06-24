@@ -1,20 +1,12 @@
 
 -- create the module's table
-local snes = {}
+local n64 = {}
 
 -- import required modules
 local dict = require "scripts.app.dict"
 local dump  = require "scripts.app.dump"
 local help  = require "scripts.app.help"
 local log   = require "scripts.app.log"
--- local swim  = require "scripts.app.swim"
-
--- file constants and global variables
-local RESET_VECT_HI = 0xFFFD
-local RESET_VECT_LO = 0xFFFC
-
--- global variables so other modules can use them
-snes_swimcart = nil
 
 -- local functions
 
@@ -28,44 +20,80 @@ snes_swimcart = nil
 
 --]]
 
--- https://snes.nesdev.org/wiki/ROM_header
+-- https://en64.shoutwiki.com/wiki/ROM#Cartridge_ROM_Header
+
+local ROM_TYPES = {
+  ["N"] = "cart",
+  ["D"] = "64DD disk",
+  ["C"] = "cartridge part of expandable game",
+  ["E"] = "64DD expansion for cart",
+  ["Z"] = "Aleck64 cart",
+}
+
+local COUNTRY_CODE = {
+  ["7"] = "Beta", -- 0x37
+  ["A"] = "Asian (NTSC)", -- 0x41
+  ["B"] = "Brazilian", -- 0x42
+  ["C"] = "Chinese", -- 0x43
+  ["D"] = "German", -- 0x44
+  ["E"] = "North America", -- 0x45
+  ["F"] = "French", -- 0x46
+  ["G"] =  "Gateway 64 (NTSC)", -- 0x47
+  ["H"] = "Dutch", -- 0x48
+  ["I"] = "Italian", -- 0x49
+  ["J"] = "Japanese", -- 0x4A
+  ["K"] = "Korean", -- 0x4B
+  ["L"] =  "Gateway 64 (PAL)", -- 0x4C
+  ["N"] = "Canadian", -- 0x4E
+  ["P"] = "European (basic spec.)", -- 0x50
+  ["S"] = "Spanish", -- 0x53
+  ["U"] = "Australian", -- 0x55
+  ["W"] = "Scandinavian", -- 0x57
+  ["X"] = "European", -- 0x58
+  ["Y"] = "European", -- 0x59
+}
+
 
 local Header = {
   bytes = nil,
   isValid = false,
 
-  cartridge_title = "",
-  rom_type = {
-    byte = 0,
-    speed = 0,
-    mode = 0
+  endianness = 0,
+  PI_BSB_DOM1_LAT_REG = 0,
+  PI_BSD_DOM1_PGS_REG = 0,
+  PI_BSD_DOM1_PWD_REG = 0,
+  PI_BSB_DOM1_PGS_REG =0,
+  clockrate_override = 0,
+  program_counter = 0,
+  release_address = 0,
+  crc1 = 0,
+  crc2 = 0,
+  image_name = "",
+  media_format = {
+    bytes = 0,
+    rom_type = 0,
+    id = "",
+    region = 0
   },
-  chipset = 0,
-  rom_size = 0,
-  ram_size = 0,
-  country = 0,
-  developer_id = 0,
-  rom_version = 0,
-  checksum_complement = 0,
-  checksum = 0,
-  vectors = {
-    _65c816 = {
-      COP = 0,
-      BRK = 0,
-      ABORT = 0,
-      NMI = 0,
-      NONE = 0,
-      IRQ = 0
-    },
-    _6502 = {
-      COP = 0,
-      NONE = 0,
-      ABORT = 0,
-      NMI = 0,
-      RESET = 0,
-      IRQ = 0
-    }
-  },
+  cartridge_id = "",
+  country_code = 0,
+  version = 0,
+  boot_code = nil,
+
+  -- return version as a string
+  get_version = function(self)
+    return tostring(((self.version & 0xF0) >> 8) + 1) .. "." .. tostring(self.version & 0x0F)
+  end,
+
+  -- return country as a string
+  get_country = function(self)
+    return COUNTRY_CODE[self.country_code]
+  end,
+
+  -- return country as a string
+  get_rom_type = function(self)
+    return ROM_TYPES[self.media_format.rom_type]
+  end,
 
   -- return a value in KB
   get_rom_size = function(self)
@@ -134,42 +162,44 @@ local rom_header = help.copy_table(Header)
 local function parse_header(byte_str, header)
 
   header.bytes = table.pack(string.unpack(string.rep('B', #byte_str), byte_str))
-  header.cartridge_title = string.sub(byte_str, 1, 21)
-  header.rom_type.byte = header.bytes[22]
-  header.rom_type.speed = ( header.rom_type.byte & 0x10 ) >> 4
-  header.rom_type.mode = header.rom_type.byte & 0x0F
-  header.chipset = header.bytes[23]
-  header.rom_size = header.bytes[24]
-  header.ram_size = header.bytes[25]
-  header.country = header.bytes[26]
-  header.developer_id = header.bytes[27]
-  header.rom_version = header.bytes[28]
-  header.checksum_complement = ( header.bytes[30] << 8 ) | header.bytes[29]
-  header.checksum = ( header.bytes[32] << 8 ) | header.bytes[31]
-  header.vectors._65c816.COP = ( header.bytes[38] << 8 ) | header.bytes[37]
-  header.vectors._65c816.BRK = ( header.bytes[40] << 8 ) | header.bytes[39]
-  header.vectors._65c816.ABORT = ( header.bytes[42] << 8 ) | header.bytes[41]
-  header.vectors._65c816.NMI = ( header.bytes[44] << 8 ) | header.bytes[43]
-  header.vectors._65c816.NONE = ( header.bytes[46] << 8 ) | header.bytes[45]
-  header.vectors._65c816.IRQ = ( header.bytes[48] << 8 ) | header.bytes[47]
-  header.vectors._6502.COP = ( header.bytes[54] << 8 ) | header.bytes[53]
-  header.vectors._6502.NONE = ( header.bytes[56] << 8 ) | header.bytes[55]
-  header.vectors._6502.ABORT = ( header.bytes[58] << 8 ) | header.bytes[57]
-  header.vectors._6502.NMI = ( header.bytes[60] << 8 ) | header.bytes[59]
-  header.vectors._6502.RESET = ( header.bytes[62] << 8 ) | header.bytes[61]
-  header.vectors._6502.IRQ = ( header.bytes[64] << 8 ) | header.bytes[63]
+  header.endianness = header.bytes[1]
+  header.PI_BSB_DOM1_LAT_REG = header.bytes[2]
+  header.PI_BSD_DOM1_PGS_REG = header.bytes[2]
+  header.PI_BSD_DOM1_PWD_REG = header.bytes[3]
+  header.PI_BSB_DOM1_PGS_REG = header.bytes[4]
+  header.clockrate_override = (header.bytes[5] << 24) | (header.bytes[6] << 16) | (header.bytes[7] << 8) --  | header.bytes[8] -- lower most nybble not read
+  header.program_counter = (header.bytes[9] << 24) | (header.bytes[10] << 16) | (header.bytes[11] << 8) | header.bytes[12]
+  header.release_address = (header.bytes[13] << 24) | (header.bytes[14] << 16) | (header.bytes[15] << 8) | header.bytes[16]
+  header.crc1 = (header.bytes[17] << 24) | (header.bytes[18] << 16) | (header.bytes[19] << 8) | header.bytes[20]
+  header.crc2 = (header.bytes[21] << 24) | (header.bytes[22] << 16) | (header.bytes[23] << 8) | header.bytes[24]
+  header.image_name = string.sub(byte_str, 32, 52)
+  -- header.media_format = (header.bytes[57] << 24) | (header.bytes[58] << 16) | (header.bytes[59] << 8) | header.bytes[60]
+  header.media_format.rom_type = string.sub(byte_str, 60, 60)
+  header.media_format.id = string.sub(byte_str, 58, 59)
+  header.media_format.region = header.bytes[57]
+  header.cartridge_id = string.sub(byte_str, 61, 62)
+  header.country_code = string.sub(byte_str, 63, 63)
+  header.version = header.bytes[64]
+  -- header.boot_code = header.bytes[6]
 
-  -- if not header:check_rom_checksum() then
-  --   log.warning("Rom checksum is not valid")
-  -- end
+  -- -- if not header:check_rom_checksum() then
+  -- --   log.warning("Rom checksum is not valid")
+  -- -- end
 
   -- cheap test
-  if not header:check_header_checksum() or not header:check_vectors() then
+  if header.program_counter < 0x80000000 then
     log.warning("Header is not valid")
     header.isValid = false
   else
     header.isValid = true
   end
+
+-- print(help.dump_table(header))
+
+-- print(header:get_version())
+-- print(header:get_country())
+-- print(header:get_rom_type())
+
 
   return header.isValid
 end
@@ -205,58 +235,33 @@ end
 -- global checksum won't be computed though
 local function parse_header_rom()
 
-  local byte_str
+  local addr_base = 0x0000  -- control signals are manually controlled
+  local bank_base = 0x1000  -- N64 roms start at address 0x1000_0000
+  local byte_str = ""
   local rv
-
-  -- first we try to get the ROM header using HIROM settings
-  -- if it doesn't work, then try using LOROM settings
-
-  -- HIROM
-  log.point("Trying to dump header using HiRom settings")
-  byte_str = ""
-
-    -- initialize device i/o
-  dict.io("IO_RESET")
-  dict.io("SNES_INIT")
-
-  -- dump data
-  -- dict.snes("SNES_SET_BANK", 0) -- not required?
-  dump.dumptocallback(
-    function(data) byte_str = byte_str .. data end,
-    64, "HIROM", "SNESROM", false
-  )
-
-  byte_str = string.sub(byte_str, 0xFFC0+1, 0xFFFF+1)
-  if parse_header(byte_str, rom_header) then
-    log.info("HiRom mapper detected")
-    return true
-  end
-
-  -- LOROM
-  log.point("Trying to dump header using LoRom settings")
-  byte_str = ""
 
   -- initialize device i/o
   dict.io("IO_RESET")
-  dict.io("SNES_INIT")
+  dict.io("N64_INIT")
 
   -- dump data
-  -- dict.snes("SNES_SET_BANK", 0) -- not required?
+  dict.n64("N64_SET_BANK", bank_base) -- not required?
+
   dump.dumptocallback(
     function(data) byte_str = byte_str .. data end,
-    32, "LOROM", "SNESROM", false
+    1, addr_base, "N64_ROM_PAGE", false
   )
+
+  byte_str = string.sub(byte_str, 0x00+1, 0x3F+1)
+
+  -- prob don't need this...
+  dict.n64("N64_RELEASE_BUS")
 
   -- reset device i/o
   dict.io("IO_RESET")
 
-  byte_str = string.sub(byte_str, 0x7FC0+1, 0x7FFF+1)
-  if parse_header(byte_str, rom_header) then
-    log.info("LoRom mapper detected")
-    return true
-  end
-
-  return false
+  byte_str = string.sub(byte_str, 0x00+1, 0x3F+1)
+  return parse_header(byte_str, rom_header)
 
 end
 
@@ -349,7 +354,7 @@ local function read_reset_vector( bank, debug )
 	return vector
 end
 
--- Desc: attempt to read flash rom ID 
+-- Desc: attempt to read flash rom ID
 -- Pre: snes_init() been called to setup i/o
 -- Post:Address left on bus memories disabled
 -- Rtn: true if flash ID found
@@ -397,7 +402,7 @@ local function read_flashID( debug )
 	--return true if detected flash chip
 	if (manf_id == 0x01 and prod_id == 0x49) then
 		return true
-	else 
+	else
 		return false
 	end
 
@@ -417,35 +422,35 @@ end
 --]]
 
 -- vars
-snes.file_header       = file_header
-snes.rom_header        = rom_header
+n64.file_header       = file_header
+n64.rom_header        = rom_header
 
 -- functions
-snes.parse_header      = parse_header
-snes.parse_header_file = parse_header_file
-snes.parse_header_rom  = parse_header_rom
+n64.parse_header      = parse_header
+n64.parse_header_file = parse_header_file
+n64.parse_header_rom  = parse_header_rom
 
--- snes.set_rom_address = set_rom_address
+-- n64.set_rom_address = set_rom_address
 
--- snes.dbg_rom_rd = dbg_rom_rd
--- snes.dbg_rom_wr = dbg_rom_wr
--- snes.rom_rd = rom_rd
--- snes.rom_wr = rom_wr
+-- n64.dbg_rom_rd = dbg_rom_rd
+-- n64.dbg_rom_wr = dbg_rom_wr
+-- n64.rom_rd = rom_rd
+-- n64.rom_wr = rom_wr
 
--- snes.dbg_ram_rd = dbg_ram_rd
--- snes.dbg_ram_wr = dbg_ram_wr
--- snes.ram_rd = ram_rd
--- snes.ram_wr = ram_wr
-
-
+-- n64.dbg_ram_rd = dbg_ram_rd
+-- n64.dbg_ram_wr = dbg_ram_wr
+-- n64.ram_rd = ram_rd
+-- n64.ram_wr = ram_wr
 
 
 
-snes.read_reset_vector = read_reset_vector
-snes.read_flashID = read_flashID
-snes.prgm_mode = prgm_mode
-snes.play_mode = play_mode
+
+
+n64.read_reset_vector = read_reset_vector
+n64.read_flashID = read_flashID
+n64.prgm_mode = prgm_mode
+n64.play_mode = play_mode
 
 -- return the module's table
-return snes
+return n64
 

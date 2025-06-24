@@ -10,13 +10,13 @@ local log   = require "scripts.app.log"
 -- file constants and global variables
 
 --[[
-██╗  ██╗███████╗ █████╗ ██████╗ ███████╗██████╗ 
+██╗  ██╗███████╗ █████╗ ██████╗ ███████╗██████╗
 ██║  ██║██╔════╝██╔══██╗██╔══██╗██╔════╝██╔══██╗
 ███████║█████╗  ███████║██║  ██║█████╗  ██████╔╝
 ██╔══██║██╔══╝  ██╔══██║██║  ██║██╔══╝  ██╔══██╗
 ██║  ██║███████╗██║  ██║██████╔╝███████╗██║  ██║
 ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝
-                                                
+
 --]]
 
 local CARTRIDGE_TYPES = {
@@ -249,7 +249,8 @@ local function parse_header(byte_str, header)
   header.cgb_flag = header.bytes[16]
   header.old_licensee_code = header.bytes[24]
   if header.old_licensee_code == 0x33 then
-    header.new_licensee_code = tonumber(string.char(header.bytes[17])) * 10 + tonumber(string.char(header.bytes[18]))
+    -- header.new_licensee_code = tonumber(string.char(header.bytes[17])) * 10 + tonumber(string.char(header.bytes[18]))
+    header.new_licensee_code = tonumber(header.bytes[17]) * 10 + tonumber(header.bytes[18])
   end
   header.sgb_flag = header.bytes[19]
   header.cartridge_type = header.bytes[20]
@@ -334,7 +335,7 @@ end
 ██║╚██╔╝██║██║╚════██║██║         ██╔══╝  ██║   ██║██║╚██╗██║██║     ╚════██║
 ██║ ╚═╝ ██║██║███████║╚██████╗    ██║     ╚██████╔╝██║ ╚████║╚██████╗███████║
 ╚═╝     ╚═╝╚═╝╚══════╝ ╚═════╝    ╚═╝      ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝╚══════╝
-                                                                             
+
 --]]
 
 local function wr(addr, val, debug, comment)
@@ -363,11 +364,11 @@ end
 --[[
 ███████╗██╗  ██╗██████╗  ██████╗ ██████╗ ████████╗
 ██╔════╝╚██╗██╔╝██╔══██╗██╔═══██╗██╔══██╗╚══██╔══╝
-█████╗   ╚███╔╝ ██████╔╝██║   ██║██████╔╝   ██║   
-██╔══╝   ██╔██╗ ██╔═══╝ ██║   ██║██╔══██╗   ██║   
-███████╗██╔╝ ██╗██║     ╚██████╔╝██║  ██║   ██║   
-╚══════╝╚═╝  ╚═╝╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝   
-                                                  
+█████╗   ╚███╔╝ ██████╔╝██║   ██║██████╔╝   ██║
+██╔══╝   ██╔██╗ ██╔═══╝ ██║   ██║██╔══██╗   ██║
+███████╗██╔╝ ██╗██║     ╚██████╔╝██║  ██║   ██║
+╚══════╝╚═╝  ╚═╝╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝
+
 --]]
 
 -- vars

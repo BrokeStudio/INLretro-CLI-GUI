@@ -25,7 +25,7 @@ local mapname = "JALECO_SS88006"
 ██║╚██╔╝██║██║╚════██║██║         ██╔══╝  ██║   ██║██║╚██╗██║██║     ╚════██║
 ██║ ╚═╝ ██║██║███████║╚██████╗    ██║     ╚██████╔╝██║ ╚████║╚██████╗███████║
 ╚═╝     ╚═╝╚═╝╚══════╝ ╚═════╝    ╚═╝      ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝╚══════╝
-                                                                             
+
 --]]
 
 local function create_header(file, prgKB, chrKB)
@@ -124,7 +124,7 @@ end
 ██╔═══╝ ██╔══██╗██║   ██║╚════╝██╔══██╗██║   ██║██║╚██╔╝██║
 ██║     ██║  ██║╚██████╔╝      ██║  ██║╚██████╔╝██║ ╚═╝ ██║
 ╚═╝     ╚═╝  ╚═╝ ╚═════╝       ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝
-                                                           
+
 --]]
 
 -- read PRG-ROM flash ID
@@ -273,7 +273,7 @@ end
 ██║     ██╔══██║██╔══██╗╚════╝██╔══██╗██║   ██║██║╚██╔╝██║
 ╚██████╗██║  ██║██║  ██║      ██║  ██║╚██████╔╝██║ ╚═╝ ██║
  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝      ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝
-                                                          
+
 --]]
 
 -- read CHR-ROM flash ID
@@ -459,7 +459,7 @@ end
 ██╔═══╝ ██╔══██╗██║   ██║╚════╝██╔══██╗██╔══██║██║╚██╔╝██║
 ██║     ██║  ██║╚██████╔╝      ██║  ██║██║  ██║██║ ╚═╝ ██║
 ╚═╝     ╚═╝  ╚═╝ ╚═════╝       ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝
-                                                          
+
 --]]
 
 -- dump the PRG-RAM, assumes the PRG-RAM was enabled/disabled as desired prior to calling
@@ -530,7 +530,7 @@ local function prg_ram_write(file, ram_size_KB, debug)
 end
 
 -- try to detect if PRG-RAM is present
-local function prg_ram_test(debug)
+local function prg_ram_detect(debug)
 
   local test = true
   local read_value
@@ -571,7 +571,7 @@ local function prg_ram_test(debug)
 
 end
 
-local function prg_ram_exercise(wram_size, retroprog_id, debug)
+local function prg_ram_test(wram_size, retroprog_id, debug)
 
   dict.stuff("RESET_LFSR")  -- sets it to 1
 
@@ -636,7 +636,7 @@ end
 ██║     ██╔══██║██╔══██╗╚════╝██╔══██╗██╔══██║██║╚██╔╝██║
 ╚██████╗██║  ██║██║  ██║      ██║  ██║██║  ██║██║ ╚═╝ ██║
  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝      ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝
-                                                         
+
 --]]
 
 -- try to detect CHR-RAM size
@@ -770,7 +770,7 @@ end
 ██╔═══╝ ██╔══██╗██║   ██║██║     ██╔══╝  ╚════██║╚════██║
 ██║     ██║  ██║╚██████╔╝╚██████╗███████╗███████║███████║
 ╚═╝     ╚═╝  ╚═╝ ╚═════╝  ╚═════╝╚══════╝╚══════╝╚══════╝
-                                                         
+
 --]]
 
 -- Cart should be in reset state upon calling this function
@@ -811,10 +811,10 @@ local function process(process_opts, console_opts)
   dict.io("NES_INIT")
 
 --[[
-888888 888888 .dP"Y8 888888 
-  88   88__   `Ybo."   88   
-  88   88""   o.`Y8b   88   
-  88   888888 8bodP'   88   
+888888 888888 .dP"Y8 888888
+  88   88__   `Ybo."   88
+  88   88""   o.`Y8b   88
+  88   888888 8bodP'   88
 --]]
 
 
@@ -857,30 +857,63 @@ local function process(process_opts, console_opts)
     end
 
     -- PRG-RAM tests
-    rv = prg_ram_test(DEBUG)
-    if rv == true then
-      if options.force_wram_test then
-        log.print()
-        log.warning("Flag 'force_wram_test' enabled")
-      end
-      -- force wram size to 8KB
-      if wram_size == 0 then
-        wram_size = 8
-      end
-      if options.force_wram_test or nes.header.isValid then
-        if not options.force_wram_test and nes.header.hasBattery ~= 0 then
-          log.print()
-          log.warning("Can't exercise PRG-RAM because NES ROM has battery backed data")
+    if options.force_wram_test then
+      log.print()
+      log.warning("Additional option 'force_wram_test' enabled")
+    end
+
+    rv = prg_ram_detect(DEBUG)
+
+    if rv == false then -- PRG RAM not found
+
+      if do_ram_dump or do_ram_write then
+        log.error("PRG-RAM not detected")
+        return false
+      elseif do_rom_write then
+        if options.force_wram_test then
+          log.warning("Additional option 'force_wram_test' implies PRG-RAM presence")
+          log.error("PRG-RAM not detected")
+          return false
+        elseif nes.header.isValid and nes.header.hasPrgRam then
+          log.warning("ROM header settings implies PRG-RAM")
+          log.error("PRG-RAM not detected")
+          return false
+        elseif wram_size ~= 0 then
+          log.warning("CLI options specify " .. wram_size .. "KB of PRG-RAM")
+          log.error("PRG-RAM not detected")
+          return false
         else
-          if wram_size ~= 0 then
-            rv = prg_ram_exercise(wram_size, retroprog_id, DEBUG)
-            -- exit script if test fails
-            if not rv then return end
-          end
+          log.info("PRG-RAM not detected")
         end
-      else
-        log.warning("Can't exercise PRG-RAM because data could be battery backed")
       end
+
+    else -- PRG RAM found
+
+      log.success("PRG-RAM detected")
+
+      -- force wram size to 8KB because it's SS88006 maximum
+      wram_size = 8
+
+      if options.force_wram_test and ( do_rom_dump or do_ram_dump ) then
+        log.warning("Additional option 'force_wram_test' ignored when dumping PRG-ROM or PRG-RAM")
+      elseif do_rom_write or do_ram_write then
+        if options.force_wram_test or do_ram_write then
+          rv = prg_ram_test(wram_size, retroprog_id, DEBUG)
+          if not rv then return false end
+        elseif nes.header.isValid and nes.header.hasPrgRam then
+          if nes.header.hasBattery then
+            log.warning("Can't test PRG-RAM because ROM header specifies battery backed data")
+            log.warning("Use additional option 'force_wram_test' to force PRG-RAM test")
+          else
+            rv = prg_ram_test(wram_size, retroprog_id, DEBUG)
+            if not rv then return false end
+          end
+        else
+          log.warning("Can't test PRG-RAM because data could be battery backed")
+          log.warning("Use additional option 'force_wram_test' to force PRG-RAM test")
+        end
+      end
+
     end
 
     -- CHR-RAM tests
@@ -899,10 +932,10 @@ local function process(process_opts, console_opts)
   end
 
 --[[
-88""Yb    db    8b    d8     8888b.  88   88 8b    d8 88""Yb 
-88__dP   dPYb   88b  d88      8I  Yb 88   88 88b  d88 88__dP 
-88"Yb   dP__Yb  88YbdP88      8I  dY Y8   8P 88YbdP88 88"""  
-88  Yb dP""""Yb 88 YY 88     8888Y"  `YbodP' 88 YY 88 88     
+88""Yb    db    8b    d8     8888b.  88   88 8b    d8 88""Yb
+88__dP   dPYb   88b  d88      8I  Yb 88   88 88b  d88 88__dP
+88"Yb   dP__Yb  88YbdP88      8I  dY Y8   8P 88YbdP88 88"""
+88  Yb dP""""Yb 88 YY 88     8888Y"  `YbodP' 88 YY 88 88
 --]]
 
   -- dump cart RAM to file
@@ -932,10 +965,10 @@ local function process(process_opts, console_opts)
 
 
 --[[
-88""Yb    db    8b    d8     Yb        dP 88""Yb 88 888888 888888 
-88__dP   dPYb   88b  d88      Yb  db  dP  88__dP 88   88   88__   
-88"Yb   dP__Yb  88YbdP88       YbdPYbdP   88"Yb  88   88   88""   
-88  Yb dP""""Yb 88 YY 88        YP  YP    88  Yb 88   88   888888 
+88""Yb    db    8b    d8     Yb        dP 88""Yb 88 888888 888888
+88__dP   dPYb   88b  d88      Yb  db  dP  88__dP 88   88   88__
+88"Yb   dP__Yb  88YbdP88       YbdPYbdP   88"Yb  88   88   88""
+88  Yb dP""""Yb 88 YY 88        YP  YP    88  Yb 88   88   888888
 --]]
 
   -- write file to the cart RAM
@@ -962,10 +995,10 @@ local function process(process_opts, console_opts)
   end
 
 --[[
-88""Yb  dP"Yb  8b    d8     8888b.  88   88 8b    d8 88""Yb 
-88__dP dP   Yb 88b  d88      8I  Yb 88   88 88b  d88 88__dP 
-88"Yb  Yb   dP 88YbdP88      8I  dY Y8   8P 88YbdP88 88"""  
-88  Yb  YbodP  88 YY 88     8888Y"  `YbodP' 88 YY 88 88     
+88""Yb  dP"Yb  8b    d8     8888b.  88   88 8b    d8 88""Yb
+88__dP dP   Yb 88b  d88      8I  Yb 88   88 88b  d88 88__dP
+88"Yb  Yb   dP 88YbdP88      8I  dY Y8   8P 88YbdP88 88"""
+88  Yb  YbodP  88 YY 88     8888Y"  `YbodP' 88 YY 88 88
 --]]
 
   -- dump cart ROM to file
@@ -1005,10 +1038,10 @@ local function process(process_opts, console_opts)
   end
 
 --[[
-88""Yb  dP"Yb  8b    d8     888888 88""Yb    db    .dP"Y8 888888 
-88__dP dP   Yb 88b  d88     88__   88__dP   dPYb   `Ybo." 88__   
-88"Yb  Yb   dP 88YbdP88     88""   88"Yb   dP__Yb  o.`Y8b 88""   
-88  Yb  YbodP  88 YY 88     888888 88  Yb dP""""Yb 8bodP' 888888 
+88""Yb  dP"Yb  8b    d8     888888 88""Yb    db    .dP"Y8 888888
+88__dP dP   Yb 88b  d88     88__   88__dP   dPYb   `Ybo." 88__
+88"Yb  Yb   dP 88YbdP88     88""   88"Yb   dP__Yb  o.`Y8b 88""
+88  Yb  YbodP  88 YY 88     888888 88  Yb dP""""Yb 8bodP' 888888
 --]]
 
   -- erase the cart
@@ -1064,10 +1097,10 @@ local function process(process_opts, console_opts)
   end
 
 --[[
-88""Yb  dP"Yb  8b    d8     Yb        dP 88""Yb 88 888888 888888 
-88__dP dP   Yb 88b  d88      Yb  db  dP  88__dP 88   88   88__   
-88"Yb  Yb   dP 88YbdP88       YbdPYbdP   88"Yb  88   88   88""   
-88  Yb  YbodP  88 YY 88        YP  YP    88  Yb 88   88   888888 
+88""Yb  dP"Yb  8b    d8     Yb        dP 88""Yb 88 888888 888888
+88__dP dP   Yb 88b  d88      Yb  db  dP  88__dP 88   88   88__
+88"Yb  Yb   dP 88YbdP88       YbdPYbdP   88"Yb  88   88   88""
+88  Yb  YbodP  88 YY 88        YP  YP    88  Yb 88   88   888888
 --]]
 
   -- program file to the cart
@@ -1095,10 +1128,10 @@ local function process(process_opts, console_opts)
   end
 
 --[[
-Yb    dP 888888 88""Yb 88 888888 Yb  dP 
- Yb  dP  88__   88__dP 88 88__    YbdP  
-  YbdP   88""   88"Yb  88 88""     8P   
-   YP    888888 88  Yb 88 88      dP    
+Yb    dP 888888 88""Yb 88 888888 Yb  dP
+ Yb  dP  88__   88__dP 88 88__    YbdP
+  YbdP   88""   88"Yb  88 88""     8P
+   YP    888888 88  Yb 88 88      dP
 --]]
 
   -- verify what we just flashed

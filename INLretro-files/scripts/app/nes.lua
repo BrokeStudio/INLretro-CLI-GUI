@@ -39,9 +39,18 @@ local MIRRORING_TYPE_STRING = {
 local header = {
   bytes = nil,
   isValid = false,
-  version = "",
+  version = nil,
+  hasBattery = nil,
+  hasTrainer = nil,
+  mirroringType = 0,
   prgRomSize = 0,
   chrRomSize = 0,
+  prgWorkRamSize = 0,
+  prgSaveRamSize = 0,
+  chrWorkRamSize = 0,
+  chrSaveRamSize = 0,
+  hasPrgRam = false,
+  hasChrRam = false,
 }
 
 -- local functions
@@ -78,16 +87,16 @@ local function parse_header(file)
   end
 
   -- mapper ID
-  header.mapperId = header.bytes[7] >> 4 | (header.bytes[8] & 0xF0)
+  header.mapperId = ( header.bytes[7] >> 4 ) | (header.bytes[8] & 0xF0)
   if (header.version == HEADER_VERSION_NES2_0) then
-    header.mapperId = header.mapperId | (header.bytes[8] & 0x0F) << 8
+    header.mapperId = header.mapperId | ( ( header.bytes[9] & 0x0F ) << 8 )
   end
 
   -- battery
-  header.hasBattery = header.bytes[7] & 0x02
+  header.hasBattery = ( header.bytes[7] & 0x02 ) == 0x02
 
   -- trainer
-  header.hasTrainer = header.bytes[7] & 0x04
+  header.hasTrainer = ( header.bytes[7] & 0x04 ) == 0x04
 
   -- mirroring
   if (header.bytes[7] & 0x09 == 0) then
@@ -100,7 +109,7 @@ local function parse_header(file)
     header.mirroringType = MIRRORING_TYPE_FOUR_SCREENS
   end
 
-  -- PRG ROM size
+  -- PRG ROM size | byte 9 and 4
   if (header.version == HEADER_VERSION_NES2_0) then
     if ((header.bytes[10] & 0x0F) == 0x0F) then
       -- TODO...
@@ -111,7 +120,7 @@ local function parse_header(file)
     header.prgRomSize = header.bytes[5] * 0x4000
   end
 
-  -- CHR ROM size
+  -- CHR ROM size | byte 9 and 5
   if (header.version == HEADER_VERSION_NES2_0) then
     if ((header.bytes[10] & 0xF0) == 0xF0) then
       -- TODO...
@@ -122,9 +131,61 @@ local function parse_header(file)
     header.chrRomSize = header.bytes[6] * 0x2000
   end
 
-  -- TODO:
-  --  * add PRG-RAM size parsing
-  --  * add CHR-RAM size parsing
+  -- PRG WORK RAM size | byte 10 (NES2) | byte 8 (iNES)
+  if (header.version == HEADER_VERSION_NES2_0) then
+    header.prgWorkRamSize = header.bytes[11] & 0x0F
+    if header.prgWorkRamSize == 0 then
+      header.prgWorkRamSize = 0
+    else
+      header.prgWorkRamSize = 64 << header.prgWorkRamSize
+    end
+  else
+    header.prgWorkRamSize = header.bytes[9] * 8
+  end
+
+  -- PRG SAVE RAM size | byte 10 (NES2)
+  if (header.version == HEADER_VERSION_NES2_0) then
+    header.prgSaveRamSize = header.bytes[11] & 0xF0
+    if header.prgSaveRamSize == 0 then
+      header.prgSaveRamSize = 0
+    else
+      header.prgSaveRamSize = 64 << ( header.prgSaveRamSize >> 4 )
+    end
+  end
+
+  -- set hasPrgRam flag
+  if header.prgWorkRamSize ~= 0 or header.prgSaveRamSize ~= 0 then
+    header.hasPrgRam = true
+  end
+
+  -- CHR WORK RAM size | byte 11 (NES2)
+  if (header.version == HEADER_VERSION_NES2_0) then
+    header.chrWorkRamSize = header.bytes[12] & 0x0F
+    if header.chrWorkRamSize == 0 then
+      header.chrWorkRamSize = 0
+    else
+      header.chrWorkRamSize = 64 << header.chrWorkRamSize
+    end
+  else
+    -- TODO...
+  end
+
+  -- CHR SAVE RAM size | byte 11 (NES2)
+  if (header.version == HEADER_VERSION_NES2_0) then
+    header.chrSaveRamSize = header.bytes[12] & 0xF0
+    if header.chrSaveRamSize == 0 then
+      header.chrSaveRamSize = 0
+    else
+      header.chrSaveRamSize = 64 << ( header.chrSaveRamSize >> 4 )
+    end
+  else
+    -- TODO...
+  end
+
+  -- set hasChrRam flag
+  if header.chrWorkRamSize ~= 0 or header.chrSaveRamSize ~= 0 then
+    header.hasChrRam = true
+  end
 
   return true
 end
@@ -287,7 +348,7 @@ local function write_header(file, prgKB, chrKB, mapper, mirroring)
   --    ---------
   --    ..DD DDDD
   --      ++-++++- Default Expansion Device
-  
+
 end
 
 -- Desc:check if PPU /A13 -> CIRAM /CE jumper present
@@ -318,7 +379,7 @@ local function jumper_ciramce_ppuA13n( debug )
   return true
 end
 
--- Desc:check if PPU A13 is inverted then drives CIRAM /CE 
+-- Desc:check if PPU A13 is inverted then drives CIRAM /CE
 --  Some mappers may do this including INLXO-ROM boards
 --  Does NOT check if PPU /A13 is drives CIRAM /CE
 -- Pre: nes_init() been called to setup i/o
@@ -367,7 +428,7 @@ local function jumper_famicom_sound (debug)
 
   --EXP0 should be floating input
   --AXLOE pin needs to be set as output and
-  --EXP FF needs enabled before we can clock it, 
+  --EXP FF needs enabled before we can clock it,
   --but don't leave it enabled before exiting function
 --
   --set AXLOE to output
@@ -384,7 +445,7 @@ local function jumper_famicom_sound (debug)
     return false
   end
 
-  --Latch RF audio sound pin high 
+  --Latch RF audio sound pin high
   dict.pinport("EXP_SET", FC_RF_HI)
   --read Famicom APU audio pin
   if dict.pinport( "CTL_RD", "FCAPU" ) == 0 then
@@ -404,7 +465,7 @@ end
 
 
 -- Desc:Run through supported mapper mirroring modes to help detect mapper.
--- Pre: 
+-- Pre:
 -- Post:cart mirroring set to found mirroring
 -- Rtn: SUCCESS if nothing bad happened, neg if error with kazzo etc
 local function detect_mapper_mirroring(debug)
@@ -497,9 +558,9 @@ end
 -- Post:memory manf/prod ID set to read values if passed
 --  memory wr_dict and wr_opcode set if successful
 --  Software mode exited if entered successfully
--- Rtn: SUCCESS if flash sensed, GEN_FAIL if not, neg if error 
+-- Rtn: SUCCESS if flash sensed, GEN_FAIL if not, neg if error
 local function read_flashID_chrrom_8K (debug)
-  
+
   local rv
   --enter software mode
   --NROM has A13 tied to A11, and A14 tied to A12.
@@ -544,7 +605,7 @@ end
 -- *  This one simply tests one address in PPU address space
 -- * Pre: nes_init() been called to setup i/o
 -- * Post:
--- * Rtn: SUCCESS if ram sensed, GEN_FAIL if not, neg if error 
+-- * Rtn: SUCCESS if ram sensed, GEN_FAIL if not, neg if error
 -- */
 --int ppu_ram_sense( USBtransfer *transfer, uint16_t addr ) {
 local function ppu_ram_sense(addr, debug)
@@ -582,7 +643,7 @@ local function ppu_ram_sense(addr, debug)
 end
 
 -- Desc:PRG-ROM flash manf/prod ID sense test
---  Using EXP0 /WE writes 
+--  Using EXP0 /WE writes
 --  Only senses SST flash ID's
 --  Assumes that isn't getting tricked by having manf/prodID at $8000/8001
 --  could add check and increment read address to ensure doesn't get tricked..
@@ -593,7 +654,7 @@ end
 -- Post:memory manf/prod ID set to read values if passed
 --  memory wr_dict and wr_opcode set if successful
 --  Software mode exited if entered successfully
--- Rtn: SUCCESS if flash sensed, GEN_FAIL if not, neg if error 
+-- Rtn: SUCCESS if flash sensed, GEN_FAIL if not, neg if error
 local function read_flashID_prgrom_exp0 (debug)
   local rv
   --enter software mode
@@ -633,22 +694,22 @@ local function read_flashID_prgrom_exp0 (debug)
   --verify exited
 --  rv = dict.nes("NES_CPU_RD", 0x8001)
 --  if debug then print("attempted read PRG-ROM prod ID:", help.hex(rv)) end
-  
+
   return true
 end
 
 --[[
-  .dP'     8888b.  888888 88""Yb 88   88  dP""b8     888888 88   88 88b 88  dP""b8 .dP"Y8 
-.dP'        8I  Yb 88__   88__dP 88   88 dP   `"     88__   88   88 88Yb88 dP   `" `Ybo." 
-`Yb.        8I  dY 88""   88""Yb Y8   8P Yb  "88     88""   Y8   8P 88 Y88 Yb      o.`Y8b 
-  `Yb.     8888Y"  888888 88oodP `YbodP'  YboodP     88     `YbodP' 88  Y8  YboodP 8bodP' 
+  .dP'     8888b.  888888 88""Yb 88   88  dP""b8     888888 88   88 88b 88  dP""b8 .dP"Y8
+.dP'        8I  Yb 88__   88__dP 88   88 dP   `"     88__   88   88 88Yb88 dP   `" `Ybo."
+`Yb.        8I  dY 88""   88""Yb Y8   8P Yb  "88     88""   Y8   8P 88 Y88 Yb      o.`Y8b
+  `Yb.     8888Y"  888888 88oodP `YbodP'  YboodP     88     `YbodP' 88  Y8  YboodP 8bodP'
 ]]
 
 local function cpu_wr(addr, val, debug, comment)
   if not (type(debug) == "boolean") then debug = true end
   if not (type(comment) == "string") then comment = "" end
   dict.nes("NES_CPU_WR", addr, val)
-  if (debug) then print("CPU", " W", help.hex(addr, 4, "0x"), val, help.hex(val, 2, "0x"), comment) end
+  if (debug) then log.point("CPU", " W", help.hex(addr, 4, "0x"), val, help.hex(val, 2, "0x"), comment) end
 end
 
 local function cpu_rd(addr, debug, label)
@@ -656,7 +717,7 @@ local function cpu_rd(addr, debug, label)
   if not (type(label) == "string") then label = "" end
   local rv
   rv = dict.nes("NES_CPU_RD", addr)
-  if (debug) then print("CPU", "R ", help.hex(addr, 4, "0x"), rv, help.hex(rv, 2, "0x"), label) end
+  if (debug) then log.point("CPU", "R ", help.hex(addr, 4, "0x"), rv, help.hex(rv, 2, "0x"), label) end
   return rv
 end
 
@@ -664,7 +725,7 @@ local function ppu_wr(addr, val, debug, comment)
   if not (type(debug) == "boolean") then debug = true end
   if not (type(comment) == "string") then comment = "" end
   dict.nes("NES_PPU_WR", addr, val)
-  if (debug) then print("PPU", " W", help.hex(addr, 4, "0x"), val, help.hex(val, 2, "0x"), comment) end
+  if (debug) then log.point("PPU", " W", help.hex(addr, 4, "0x"), val, help.hex(val, 2, "0x"), comment) end
 end
 
 local function ppu_rd(addr, debug, label)
@@ -672,7 +733,7 @@ local function ppu_rd(addr, debug, label)
   if not (type(label) == "string") then label = "" end
   local rv
   rv = dict.nes("NES_PPU_RD", addr)
-  if (debug) then print("PPU", "R ", help.hex(addr, 4, "0x"), rv, help.hex(rv, 2, "0x"), label) end
+  if (debug) then log.point("PPU", "R ", help.hex(addr, 4, "0x"), rv, help.hex(rv, 2, "0x"), label) end
   return rv
 end
 
@@ -682,10 +743,10 @@ nes.ppu_rd = ppu_rd
 nes.ppu_wr = ppu_wr
 
 --[[
-8888b.  888888 88""Yb 88   88  dP""b8     888888 88   88 88b 88  dP""b8 .dP"Y8     `Yb.   
- 8I  Yb 88__   88__dP 88   88 dP   `"     88__   88   88 88Yb88 dP   `" `Ybo."       `Yb. 
- 8I  dY 88""   88""Yb Y8   8P Yb  "88     88""   Y8   8P 88 Y88 Yb      o.`Y8b       .dP' 
-8888Y"  888888 88oodP `YbodP'  YboodP     88     `YbodP' 88  Y8  YboodP 8bodP'     .dP'   
+8888b.  888888 88""Yb 88   88  dP""b8     888888 88   88 88b 88  dP""b8 .dP"Y8     `Yb.
+ 8I  Yb 88__   88__dP 88   88 dP   `"     88__   88   88 88Yb88 dP   `" `Ybo."       `Yb.
+ 8I  dY 88""   88""Yb Y8   8P Yb  "88     88""   Y8   8P 88 Y88 Yb      o.`Y8b       .dP'
+8888Y"  888888 88oodP `YbodP'  YboodP     88     `YbodP' 88  Y8  YboodP 8bodP'     .dP'
 ]]
 
 -- global variables so other modules can use them
@@ -696,7 +757,7 @@ nes.ppu_wr = ppu_wr
 
 -- functions other modules are able to call
 nes.jumper_ciramce_ppuA13n = jumper_ciramce_ppuA13n
-nes.ciramce_inv_ppuA13 = ciramce_inv_ppuA13 
+nes.ciramce_inv_ppuA13 = ciramce_inv_ppuA13
 nes.jumper_famicom_sound = jumper_famicom_sound
 nes.detect_mapper_mirroring = detect_mapper_mirroring
 nes.test_cic_soft_switch = test_cic_soft_switch
@@ -728,7 +789,7 @@ return nes
 -- * Post:memory manf/prod ID set to read values if passed
 -- *  memory wr_dict and wr_opcode set if successful
 -- *  Software mode exited if entered successfully
--- * Rtn: SUCCESS if flash sensed, GEN_FAIL if not, neg if error 
+-- * Rtn: SUCCESS if flash sensed, GEN_FAIL if not, neg if error
 -- */
 --int read_flashID_prgrom_map30( USBtransfer *transfer, memory *flash ) {
 --
@@ -741,26 +802,26 @@ return nes
   -- 0x5 = 0b  0  1  0  1  -> $9555
   -- 0x2 = 0b  0  0  1  0  -> $2AAA
   --set A14 in mapper reg for $5555 command
---  dictionary_call( transfer, DICT_NES,   NES_CPU_WR,  0xC000,    0x01,  
+--  dictionary_call( transfer, DICT_NES,   NES_CPU_WR,  0xC000,    0x01,
 --                  USB_IN,    NULL,  1);
   --write $5555 0xAA
---  dictionary_call( transfer, DICT_NES,   NES_CPU_WR,  0x9555,    0xAA,  
+--  dictionary_call( transfer, DICT_NES,   NES_CPU_WR,  0x9555,    0xAA,
 --                  USB_IN,    NULL,  1);
   --clear A14 in mapper reg for $2AAA command
---  dictionary_call( transfer, DICT_NES,   NES_CPU_WR,  0xC000,    0x00,  
+--  dictionary_call( transfer, DICT_NES,   NES_CPU_WR,  0xC000,    0x00,
 --                  USB_IN,    NULL,  1);
   --write $2AAA 0x55
---  dictionary_call( transfer, DICT_NES,   NES_CPU_WR,  0xAAAA,    0x55,  
+--  dictionary_call( transfer, DICT_NES,   NES_CPU_WR,  0xAAAA,    0x55,
 --                  USB_IN,    NULL,  1);
   --set A14 in mapper reg for $5555 command
---  dictionary_call( transfer, DICT_NES,   NES_CPU_WR,  0xC000,    0x01,  
+--  dictionary_call( transfer, DICT_NES,   NES_CPU_WR,  0xC000,    0x01,
 --                  USB_IN,    NULL,  1);
   --write $5555 0x90 for software mode
---  dictionary_call( transfer, DICT_NES,   NES_CPU_WR,  0x9555,    0x90,  
+--  dictionary_call( transfer, DICT_NES,   NES_CPU_WR,  0x9555,    0x90,
 --                  USB_IN,    NULL,  1);
 --
   --read manf ID
---  dictionary_call( transfer, DICT_NES,   NES_CPU_RD,      0x8000,    NILL,  
+--  dictionary_call( transfer, DICT_NES,   NES_CPU_RD,      0x8000,    NILL,
 --                USB_IN,    rv,  RV_DATA0_IDX+1);
 --  debug("manf id: %x", rv[RV_DATA0_IDX]);
 --  if ( rv[RV_DATA0_IDX] != SST_MANF_ID ) {
@@ -769,7 +830,7 @@ return nes
 --  }
 --
   --read prod ID
---  dictionary_call( transfer, DICT_NES,   NES_CPU_RD,      0x8001,    NILL,  
+--  dictionary_call( transfer, DICT_NES,   NES_CPU_RD,      0x8001,    NILL,
 --                USB_IN,    rv,  RV_DATA0_IDX+1);
 --  debug("prod id: %x", rv[RV_DATA0_IDX]);
 --  if ( (rv[RV_DATA0_IDX] == SST_PROD_128)
@@ -783,11 +844,11 @@ return nes
 --  }
 --
   -- exit software
---  dictionary_call( transfer, DICT_NES,   NES_CPU_WR,  0x8000,    0xF0,  
+--  dictionary_call( transfer, DICT_NES,   NES_CPU_WR,  0x8000,    0xF0,
 --                  USB_IN,    NULL,  1);
 --
   --verify exited
---  dictionary_call( transfer, DICT_NES,   NES_CPU_RD,      0x8000,    NILL,  
+--  dictionary_call( transfer, DICT_NES,   NES_CPU_RD,      0x8000,    NILL,
 --                USB_IN,    rv,  RV_DATA0_IDX+1);
 --  debug("prod id: %x", rv[RV_DATA0_IDX]);
 --

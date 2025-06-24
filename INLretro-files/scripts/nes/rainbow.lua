@@ -52,7 +52,7 @@ local BOOTLOADER_MODE   = 0x41FF
 ██║╚██╔╝██║██║╚════██║██║         ██╔══╝  ██║   ██║██║╚██╗██║██║     ╚════██║
 ██║ ╚═╝ ██║██║███████║╚██████╗    ██║     ╚██████╔╝██║ ╚████║╚██████╗███████║
 ╚═╝     ╚═╝╚═╝╚══════╝ ╚═════╝    ╚═╝      ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝╚══════╝
-                                                                             
+
 --]]
 
 local function init_mapper(debug)
@@ -368,14 +368,14 @@ local function mirror_test(chr_size, chr_ram_detected, retroprog_id, debug)
   end
 
   -- FPGA-RAM
-  log.point("FPGA-RAM")
-  dict.nes("NES_CPU_WR", NT_A_CTRL, 0x80)
-  dict.nes("NES_CPU_WR", NT_B_CTRL, 0x80)
-  dict.nes("NES_CPU_WR", NT_C_CTRL, 0x80)
-  dict.nes("NES_CPU_WR", NT_D_CTRL, 0x80)
-  if _mirror_test(retroprog_id, debug) == false then
-   return false
-  end
+  -- log.point("FPGA-RAM")
+  -- dict.nes("NES_CPU_WR", NT_A_CTRL, 0x80)
+  -- dict.nes("NES_CPU_WR", NT_B_CTRL, 0x80)
+  -- dict.nes("NES_CPU_WR", NT_C_CTRL, 0x80)
+  -- dict.nes("NES_CPU_WR", NT_D_CTRL, 0x80)
+  -- if _mirror_test(retroprog_id, debug) == false then
+  --  return false
+  -- end
 
   -- passed all tests
   return true
@@ -388,7 +388,7 @@ end
 ██╔═══╝ ██╔══██╗██║   ██║╚════╝██╔══██╗██║   ██║██║╚██╔╝██║
 ██║     ██║  ██║╚██████╔╝      ██║  ██║╚██████╔╝██║ ╚═╝ ██║
 ╚═╝     ╚═╝  ╚═╝ ╚═════╝       ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝
-                                                           
+
 --]]
 
 -- read PRG-ROM flash ID
@@ -540,7 +540,7 @@ end
 ██║     ██╔══██║██╔══██╗╚════╝██╔══██╗██║   ██║██║╚██╔╝██║
 ╚██████╗██║  ██║██║  ██║      ██║  ██║╚██████╔╝██║ ╚═╝ ██║
  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝      ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝
-                                                          
+
 --]]
 
 -- read CHR-ROM flash ID
@@ -566,9 +566,12 @@ local function chr_rom_manf_id()
   manufacturer_id = dict.nes("NES_PPU_RD", 0x0000)
   chips.display_manufacturer(manufacturer_id)
 
-  device_id = dict.nes("NES_PPU_RD", 0x8002) << 16
-  device_id = device_id | ( dict.nes("NES_PPU_RD", 0x801C) << 8 )
-  device_id = device_id | dict.nes("NES_PPU_RD", 0x801E)
+  device_id = dict.nes("NES_PPU_RD", 0x0001)
+  device_test = chips.display_device(manufacturer_id, device_id)
+
+  device_id = dict.nes("NES_PPU_RD", 0x0002) << 16
+  device_id = device_id | ( dict.nes("NES_PPU_RD", 0x001C) << 8 )
+  device_id = device_id | dict.nes("NES_PPU_RD", 0x001E)
   device_test = chips.display_device(manufacturer_id, device_id)
 
   -- exit software
@@ -687,7 +690,7 @@ end
 ██╔═══╝ ██╔══██╗██║   ██║╚════╝██╔══██╗██╔══██║██║╚██╔╝██║
 ██║     ██║  ██║╚██████╔╝      ██║  ██║██║  ██║██║ ╚═╝ ██║
 ╚═╝     ╚═╝  ╚═╝ ╚═════╝       ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝
-                                                          
+
 --]]
 
 -- dump the PRG-RAM, assumes the PRG-RAM was enabled as desired prior to calling
@@ -806,11 +809,15 @@ local function prg_ram_get_size(debug)
   -- PRG-RAM can be maximum 128KB
   -- so we'll check sixteen (16) 8K banks and see if we can write to each
 
-  local prg_ram_size = 32 -- 128 -- let's use 32K as default value for now
+  local prg_ram_size = 8 --32 -- 128 -- let's use 32K as default value for now
   local num_banks = math.floor(prg_ram_size / 8)
   local cur_bank = num_banks - 1
 
   log.section("Detecting PRG-RAM size")
+
+  -- set PRG-RAM mode to 8K
+  local rv = dict.nes("NES_CPU_RD", PRG_BANKING_MODE)
+  dict.nes("NES_CPU_WR", PRG_BANKING_MODE, rv & 0x7f)
 
   -- map PRG-RAM at $6000
   dict.nes("NES_CPU_WR", PRG_6_HI, 0x80)
@@ -921,7 +928,7 @@ end
 ██╔══╝  ██╔═══╝ ██║   ██║██╔══██║╚════╝██╔══██╗██╔══██║██║╚██╔╝██║
 ██║     ██║     ╚██████╔╝██║  ██║      ██║  ██║██║  ██║██║ ╚═╝ ██║
 ╚═╝     ╚═╝      ╚═════╝ ╚═╝  ╚═╝      ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝
-                                                                  
+
 --]]
 
 -- dump the FPGA-RAM
@@ -1012,7 +1019,7 @@ end
 ██║     ██╔══██║██╔══██╗╚════╝██╔══██╗██╔══██║██║╚██╔╝██║
 ╚██████╗██║  ██║██║  ██║      ██║  ██║██║  ██║██║ ╚═╝ ██║
  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝      ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝
-                                                         
+
 --]]
 
 -- select different chr-ram banks and verify all banks are present
@@ -1124,7 +1131,7 @@ end
 ██╔═══╝ ██╔══██╗██║   ██║██║     ██╔══╝  ╚════██║╚════██║
 ██║     ██║  ██║╚██████╔╝╚██████╗███████╗███████║███████║
 ╚═╝     ╚═╝  ╚═╝ ╚═════╝  ╚═════╝╚══════╝╚══════╝╚══════╝
-                                                         
+
 --]]
 
 -- Cart should be in reset state upon calling this function
@@ -1168,16 +1175,37 @@ local function process(process_opts, console_opts)
   init_mapper()
 
 --[[
-888888 888888 .dP"Y8 888888 
-  88   88__   `Ybo."   88   
-  88   88""   o.`Y8b   88   
-  88   888888 8bodP'   88   
+888888 888888 .dP"Y8 888888
+  88   88__   `Ybo."   88
+  88   88""   o.`Y8b   88
+  88   888888 8bodP'   88
 --]]
 
   -- test cart
   if do_test then
 
     log.section("Testing ".. mapname)
+
+
+    -- rv = nes.cpu_rd(PRG_BANKING_MODE)
+    -- nes.cpu_wr(PRG_BANKING_MODE, rv & 0x7f)
+
+    -- nes.cpu_wr(PRG_6_HI, 0x80)
+    -- nes.cpu_wr(PRG_6_LO, 0x00)
+
+    -- nes.cpu_wr(0x6000, 0xaa)
+    -- rv = nes.cpu_rd(0x6000)
+    -- nes.cpu_wr(0x6000, rv ~ 0xff)
+    -- nes.cpu_rd(0x6000)
+
+    -- nes.cpu_wr(0x6000, 0xaa)
+    -- nes.cpu_wr(0x7000, 0x55)
+    -- nes.cpu_rd(0x6000)
+    -- nes.cpu_rd(0x7000)
+
+    -- rv = prg_ram_exercise(32, retroprog_id, DEBUG)
+
+    -- do return end
 
     dict.nes("NES_CPU_WR", CHR_BANKING_MODE, 0x40)  -- CHR-RAM
     chr_ram_detected = nes.ppu_ram_sense(0x1000, DEBUG)
@@ -1250,10 +1278,10 @@ local function process(process_opts, console_opts)
   end
 
 --[[
-88""Yb    db    8b    d8     8888b.  88   88 8b    d8 88""Yb 
-88__dP   dPYb   88b  d88      8I  Yb 88   88 88b  d88 88__dP 
-88"Yb   dP__Yb  88YbdP88      8I  dY Y8   8P 88YbdP88 88"""  
-88  Yb dP""""Yb 88 YY 88     8888Y"  `YbodP' 88 YY 88 88     
+88""Yb    db    8b    d8     8888b.  88   88 8b    d8 88""Yb
+88__dP   dPYb   88b  d88      8I  Yb 88   88 88b  d88 88__dP
+88"Yb   dP__Yb  88YbdP88      8I  dY Y8   8P 88YbdP88 88"""
+88  Yb dP""""Yb 88 YY 88     8888Y"  `YbodP' 88 YY 88 88
 --]]
 
   -- dump cart RAM to file
@@ -1289,10 +1317,10 @@ local function process(process_opts, console_opts)
   end
 
 --[[
-88""Yb    db    8b    d8     Yb        dP 88""Yb 88 888888 888888 
-88__dP   dPYb   88b  d88      Yb  db  dP  88__dP 88   88   88__   
-88"Yb   dP__Yb  88YbdP88       YbdPYbdP   88"Yb  88   88   88""   
-88  Yb dP""""Yb 88 YY 88        YP  YP    88  Yb 88   88   888888 
+88""Yb    db    8b    d8     Yb        dP 88""Yb 88 888888 888888
+88__dP   dPYb   88b  d88      Yb  db  dP  88__dP 88   88   88__
+88"Yb   dP__Yb  88YbdP88       YbdPYbdP   88"Yb  88   88   88""
+88  Yb dP""""Yb 88 YY 88        YP  YP    88  Yb 88   88   888888
 --]]
 
   -- write file to the cart RAM
@@ -1319,10 +1347,10 @@ local function process(process_opts, console_opts)
   end
 
 --[[
-88""Yb  dP"Yb  8b    d8     8888b.  88   88 8b    d8 88""Yb 
-88__dP dP   Yb 88b  d88      8I  Yb 88   88 88b  d88 88__dP 
-88"Yb  Yb   dP 88YbdP88      8I  dY Y8   8P 88YbdP88 88"""  
-88  Yb  YbodP  88 YY 88     8888Y"  `YbodP' 88 YY 88 88     
+88""Yb  dP"Yb  8b    d8     8888b.  88   88 8b    d8 88""Yb
+88__dP dP   Yb 88b  d88      8I  Yb 88   88 88b  d88 88__dP
+88"Yb  Yb   dP 88YbdP88      8I  dY Y8   8P 88YbdP88 88"""
+88  Yb  YbodP  88 YY 88     8888Y"  `YbodP' 88 YY 88 88
 --]]
 
   -- dump cart ROM to file
@@ -1361,10 +1389,10 @@ local function process(process_opts, console_opts)
   end
 
 --[[
-88""Yb  dP"Yb  8b    d8     888888 88""Yb    db    .dP"Y8 888888 
-88__dP dP   Yb 88b  d88     88__   88__dP   dPYb   `Ybo." 88__   
-88"Yb  Yb   dP 88YbdP88     88""   88"Yb   dP__Yb  o.`Y8b 88""   
-88  Yb  YbodP  88 YY 88     888888 88  Yb dP""""Yb 8bodP' 888888 
+88""Yb  dP"Yb  8b    d8     888888 88""Yb    db    .dP"Y8 888888
+88__dP dP   Yb 88b  d88     88__   88__dP   dPYb   `Ybo." 88__
+88"Yb  Yb   dP 88YbdP88     88""   88"Yb   dP__Yb  o.`Y8b 88""
+88  Yb  YbodP  88 YY 88     888888 88  Yb dP""""Yb 8bodP' 888888
 --]]
 
   -- erase the cart
@@ -1421,10 +1449,10 @@ local function process(process_opts, console_opts)
   end
 
 --[[
-88""Yb  dP"Yb  8b    d8     Yb        dP 88""Yb 88 888888 888888 
-88__dP dP   Yb 88b  d88      Yb  db  dP  88__dP 88   88   88__   
-88"Yb  Yb   dP 88YbdP88       YbdPYbdP   88"Yb  88   88   88""   
-88  Yb  YbodP  88 YY 88        YP  YP    88  Yb 88   88   888888 
+88""Yb  dP"Yb  8b    d8     Yb        dP 88""Yb 88 888888 888888
+88__dP dP   Yb 88b  d88      Yb  db  dP  88__dP 88   88   88__
+88"Yb  Yb   dP 88YbdP88       YbdPYbdP   88"Yb  88   88   88""
+88  Yb  YbodP  88 YY 88        YP  YP    88  Yb 88   88   888888
 --]]
 
   -- program file to the cart
@@ -1452,10 +1480,10 @@ local function process(process_opts, console_opts)
   end
 
 --[[
-Yb    dP 888888 88""Yb 88 888888 Yb  dP 
- Yb  dP  88__   88__dP 88 88__    YbdP  
-  YbdP   88""   88"Yb  88 88""     8P   
-   YP    888888 88  Yb 88 88      dP    
+Yb    dP 888888 88""Yb 88 888888 Yb  dP
+ Yb  dP  88__   88__dP 88 88__    YbdP
+  YbdP   88""   88"Yb  88 88""     8P
+   YP    888888 88  Yb 88 88      dP
 --]]
 
   -- verify what we just flashed

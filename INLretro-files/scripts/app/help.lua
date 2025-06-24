@@ -166,7 +166,7 @@ end
 
 local function parse_additional_opts(str)
   local t = {}
-  if str == nil then return t end
+  if str == nil then return true, t end
 
   -- split string by comma (,)
   local kvs = {}

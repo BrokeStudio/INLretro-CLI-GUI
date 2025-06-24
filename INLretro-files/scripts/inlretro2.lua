@@ -6,6 +6,8 @@ local log     = require "scripts.app.log"
 local nes     = require "scripts.app.nes"
 local gb      = require "scripts.app.gb"
 local genesis = require "scripts.app.genesis"
+local snes    = require "scripts.app.snes"
+local n64     = require "scripts.app.n64"
 
 -- Just to avoid warnings in VS Code
 if opts == nil then opts = {} end
@@ -36,6 +38,74 @@ local function default_exec(process_opts, console_opts)
 end
 
 --[[
+███╗   ██╗ ██████╗ ██╗  ██╗
+████╗  ██║██╔════╝ ██║  ██║
+██╔██╗ ██║███████╗ ███████║
+██║╚██╗██║██╔═══██╗╚════██║
+██║ ╚████║╚██████╔╝     ██║
+╚═╝  ╚═══╝ ╚═════╝      ╚═╝
+
+--]]
+
+
+-- Wrapper for managing N64 operations.
+local function n64_exec(process_opts, console_opts)
+
+  local header
+
+    -- if a rom dump file is provided, parse the cartridge ROM header
+  if process_opts.rom_dump_file ~= "" then
+
+    -- parse cartridge ROM header
+    log.section("Parsing cartridge ROM header")
+    if not n64.parse_header_rom() then
+      log.warning("Failed to parse cartridge ROM header")
+    else
+      log.success("Cartridge ROM header parsed successfully")
+    end
+
+    header = n64.rom_header
+
+  end
+
+  -- if header ~= nil then
+
+  --   -- control passed ROM size vs header data
+  --   if console_opts.rom_size_kb < header:get_rom_size() then
+  --     log.warning("Passed ROM size (" .. console_opts.rom_size_kb .. ") is LESS than header value (" .. header:get_rom_size() .. ")")
+  --   elseif console_opts.rom_size_kb > header:get_rom_size() then
+  --     log.warning("Passed ROM size (" .. console_opts.rom_size_kb .. ") is MORE than header value (" .. header:get_rom_size() .. ")")
+  --   end
+
+  -- end
+
+  -- Defensively filter out any console options that aren't standard.
+  local n64_console_opts = {
+    rom_size_kb = console_opts.rom_size_kb,
+    wram_size_kb = console_opts.wram_size_kb,
+  }
+
+  local mappers = {
+    basic  = require "scripts.n64.basic",
+  }
+
+  -- if no mapper provided, use basic
+  if console_opts.mapper == "" then
+    console_opts.mapper = "basic"
+  end
+
+  local m = mappers[console_opts.mapper]
+  if m == nil then
+    log.error("UNSUPPORTED MAPPER: ", console_opts.mapper)
+  else
+    -- Attempt requested operations with hardware!
+    -- TODO: Do plumbing for interacting with RAM.
+    m.process(process_opts, n64_console_opts)
+  end
+
+end
+
+--[[
 ███████╗███╗   ██╗███████╗███████╗        ██╗    ███████╗███████╗ ██████╗
 ██╔════╝████╗  ██║██╔════╝██╔════╝       ██╔╝    ██╔════╝██╔════╝██╔════╝
 ███████╗██╔██╗ ██║█████╗  ███████╗      ██╔╝     ███████╗█████╗  ██║
@@ -47,13 +117,59 @@ end
 
 -- Wrapper for managing Super Nintendo operations.
 local function snes_exec(process_opts, console_opts)
+
+  local header
+
+    -- if a rom dump file is provided, parse the cartridge ROM header
+  if process_opts.rom_dump_file ~= "" then
+
+    -- parse cartridge ROM header
+    log.section("Parsing cartridge ROM header")
+    if not snes.parse_header_rom() then
+      log.warning("Failed to parse cartridge ROM header")
+    else
+      log.success("Cartridge ROM header parsed successfully")
+    end
+
+    header = snes.rom_header
+
+  end
+
+  if header ~= nil then
+
+    -- control passed ROM size vs header data
+    if console_opts.rom_size_kb < header:get_rom_size() then
+      log.warning("Passed ROM size (" .. console_opts.rom_size_kb .. ") is LESS than header value (" .. header:get_rom_size() .. ")")
+    elseif console_opts.rom_size_kb > header:get_rom_size() then
+      log.warning("Passed ROM size (" .. console_opts.rom_size_kb .. ") is MORE than header value (" .. header:get_rom_size() .. ")")
+    end
+
+  end
+
   -- Defensively filter out any console options that aren't standard.
-  local snes_opts = {
+  local snes_console_opts = {
     rom_size_kb = console_opts.rom_size_kb,
     wram_size_kb = console_opts.wram_size_kb,
-    mapper = console_opts.mapper
   }
-  console_opts.console_process_script.process(process_opts, console_opts)
+
+  local mappers = {
+    auto  = require "scripts.snes.auto",
+  }
+
+  -- if no mapper provided, use default one (LoRom / HiRom auto detection)
+  if console_opts.mapper == "" then
+    console_opts.mapper = "auto"
+  end
+
+  local m = mappers[console_opts.mapper]
+  if m == nil then
+    log.error("UNSUPPORTED MAPPER: ", console_opts.mapper)
+  else
+    -- Attempt requested operations with hardware!
+    -- TODO: Do plumbing for interacting with RAM.
+    m.process(process_opts, snes_console_opts)
+  end
+
 end
 
 --[[
@@ -517,7 +633,7 @@ local function main()
     md        = genesis_exec,
 
     -- Nintendo 64
-    n64       = default_exec,
+    n64       = n64_exec, --default_exec,
 
     -- Nintendo Entertainment System / Nintendo Family Computer
     nes       = nes_exec,
