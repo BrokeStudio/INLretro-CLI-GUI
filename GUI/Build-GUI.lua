@@ -58,6 +58,8 @@ targetdir("../Binaries/" .. OutputDir .. "/%{prj.name}")
 objdir("../Binaries/Intermediates/" .. OutputDir .. "/%{prj.name}")
 
 filter "system:windows"
+  files { '../Windows/Resources/resources.rc', '**.ico' }
+  vpaths { ['../Windows/Resources/*'] = { '*.rc', '**.ico' } }
   systemversion "latest"
   defines { "_CRT_SECURE_NO_WARNINGS" }
   linkoptions { "libusb-1.0.dll.a" }
