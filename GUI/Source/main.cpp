@@ -6,8 +6,6 @@
 #include <sstream>
 #include <stdio.h>
 #include <string>
-#include <SDL.h>
-#include <SDL_opengl.h>
 #include <thread>
 
 #include "usb_operations.h"
@@ -20,6 +18,18 @@
 #include "Ini.h"
 #include "Menu.h"
 #include "Settings.h"
+
+#if __APPLE__
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_opengl.h>
+#include <TargetConditionals.h>
+#if TARGET_OS_MAC
+#include "macos.h"
+#endif
+#else
+#include <SDL.h>
+#include <SDL_opengl.h>
+#endif
 
 // FontAwesome
 #include "IconsFontAwesome6.h"

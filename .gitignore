@@ -27,3 +27,5 @@ External/SDL2/SDL2.dll
 External/libusb/include/libusb.h
 External/libusb/MinGW32/
 External/libusb/MinGW64/
+.cache/
+.codelite/

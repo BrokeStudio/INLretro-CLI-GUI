@@ -55,10 +55,7 @@ filter "system:windows"
     "../External/libusb/INL/static",
   }
 
-filter "system:linux"
-  links { "usb-1.0", "pthread" }
-
-filter "system:macosx"
+filter "system:linux or macosx"
   links { "usb-1.0", "pthread" }
 
 filter "configurations:Debug"

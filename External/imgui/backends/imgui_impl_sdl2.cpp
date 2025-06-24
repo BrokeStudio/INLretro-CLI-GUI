@@ -90,10 +90,13 @@
 #endif
 
 // SDL
+#ifdef __APPLE__
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_syswm.h>
+#include <TargetConditionals.h>
+#else
 #include <SDL.h>
 #include <SDL_syswm.h>
-#ifdef __APPLE__
-#include <TargetConditionals.h>
 #endif
 #ifdef __EMSCRIPTEN__
 #include <emscripten/em_js.h>

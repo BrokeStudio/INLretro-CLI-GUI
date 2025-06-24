@@ -103,3 +103,11 @@ filter { "configurations:Dist", "system:windows or linux" }
   {
     "{COPYDIR} \"../INLretro-files\\.\" \"%{cfg.targetdir}\""
   }
+
+filter { "configurations:Dist", "system:macosx" }
+  kind "ConsoleApp"
+  defines { "_DIST" }
+  runtime "Release"
+  optimize "On"
+  symbols "Off"
+  targetdir("../Binaries/" .. OutputDir .. "/INLretro")

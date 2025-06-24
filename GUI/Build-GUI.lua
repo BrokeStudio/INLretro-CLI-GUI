@@ -98,9 +98,9 @@ filter "system:linux"
   links { "usb-1.0", "pthread" }
 
 filter "system:macosx"
-  buildoptions "`sdl2-config --cflags`"
-  linkoptions "-framework OpenGL -framework CoreFoundation `sdl2-config --libs`"
-  links { "usb-1.0", "pthread" }
+  -- buildoptions "`sdl2-config --cflags`"
+  linkoptions "-framework OpenGL -framework CoreFoundation" -- `sdl2-config --libs`"
+  links { "usb-1.0", "pthread", "SDL2" }
 
 filter "configurations:Debug"
   kind "ConsoleApp"

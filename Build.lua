@@ -18,9 +18,9 @@ workspace "INLretro"
 
 OutputDir = "%{cfg.system}-%{cfg.architecture}/%{cfg.buildcfg}"
 
-group "Core"
+-- group "Core"
   include "Core/Build-Core.lua"
-group ""
+-- group ""
 
 include "CLI/Build-CLI.lua"
 include "GUI/Build-GUI.lua"
