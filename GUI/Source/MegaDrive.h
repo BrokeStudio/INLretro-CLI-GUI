@@ -47,7 +47,7 @@ protected:
   }
 
 private:
-  // Game Boy header specific stuff
+  // Mega Drive/Genesis header specific stuff
   inline static const std::map<std::string, std::string> softwareTypes{
       {"GM", "Game"},
       {"AI", "Aid"},
@@ -224,7 +224,8 @@ private:
     {
       uint16_t val = (uint8_t)rom.get() << 8;
       val |= (uint8_t)rom.get();
-      if (rom.eof()) break;
+      if (rom.eof())
+        break;
       checksum += val;
     }
     header.file_checksum = checksum;

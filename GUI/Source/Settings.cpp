@@ -10,10 +10,10 @@ namespace Settings
 {
 
   t_Settings settings = {
-    "dark",   // theme
-    "",       // firmware_update_script
-    true,     // save_on_exit
-    false     // imgui_demo
+      "dark", // theme
+      "",     // firmware_update_script
+      true,   // save_on_exit
+      false   // imgui_demo
   };
 
   /**
@@ -48,16 +48,22 @@ namespace Settings
    */
   void set_property(const std::string &key, const std::string &value)
   {
-          if (key == "theme")
-          {
-                  if(value == "dark") set_theme(0);
-            else  if(value == "light") set_theme(1);
-            else  if(value == "classic") set_theme(2);
-          }
-    else  if (key == "save_on_exit") settings.save_on_exit = value == "true" ? true : false;
-    else  if (key == "firmware_update_script") settings.firmware_update_script = value;
+    if (key == "theme")
+    {
+      if (value == "dark")
+        set_theme(0);
+      else if (value == "light")
+        set_theme(1);
+      else if (value == "classic")
+        set_theme(2);
+    }
+    else if (key == "save_on_exit")
+      settings.save_on_exit = value == "true" ? true : false;
+    else if (key == "firmware_update_script")
+      settings.firmware_update_script = value;
 #if defined _DEBUG
-    else  if (key == "imgui_demo") settings.imgui_demo = value == "true" ? true : false;
+    else if (key == "imgui_demo")
+      settings.imgui_demo = value == "true" ? true : false;
 #endif
     else
     {
@@ -73,7 +79,9 @@ namespace Settings
   {
     // ImGui::BeginGroup();
     ImGui::SeparatorText("Flasher(s)");
-    ImGui::TextWrapped("Detected flashers. Use checkbox to enable/disable a flasher. Press refresh to refresh the list.");
+    ImGui::TextWrapped("Detected flashers are listed above.");
+    ImGui::TextWrapped("Use checkbox to enable/disable a flasher.");
+    ImGui::TextWrapped("Press refresh to refresh the list.");
     ImGui::Separator();
 
     // flasher tab/list
@@ -93,7 +101,7 @@ namespace Settings
         ImGui::TableHeadersRow();
 
         // Flashers
-        for (auto& flasher : Flasher::list)
+        for (auto &flasher : Flasher::list)
         {
           ImGui::BeginDisabled(flasher->isFlashing);
 
@@ -106,9 +114,10 @@ namespace Settings
           sprintf(label, "##flasher_is_active%s", flasher->id.c_str());
           ImGui::Checkbox(label, &flasher->isActive);
           ImGui::TableSetColumnIndex(2);
-          if(!flasher->isActive) ImGui::BeginDisabled();
+          if (!flasher->isActive)
+            ImGui::BeginDisabled();
           sprintf(label, "Update firmware##inlretropro%s", flasher->id.c_str());
-          if(ImGui::Button(label))
+          if (ImGui::Button(label))
           {
             // scripts/inlretro_inl6fwupdate.lua
             t_INLoptions_std firmware_INLOptions;
@@ -117,14 +126,14 @@ namespace Settings
             firmware_INLOptions.lua_file = Settings::settings.firmware_update_script; // "scripts/inlretro_fwupdate.lua";
             flasher->exec(firmware_INLOptions);
           }
-          if(!flasher->isActive) ImGui::EndDisabled();
+          if (!flasher->isActive)
+            ImGui::EndDisabled();
 
           ImGui::EndDisabled();
         }
 
         ImGui::EndTable();
       }
-
     }
     // ImGui::Separator();
     // ImGui::Checkbox("Debug", &INLoptions.debug); // FIXME
@@ -135,7 +144,6 @@ namespace Settings
       Flasher::detect_all();
     }
     ImGui::EndDisabled();
-
   }
 
   /**
@@ -202,7 +210,7 @@ namespace Settings
     ImGui::SeparatorText("About");
     ImGui::Text(ICON_FA_MICROCHIP " INLretro GUI v%s", INLRETRO_GUI_VERSION);
     ImGui::Separator();
-    ImGui::Text("2024, Broke Studio");
+    ImGui::Text("2024-2025, Broke Studio");
     ImGui::Text("Developed by Antoine Gohin");
     ImGui::Separator();
     ImGui::Text("Based on the original");
