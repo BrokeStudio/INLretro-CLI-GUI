@@ -107,7 +107,7 @@ filter "configurations:Debug"
   symbols "On"
   prebuildcommands
   {
-    "{COPYDIR} \"../INLretro-files\" \"%{cfg.targetdir}\"",
+    "{COPYDIR} \"../INLretro-files\\.\" \"%{cfg.targetdir}\"",
     "{COPYDIR} \"../Roms\" \"%{cfg.targetdir}/roms\""
   }
 
@@ -119,7 +119,7 @@ filter "configurations:Release"
   symbols "On"
   prebuildcommands
   {
-    "{COPYDIR} \"../INLretro-files\" \"%{cfg.targetdir}\"",
+    "{COPYDIR} \"../INLretro-files\\.\" \"%{cfg.targetdir}\"",
     "{COPYDIR} \"../Roms\" \"%{cfg.targetdir}/roms\""
   }
 
@@ -132,7 +132,7 @@ filter { "configurations:Dist", "system:windows or linux" }
   targetdir("../Binaries/" .. OutputDir .. "/INLretro")
   prebuildcommands
   {
-    "{COPYDIR} \"../INLretro-files\" \"%{cfg.targetdir}\"",
+    "{COPYDIR} \"../INLretro-files\\.\" \"%{cfg.targetdir}\"",
   }
 
 filter { "configurations:Dist", "system:macosx" }

@@ -72,7 +72,7 @@ filter "configurations:Debug"
   symbols "On"
   prebuildcommands
   {
-    "{COPYDIR} \"../INLretro-files\" \"%{cfg.targetdir}\"",
+    "{COPYDIR} \"../INLretro-files\\.\" \"%{cfg.targetdir}\"",
     "{DELETE} \"%{cfg.targetdir}\\INLretro.ini\"",
     "{COPYDIR} \"../Roms\" \"%{cfg.targetdir}/roms\""
   }
@@ -85,12 +85,12 @@ filter "configurations:Release"
   symbols "On"
   prebuildcommands
   {
-    "{COPYDIR} \"../INLretro-files\" \"%{cfg.targetdir}\"",
+    "{COPYDIR} \"../INLretro-files\\.\" \"%{cfg.targetdir}\"",
     "{DELETE} \"%{cfg.targetdir}\\INLretro.ini\"",
     "{COPYDIR} \"../Roms\" \"%{cfg.targetdir}/roms\""
   }
 
-filter "configurations:Dist"
+filter { "configurations:Dist", "system:windows or linux" }
   kind "ConsoleApp"
   defines { "_DIST" }
   runtime "Release"
@@ -99,5 +99,5 @@ filter "configurations:Dist"
   targetdir("../Binaries/" .. OutputDir .. "/INLretro")
   prebuildcommands
   {
-    "{COPYDIR} \"../INLretro-files\" \"%{cfg.targetdir}\""
+    "{COPYDIR} \"../INLretro-files\\.\" \"%{cfg.targetdir}\""
   }
