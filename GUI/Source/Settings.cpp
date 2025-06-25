@@ -108,15 +108,15 @@ namespace Settings
           ImGui::TableNextRow();
           ImGui::TableSetColumnIndex(0);
           char label[32];
-          sprintf(label, "INL Retro-Pro%s", flasher->id.c_str());
+          snprintf(label, sizeof(label), "INL Retro-Pro%s", flasher->id.c_str());
           ImGui::TextUnformatted(label);
           ImGui::TableSetColumnIndex(1);
-          sprintf(label, "##flasher_is_active%s", flasher->id.c_str());
+          snprintf(label, sizeof(label), "##flasher_is_active%s", flasher->id.c_str());
           ImGui::Checkbox(label, &flasher->isActive);
           ImGui::TableSetColumnIndex(2);
           if (!flasher->isActive)
             ImGui::BeginDisabled();
-          sprintf(label, "Update firmware##inlretropro%s", flasher->id.c_str());
+          snprintf(label, sizeof(label), "Update firmware##inlretropro%s", flasher->id.c_str());
           if (ImGui::Button(label))
           {
             // scripts/inlretro_inl6fwupdate.lua

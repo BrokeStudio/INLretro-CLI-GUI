@@ -213,7 +213,7 @@ bool parseOptions(int argc, char *argv[], t_INLoptions_std *opts)
     case '?':
       if ((optopt == 'c') || (optopt == 'd') || (optopt == 'm') || (optopt == 'o') || (optopt == 'p') || (optopt == 's'))
       {
-        sprintf(buf, "Option -%c requires an argument", optopt);
+        snprintf(buf, sizeof(buf), "Option -%c requires an argument", optopt);
         std::cout << termcolor::red << SYMBOL_ERROR << buf << termcolor::reset << std::endl;
         // log_err("Option -%c requires an argument.", optopt);
         // return false;
@@ -221,7 +221,7 @@ bool parseOptions(int argc, char *argv[], t_INLoptions_std *opts)
       }
       else if (isprint(optopt))
       {
-        sprintf(buf, "Unknown option -%c", optopt);
+        snprintf(buf, sizeof(buf), "Unknown option -%c", optopt);
         std::cout << termcolor::red << SYMBOL_ERROR << buf << termcolor::reset << std::endl;
         // log_err("Unknown option -%c .", optopt);
         // return false;
@@ -229,7 +229,7 @@ bool parseOptions(int argc, char *argv[], t_INLoptions_std *opts)
       }
       else
       {
-        sprintf(buf, "Unknown option character '\\x%x'", optopt);
+        snprintf(buf, sizeof(buf), "Unknown option character '\\x%x'", optopt);
         std::cout << termcolor::red << SYMBOL_ERROR << buf << termcolor::reset << std::endl;
         // log_err("Unknown option character '\\x%x'", optopt);
         // return false;
@@ -252,7 +252,7 @@ bool parseOptions(int argc, char *argv[], t_INLoptions_std *opts)
 
   for (index = optind; index < argc; index++)
   {
-    sprintf(buf, "Non-option argument: %s \n", argv[index]);
+    snprintf(buf, sizeof(buf), "Non-option argument: %s \n", argv[index]);
     std::cout << termcolor::red << SYMBOL_ERROR << buf << termcolor::reset << std::endl;
     // log_err("Non-option argument: %s \n", argv[index]);
   }

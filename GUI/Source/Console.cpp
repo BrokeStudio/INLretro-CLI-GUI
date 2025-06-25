@@ -78,7 +78,7 @@ Console::~Console() {}
 void Console::render_rom_dump()
 {
   bool isFlashing = Flasher::is_flashing();
-  sprintf(this->buf, "%s - ROM dump", this->full_name.c_str());
+  snprintf(this->buf, sizeof(this->buf), "%s - ROM dump", this->full_name.c_str());
   ImGui::SeparatorText(this->buf);
 
   ImGui::BeginChild("ConsoleContent");
@@ -114,14 +114,14 @@ void Console::render_rom_dump()
         mapper_idx = 0;
         rom_dump_INLOptions.mapper_name = mappers[mapper_idx].script_name;
       }
-      sprintf(this->buf, "%i - %s\n", mappers[mapper_idx].id, mappers[mapper_idx].name.c_str());
+      snprintf(this->buf, sizeof(this->buf), "%i - %s\n", mappers[mapper_idx].id, mappers[mapper_idx].name.c_str());
       ImGui::SetNextItemWidth(-FLT_MIN);
       if (ImGui::BeginCombo("##rom_dump_mapper", this->buf, 0))
       {
         for (size_t n = 0; n < mappers.size(); n++)
         {
           const bool is_selected = (mapper_idx == n);
-          sprintf(this->buf, "%i - %s\n", mappers[n].id, mappers[n].name.c_str());
+          snprintf(this->buf, sizeof(this->buf), "%i - %s\n", mappers[n].id, mappers[n].name.c_str());
           if (ImGui::Selectable(this->buf, is_selected))
             rom_dump_INLOptions.mapper_name = mappers[n].script_name;
 
@@ -200,7 +200,7 @@ void Console::render_rom_dump()
 void Console::render_rom_write()
 {
   bool isFlashing = Flasher::is_flashing();
-  sprintf(this->buf, "%s - ROM write", this->full_name.c_str());
+  snprintf(this->buf, sizeof(this->buf), "%s - ROM write", this->full_name.c_str());
   ImGui::SeparatorText(buf);
 
   ImGui::BeginChild("ConsoleContent");
@@ -236,14 +236,14 @@ void Console::render_rom_write()
         mapper_idx = 0;
         rom_write_INLOptions.mapper_name = mappers[mapper_idx].script_name;
       }
-      sprintf(this->buf, "%i - %s\n", mappers[mapper_idx].id, mappers[mapper_idx].name.c_str());
+      snprintf(this->buf, sizeof(this->buf), "%i - %s\n", mappers[mapper_idx].id, mappers[mapper_idx].name.c_str());
       ImGui::SetNextItemWidth(-FLT_MIN);
       if (ImGui::BeginCombo("##rom_write_mapper", buf, 0))
       {
         for (size_t n = 0; n < mappers.size(); n++)
         {
           const bool is_selected = (mapper_idx == n);
-          sprintf(this->buf, "%i - %s\n", mappers[n].id, mappers[n].name.c_str());
+          snprintf(this->buf, sizeof(this->buf), "%i - %s\n", mappers[n].id, mappers[n].name.c_str());
           if (ImGui::Selectable(buf, is_selected))
             rom_write_INLOptions.mapper_name = mappers[n].script_name;
 
@@ -288,7 +288,7 @@ void Console::render_rom_write()
     {
       trim(rom_write_INLOptions.additional_opts);
       if (ImGui::Selectable("force_wram_test"))
-        rom_write_INLOptions.additional_opts +=  ",force_wram_test";
+        rom_write_INLOptions.additional_opts += ",force_wram_test";
       if (ImGui::Selectable("force_flash_test"))
         rom_write_INLOptions.additional_opts += ",force_flash_test";
       if (ImGui::Selectable("bank_table"))
@@ -338,7 +338,7 @@ void Console::render_rom_write()
   ImGui::EndDisabled();
 
   ImGui::BeginDisabled(Flasher::count_flashing() == Flasher::list.size());
-  sprintf(this->buf, ICON_FA_UPLOAD " Write");
+  snprintf(this->buf, sizeof(this->buf), ICON_FA_UPLOAD " Write");
   if (ImGui::Button(buf, ImVec2(-FLT_MIN, 50)))
   {
     trim(rom_write_INLOptions.additional_opts);
@@ -357,7 +357,7 @@ void Console::render_rom_write()
         ImGui::TableSetColumnIndex(i);
         ImGui::BeginDisabled(flasher->isFlashing);
 
-        sprintf(this->buf, ICON_FA_UPLOAD " Write (%s)##write_btn_%s", flasher->id.c_str(), flasher->id.c_str());
+        snprintf(this->buf, sizeof(this->buf), ICON_FA_UPLOAD " Write (%s)##write_btn_%s", flasher->id.c_str(), flasher->id.c_str());
         if (ImGui::Button(buf, ImVec2(-FLT_MIN, 50)))
         {
           flasher->exec(rom_write_INLOptions);
@@ -380,7 +380,7 @@ void Console::render_rom_write()
 void Console::render_ram_dump()
 {
   bool isFlashing = Flasher::is_flashing();
-  sprintf(this->buf, "%s - RAM dump", this->full_name.c_str());
+  snprintf(this->buf, sizeof(this->buf), "%s - RAM dump", this->full_name.c_str());
   ImGui::SeparatorText(buf);
 
   ImGui::BeginChild("ConsoleContent");
@@ -416,14 +416,14 @@ void Console::render_ram_dump()
         mapper_idx = 0;
         ram_dump_INLOptions.mapper_name = mappers[mapper_idx].script_name;
       }
-      sprintf(this->buf, "%i - %s\n", mappers[mapper_idx].id, mappers[mapper_idx].name.c_str());
+      snprintf(this->buf, sizeof(this->buf), "%i - %s\n", mappers[mapper_idx].id, mappers[mapper_idx].name.c_str());
       ImGui::SetNextItemWidth(-FLT_MIN);
       if (ImGui::BeginCombo("##ram_dump_mapper", buf, 0))
       {
         for (size_t n = 0; n < mappers.size(); n++)
         {
           const bool is_selected = (mapper_idx == n);
-          sprintf(this->buf, "%i - %s\n", mappers[n].id, mappers[n].name.c_str());
+          snprintf(this->buf, sizeof(this->buf), "%i - %s\n", mappers[n].id, mappers[n].name.c_str());
           if (ImGui::Selectable(buf, is_selected))
             ram_dump_INLOptions.mapper_name = mappers[n].script_name;
 
@@ -484,7 +484,7 @@ void Console::render_ram_dump()
 void Console::render_ram_write()
 {
   bool isFlashing = Flasher::is_flashing();
-  sprintf(this->buf, "%s - RAM write", this->full_name.c_str());
+  snprintf(this->buf, sizeof(this->buf), "%s - RAM write", this->full_name.c_str());
   ImGui::SeparatorText(buf);
 
   ImGui::BeginChild("ConsoleContent");
@@ -520,14 +520,14 @@ void Console::render_ram_write()
         mapper_idx = 0;
         ram_write_INLOptions.mapper_name = mappers[mapper_idx].script_name;
       }
-      sprintf(this->buf, "%i - %s\n", mappers[mapper_idx].id, mappers[mapper_idx].name.c_str());
+      snprintf(this->buf, sizeof(this->buf), "%i - %s\n", mappers[mapper_idx].id, mappers[mapper_idx].name.c_str());
       ImGui::SetNextItemWidth(-FLT_MIN);
       if (ImGui::BeginCombo("##ram_write_mapper", buf, 0))
       {
         for (size_t n = 0; n < mappers.size(); n++)
         {
           const bool is_selected = (mapper_idx == n);
-          sprintf(this->buf, "%i - %s\n", mappers[n].id, mappers[n].name.c_str());
+          snprintf(this->buf, sizeof(this->buf), "%i - %s\n", mappers[n].id, mappers[n].name.c_str());
           if (ImGui::Selectable(buf, is_selected))
             ram_write_INLOptions.mapper_name = mappers[n].script_name;
 
@@ -570,7 +570,7 @@ void Console::render_ram_write()
   ImGui::EndDisabled();
 
   ImGui::BeginDisabled(Flasher::count_flashing() == Flasher::list.size());
-  sprintf(this->buf, ICON_FA_UPLOAD " Write");
+  snprintf(this->buf, sizeof(this->buf), ICON_FA_UPLOAD " Write");
   if (ImGui::Button(buf, ImVec2(-FLT_MIN, 50)))
   {
     trim(rom_write_INLOptions.additional_opts);
