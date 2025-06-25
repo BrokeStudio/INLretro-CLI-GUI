@@ -144,6 +144,10 @@ filter { "configurations:Dist", "system:macosx" }
   optimize "On"
   symbols "Off"
   targetdir("../Binaries/" .. OutputDir .. "/INLretro")
+  includedirs
+  {
+    "../macOS"
+  }
   -- prebuildcommands
   -- {
   --   "{COPYDIR} \"../INLretro-files\" \"%{cfg.targetdir}\"",
@@ -154,8 +158,8 @@ filter { "configurations:Dist", "system:macosx" }
     "{MKDIR} \"%{cfg.targetdir}/INLretroGUI.app/Contents\"",
     "{MKDIR} \"%{cfg.targetdir}/INLretroGUI.app/Contents/MacOS\"",
     "{MKDIR} \"%{cfg.targetdir}/INLretroGUI.app/Contents/Resources\"",
-    "{COPY} \"../macOS/info.plist\" \"%{cfg.targetdir}/INLretroGUI.app/Contents\"",
+    "{COPY} \"../macOS/Info.plist\" \"%{cfg.targetdir}/INLretroGUI.app/Contents\"",
     "{COPY} \"%{cfg.targetdir}/INLretroGUI\" \"%{cfg.targetdir}/INLretroGUI.app/Contents/MacOS\"",
-    "{COPY} \"../macOS/icon.icns\" \"%{cfg.targetdir}/INLretroGUI.app/Contents/Resources\"",
+    "{COPY} \"../macOS/INL.png\" \"%{cfg.targetdir}/INLretroGUI.app/Contents/Resources\"",
     "{COPYDIR} \"../INLretro-files/\" \"%{cfg.targetdir}/INLretroGUI.app/Contents/Resources\"",
   }

@@ -15,6 +15,10 @@
 #include "Nes.h"
 #include "Settings.h"
 
+#if __APPLE__
+#include "macos.h"
+#endif
+
 #define INI_FILENAME "INLretro.ini"
 
 std::string &trim(std::string &s, char c, bool reverse = false)
@@ -36,7 +40,9 @@ namespace Ini
    */
   bool load()
   {
+
 #define LINE_SIZE 256
+
     bool inSection = false;
     char line[LINE_SIZE];
     std::string sLine;
@@ -44,10 +50,25 @@ namespace Ini
     section.clear();
 
     // try to open INI file
-    std::ifstream file(INI_FILENAME, std::ifstream::in);
+
+#if __APPLE__
+    std::string iniFilePath;
+    if (getResourcesPath(iniFilePath) == -1)
+    {
+      APP_LOG(LogTypes_Error, L_INI "Couldn't get resources path");
+
+      return false;
+    }
+
+    iniFilePath += INI_FILENAME;
+#else
+    std::string iniFilePath = INI_FILENAME;
+#endif
+
+    std::ifstream file(iniFilePath.c_str(), std::ifstream::in);
     if (!file)
     {
-      APP_LOG(LogTypes_Error, L_INI "Couldn't find file: " INI_FILENAME);
+      APP_LOG(LogTypes_Error, L_INI "Couldn't open file: " INI_FILENAME);
       return false;
     }
 
@@ -115,10 +136,23 @@ namespace Ini
   bool save()
   {
     // try to open INI file
-    std::ofstream file(INI_FILENAME, std::ifstream::trunc);
+
+#if __APPLE__
+    std::string iniFilePath;
+    if (getResourcesPath(iniFilePath) == -1)
+    {
+      APP_LOG(LogTypes_Error, L_INI "Couldn't get resources path");
+      return false;
+    }
+    iniFilePath += INI_FILENAME;
+#else
+    std::string iniFilePath = INI_FILENAME;
+#endif
+
+    std::ofstream file(iniFilePath.c_str(), std::ifstream::trunc);
     if (!file)
     {
-      APP_LOG(LogTypes_Error, L_INI "Couldn't find file: " INI_FILENAME);
+      APP_LOG(LogTypes_Error, L_INI "Couldn't open file: " INI_FILENAME);
       return false;
     }
 
@@ -225,7 +259,6 @@ namespace Ini
         }
         else
         {
-          APP_LOG(LogTypes_Warning, L_INI "Console '" + console.name + "' unknown");
           Console::add(new Console(console));
           APP_LOG(LogTypes_Warning, L_INI "Console '" + console.name + "' added with basic support only");
         }

@@ -56,6 +56,10 @@ filter "system:windows"
   }
 
 filter "system:linux or macosx"
+  includedirs
+  {
+    "../macOS"
+  }
   links { "usb-1.0", "pthread" }
 
 filter "configurations:Debug"

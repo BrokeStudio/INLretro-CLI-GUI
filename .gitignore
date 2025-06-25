@@ -27,5 +27,24 @@ External/SDL2/SDL2.dll
 External/libusb/include/libusb.h
 External/libusb/MinGW32/
 External/libusb/MinGW64/
+
+# Windows
+Windows/Resources/resources.aps
+
+# Codelite files
+INLretro.workspace
+.build-debug
+.build-release
+.build-dist
 .cache/
 .codelite/
+CLI/CLI.mk
+CLI/CLI.project
+CLI/CLI.txt
+Core/Core.mk
+Core/Core.project
+Core/Core.txt
+GUI/GUI.mk
+GUI/GUI.project
+GUI/GUI.txt
+compile_commands.json

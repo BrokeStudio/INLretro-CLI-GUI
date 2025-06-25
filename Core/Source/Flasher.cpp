@@ -8,6 +8,10 @@
 #include "lua.hpp"
 #include "Lua.h"
 
+#if __APPLE__
+#include "macos.h"
+#endif
+
 std::vector<Flasher *> Flasher::list;
 
 void Flasher::clear_list()
@@ -457,25 +461,52 @@ int Flasher::inlprog_opt(const t_INLoptions_std &opts)
   // USB variables
   USBtransfer *transfer = NULL;
 
-  // Default script
-  char *DEFAULT_SCRIPT = "scripts/inlretro2.lua";
-  char *script = DEFAULT_SCRIPT;
-
   // Default to no libusb logging.
   int libusb_log = LIBUSB_LOG_LEVEL_NONE;
 
   // Lua variables.
   lua_State *L = NULL;
-  const char *LUA_SCRIPT_USB = "scripts/app/usb_device.lua";
+
+  // Default script
+  std::string cur_path;
+  std::string resourcesPath;
+  std::string luaScript = "";
+  std::string luaUsbScript;
+
+#if __APPLE__
+  if (getResourcesPath(resourcesPath) == -1)
+  {
+    APP_LOG(LogTypes_Error, L_INI "Couldn't get resources path");
+    goto error;
+  }
+  luaUsbScript = resourcesPath + "scripts/app/usb_device.lua";
+  luaScript = resourcesPath;
+#else
+  luaUsbScript = "scripts/app/usb_device.lua";
+#endif
 
   // Start up Lua.
   L = lua.init(opts);
+
+#if __APPLE__
+  // set the package path for 'require' to work correctly
+  lua_getglobal(L, "package");
+  lua_getfield(L, -1, "path");    // get field "path" from table at top of stack (-1)
+  cur_path = lua_tostring(L, -1); // grab path string from top of stack
+  cur_path.append(";");           // do your path magic here
+  cur_path.append(resourcesPath);
+  cur_path.append("?.lua");
+  lua_pop(L, 1);                       // get rid of the string on the stack we just pushed on line 5
+  lua_pushstring(L, cur_path.c_str()); // push the new one
+  lua_setfield(L, -2, "path");         // set the field "path" in table at -2 with value at top of stack
+  lua_pop(L, 1);                       // get rid of package table from top of stack
+#endif
 
   // Setup and check connection to USB Device.
   // TODO get usb device settings from usb_device.lua
 
   // Lua script arg to set different libusb debugging options.
-  check(&log, !(luaL_loadfile(L, LUA_SCRIPT_USB) || lua_pcall(L, 0, 0, 0)),
+  check(&log, !(luaL_loadfile(L, luaUsbScript.c_str()) || lua_pcall(L, 0, 0, 0)),
         "Cannot run config. file: %s", lua_tostring(L, -1));
 
   // Any value > 0 for libusb_log also prints debug statements in open_usb_device function.
@@ -503,10 +534,14 @@ int Flasher::inlprog_opt(const t_INLoptions_std &opts)
   // If lua_filename isn't set from args, use default script.
   if (strlen(opts.lua_file.c_str()))
   {
-    script = (char *)opts.lua_file.c_str();
+    luaScript += opts.lua_file;
+  }
+  else
+  {
+    luaScript += "scripts/inlretro2.lua";
   }
 
-  check(&log, !(luaL_loadfile(L, script) || lua_pcall(L, 0, 0, 0)),
+  check(&log, !(luaL_loadfile(L, luaScript.c_str()) || lua_pcall(L, 0, 0, 0)),
         "cannot run config. file: %s", lua_tostring(L, -1));
   // if (!(!(luaL_loadfile(L, script) || lua_pcall(L, 0, 0, 0))))
   // {
