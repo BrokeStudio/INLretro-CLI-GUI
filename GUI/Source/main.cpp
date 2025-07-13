@@ -1,13 +1,30 @@
-#include "imgui.h"
-#include "imgui_impl_sdl2.h"
-#include "imgui_impl_opengl2.h"
-
+#include <stdio.h>
 #include <functional>
 #include <sstream>
-#include <stdio.h>
 #include <string>
 #include <thread>
 
+// imgui
+#include "imgui.h"
+// #include "imgui_stdlib.h"
+#include "imgui_impl_sdl2.h"
+#include "imgui_impl_opengl2.h"
+// #include "ImGuiFileBrowser.h"
+
+// SDL
+#include <SDL.h>
+#include <SDL_opengl.h>
+#ifdef _WIN32
+#include <windows.h> // SetProcessDPIAware()
+#endif
+
+// FontAwesome
+#include "IconsFontAwesome6.h"
+#include "fa_regular_400.h"
+#include "fa_solid_900.h"
+#include "RobotoMonoRegular.h"
+
+// INLretro
 #include "usb_operations.h"
 #include "cli.h"
 #include "dbg.h"
@@ -19,19 +36,9 @@
 #include "Menu.h"
 #include "Settings.h"
 
-#if __APPLE__
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
-#else
-#include <SDL.h>
-#include <SDL_opengl.h>
+#ifdef __APPLE__
+#include "macos.h"
 #endif
-
-// FontAwesome
-#include "IconsFontAwesome6.h"
-#include "fa_regular_400.h"
-#include "fa_solid_900.h"
-#include "RobotoMonoRegular.h"
 
 // Helpers macros
 // We normally try to not use many helpers in imgui_demo.cpp in order to make code easier to copy and paste,
@@ -85,6 +92,9 @@ int main(int argc, char **argv)
   // libusb_set_option(NULL, LIBUSB_OPTION_LOG_LEVEL, LIBUSB_LOG_LEVEL_DEBUG);
 
   // Setup SDL
+#ifdef _WIN32
+  ::SetProcessDPIAware();
+#endif
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
   {
     printf("Error: %s\n", SDL_GetError());
@@ -104,12 +114,26 @@ int main(int argc, char **argv)
   SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+  float main_scale = ImGui_ImplSDL2_GetContentScaleForDisplay(0);
   SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-  SDL_Window *window = SDL_CreateWindow("INL retroprog GUI", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, min_width, min_height, window_flags);
+  SDL_Window *window = SDL_CreateWindow("INL retroprog GUI", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, (int)(min_width * main_scale), (int)(min_height * main_scale), window_flags);
+  if (window == nullptr)
+  {
+    printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
+    return -1;
+  }
+
   SDL_GLContext gl_context = SDL_GL_CreateContext(window);
   SDL_GL_MakeCurrent(window, gl_context);
   SDL_GL_SetSwapInterval(1); // Enable vsync
   SDL_SetWindowMinimumSize(window, min_width, min_height);
+
+  // SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+  // SDL_Window *window = SDL_CreateWindow("INL retroprog GUI", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, min_width, min_height, window_flags);
+  // SDL_GLContext gl_context = SDL_GL_CreateContext(window);
+  // SDL_GL_MakeCurrent(window, gl_context);
+  // SDL_GL_SetSwapInterval(1); // Enable vsync
+  // SDL_SetWindowMinimumSize(window, min_width, min_height);
 
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
@@ -117,12 +141,37 @@ int main(int argc, char **argv)
   ImGuiIO &io = ImGui::GetIO();
   (void)io;
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+  // io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;	// Enable Gamepad Controls
+  io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;   // Enable Docking
+  io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
+  // io.ConfigViewportsNoAutoMerge = true;
+  // io.ConfigViewportsNoTaskBarIcon = true;
+
+#ifdef __APPLE__
+  std::string iniPath;
+#ifdef _DIST
+  getResourcesPath(iniPath); // TODO: handle error
+#else
+  getExecutablePath(iniPath); // TODO: handle error
+#endif
+  iniPath += "imgui.ini";
+  io.IniFilename = iniPath.c_str();
+#endif
 
   // Setup Dear ImGui style
   ImGui::StyleColorsDark();
 
-  // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+  // Setup scaling
   ImGuiStyle &style = ImGui::GetStyle();
+  style.ScaleAllSizes(main_scale); // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
+  style.FontScaleDpi = main_scale; // Set initial font scale. (using io.ConfigDpiScaleFonts=true makes this unnecessary. We leave both here for documentation purpose)
+
+  // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+  if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+  {
+    style.WindowRounding = 0.0f;
+    style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+  }
 
   // Setup Platform/Renderer backends
   ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
@@ -302,7 +351,29 @@ int main(int argc, char **argv)
     glClear(GL_COLOR_BUFFER_BIT);
     // glUseProgram(0); // You may want this if using this code in an OpenGL 3+ context where shaders may be bound
     ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
+
+    // Update and Render additional Platform Windows
+    // (Platform functions may change the current OpenGL context, so we save/restore it to make it easier to paste this code elsewhere.
+    //  For this specific demo app we could also call SDL_GL_MakeCurrent(window, gl_context) directly)
+    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+      SDL_Window *backup_current_window = SDL_GL_GetCurrentWindow();
+      SDL_GLContext backup_current_context = SDL_GL_GetCurrentContext();
+      ImGui::UpdatePlatformWindows();
+      ImGui::RenderPlatformWindowsDefault();
+      SDL_GL_MakeCurrent(backup_current_window, backup_current_context);
+    }
+
     SDL_GL_SwapWindow(window);
+
+    // // Rendering
+    // ImGui::Render();
+    // glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
+    // glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
+    // glClear(GL_COLOR_BUFFER_BIT);
+    // // glUseProgram(0); // You may want this if using this code in an OpenGL 3+ context where shaders may be bound
+    // ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
+    // SDL_GL_SwapWindow(window);
   }
 
   // Cleanup
@@ -315,6 +386,7 @@ int main(int argc, char **argv)
     libusb_exit(NULL);
   }
 
+  // Cleanup
   ImGui_ImplOpenGL2_Shutdown();
   ImGui_ImplSDL2_Shutdown();
   ImGui::DestroyContext();

@@ -8,13 +8,14 @@ targetname "INLretroGUI"
 
 files
 {
-  "Source/**.h", "Source/**.cpp",
-  "fonts/**.h",
+  "./Source/**.h", "./Source/**.cpp",
+  "./fonts/**.h",
 
   "../External/SDL2/include/**.h",
-  "../External/imgui/**.h", "../External/imgui/**.cpp",
+  "../External/imgui/*.h", "../External/imgui/*.cpp",
   "../External/imgui/backends/**.h", "../External/imgui/backends/**.cpp",
-  "../External/imgui/FileBrowser/**.h", "../External/imgui/FileBrowser/**.cpp",
+  "../External/imgui/misc/cpp/**.h", "../External/imgui/misc/cpp/**.cpp",
+  "../External/FileBrowser/**.h", "../External/FileBrowser/**.cpp",
 }
 
 vpaths {
@@ -26,8 +27,10 @@ vpaths {
     "../External/imgui/**.cpp",
     "../External/imgui/backends/**.h",
     "../External/imgui/backends/**.cpp",
-    "../External/imgui/FileBrowser/**.h",
-    "../External/imgui/FileBrowser/**.cpp",
+    "../External/imgui/misc/cpp/*.h",
+    "../External/imgui/misc/cpp/*.cpp",
+    "../External/FileBrowser/**.h",
+    "../External/FileBrowser/**.cpp",
   },
   ["shared"] = {
     "../INLretro-files/shared/**.h",
@@ -36,8 +39,8 @@ vpaths {
 
 includedirs
 {
-  "Source",
-  "fonts",
+  "./Source",
+  "./fonts",
 
   "../Core/Source",
 
@@ -45,7 +48,8 @@ includedirs
 
   "../External/imgui",
   "../External/imgui/backends",
-  "../External/imgui/FileBrowser",
+  "../External/imgui/misc/cpp",
+  "../External/FileBrowser",
   "../External/lua",
 }
 
@@ -57,61 +61,14 @@ links
 targetdir("../Binaries/" .. OutputDir .. "/%{prj.name}")
 objdir("../Binaries/Intermediates/" .. OutputDir .. "/%{prj.name}")
 
-filter "system:windows"
-  files { '../Windows/Resources/resources.rc', '**.ico' }
-  vpaths { ['../Windows/Resources/*'] = { '*.rc', '**.ico' } }
-  systemversion "latest"
-  defines { "_CRT_SECURE_NO_WARNINGS" }
-  linkoptions { "libusb-1.0.dll.a" }
-  links {
-    "opengl32",
-    "SDL2",
-    "SDL2main",
-  }
-  includedirs
-  {
-    -- Include SDL2
-    "../External/SDL2/include",
-
-    -- Include libusb
-    -- "../External/libusb/include",
-    "../External/libusb/INL/include",
-  }
-  libdirs
-  {
-    -- SDL2
-    "../External/SDL2/x86",
-
-    -- libusb
-    -- "../External/libusb/MinGW32/static",
-    "../External/libusb/INL/static",
-  }
-  prebuildcommands {
-    -- "{COPYFILE} \"../External/libusb/MinGW32/dll/libusb-1.0.dll\" \"%{cfg.targetdir}\"",
-    "{COPYFILE} \"../External/libusb/INL/dll/libusb-1.0.dll\" \"%{cfg.targetdir}\"",
-    "{COPYFILE} \"../External/SDL2/x86/SDL2.dll\" \"%{cfg.targetdir}\"",
-  }
-
-filter "system:linux"
-  buildoptions "`sdl2-config --cflags`"
-  linkoptions "-lGL `sdl2-config --libs`"
-  links { "usb-1.0", "pthread" }
-
-filter "system:macosx"
-  -- buildoptions "`sdl2-config --cflags`"
-  linkoptions "-framework OpenGL -framework CoreFoundation" -- `sdl2-config --libs`"
-  links { "usb-1.0", "pthread", "SDL2" }
+-- Windows / Linux / macOS
 
 filter "configurations:Debug"
   kind "ConsoleApp"
   defines { "_DEBUG" }
   runtime "Debug"
   symbols "On"
-  prebuildcommands
-  {
-    "{COPYDIR} \"../INLretro-files\\.\" \"%{cfg.targetdir}\"",
-    "{COPYDIR} \"../Roms\" \"%{cfg.targetdir}/roms\""
-  }
+
 
 filter "configurations:Release"
   kind "ConsoleApp"
@@ -119,41 +76,131 @@ filter "configurations:Release"
   runtime "Release"
   optimize "On"
   symbols "On"
-  prebuildcommands
+
+filter "configurations:Debug or Release or Dist"
+  postbuildcommands
   {
-    "{COPYDIR} \"../INLretro-files\\.\" \"%{cfg.targetdir}\"",
+    "{COPYDIR} \"../INLretro-files\\.\" \"%{cfg.targetdir}\""
+  }
+
+filter "configurations:Debug or Release"
+  postbuildcommands
+  {
     "{COPYDIR} \"../Roms\" \"%{cfg.targetdir}/roms\""
   }
 
-filter { "configurations:Dist", "system:windows or linux" }
+-- Windows
+
+filter { "system:windows" }
+  staticruntime "on"
+
+filter { "system:windows", "configurations:Dist" }
   kind "WindowedApp"
   defines { "_DIST" }
   runtime "Release"
   optimize "On"
   symbols "Off"
   targetdir("../Binaries/" .. OutputDir .. "/INLretro")
-  prebuildcommands
-  {
-    "{COPYDIR} \"../INLretro-files\\.\" \"%{cfg.targetdir}\"",
+  entrypoint "mainCRTStartup"
+
+filter "platforms:x86"
+    system "Windows"
+    architecture "x86"
+
+-- filter "platforms:x86_64"
+--     system "Windows"
+--     architecture "x86_64"
+
+filter "system:windows"
+  files { '../Windows/Resources/resources.rc', '**.ico' }
+  vpaths { ["Resources"] = { "../Windows/Resources/*.rc", "../Windows/Resources/*.ico" } }
+  systemversion "latest"
+  defines {
+    "_CRT_SECURE_NO_WARNINGS",
+    "SDL_MAIN_HANDLED", -- to avoid SDL_main
+  }
+  includedirs {
+    "../External/SDL2/include",
+    "../External/libusb/INL/include",
+  }
+  linkoptions { "libusb-1.0.dll.a" }
+  links {
+    "winmm.lib",
+    "setupapi.lib",
+    "version.lib",
+    -- "Imm32.lib",
+    "opengl32",
+  }
+  libdirs {
+    "../External/libusb/INL/static",
+  }
+  prebuildcommands {
+    -- "{COPYFILE} \"../External/libusb/MinGW32/dll/libusb-1.0.dll\" \"%{cfg.targetdir}\"",
+    "{COPYFILE} \"../External/libusb/INL/dll/libusb-1.0.dll\" \"%{cfg.targetdir}\""
   }
 
-filter { "configurations:Dist", "system:macosx" }
-  kind "ConsoleApp"
+filter { "system:windows", "configurations:Debug", "platforms:x86" }
+  links { "SDL2-staticd" }
+  libdirs { "../External/SDL2/lib/x86-static-debug" }
+
+-- filter { "system:windows", "configurations:Debug", "platforms:x86_64" }
+--   links { "SDL2-staticd" }
+--   libdirs { "../External/SDL2/lib/x64-static-debug" }
+
+filter { "system:windows", "configurations:Release or Dist", "platforms:x86" }
+  links { "SDL2-static" }
+  libdirs { "../External/SDL2/lib/x86-static-release" }
+
+-- filter { "system:windows", "configurations:Release or Dist", "platforms:x86_64" }
+--   links { "SDL2-static" }
+--   libdirs { "../External/SDL2/lib/x64-static-release" }
+
+-- Linux
+
+filter "system:linux"
+  buildoptions { "`sdl2-config --cflags`" }
+  linkoptions { "`sdl2-config --libs`" }
+  links {
+    "usb-1.0",
+    "GL",
+    -- "dl",
+    "pthread",
+    "SDL2"
+  }
+
+filter { "system:linux", "configurations:Dist" }
+  kind "WindowedApp"
   defines { "_DIST" }
   runtime "Release"
   optimize "On"
   symbols "Off"
   targetdir("../Binaries/" .. OutputDir .. "/INLretro")
+
+-- macOS
+
+filter "system:macosx"
+  buildoptions { "`sdl2-config --cflags`" }
+  linkoptions {
+    "usb-1.0",
+    "`sdl2-config --libs`",
+    "-framework OpenGL",
+    "-framework CoreFoundation"
+  }
   includedirs
   {
     "../macOS"
   }
-  -- prebuildcommands
-  -- {
-  --   "{COPYDIR} \"../INLretro-files\" \"%{cfg.targetdir}\"",
-  -- }
+
+filter { "system:macosx", "configurations:Dist" }
+  kind "ConsoleApp"
+  defines { "_DIST" }
+  runtime "Release"
+  optimize "On"
+  symbols "Off"
+  targetdir("../Binaries/" .. OutputDir .. "/RainbowFileExplorer")
   postbuildcommands
   {
+    "{RMDIR} \"%{cfg.targetdir}/INLretroGUI.app\"",
     "{MKDIR} \"%{cfg.targetdir}/INLretroGUI.app\"",
     "{MKDIR} \"%{cfg.targetdir}/INLretroGUI.app/Contents\"",
     "{MKDIR} \"%{cfg.targetdir}/INLretroGUI.app/Contents/MacOS\"",

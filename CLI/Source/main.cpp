@@ -72,6 +72,8 @@ int main(int argc, char **argv)
   }
 
 #if defined _DEBUG || defined _RELEASE
+  APP_LOG_SYS(LogTypes_None, "");
+  APP_LOG_SYS(LogTypes_Info, "Press any key...");
   std::cin.get();
 #endif
 
@@ -85,8 +87,11 @@ error:
   }
 
 #if defined _DEBUG || defined _RELEASE
+  APP_LOG_SYS(LogTypes_None, "");
+  APP_LOG_SYS(LogTypes_Info, "Press any key...");
   std::cin.get();
 #endif
+
   return 1;
 }
 

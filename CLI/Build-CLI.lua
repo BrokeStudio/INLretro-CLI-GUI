@@ -36,48 +36,13 @@ links
 targetdir("../Binaries/" .. OutputDir .. "/%{prj.name}")
 objdir("../Binaries/Intermediates/" .. OutputDir .. "/%{prj.name}")
 
-filter "system:windows"
-  files { '../Windows/Resources/resources.rc', '**.ico' }
-  vpaths { ['../Windows/Resources/*'] = { '*.rc', '**.ico' } }
-  systemversion "latest"
-  defines { "_CRT_SECURE_NO_WARNINGS" }
-  linkoptions { "libusb-1.0.dll.a" }
-  links {
-    "opengl32",
-  }
-  includedirs
-  {
-    -- "include",
-    -- "../External/libusb/include"
-    "../External/libusb/INL/include",
-  }
-  libdirs {
-    -- libusb
-    -- "../External/libusb/MinGW32/static",
-    "../External/libusb/INL/static",
-  }
-  prebuildcommands {
-    -- "{COPYFILE} \"../External/libusb/MinGW32/dll/libusb-1.0.dll\" \"%{cfg.targetdir}\"",
-    "{COPYFILE} \"../External/libusb/INL/dll/libusb-1.0.dll\" \"%{cfg.targetdir}\"",
-  }
-
-filter "system:linux"
-  links { "usb-1.0", "pthread" }
-
-filter "system:macosx"
-  links { "usb-1.0", "pthread" }
+-- Windows / Linux / macOS
 
 filter "configurations:Debug"
   kind "ConsoleApp"
   defines { "_DEBUG" }
   runtime "Debug"
   symbols "On"
-  prebuildcommands
-  {
-    "{COPYDIR} \"../INLretro-files\\.\" \"%{cfg.targetdir}\"",
-    "{DELETE} \"%{cfg.targetdir}\\INLretro.ini\"",
-    "{COPYDIR} \"../Roms\" \"%{cfg.targetdir}/roms\""
-  }
 
 filter "configurations:Release"
   kind "ConsoleApp"
@@ -85,14 +50,8 @@ filter "configurations:Release"
   runtime "Release"
   optimize "On"
   symbols "On"
-  prebuildcommands
-  {
-    "{COPYDIR} \"../INLretro-files\\.\" \"%{cfg.targetdir}\"",
-    "{DELETE} \"%{cfg.targetdir}\\INLretro.ini\"",
-    "{COPYDIR} \"../Roms\" \"%{cfg.targetdir}/roms\""
-  }
 
-filter { "configurations:Dist", "system:windows or linux" }
+  filter { "configurations:Dist", "system:windows or linux" }
   kind "ConsoleApp"
   defines { "_DIST" }
   runtime "Release"
@@ -111,3 +70,64 @@ filter { "configurations:Dist", "system:macosx" }
   optimize "On"
   symbols "Off"
   targetdir("../Binaries/" .. OutputDir .. "/INLretro")
+
+filter "configurations:*"
+  postbuildcommands
+  {
+    "{COPYDIR} \"../INLretro-files\\.\" \"%{cfg.targetdir}\""
+  }
+
+filter "configurations:Debug or Release"
+  postbuildcommands
+  {
+    "{COPYDIR} \"../Roms\" \"%{cfg.targetdir}/roms\""
+  }
+
+-- Windows
+
+filter { "system:windows" }
+  staticruntime "on"
+
+filter "platforms:x86"
+    system "Windows"
+    architecture "x86"
+
+-- filter "platforms:x86_64"
+--     system "Windows"
+--     architecture "x86_64"
+
+filter "system:windows"
+  files { '../Windows/Resources/resources.rc', '**.ico' }
+  vpaths { ["Resources"] = { "../Windows/Resources/*.rc", "../Windows/Resources/*.ico" } }
+  systemversion "latest"
+  defines { "_CRT_SECURE_NO_WARNINGS" }
+  includedirs
+  {
+    "../External/libusb/INL/include",
+  }
+  linkoptions { "libusb-1.0.dll.a" }
+  links {
+    "opengl32",
+  }
+  libdirs {
+    "../External/libusb/INL/static",
+  }
+  prebuildcommands {
+    "{COPYFILE} \"../External/libusb/INL/dll/libusb-1.0.dll\" \"%{cfg.targetdir}\"",
+  }
+
+-- Linux
+
+filter "system:linux"
+  links {
+    "usb-1.0",
+    "pthread"
+  }
+
+-- macOS
+
+filter "system:macosx"
+  links {
+    "usb-1.0",
+    "pthread"
+  }
