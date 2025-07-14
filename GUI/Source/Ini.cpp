@@ -51,9 +51,14 @@ namespace Ini
 
     // try to open INI file
 
-#if __APPLE__
+#ifdef __APPLE__
+
     std::string iniFilePath;
+#ifdef _DIST
     if (getResourcesPath(iniFilePath) == -1)
+#else
+    if (getExecutablePath(iniFilePath) == -1)
+#endif
     {
       APP_LOG(LogTypes_Error, L_INI "Couldn't get resources path");
 

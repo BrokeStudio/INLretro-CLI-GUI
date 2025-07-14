@@ -187,10 +187,12 @@ filter { "system:linux", "configurations:Dist" }
 filter "system:macosx"
   buildoptions { "`sdl2-config --cflags`" }
   linkoptions {
-    "usb-1.0",
     "`sdl2-config --libs`",
     "-framework OpenGL",
     "-framework CoreFoundation"
+  }
+  links {
+    "usb-1.0",
   }
   includedirs
   {
@@ -203,7 +205,7 @@ filter { "system:macosx", "configurations:Dist" }
   runtime "Release"
   optimize "On"
   symbols "Off"
-  targetdir("../Binaries/" .. OutputDir .. "/RainbowFileExplorer")
+  targetdir("../Binaries/" .. OutputDir .. "/INLretro")
   postbuildcommands
   {
     "{RMDIR} \"%{cfg.targetdir}/INLretroGUI.app\"",

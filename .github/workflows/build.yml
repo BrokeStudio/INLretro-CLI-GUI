@@ -95,7 +95,7 @@ jobs:
           version: "5.0.0-beta2"
 
       - name: Install Dependencies
-        run: brew install sdl2
+        run: brew install sdl2 libusb
 
       - name: Prepare make file
         run: premake5 --file=Build.lua gmake2
