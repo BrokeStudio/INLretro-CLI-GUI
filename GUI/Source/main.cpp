@@ -380,13 +380,8 @@ int main(int argc, char **argv)
     Dialog::render();
 
     // TOP
-    //float top_max_y = IM_MIN(TOP_MAX_Y, viewport->Size.y - style.ItemSpacing.y * 6 - middle_size.y - bottom_size.y);
-    float top_max_y = IM_CLAMP(viewport->Size.y - style.ItemSpacing.y * 6 - middle_size.y - bottom_size.y, TOP_MIN_Y, TOP_MAX_Y);
-    //if (top_size.y != top_max_y) {
-    //  ImGui::SetNextWindowSize(ImVec2(0, top_max_y));
-    //}
     ImGui::SetNextWindowSizeConstraints(ImVec2(0, TOP_MIN_Y), ImVec2(FLT_MAX, TOP_MAX_Y));
-    ImGui::BeginChild("Top", ImVec2(0, top_max_y), ImGuiChildFlags_ResizeY); // TOP start
+    ImGui::BeginChild("Top", ImVec2(0, TOP_MAX_Y), ImGuiChildFlags_ResizeY); // TOP start
     Menu::render_tree(isFlashing);
     ImGui::SameLine();
     Menu::render_content();
@@ -395,11 +390,10 @@ int main(int argc, char **argv)
 
     // MIDDLE
     float middle_max_y = IM_MAX(MIDDLE_MIN_Y, viewport->Size.y - style.ItemSpacing.y * 6 - top_size.y - bottom_size.y);
-    //float middle_max_y = IM_MAX(MIDDLE_MIN_Y, ImGui::GetContentRegionAvail().y - style.ItemSpacing.y * 4 - bottom_size.y);
-    if (middle_size.y != middle_max_y) {
+    if (middle_size.y != middle_max_y)
+    {
       ImGui::SetNextWindowSize(ImVec2(0, middle_max_y));
     }
-    //ImGui::SetNextWindowSizeConstraints(ImVec2(0, MIDDLE_MIN_Y), ImVec2(FLT_MAX, middle_max_y));
     ImGui::BeginChild("Middle", ImVec2(0, middle_max_y), ImGuiChildFlags_ResizeY); // MIDDLE start
 
     // count active flashers
@@ -424,7 +418,6 @@ int main(int argc, char **argv)
         char label[64];
         char spinner[2] = "";
         spinner[0] = flasher->isFlashing ? "|/-\\"[(int)(ImGui::GetTime() / 0.05f) & 3] : 0;
-        snprintf(label, 64, "INL Retro-Pro%s [%s] %s", flasher->id.c_str(), flasher->isFlashing ? "Processing" : "Done", spinner);
         ImGui::BeginChild(label, child_size, ImGuiChildFlags_Border);
         ImGui::SeparatorText(label);
         flasher->log.render();
@@ -436,17 +429,10 @@ int main(int argc, char **argv)
     middle_size = ImGui::GetItemRectSize();
 
     // BOTTOM
-    //float bottom_max_y = IM_MAX(BOTTOM_MIN_Y, viewport->Size.y - style.ItemSpacing.y * 6 - top_size.y - middle_size.y);
-    /*float bottom_max_y = IM_CLAMP(viewport->Size.y - style.ItemSpacing.y * 6 - top_size.y - middle_size.y, BOTTOM_MIN_Y, BOTTOM_MAX_Y);*/
-    float bottom_max_y = viewport->Size.y - style.ItemSpacing.y * 6 - top_size.y - middle_size.y;
-    //float bottom_max_y = ImGui::GetContentRegionAvail().y - style.ItemSpacing.y * 2;
-    /*if (bottom_size.y != bottom_max_y) {
-      ImGui::SetNextWindowSize(ImVec2(0, bottom_max_y));
-    }*/
     ImGui::SetNextWindowSizeConstraints(ImVec2(0, BOTTOM_MIN_Y), ImVec2(FLT_MAX, BOTTOM_MAX_Y));
-    ImGui::BeginChild("Bottom", ImVec2(0, bottom_max_y)); // BOTTOM start
+    ImGui::BeginChild("Bottom", ImVec2(0, ImGui::GetContentRegionAvail().y)); // BOTTOM start
     AppLog::render();
-    ImGui::EndChild(); // /BOTTOM end
+    ImGui::EndChild(); // BOTTOM end
     bottom_size = ImGui::GetItemRectSize();
 
     ImGui::PopStyleVar();
