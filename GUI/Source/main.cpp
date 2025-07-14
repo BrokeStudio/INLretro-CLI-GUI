@@ -63,25 +63,25 @@ void show_status_bar_window(void)
 }
 */
 
-int window_width, window_height;
-bool hasWindowSizeChanged(ImGuiViewport *view)
-{
-  if (view->Size.x != window_width || view->Size.y != window_height)
-  {
-    if (view->Size.x == 0 || view->Size.y == 0)
-    {
-      // The window is too small or collapsed.
-      return false;
-    }
+// int window_width, window_height;
+// bool hasWindowSizeChanged(ImGuiViewport *view)
+// {
+//   if (view->Size.x != window_width || view->Size.y != window_height)
+//   {
+//     if (view->Size.x == 0 || view->Size.y == 0)
+//     {
+//       // The window is too small or collapsed.
+//       return false;
+//     }
 
-    window_width = view->Size.x;
-    window_height = view->Size.y;
+//     window_width = view->Size.x;
+//     window_height = view->Size.y;
 
-    return true;
-  }
+//     return true;
+//   }
 
-  return false;
-}
+//   return false;
+// }
 
 /*
 
@@ -148,7 +148,7 @@ int main(int argc, char **argv)
   SDL_GL_MakeCurrent(window, gl_context);
   SDL_GL_SetSwapInterval(1); // Enable vsync
   SDL_SetWindowMinimumSize(window, min_width, min_height);
-  SDL_GetWindowSizeInPixels(window, &window_width, &window_height);
+  // SDL_GetWindowSizeInPixels(window, &window_width, &window_height);
 
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <mutex>
 #include <string>
 #include <stdarg.h> // va_list, va_start, va_end
 
@@ -54,7 +55,7 @@ void Log::add(LogTypes type, const std::string &message)
 {
   if (!cliOutput)
   {
-    std::unique_lock<std::shared_mutex> lock(itemsMutex); // Bloque toutes les lectures pendant l'écriture
+    std::unique_lock<std::shared_mutex> lock(itemsMutex); // block reads during writes
     Items.push_back(LogMessage({type, message}));
   }
   else
