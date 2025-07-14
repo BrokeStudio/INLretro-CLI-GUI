@@ -131,7 +131,6 @@ namespace Menu
    */
   void render_content()
   {
-    ImGui::SameLine();
     ImVec2 button_sz(50, 50);
     ImGui::BeginChild("Content", ImVec2(0, 0), ImGuiChildFlags_Border);
 

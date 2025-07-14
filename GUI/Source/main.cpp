@@ -157,8 +157,8 @@ int main(int argc, char **argv)
   (void)io;
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
   // io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;	// Enable Gamepad Controls
-  io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;   // Enable Docking
-  io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
+  // io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;   // Enable Docking
+  // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
   // io.ConfigViewportsNoAutoMerge = true;
   // io.ConfigViewportsNoTaskBarIcon = true;
 
@@ -255,6 +255,19 @@ int main(int argc, char **argv)
   bool done = false;
   while (!done)
   {
+
+#define TOP_MIN_Y 200
+#define TOP_MAX_Y 300
+
+#define MIDDLE_MIN_Y 126
+
+#define BOTTOM_MIN_Y 150
+#define BOTTOM_MAX_Y 300
+
+    static ImVec2 top_size(FLT_MAX, TOP_MAX_Y);
+    static ImVec2 middle_size(FLT_MAX, MIDDLE_MIN_Y);
+    static ImVec2 bottom_size(FLT_MAX, BOTTOM_MIN_Y);
+
     // check if flashing
     static bool isFlashing;
     isFlashing = Flasher::is_flashing();
@@ -280,57 +293,62 @@ int main(int argc, char **argv)
     ImGui::NewFrame();
     ImGui::PushFont(RobotoMonoRegularFont);
 
-#if 0
+    // #if 0
+    ImGuiViewport *viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
-    ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
+    ImGui::SetNextWindowSize(viewport->Size); // ImGui::GetIO().DisplaySize);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
     ImGui::Begin("Main", 0, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize); // ImGuiWindowFlags_MenuBar
-#endif
+                                                                                        // #endif
 
-    ImGuiViewport *viewport = ImGui::GetMainViewport();
-    // ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+    // ----------------------------------------------------------------------------------------------------
 
-    ImGuiID dockspace_id = ImGui::DockSpaceOverViewport(0, viewport, ImGuiDockNodeFlags_NoTabBar | ImGuiDockNodeFlags_NoUndocking | ImGuiDockNodeFlags_NoWindowMenuButton);
-    //, ImGuiDockNodeFlags_PassthruCentralNode | ); //, ImGuiDockNodeFlags_NoResize |  | ImGuiDockNodeFlags_AutoHideTabBar); // , ImGuiDockNodeFlags_PassthruCentralNode);
+    // ImGuiViewport *viewport = ImGui::GetMainViewport();
+    // // ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 
-    static bool reset_layout = true;
-    // static ImGuiID dock_up_left_id, dock_up_right_id;
+    // ImGuiID dockspace_id = ImGui::DockSpaceOverViewport(0, viewport, ImGuiDockNodeFlags_NoTabBar | ImGuiDockNodeFlags_NoUndocking | ImGuiDockNodeFlags_NoWindowMenuButton);
+    // //, ImGuiDockNodeFlags_PassthruCentralNode | ); //, ImGuiDockNodeFlags_NoResize |  | ImGuiDockNodeFlags_AutoHideTabBar); // , ImGuiDockNodeFlags_PassthruCentralNode);
 
-    if (hasWindowSizeChanged(viewport))
-    {
-      reset_layout = true;
-    }
+    // static bool reset_layout = true;
+    // // static ImGuiID dock_up_left_id, dock_up_right_id;
 
-    if (ImGui::DockBuilderGetNode(dockspace_id) == NULL || reset_layout)
-    {
-      ImGui::DockBuilderRemoveNode(dockspace_id); // Clear out existing layout
-      ImGui::DockBuilderAddNode(dockspace_id);    // Add empty node
-      ImGui::DockBuilderSetNodeSize(dockspace_id, viewport->Size);
+    // if (hasWindowSizeChanged(viewport))
+    // {
+    //   reset_layout = true;
+    // }
 
-      ImGui::DockBuilderGetCentralNode(dockspace_id);
+    // if (ImGui::DockBuilderGetNode(dockspace_id) == NULL || reset_layout)
+    // {
+    //   ImGui::DockBuilderRemoveNode(dockspace_id); // Clear out existing layout
+    //   ImGui::DockBuilderAddNode(dockspace_id);    // Add empty node
+    //   ImGui::DockBuilderSetNodeSize(dockspace_id, viewport->Size);
 
-      ImGuiID dock_main_id = dockspace_id; // This variable will track the document node, however we are not using it here as we aren't docking anything into it.
-      ImGuiID dock_up_id = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Up, 0.375f, nullptr, &dock_main_id);
-      // ImGui::DockBuilderSplitNode(dock_up_id, ImGuiDir_Left, 0.33f, &dock_up_left_id, &dock_up_right_id);
-      ImGuiID dock_down_id = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Down, 0.25f, nullptr, &dock_main_id);
+    //   ImGui::DockBuilderGetCentralNode(dockspace_id);
 
-      ImGui::DockBuilderDockWindow("Top", dock_up_id);
-      ImGui::DockBuilderDockWindow("Middle", dock_main_id);
-      ImGui::DockBuilderDockWindow("Bottom", dock_down_id);
+    //   ImGuiID dock_main_id = dockspace_id; // This variable will track the document node, however we are not using it here as we aren't docking anything into it.
+    //   ImGuiID dock_up_id = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Up, 0.375f, nullptr, &dock_main_id);
+    //   // ImGui::DockBuilderSplitNode(dock_up_id, ImGuiDir_Left, 0.33f, &dock_up_left_id, &dock_up_right_id);
+    //   ImGuiID dock_down_id = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Down, 0.25f, nullptr, &dock_main_id);
 
-      // Set specific behaviour for top-left window
-      // node = ImGui::DockBuilderGetNode(dock_up_left_id);
-      // node->LocalFlags |= ImGuiDockNodeFlags_NoResizeX; // ImGuiDockNodeFlags_NoTabBar | ImGuiDockNodeFlags_NoResize; // ImGuiDockNodeFlags_NoCloseButton
-      // ImGui::DockBuilderSetNodeSize(dock_up_left_id, ImVec2(200.0f, FLT_MAX));
+    //   ImGui::DockBuilderDockWindow("Top", dock_up_id);
+    //   ImGui::DockBuilderDockWindow("Middle", dock_main_id);
+    //   ImGui::DockBuilderDockWindow("Bottom", dock_down_id);
 
-      // // Set specific behaviour for top-left window
-      // node = ImGui::DockBuilderGetNode(dock_up_id);
-      // ImGui::DockBuilderSetNodeSize(dock_up_id, ImVec2(FLT_MAX, dock_up_y));
+    //   // Set specific behaviour for top-left window
+    //   // node = ImGui::DockBuilderGetNode(dock_up_left_id);
+    //   // node->LocalFlags |= ImGuiDockNodeFlags_NoResizeX; // ImGuiDockNodeFlags_NoTabBar | ImGuiDockNodeFlags_NoResize; // ImGuiDockNodeFlags_NoCloseButton
+    //   // ImGui::DockBuilderSetNodeSize(dock_up_left_id, ImVec2(200.0f, FLT_MAX));
 
-      ImGui::DockBuilderFinish(dockspace_id);
+    //   // // Set specific behaviour for top-left window
+    //   // node = ImGui::DockBuilderGetNode(dock_up_id);
+    //   // ImGui::DockBuilderSetNodeSize(dock_up_id, ImVec2(FLT_MAX, dock_up_y));
 
-      reset_layout = false;
-    }
+    //   ImGui::DockBuilderFinish(dockspace_id);
+
+    //   reset_layout = false;
+    // }
+
+    // ----------------------------------------------------------------------------------------------------
 
     // if (ImGui::BeginMainMenuBar())
     //{
@@ -362,14 +380,27 @@ int main(int argc, char **argv)
     Dialog::render();
 
     // TOP
-    // ImGui::SetNextWindowSizeConstraints(ImVec2(0.0f, 300.0f), ImVec2(FLT_MAX, FLT_MAX));
-    ImGui::Begin("Top"); // TOP start
+    //float top_max_y = IM_MIN(TOP_MAX_Y, viewport->Size.y - style.ItemSpacing.y * 6 - middle_size.y - bottom_size.y);
+    float top_max_y = IM_CLAMP(viewport->Size.y - style.ItemSpacing.y * 6 - middle_size.y - bottom_size.y, TOP_MIN_Y, TOP_MAX_Y);
+    //if (top_size.y != top_max_y) {
+    //  ImGui::SetNextWindowSize(ImVec2(0, top_max_y));
+    //}
+    ImGui::SetNextWindowSizeConstraints(ImVec2(0, TOP_MIN_Y), ImVec2(FLT_MAX, TOP_MAX_Y));
+    ImGui::BeginChild("Top", ImVec2(0, top_max_y), ImGuiChildFlags_ResizeY); // TOP start
     Menu::render_tree(isFlashing);
+    ImGui::SameLine();
     Menu::render_content();
-    ImGui::End(); // TOP end
+    ImGui::EndChild(); // TOP end
+    top_size = ImGui::GetItemRectSize();
 
-    // MIDDLE / FLASHER LOGS
-    ImGui::Begin("Middle"); // MIDDLE start
+    // MIDDLE
+    float middle_max_y = IM_MAX(MIDDLE_MIN_Y, viewport->Size.y - style.ItemSpacing.y * 6 - top_size.y - bottom_size.y);
+    //float middle_max_y = IM_MAX(MIDDLE_MIN_Y, ImGui::GetContentRegionAvail().y - style.ItemSpacing.y * 4 - bottom_size.y);
+    if (middle_size.y != middle_max_y) {
+      ImGui::SetNextWindowSize(ImVec2(0, middle_max_y));
+    }
+    //ImGui::SetNextWindowSizeConstraints(ImVec2(0, MIDDLE_MIN_Y), ImVec2(FLT_MAX, middle_max_y));
+    ImGui::BeginChild("Middle", ImVec2(0, middle_max_y), ImGuiChildFlags_ResizeY); // MIDDLE start
 
     // count active flashers
     size_t activeFlashers = 0;
@@ -401,11 +432,25 @@ int main(int argc, char **argv)
         ImGui::SameLine();
       }
     }
-    ImGui::End(); // MIDDLE end
+    ImGui::EndChild(); // MIDDLE end
+    middle_size = ImGui::GetItemRectSize();
 
-    ImGui::Begin("Bottom"); // BOTTOM start
+    // BOTTOM
+    //float bottom_max_y = IM_MAX(BOTTOM_MIN_Y, viewport->Size.y - style.ItemSpacing.y * 6 - top_size.y - middle_size.y);
+    /*float bottom_max_y = IM_CLAMP(viewport->Size.y - style.ItemSpacing.y * 6 - top_size.y - middle_size.y, BOTTOM_MIN_Y, BOTTOM_MAX_Y);*/
+    float bottom_max_y = viewport->Size.y - style.ItemSpacing.y * 6 - top_size.y - middle_size.y;
+    //float bottom_max_y = ImGui::GetContentRegionAvail().y - style.ItemSpacing.y * 2;
+    /*if (bottom_size.y != bottom_max_y) {
+      ImGui::SetNextWindowSize(ImVec2(0, bottom_max_y));
+    }*/
+    ImGui::SetNextWindowSizeConstraints(ImVec2(0, BOTTOM_MIN_Y), ImVec2(FLT_MAX, BOTTOM_MAX_Y));
+    ImGui::BeginChild("Bottom", ImVec2(0, bottom_max_y)); // BOTTOM start
     AppLog::render();
-    ImGui::End(); // /BOTTOM end
+    ImGui::EndChild(); // /BOTTOM end
+    bottom_size = ImGui::GetItemRectSize();
+
+    ImGui::PopStyleVar();
+    ImGui::End(); // MAIN
 
     ImGui::PopFont();
 

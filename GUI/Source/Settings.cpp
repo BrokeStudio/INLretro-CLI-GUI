@@ -79,6 +79,7 @@ namespace Settings
   {
     // ImGui::BeginGroup();
     ImGui::SeparatorText("Flasher(s)");
+    ImGui::BeginChild("Flasher(s)");
     ImGui::TextWrapped("Detected flashers are listed above.");
     ImGui::TextWrapped("Use checkbox to enable/disable a flasher.");
     ImGui::TextWrapped("Press refresh to refresh the list.");
@@ -144,6 +145,7 @@ namespace Settings
       Flasher::detect_all();
     }
     ImGui::EndDisabled();
+    ImGui::EndChild();
   }
 
   /**
@@ -153,6 +155,7 @@ namespace Settings
   void render_settings()
   {
     ImGui::SeparatorText("Settings");
+    ImGui::BeginChild("Settings");
 
     if (ImGui::BeginTable("rom_dump_table", 2, ImGuiTableFlags_SizingStretchProp))
     {
@@ -199,6 +202,8 @@ namespace Settings
     {
       Ini::save();
     }
+
+    ImGui::EndChild();
   }
 
   /**
@@ -208,6 +213,7 @@ namespace Settings
   void render_about()
   {
     ImGui::SeparatorText("About");
+    ImGui::BeginChild("About");
     ImGui::Text(ICON_FA_MICROCHIP " INLretro GUI v%s", INLRETRO_GUI_VERSION);
     ImGui::Separator();
     ImGui::Text("2024-2025, Broke Studio");
@@ -224,6 +230,7 @@ namespace Settings
     ImGui::SameLine();
     ImGui::Text("v" IMGUI_VERSION);
     ImGui::Text("by Omar Cornut");
+    ImGui::EndChild();
   }
 
 }
