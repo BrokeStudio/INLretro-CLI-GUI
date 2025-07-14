@@ -51,14 +51,14 @@ namespace Menu
    */
   void render_tree(bool disabled)
   {
-    ImGui::BeginChild("MenuPanel", ImVec2(200, 0), ImGuiChildFlags_Border); // | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+    ImGui::BeginChild("MenuPanel", ImVec2(220, 0), ImGuiChildFlags_Border);
 
     char label[32];
     ImVec2 size = ImVec2(0, 35.0f);
     ImVec2 alignment = ImVec2(0, 0.5f);
     ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, alignment);
     ImGui::SeparatorText("Menu");
-    ImGui::BeginChild("Menu");
+    ImGui::BeginChild("MenuItems");
 
     ImGui::BeginDisabled(disabled);
 
@@ -83,7 +83,7 @@ namespace Menu
     ImGui::EndDisabled();
 
     ImGui::PopStyleVar();
-    ImGui::EndChild(); // Menu
+    ImGui::EndChild(); // MenuItems
     ImGui::EndChild(); // MenuPanel
   }
 
@@ -133,7 +133,7 @@ namespace Menu
   {
     ImGui::SameLine();
     ImVec2 button_sz(50, 50);
-    ImGui::BeginChild("Content", ImVec2(0, 0), ImGuiChildFlags_Border); // | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+    ImGui::BeginChild("Content", ImVec2(0, 0), ImGuiChildFlags_Border);
 
     for (auto &item : Menu::menu)
     {

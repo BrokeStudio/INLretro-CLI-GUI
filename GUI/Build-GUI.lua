@@ -77,6 +77,12 @@ filter "configurations:Release"
   optimize "On"
   symbols "On"
 
+filter "configurations:*"
+  postbuildcommands
+  {
+    "{DELETE} \"%{cfg.targetdir}\"\\imgui.ini"
+  }
+
 filter "configurations:Debug or Release or Dist"
   postbuildcommands
   {
@@ -134,7 +140,7 @@ filter "system:windows"
   libdirs {
     "../External/libusb/INL/static",
   }
-  prebuildcommands {
+  postbuildcommands {
     -- "{COPYFILE} \"../External/libusb/MinGW32/dll/libusb-1.0.dll\" \"%{cfg.targetdir}\"",
     "{COPYFILE} \"../External/libusb/INL/dll/libusb-1.0.dll\" \"%{cfg.targetdir}\""
   }

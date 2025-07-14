@@ -5,7 +5,10 @@ namespace AppLog
 {
   void render()
   {
+    ImGui::BeginChild("Bottom", ImVec2(0, 0), ImGuiChildFlags_Border);
+    ImGui::SameLine();
     ImGui::SeparatorText("Activity log");
     log.render();
+    ImGui::EndChild();
   }
 }

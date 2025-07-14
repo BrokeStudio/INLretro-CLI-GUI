@@ -6,6 +6,7 @@
 
 // imgui
 #include "imgui.h"
+#include "imgui_internal.h"
 // #include "imgui_stdlib.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl2.h"
@@ -61,6 +62,26 @@ void show_status_bar_window(void)
   ImGui::End();
 }
 */
+
+int window_width, window_height;
+bool hasWindowSizeChanged(ImGuiViewport *view)
+{
+  if (view->Size.x != window_width || view->Size.y != window_height)
+  {
+    if (view->Size.x == 0 || view->Size.y == 0)
+    {
+      // The window is too small or collapsed.
+      return false;
+    }
+
+    window_width = view->Size.x;
+    window_height = view->Size.y;
+
+    return true;
+  }
+
+  return false;
+}
 
 /*
 
@@ -127,13 +148,7 @@ int main(int argc, char **argv)
   SDL_GL_MakeCurrent(window, gl_context);
   SDL_GL_SetSwapInterval(1); // Enable vsync
   SDL_SetWindowMinimumSize(window, min_width, min_height);
-
-  // SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-  // SDL_Window *window = SDL_CreateWindow("INL retroprog GUI", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, min_width, min_height, window_flags);
-  // SDL_GLContext gl_context = SDL_GL_CreateContext(window);
-  // SDL_GL_MakeCurrent(window, gl_context);
-  // SDL_GL_SetSwapInterval(1); // Enable vsync
-  // SDL_SetWindowMinimumSize(window, min_width, min_height);
+  SDL_GetWindowSizeInPixels(window, &window_width, &window_height);
 
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
@@ -265,17 +280,77 @@ int main(int argc, char **argv)
     ImGui::NewFrame();
     ImGui::PushFont(RobotoMonoRegularFont);
 
-#ifdef IMGUI_HAS_VIEWPORT
-    ImGuiViewport *viewport = ImGui::GetMainViewport();
-    ImGui::SetNextWindowPos(viewport->Pos);
-    ImGui::SetNextWindowSize(viewport->Size);
-    ImGui::SetNextWindowViewport(viewport->ID);
-#else
+#if 0
     ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
-#endif
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
     ImGui::Begin("Main", 0, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize); // ImGuiWindowFlags_MenuBar
+#endif
+
+    ImGuiViewport *viewport = ImGui::GetMainViewport();
+    // ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+
+    ImGuiID dockspace_id = ImGui::DockSpaceOverViewport(0, viewport, ImGuiDockNodeFlags_NoTabBar | ImGuiDockNodeFlags_NoUndocking | ImGuiDockNodeFlags_NoWindowMenuButton);
+    //, ImGuiDockNodeFlags_PassthruCentralNode | ); //, ImGuiDockNodeFlags_NoResize |  | ImGuiDockNodeFlags_AutoHideTabBar); // , ImGuiDockNodeFlags_PassthruCentralNode);
+
+    static bool reset_layout = true;
+    // static ImGuiID dock_up_left_id, dock_up_right_id;
+
+    if (hasWindowSizeChanged(viewport))
+    {
+      reset_layout = true;
+    }
+
+    if (ImGui::DockBuilderGetNode(dockspace_id) == NULL || reset_layout)
+    {
+      ImGui::DockBuilderRemoveNode(dockspace_id); // Clear out existing layout
+      ImGui::DockBuilderAddNode(dockspace_id);    // Add empty node
+      ImGui::DockBuilderSetNodeSize(dockspace_id, viewport->Size);
+
+      ImGui::DockBuilderGetCentralNode(dockspace_id);
+
+      ImGuiID dock_main_id = dockspace_id; // This variable will track the document node, however we are not using it here as we aren't docking anything into it.
+      ImGuiID dock_up_id = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Up, 0.375f, nullptr, &dock_main_id);
+      // ImGui::DockBuilderSplitNode(dock_up_id, ImGuiDir_Left, 0.33f, &dock_up_left_id, &dock_up_right_id);
+      ImGuiID dock_down_id = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Down, 0.25f, nullptr, &dock_main_id);
+
+      ImGui::DockBuilderDockWindow("Top", dock_up_id);
+      ImGui::DockBuilderDockWindow("Middle", dock_main_id);
+      ImGui::DockBuilderDockWindow("Bottom", dock_down_id);
+
+      // Set specific behaviour for top-left window
+      // node = ImGui::DockBuilderGetNode(dock_up_left_id);
+      // node->LocalFlags |= ImGuiDockNodeFlags_NoResizeX; // ImGuiDockNodeFlags_NoTabBar | ImGuiDockNodeFlags_NoResize; // ImGuiDockNodeFlags_NoCloseButton
+      // ImGui::DockBuilderSetNodeSize(dock_up_left_id, ImVec2(200.0f, FLT_MAX));
+
+      // // Set specific behaviour for top-left window
+      // node = ImGui::DockBuilderGetNode(dock_up_id);
+      // ImGui::DockBuilderSetNodeSize(dock_up_id, ImVec2(FLT_MAX, dock_up_y));
+
+      ImGui::DockBuilderFinish(dockspace_id);
+
+      reset_layout = false;
+    }
+
+    // if (ImGui::BeginMainMenuBar())
+    //{
+    //   if (ImGui::BeginMenu("File"))
+    //   {
+    //     // ShowExampleMenuFile();
+    //     if (ImGui::MenuItem("Open", NULL))
+    //     {
+    //       // load_project("C:/Users/Antoine/Dropbox/imgui/tool/nes_tool/project.bin");
+    //     }
+    //     // open = true;
+    //     if (ImGui::MenuItem("Save", NULL))
+    //     {
+    //       // save_project("C:/Users/Antoine/Dropbox/imgui/tool/nes_tool/project.bin");
+    //     }
+    //     // save = true;
+    //     ImGui::EndMenu();
+    //   }
+    //   ImGui::EndMainMenuBar();
+    // }
 
     // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
 #if defined _DEBUG
@@ -287,20 +362,14 @@ int main(int argc, char **argv)
     Dialog::render();
 
     // TOP
-    ImGui::SetNextWindowSizeConstraints(ImVec2(0.0f, 300.0f), ImVec2(FLT_MAX, FLT_MAX));
-    ImGui::BeginChild("Top", ImVec2(0.0f, 300.0f), ImGuiChildFlags_ResizeY); // | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
-
-    // MENU TREE
+    // ImGui::SetNextWindowSizeConstraints(ImVec2(0.0f, 300.0f), ImVec2(FLT_MAX, FLT_MAX));
+    ImGui::Begin("Top"); // TOP start
     Menu::render_tree(isFlashing);
-
-    // MENU CONTENT
     Menu::render_content();
-
-    // TOP END
-    ImGui::EndChild(); // Top
+    ImGui::End(); // TOP end
 
     // MIDDLE / FLASHER LOGS
-    ImGui::BeginChild("Middle", ImVec2(0, ImGui::GetContentRegionAvail().y - 150.0f)); // MIDDLE
+    ImGui::Begin("Middle"); // MIDDLE start
 
     // count active flashers
     size_t activeFlashers = 0;
@@ -313,7 +382,7 @@ int main(int argc, char **argv)
     // any active flashers?
     if (activeFlashers != 0)
     {
-      ImVec2 child_size = ImVec2(ImGui::GetContentRegionAvail().x / activeFlashers, 0.0f);
+      ImVec2 child_size = ImVec2(ImGui::GetContentRegionAvail().x / activeFlashers, 0);
       if (activeFlashers > 1)
         child_size.x = child_size.x - (style.WindowPadding.x / activeFlashers) * (activeFlashers - 1);
       for (auto &flasher : Flasher::list)
@@ -332,15 +401,11 @@ int main(int argc, char **argv)
         ImGui::SameLine();
       }
     }
-    ImGui::EndChild(); // /MIDDLE
+    ImGui::End(); // MIDDLE end
 
-    ImGui::BeginChild("Bottom", ImVec2(0.0f, 150.0f), ImGuiChildFlags_Border); // BOTTOM
+    ImGui::Begin("Bottom"); // BOTTOM start
     AppLog::render();
-    ImGui::EndChild(); // /BOTTOM
-
-    ImGui::End();
-
-    ImGui::PopStyleVar();
+    ImGui::End(); // /BOTTOM end
 
     ImGui::PopFont();
 
@@ -365,15 +430,6 @@ int main(int argc, char **argv)
     }
 
     SDL_GL_SwapWindow(window);
-
-    // // Rendering
-    // ImGui::Render();
-    // glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-    // glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
-    // glClear(GL_COLOR_BUFFER_BIT);
-    // // glUseProgram(0); // You may want this if using this code in an OpenGL 3+ context where shaders may be bound
-    // ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
-    // SDL_GL_SwapWindow(window);
   }
 
   // Cleanup
