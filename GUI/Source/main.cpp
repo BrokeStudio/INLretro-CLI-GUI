@@ -409,21 +409,32 @@ int main(int argc, char **argv)
     {
       ImVec2 child_size = ImVec2(ImGui::GetContentRegionAvail().x / activeFlashers, 0);
       if (activeFlashers > 1)
+      {
         child_size.x = child_size.x - (style.WindowPadding.x / activeFlashers) * (activeFlashers - 1);
+      }
       for (auto &flasher : Flasher::list)
       {
         if (!flasher->isActive)
+        {
           continue;
+        }
 
         char label[64];
         char spinner[2] = "";
         spinner[0] = flasher->isFlashing ? "|/-\\"[(int)(ImGui::GetTime() / 0.05f) & 3] : 0;
+        snprintf(label, 64, "INL Retro-Pro%s [%s] %s", flasher->id.c_str(), flasher->isFlashing ? "Processing" : "Idle", spinner);
         ImGui::BeginChild(label, child_size, ImGuiChildFlags_Border);
         ImGui::SeparatorText(label);
         flasher->log.render();
         ImGui::EndChild();
         ImGui::SameLine();
       }
+    }
+    else
+    {
+      ImGui::BeginChild("No Flasher", ImVec2(0, 0), ImGuiChildFlags_Border);
+      ImGui::Text("No flasher active or detected...");
+      ImGui::EndChild();
     }
     ImGui::EndChild(); // MIDDLE end
     middle_size = ImGui::GetItemRectSize();
