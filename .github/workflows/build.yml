@@ -56,7 +56,7 @@ jobs:
       - name: Upload INLretroGUI
         uses: actions/upload-artifact@v4
         with:
-          name: INLretroGUI (Windows - ${{ matrix.platform.arch }})
+          name: INLretroGUI+CLI_Windows_${{ matrix.platform.arch }}
           path: Binaries/windows-${{ matrix.platform.binPath }}/Dist/INLretro
 
   linux-ubuntu64:
@@ -81,7 +81,7 @@ jobs:
       - name: Upload INLretroGUI
         uses: actions/upload-artifact@v4
         with:
-          name: INLretroGUI (Linux)
+          name: INLretroGUI+CLI_Linux
           path: Binaries/linux-x86_64/Dist/INLretro
 
   macos:
@@ -107,7 +107,7 @@ jobs:
       - name: Upload INLretroGUI (app)
         uses: actions/upload-artifact@v4
         with:
-          name: INLretroGUI (macOS)
+          name: INLretroGUI_macOS
           path: Binaries/macosx-universal/Dist/app
 
       - name: Delete GUI executable and .ini files
@@ -118,5 +118,5 @@ jobs:
       - name: Upload INLretro CLI
         uses: actions/upload-artifact@v4
         with:
-          name: INLretroCLI (macOS)
+          name: INLretroCLI_macOS
           path: Binaries/macosx-universal/Dist/INLretro
