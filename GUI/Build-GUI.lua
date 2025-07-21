@@ -77,12 +77,6 @@ filter "configurations:Release"
   optimize "On"
   symbols "On"
 
-filter "configurations:*"
-  postbuildcommands
-  {
-    "{DELETE} \"%{cfg.targetdir}\"\\imgui.ini"
-  }
-
 filter "configurations:Debug or Release or Dist"
   postbuildcommands
   {
@@ -208,13 +202,13 @@ filter { "system:macosx", "configurations:Dist" }
   targetdir("../Binaries/" .. OutputDir .. "/INLretro")
   postbuildcommands
   {
-    "{RMDIR} \"%{cfg.targetdir}/INLretroGUI.app\"",
-    "{MKDIR} \"%{cfg.targetdir}/INLretroGUI.app\"",
-    "{MKDIR} \"%{cfg.targetdir}/INLretroGUI.app/Contents\"",
-    "{MKDIR} \"%{cfg.targetdir}/INLretroGUI.app/Contents/MacOS\"",
-    "{MKDIR} \"%{cfg.targetdir}/INLretroGUI.app/Contents/Resources\"",
-    "{COPY} \"../macOS/Info.plist\" \"%{cfg.targetdir}/INLretroGUI.app/Contents\"",
-    "{COPY} \"%{cfg.targetdir}/INLretroGUI\" \"%{cfg.targetdir}/INLretroGUI.app/Contents/MacOS\"",
-    "{COPY} \"../macOS/INL.png\" \"%{cfg.targetdir}/INLretroGUI.app/Contents/Resources\"",
-    "{COPYDIR} \"../INLretro-files/\" \"%{cfg.targetdir}/INLretroGUI.app/Contents/Resources\"",
+    "{RMDIR} \"%{cfg.targetdir}/../app/INLretroGUI.app\"",
+    "{MKDIR} \"%{cfg.targetdir}/../app/INLretroGUI.app\"",
+    "{MKDIR} \"%{cfg.targetdir}/../app/INLretroGUI.app/Contents\"",
+    "{MKDIR} \"%{cfg.targetdir}/../app/INLretroGUI.app/Contents/MacOS\"",
+    "{MKDIR} \"%{cfg.targetdir}/../app/INLretroGUI.app/Contents/Resources\"",
+    "{COPY} \"../macOS/Info.plist\" \"%{cfg.targetdir}/../app/INLretroGUI.app/Contents\"",
+    "{COPY} \"%{cfg.targetdir}/INLretroGUI\" \"%{cfg.targetdir}/../app/INLretroGUI.app/Contents/MacOS\"",
+    "{COPY} \"../macOS/INL.png\" \"%{cfg.targetdir}/../app/INLretroGUI.app/Contents/Resources\"",
+    "{COPYDIR} \"../INLretro-files/\" \"%{cfg.targetdir}/../app/INLretroGUI.app/Contents/Resources\"",
   }

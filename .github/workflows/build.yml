@@ -57,7 +57,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: INLretroGUI (Windows - ${{ matrix.platform.arch }})
-          path: Binaries/windows-${{ matrix.platform.binPath }}/Dist
+          path: Binaries/windows-${{ matrix.platform.binPath }}/Dist/INLretro
 
   linux-ubuntu64:
     runs-on: ubuntu-22.04
@@ -82,7 +82,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: INLretroGUI (Linux)
-          path: Binaries/linux-x86_64/Dist
+          path: Binaries/linux-x86_64/Dist/INLretro
 
   macos:
     runs-on: macos-13
@@ -95,7 +95,8 @@ jobs:
           version: "5.0.0-beta2"
 
       - name: Install Dependencies
-        run: brew install sdl2 libusb
+        run: brew install sdl2
+        # libusb
 
       - name: Prepare make file
         run: premake5 --file=Build.lua gmake2
@@ -103,8 +104,19 @@ jobs:
       - name: Build
         run: make config=dist
 
-      - name: Upload INLretroGUI
+      - name: Upload INLretroGUI (app)
         uses: actions/upload-artifact@v4
         with:
           name: INLretroGUI (macOS)
-          path: Binaries/macosx-universal/Dist
+          path: Binaries/macosx-universal/Dist/app
+
+      - name: Delete GUI executable and .ini files
+        run: |
+          rm Binaries/macosx-universal/Dist/INLretro/INLretroGUI
+          rm Binaries/macosx-universal/Dist/INLretro/INLretro.ini
+
+      - name: Upload INLretro CLI
+        uses: actions/upload-artifact@v4
+        with:
+          name: INLretroCLI (macOS)
+          path: Binaries/macosx-universal/Dist/INLretro
