@@ -80,7 +80,7 @@ namespace Settings
     // ImGui::BeginGroup();
     ImGui::SeparatorText("Flasher(s)");
     ImGui::BeginChild("Flasher(s)");
-    ImGui::TextWrapped("Detected flashers are listed above.");
+    ImGui::TextWrapped("Detected flashers are listed below.");
     ImGui::TextWrapped("Use checkbox to enable/disable a flasher.");
     ImGui::TextWrapped("Press refresh to refresh the list.");
     ImGui::Separator();

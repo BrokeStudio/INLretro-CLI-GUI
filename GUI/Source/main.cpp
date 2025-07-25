@@ -449,8 +449,24 @@ int main(int argc, char **argv)
     }
     else
     {
-      ImGui::BeginChild("No Flasher", ImVec2(0, 0), ImGuiChildFlags_Border);
-      ImGui::Text("No flasher active or detected...");
+#define NO_FLASHER_TEXT "No flasher active or detected..."
+      ImGui::BeginChild(NO_FLASHER_TEXT, ImVec2(0, 0), ImGuiChildFlags_Border);
+
+      ImGuiStyle &style = ImGui::GetStyle();
+      ImVec2 text_size = ImGui::CalcTextSize(NO_FLASHER_TEXT);
+      float size_x = text_size.x + style.FramePadding.x * 2.0f;
+      float size_y = text_size.y + style.FramePadding.y * 2.0f;
+      ImVec2 avail = ImGui::GetContentRegionAvail();
+
+      float off_x = (avail.x - size_x) * 0.5f;
+      if (off_x > 0.0f)
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off_x);
+
+      float off_y = (avail.y - size_y) * 0.5f;
+      if (off_y > 0.0f)
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + off_y);
+
+      ImGui::Text(NO_FLASHER_TEXT);
       ImGui::EndChild();
     }
     ImGui::EndChild(); // MIDDLE end
