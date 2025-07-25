@@ -101,6 +101,11 @@ protected:
   int get_mapper_index_by_mapper_id(int mapper_id);
   int get_mapper_index_by_mapper_name(const std::string &mapper_name);
   int get_mapper_index_by_script_name(const std::string &script_name);
+
+private:
+  void Browse(const char *label, std::string &file, std::function<void(const std::string &path, const std::string &filename)> callback);
+  void AdditionalOptions(const char *label, t_INLoptions_std *INLoptions);
+  void render_additional_options_popup(t_INLoptions_std *INLoptions);
 };
 
 #endif

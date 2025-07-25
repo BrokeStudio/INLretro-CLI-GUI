@@ -11,6 +11,8 @@
 #include "Flasher.h"
 #include "trim.h"
 
+#define IM_MAX(A, B) (((A) >= (B)) ? (A) : (B))
+
 using namespace std::placeholders; // for `_1`, `_2`
 
 std::vector<Console *> Console::list;
@@ -72,6 +74,39 @@ Console::Console(const t_Console &console)
 Console::~Console() {}
 
 /**
+ * @brief Render the additional options popup
+ *
+ * @param INLoptions depends on the current view (rom dump, rom write, ram dump, ram write)
+ */
+void Console::render_additional_options_popup(t_INLoptions_std *INLoptions)
+{
+  // Additional options
+  if (ImGui::BeginPopupContextItem("additional_options_popup"))
+  {
+    trim(INLoptions->additional_opts);
+    if (ImGui::Selectable("force_wram_test"))
+      INLoptions->additional_opts += ",force_wram_test";
+
+    if (ImGui::Selectable("force_flash_test"))
+      INLoptions->additional_opts += ",force_flash_test";
+
+    if (ImGui::Selectable("bank_table"))
+      INLoptions->additional_opts += ",bank_table=0x0000";
+
+    trim(INLoptions->additional_opts);
+    if (INLoptions->additional_opts != "" && INLoptions->additional_opts.at(0) == ',')
+      INLoptions->additional_opts.erase(0, 1);
+
+    ImGui::Separator();
+
+    if (ImGui::Selectable("Clear"))
+      INLoptions->additional_opts = "";
+
+    ImGui::EndPopup();
+  }
+}
+
+/**
  * @brief Render the rom dump view
  *
  */
@@ -87,19 +122,18 @@ void Console::render_rom_dump()
 
   if (ImGui::BeginTable("rom_dump_table", 2, ImGuiTableFlags_SizingStretchProp))
   {
+    // Setup table columns sizes
+    ImVec2 text_max_size = ImGui::CalcTextSize("Additional options");
+    ImGui::TableSetupColumn("one", ImGuiTableColumnFlags_WidthFixed, text_max_size.x);
+    ImGui::TableSetupColumn("two", ImGuiTableColumnFlags_WidthStretch);
+
     // Destination file
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
     ImGui::TextUnformatted("Destination file");
     ImGui::TableSetColumnIndex(1);
-    ImGui::InputText("##rom_dump_rom_dump_file", &rom_dump_INLOptions.rom_dump_file);
-    ImGui::SameLine();
-    if (ImGui::Button("Browse..."))
-    {
-      Dialog::fileExt = this->rom_file_ext;
-      Dialog::callback = std::bind(&Console::cb_rom_dump_file_dialog, this, _1, _2);
-      Dialog::showFileSave = true;
-    }
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+    Browse("##rom_dump_rom_write_file", rom_dump_INLOptions.rom_dump_file, std::bind(&Console::cb_rom_dump_file_dialog, this, _1, _2));
 
     // Mapper
     if (mappers.size() != 0)
@@ -115,7 +149,7 @@ void Console::render_rom_dump()
         rom_dump_INLOptions.mapper_name = mappers[mapper_idx].script_name;
       }
       snprintf(this->buf, sizeof(this->buf), "%i - %s\n", mappers[mapper_idx].id, mappers[mapper_idx].name.c_str());
-      ImGui::SetNextItemWidth(-FLT_MIN);
+      ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
       if (ImGui::BeginCombo("##rom_dump_mapper", this->buf, 0))
       {
         for (size_t n = 0; n < mappers.size(); n++)
@@ -140,14 +174,14 @@ void Console::render_rom_dump()
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("PRG-ROM size (KB)");
       ImGui::TableSetColumnIndex(1);
-      ImGui::SetNextItemWidth(-FLT_MIN);
+      ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
       ImGui::InputInt("##rom_dump_prg_rom_size_kb", &rom_dump_INLOptions.prg_rom_size_kb);
 
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("CHR-ROM size (KB)");
       ImGui::TableSetColumnIndex(1);
-      ImGui::SetNextItemWidth(-FLT_MIN);
+      ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
       ImGui::InputInt("##rom_dump_chr_rom_size_kb", &rom_dump_INLOptions.chr_rom_size_kb);
     }
     else
@@ -156,7 +190,7 @@ void Console::render_rom_dump()
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("ROM size (KB)");
       ImGui::TableSetColumnIndex(1);
-      ImGui::SetNextItemWidth(-FLT_MIN);
+      ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
       ImGui::InputInt("##rom_dump_rom_size_kb", &rom_dump_INLOptions.rom_size_kb);
     }
 
@@ -165,8 +199,8 @@ void Console::render_rom_dump()
     ImGui::TableSetColumnIndex(0);
     ImGui::TextUnformatted("Additional Options");
     ImGui::TableSetColumnIndex(1);
-    ImGui::SetNextItemWidth(-FLT_MIN);
-    ImGui::InputText("##rom_dump_additional_opts", &rom_dump_INLOptions.additional_opts);
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+    AdditionalOptions("##rom_dump_additional_opts", &rom_dump_INLOptions);
 
     // Command line
     ImGui::TableNextRow();
@@ -201,7 +235,7 @@ void Console::render_rom_write()
 {
   bool isFlashing = Flasher::is_flashing();
   snprintf(this->buf, sizeof(this->buf), "%s - ROM write", this->full_name.c_str());
-  ImGui::SeparatorText(buf);
+  ImGui::SeparatorText(this->buf);
 
   ImGui::BeginChild("ConsoleContent");
 
@@ -209,19 +243,18 @@ void Console::render_rom_write()
 
   if (ImGui::BeginTable("rom_write_table", 2, ImGuiTableFlags_SizingStretchProp))
   {
+    // Setup table columns sizes
+    ImVec2 text_max_size = ImGui::CalcTextSize("Additional options");
+    ImGui::TableSetupColumn("one", ImGuiTableColumnFlags_WidthFixed, text_max_size.x);
+    ImGui::TableSetupColumn("two", ImGuiTableColumnFlags_WidthStretch);
+
     // Source file
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
     ImGui::TextUnformatted("Source file");
     ImGui::TableSetColumnIndex(1);
-    ImGui::InputText("##rom_write_rom_write_file", &rom_write_INLOptions.rom_write_file);
-    ImGui::SameLine();
-    if (ImGui::Button("Browse..."))
-    {
-      Dialog::fileExt = this->rom_file_ext;
-      Dialog::callback = std::bind(&Console::cb_rom_write_file_dialog, this, _1, _2);
-      Dialog::showFileOpen = true;
-    }
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+    Browse("##rom_write_rom_write_file", rom_write_INLOptions.rom_write_file, std::bind(&Console::cb_rom_write_file_dialog, this, _1, _2));
 
     // Mapper
     if (mappers.size() != 0)
@@ -237,7 +270,7 @@ void Console::render_rom_write()
         rom_write_INLOptions.mapper_name = mappers[mapper_idx].script_name;
       }
       snprintf(this->buf, sizeof(this->buf), "%i - %s\n", mappers[mapper_idx].id, mappers[mapper_idx].name.c_str());
-      ImGui::SetNextItemWidth(-FLT_MIN);
+      ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
       if (ImGui::BeginCombo("##rom_write_mapper", buf, 0))
       {
         for (size_t n = 0; n < mappers.size(); n++)
@@ -262,14 +295,14 @@ void Console::render_rom_write()
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("PRG-ROM size (KB)");
       ImGui::TableSetColumnIndex(1);
-      ImGui::SetNextItemWidth(-FLT_MIN);
+      ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
       ImGui::InputInt("##rom_write_prg_rom_size_kb", &rom_write_INLOptions.prg_rom_size_kb);
 
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("CHR-ROM size (KB)");
       ImGui::TableSetColumnIndex(1);
-      ImGui::SetNextItemWidth(-FLT_MIN);
+      ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
       ImGui::InputInt("##rom_write_chr_rom_size_kb", &rom_write_INLOptions.chr_rom_size_kb);
     }
     else
@@ -278,43 +311,17 @@ void Console::render_rom_write()
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("ROM size (KB)");
       ImGui::TableSetColumnIndex(1);
-      ImGui::SetNextItemWidth(-FLT_MIN);
+      ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
       ImGui::InputInt("##rom_write_rom_size_kb", &rom_write_INLOptions.rom_size_kb);
     }
 
     // Additional options
-    float w = ImGui::GetContentRegionAvail().x - 40.0f;
-    if (ImGui::BeginPopupContextItem("rom_write_options_popup"))
-    {
-      trim(rom_write_INLOptions.additional_opts);
-      if (ImGui::Selectable("force_wram_test"))
-        rom_write_INLOptions.additional_opts += ",force_wram_test";
-      if (ImGui::Selectable("force_flash_test"))
-        rom_write_INLOptions.additional_opts += ",force_flash_test";
-      if (ImGui::Selectable("bank_table"))
-        rom_write_INLOptions.additional_opts += ",bank_table=0x0000";
-      trim(rom_write_INLOptions.additional_opts);
-      if (rom_write_INLOptions.additional_opts != "" && rom_write_INLOptions.additional_opts.at(0) == ',')
-        rom_write_INLOptions.additional_opts.erase(0, 1);
-      ImGui::Separator();
-      if (ImGui::Selectable("Clear"))
-        rom_write_INLOptions.additional_opts = "";
-      ImGui::EndPopup();
-    }
-
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
     ImGui::TextUnformatted("Additional Options");
     ImGui::TableSetColumnIndex(1);
-    // ImGui::SetNextItemWidth(-FLT_MIN);
-    ImGui::SetNextItemWidth(w);
-    ImGui::InputText("##rom_write_additional_opts", &rom_write_INLOptions.additional_opts);
-    ImGui::SameLine();
-    // Back to square one: manually open the same popup.
-    if (ImGui::Button(" + "))
-    {
-      ImGui::OpenPopup("rom_write_options_popup");
-    }
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+    AdditionalOptions("##rom_write_additional_opts", &rom_write_INLOptions);
 
     // Verify
     ImGui::TableNextRow();
@@ -329,7 +336,7 @@ void Console::render_rom_write()
     ImGui::TextUnformatted("Command line");
     ImGui::TableSetColumnIndex(1);
     std::string cli = get_cli(rom_write_INLOptions);
-    ImGui::SetNextItemWidth(-FLT_MIN);
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     ImGui::InputText("##rom_write_command_line", &cli, ImGuiInputTextFlags_ReadOnly);
 
     ImGui::EndTable();
@@ -381,7 +388,7 @@ void Console::render_ram_dump()
 {
   bool isFlashing = Flasher::is_flashing();
   snprintf(this->buf, sizeof(this->buf), "%s - RAM dump", this->full_name.c_str());
-  ImGui::SeparatorText(buf);
+  ImGui::SeparatorText(this->buf);
 
   ImGui::BeginChild("ConsoleContent");
 
@@ -389,19 +396,18 @@ void Console::render_ram_dump()
 
   if (ImGui::BeginTable("ram_dump_table", 2, ImGuiTableFlags_SizingStretchProp))
   {
+    // Setup table columns sizes
+    ImVec2 text_max_size = ImGui::CalcTextSize("Additional options");
+    ImGui::TableSetupColumn("one", ImGuiTableColumnFlags_WidthFixed, text_max_size.x);
+    ImGui::TableSetupColumn("two", ImGuiTableColumnFlags_WidthStretch);
+
     // Destination file
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
     ImGui::TextUnformatted("Destination file");
     ImGui::TableSetColumnIndex(1);
-    ImGui::InputText("##ram_dump_ram_dump_file", &ram_dump_INLOptions.ram_dump_file);
-    ImGui::SameLine();
-    if (ImGui::Button("Browse..."))
-    {
-      Dialog::fileExt = this->ram_file_ext;
-      Dialog::callback = std::bind(&Console::cb_ram_dump_file_dialog, this, _1, _2);
-      Dialog::showFileSave = true;
-    }
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+    Browse("##ram_dump_ram_dump_file", ram_dump_INLOptions.ram_dump_file, std::bind(&Console::cb_ram_dump_file_dialog, this, _1, _2));
 
     // Mapper
     if (mappers.size() != 0)
@@ -417,7 +423,7 @@ void Console::render_ram_dump()
         ram_dump_INLOptions.mapper_name = mappers[mapper_idx].script_name;
       }
       snprintf(this->buf, sizeof(this->buf), "%i - %s\n", mappers[mapper_idx].id, mappers[mapper_idx].name.c_str());
-      ImGui::SetNextItemWidth(-FLT_MIN);
+      ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
       if (ImGui::BeginCombo("##ram_dump_mapper", buf, 0))
       {
         for (size_t n = 0; n < mappers.size(); n++)
@@ -448,8 +454,8 @@ void Console::render_ram_dump()
     ImGui::TableSetColumnIndex(0);
     ImGui::TextUnformatted("Additional Options");
     ImGui::TableSetColumnIndex(1);
-    ImGui::SetNextItemWidth(-FLT_MIN);
-    ImGui::InputText("##ram_dump_additional_opts", &ram_dump_INLOptions.additional_opts);
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+    AdditionalOptions("##ram_dump_additional_opts", &ram_dump_INLOptions);
 
     // Command line
     ImGui::TableNextRow();
@@ -485,7 +491,7 @@ void Console::render_ram_write()
 {
   bool isFlashing = Flasher::is_flashing();
   snprintf(this->buf, sizeof(this->buf), "%s - RAM write", this->full_name.c_str());
-  ImGui::SeparatorText(buf);
+  ImGui::SeparatorText(this->buf);
 
   ImGui::BeginChild("ConsoleContent");
 
@@ -493,19 +499,18 @@ void Console::render_ram_write()
 
   if (ImGui::BeginTable("ram_write_table", 2, ImGuiTableFlags_SizingStretchProp))
   {
+    // Setup table columns sizes
+    ImVec2 text_max_size = ImGui::CalcTextSize("Additional options");
+    ImGui::TableSetupColumn("one", ImGuiTableColumnFlags_WidthFixed, text_max_size.x);
+    ImGui::TableSetupColumn("two", ImGuiTableColumnFlags_WidthStretch);
+
     // Source file
     ImGui::TableNextRow();
     ImGui::TableSetColumnIndex(0);
     ImGui::TextUnformatted("Source file");
     ImGui::TableSetColumnIndex(1);
-    ImGui::InputText("##ram_write_ram_write_file", &ram_write_INLOptions.ram_write_file);
-    ImGui::SameLine();
-    if (ImGui::Button("Browse..."))
-    {
-      Dialog::fileExt = this->ram_file_ext;
-      Dialog::callback = std::bind(&Console::cb_ram_write_file_dialog, this, _1, _2);
-      Dialog::showFileOpen = true;
-    }
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+    Browse("##ram_write_ram_write_file", ram_write_INLOptions.ram_write_file, std::bind(&Console::cb_ram_write_file_dialog, this, _1, _2));
 
     // Mapper
     if (mappers.size() != 0)
@@ -521,7 +526,7 @@ void Console::render_ram_write()
         ram_write_INLOptions.mapper_name = mappers[mapper_idx].script_name;
       }
       snprintf(this->buf, sizeof(this->buf), "%i - %s\n", mappers[mapper_idx].id, mappers[mapper_idx].name.c_str());
-      ImGui::SetNextItemWidth(-FLT_MIN);
+      ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
       if (ImGui::BeginCombo("##ram_write_mapper", buf, 0))
       {
         for (size_t n = 0; n < mappers.size(); n++)
@@ -552,8 +557,8 @@ void Console::render_ram_write()
     ImGui::TableSetColumnIndex(0);
     ImGui::TextUnformatted("Additional Options");
     ImGui::TableSetColumnIndex(1);
-    ImGui::SetNextItemWidth(-FLT_MIN);
-    ImGui::InputText("##ram_write_additional_opts", &ram_write_INLOptions.additional_opts);
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+    AdditionalOptions("##ram_write_additional_opts", &ram_write_INLOptions);
 
     // Command line
     ImGui::TableNextRow();
@@ -633,4 +638,54 @@ int Console::get_mapper_index_by_script_name(const std::string &script_name)
     }
   }
   return -1;
+}
+
+void Console::Browse(const char *label, std::string &file, std::function<void(const std::string &path, const std::string &filename)> callback)
+{
+#define BROWSE_TEXT "Browse..."
+
+  ImGuiStyle &style = ImGui::GetStyle();
+
+  const float browse_text_size = ImGui::CalcTextSize(BROWSE_TEXT).x;
+
+  ImGui::PushID(label);
+  ImGui::SetNextItemWidth(IM_MAX(1.0f, ImGui::CalcItemWidth() - browse_text_size - style.FramePadding.x * 2.0f)); // -style.ItemInnerSpacing.x));
+
+  ImGui::InputText(label, &file);
+  const ImVec2 backup_frame_padding = style.FramePadding;
+  style.FramePadding.x = style.FramePadding.y;
+  ImGui::SameLine(0, style.ItemInnerSpacing.x);
+  if (ImGui::Button(BROWSE_TEXT))
+  {
+    Dialog::fileExt = this->rom_file_ext;
+    Dialog::callback = callback;
+    Dialog::showFileOpen = true;
+  }
+  style.FramePadding = backup_frame_padding;
+
+  ImGui::PopID();
+}
+
+void Console::AdditionalOptions(const char *label, t_INLoptions_std *INLoptions)
+{
+  ImGuiStyle &style = ImGui::GetStyle();
+
+  const float button_size = ImGui::GetFrameHeight();
+
+  ImGui::PushID(label);
+  ImGui::SetNextItemWidth(IM_MAX(1.0f, ImGui::CalcItemWidth() - button_size - style.ItemInnerSpacing.x));
+
+  ImGui::InputText(label, &INLoptions->additional_opts);
+
+  const ImVec2 backup_frame_padding = style.FramePadding;
+  style.FramePadding.x = style.FramePadding.y;
+  ImGui::SameLine(0, style.ItemInnerSpacing.x);
+  if (ImGui::Button("+", ImVec2(button_size, button_size)))
+    ImGui::OpenPopup("additional_options_popup");
+
+  style.FramePadding = backup_frame_padding;
+
+  render_additional_options_popup(INLoptions);
+
+  ImGui::PopID();
 }
