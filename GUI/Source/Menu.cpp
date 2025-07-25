@@ -51,8 +51,6 @@ namespace Menu
    */
   void render_tree(bool disabled)
   {
-    ImGui::BeginChild("MenuPanel", ImVec2(220, 0), ImGuiChildFlags_Border);
-
     char label[32];
     ImVec2 size = ImVec2(0, 35.0f);
     ImVec2 alignment = ImVec2(0, 0.5f);
@@ -84,7 +82,6 @@ namespace Menu
 
     ImGui::PopStyleVar();
     ImGui::EndChild(); // MenuItems
-    ImGui::EndChild(); // MenuPanel
   }
 
   /**
@@ -132,7 +129,6 @@ namespace Menu
   void render_content()
   {
     ImVec2 button_sz(50, 50);
-    ImGui::BeginChild("Content", ImVec2(0, 0), ImGuiChildFlags_Border);
 
     for (auto &item : Menu::menu)
     {
@@ -168,7 +164,5 @@ namespace Menu
       }
       break;
     }
-
-    ImGui::EndChild(); // Content
   }
 }

@@ -147,7 +147,7 @@ int main(int argc, char **argv)
   SDL_GLContext gl_context = SDL_GL_CreateContext(window);
   SDL_GL_MakeCurrent(window, gl_context);
   SDL_GL_SetSwapInterval(1); // Enable vsync
-  SDL_SetWindowMinimumSize(window, min_width, min_height);
+  SDL_SetWindowMinimumSize(window, (int)(min_width * main_scale), (int)(min_height * main_scale));
   // SDL_GetWindowSizeInPixels(window, &window_width, &window_height);
 
   // Setup Dear ImGui context
@@ -265,9 +265,21 @@ int main(int argc, char **argv)
 #define BOTTOM_MIN_Y 150
 #define BOTTOM_MAX_Y 300
 
-    static ImVec2 top_size(FLT_MAX, TOP_MAX_Y);
-    static ImVec2 middle_size(FLT_MAX, MIDDLE_MIN_Y);
-    static ImVec2 bottom_size(FLT_MAX, BOTTOM_MIN_Y);
+    // static ImVec2 top_size(FLT_MAX, TOP_MAX_Y);
+    // static ImVec2 middle_size(FLT_MAX, MIDDLE_MIN_Y);
+    // static ImVec2 bottom_size(FLT_MAX, BOTTOM_MIN_Y);
+
+    static ImVec2 top_size_min(FLT_MAX, (int)(TOP_MIN_Y * main_scale));
+    static ImVec2 middle_size_min(FLT_MAX, (int)(MIDDLE_MIN_Y * main_scale));
+    static ImVec2 bottom_size_min((int)(TOP_MAX_Y * main_scale), (int)(BOTTOM_MIN_Y * main_scale));
+
+    static ImVec2 top_size(FLT_MAX, (int)(TOP_MAX_Y * main_scale));
+    static ImVec2 middle_size(FLT_MAX, (int)(MIDDLE_MIN_Y * main_scale));
+    static ImVec2 bottom_size((int)(TOP_MAX_Y * main_scale), (int)(BOTTOM_MIN_Y * main_scale));
+
+    static ImVec2 top_size_max(FLT_MAX, (int)(TOP_MAX_Y * main_scale));
+    // static ImVec2 middle_size_max(FLT_MAX, (int)(MIDDLE_MIN_Y * main_scale));
+    static ImVec2 bottom_size_max((int)(TOP_MAX_Y * main_scale), (int)(BOTTOM_MAX_Y * main_scale));
 
     // check if flashing
     static bool isFlashing;
@@ -381,16 +393,20 @@ int main(int argc, char **argv)
     Dialog::render();
 
     // TOP
-    ImGui::SetNextWindowSizeConstraints(ImVec2(0, TOP_MIN_Y), ImVec2(FLT_MAX, TOP_MAX_Y));
-    ImGui::BeginChild("Top", ImVec2(0, TOP_MAX_Y), ImGuiChildFlags_ResizeY); // TOP start
+    ImGui::SetNextWindowSizeConstraints(ImVec2(0, top_size_min.y), ImVec2(FLT_MAX, top_size_max.y));
+    ImGui::BeginChild("Top", ImVec2(0, top_size_max.y), ImGuiChildFlags_ResizeY); // TOP start
+    ImGui::BeginChild("MenuPanel", ImVec2((int)(220 * main_scale), 0), ImGuiChildFlags_Border);
     Menu::render_tree(isFlashing);
+    ImGui::EndChild(); // MenuPanel end
     ImGui::SameLine();
+    ImGui::BeginChild("Content", ImVec2(0, 0), ImGuiChildFlags_Border);
     Menu::render_content();
+    ImGui::EndChild(); // Content end
     ImGui::EndChild(); // TOP end
     top_size = ImGui::GetItemRectSize();
 
     // MIDDLE
-    float middle_max_y = IM_MAX(MIDDLE_MIN_Y, viewport->Size.y - style.ItemSpacing.y * 6 - top_size.y - bottom_size.y);
+    float middle_max_y = IM_MAX(middle_size_min.y, viewport->Size.y - style.ItemSpacing.y * 6 - top_size.y - bottom_size.y);
     if (middle_size.y != middle_max_y)
     {
       ImGui::SetNextWindowSize(ImVec2(0, middle_max_y));
@@ -441,7 +457,7 @@ int main(int argc, char **argv)
     middle_size = ImGui::GetItemRectSize();
 
     // BOTTOM
-    ImGui::SetNextWindowSizeConstraints(ImVec2(0, BOTTOM_MIN_Y), ImVec2(FLT_MAX, BOTTOM_MAX_Y));
+    ImGui::SetNextWindowSizeConstraints(ImVec2(0, bottom_size_min.y), ImVec2(FLT_MAX, bottom_size_max.y));
     ImGui::BeginChild("Bottom", ImVec2(0, ImGui::GetContentRegionAvail().y)); // BOTTOM start
     AppLog::render();
     ImGui::EndChild(); // BOTTOM end
