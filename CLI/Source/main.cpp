@@ -3,6 +3,8 @@
 // On Windows, due to internal usage of <windows.h>, global namespace could be polluted with min/max macros.
 // If such effect is desireable, please consider using #define NOMINMAX before #include <termcolor.hpp>
 #include "termcolor.hpp"
+#include "version.h"
+#include "build.h"
 
 // Core files
 #include "cli.h"
@@ -23,12 +25,16 @@ int main(int argc, char **argv)
 #endif
 
   std::cout << termcolor::bright_yellow
-            << "  ___ _  _ _            _           \n"
-            << " |_ _| \\| | |   _ _ ___| |_ _ _ ___ \n"
-            << "  | || .` | |__| '_/ -_)  _| '_/ _ \\\n"
-            << " |___|_|\\_|____|_| \\___|\\__|_| \\___/\n"
-            // << "                                    \n"
+            << " ___ _  _ _            _           " << std::endl
+            << "|_ _| \\| | |   _ _ ___| |_ _ _ ___ " << std::endl
+            << " | || .` | |__| '_/ -_)  _| '_/ _ \\" << std::endl
+            << "|___|_|\\_|____|_| \\___|\\__|_| \\___/" << std::endl
             << termcolor::reset
+#if defined(_DEBUG) || defined(_RELEASE)
+            << "v" << INLRETRO_CLI_VERSION << "-dev+build." << INLRETRO_CLI_BUILD << std::endl
+#else
+            << "v" << INLRETRO_CLI_VERSION << std::endl
+#endif
             << std::endl;
 
   t_INLoptions_std *opts = new t_INLoptions_std();
@@ -71,7 +77,7 @@ int main(int argc, char **argv)
     libusb_exit(NULL);
   }
 
-#if defined _DEBUG || defined _RELEASE
+#if defined(_DEBUG) || defined(_RELEASE)
   APP_LOG_SYS(LogTypes_None, "");
   APP_LOG_SYS(LogTypes_Info, "Press any key...");
   std::cin.get();
@@ -86,7 +92,7 @@ error:
     libusb_exit(NULL);
   }
 
-#if defined _DEBUG || defined _RELEASE
+#if defined(_DEBUG) || defined(_RELEASE)
   APP_LOG_SYS(LogTypes_None, "");
   APP_LOG_SYS(LogTypes_Info, "Press any key...");
   std::cin.get();
@@ -449,7 +455,7 @@ error:
 
 //   libusb_exit(NULL);
 
-// #if defined _DEBUG || defined _RELEASE
+// #if defined(_DEBUG) || defined(_RELEASE)
 //   std::cin.get();
 // #endif
 

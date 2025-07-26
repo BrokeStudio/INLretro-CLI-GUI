@@ -178,7 +178,7 @@ namespace Ini
             property.second = Settings::settings.save_on_exit ? "true" : "false";
           else if (property.first == "firmware_update_script")
             property.second = Settings::settings.firmware_update_script;
-#if defined _DEBUG
+#if defined(_DEBUG)
           else if (property.first == "imgui_demo")
             property.second = Settings::settings.imgui_demo ? "true" : "false";
 #endif

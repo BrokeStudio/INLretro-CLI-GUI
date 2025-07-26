@@ -87,6 +87,9 @@ filter "configurations:Debug or Release"
 
 filter { "system:windows" }
   staticruntime "on"
+  prebuildcommands {
+    "powershell -ExecutionPolicy Bypass -File increment-build.ps1"
+  }
 
 filter "platforms:x86"
     system "Windows"
@@ -103,7 +106,7 @@ filter "system:windows"
   defines { "_CRT_SECURE_NO_WARNINGS" }
   includedirs
   {
-    "../External/libusb/INL/include",
+    "../External/libusb/INL/include"
   }
   linkoptions { "libusb-1.0.dll.a" }
   links {
@@ -123,6 +126,9 @@ filter "system:linux"
     "usb-1.0",
     "pthread"
   }
+  prebuildcommands {
+    "./increment-build.sh"
+  }
 
 -- macOS
 
@@ -130,4 +136,7 @@ filter "system:macosx"
   links {
     "usb-1.0",
     "pthread"
+  }
+  prebuildcommands {
+    "sh ./increment-build.sh"
   }

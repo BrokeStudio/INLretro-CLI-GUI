@@ -134,6 +134,9 @@ filter "system:windows"
   libdirs {
     "../External/libusb/INL/static",
   }
+  prebuildcommands {
+    "powershell -ExecutionPolicy Bypass -File increment-build.ps1"
+  }
   postbuildcommands {
     -- "{COPYFILE} \"../External/libusb/MinGW32/dll/libusb-1.0.dll\" \"%{cfg.targetdir}\"",
     "{COPYFILE} \"../External/libusb/INL/dll/libusb-1.0.dll\" \"%{cfg.targetdir}\""
@@ -167,6 +170,9 @@ filter "system:linux"
     "pthread",
     "SDL2"
   }
+  prebuildcommands {
+    "./increment-build.sh"
+  }
 
 filter { "system:linux", "configurations:Dist" }
   kind "WindowedApp"
@@ -191,6 +197,9 @@ filter "system:macosx"
   includedirs
   {
     "../macOS"
+  }
+  prebuildcommands {
+    "sh ./increment-build.sh"
   }
 
 filter { "system:macosx", "configurations:Dist" }

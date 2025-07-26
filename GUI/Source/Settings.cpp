@@ -5,6 +5,7 @@
 #include "Ini.h"
 #include "Settings.h"
 #include "version.h"
+#include "build.h"
 
 namespace Settings
 {
@@ -61,7 +62,7 @@ namespace Settings
       settings.save_on_exit = value == "true" ? true : false;
     else if (key == "firmware_update_script")
       settings.firmware_update_script = value;
-#if defined _DEBUG
+#if defined(_DEBUG)
     else if (key == "imgui_demo")
       settings.imgui_demo = value == "true" ? true : false;
 #endif
@@ -185,7 +186,7 @@ namespace Settings
       ImGui::TableSetColumnIndex(1);
       ImGui::Checkbox("##seting_save_on_exit", &settings.save_on_exit);
 
-#if defined _DEBUG
+#if defined(_DEBUG)
       // ImGui demo window
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
@@ -214,7 +215,11 @@ namespace Settings
   {
     ImGui::SeparatorText("About");
     ImGui::BeginChild("About");
-    ImGui::Text(ICON_FA_MICROCHIP " INLretro GUI v%s", INLRETRO_GUI_VERSION);
+#if defined(_DEBUG) || defined(_RELEASE)
+    ImGui::Text(ICON_FA_MICROCHIP " INLretro GUI v%s-dev+build.%d", INLRETRO_GUI_VERSION, INLRETRO_GUI_BUILD);
+#else
+    ImGui::Text(ICON_FA_MICROCHIP " INLretro GUI v%s", INLRETRO_GUI_VERSION, INLRETRO_GUI_BUILD);
+#endif
     ImGui::Separator();
     ImGui::Text("2024-2025, Broke Studio");
     ImGui::Text("Developed by Antoine Gohin");
