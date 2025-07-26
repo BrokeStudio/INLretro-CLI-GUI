@@ -5,7 +5,7 @@ workspace "INLretro"
 
   -- Workspace-wide build options for MSVC
   filter "system:windows"
-    platforms { "x86" } --, "x86_64" }
+    platforms { "x86", "x86_64" }
     buildoptions { "/EHsc", "/Zc:preprocessor", "/Zc:__cplusplus" }
     linkoptions { "/SAFESEH:NO" } -- Image Has Safe Exception Handers: No
 

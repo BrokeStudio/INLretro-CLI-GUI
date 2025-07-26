@@ -66,18 +66,16 @@ filter "platforms:x86"
   system "Windows"
   architecture "x86"
 
+filter "platforms:x86_64"
+  system "Windows"
+  architecture "x86_64"
+
 filter "system:windows"
   systemversion "latest"
   defines { "_CRT_SECURE_NO_WARNINGS" }
-  linkoptions { "libusb-1.0.dll.a" }
   includedirs
   {
     "include",
-    "../External/libusb/INL/include"
-  }
-  libdirs
-  {
-    "../External/libusb/INL/static",
     "../External/libusb/include"
   }
 
@@ -85,9 +83,17 @@ filter { "system:windows", "configurations:Debug", "platforms:x86" }
   links { "libusb-1.0" }
   libdirs { "../External/libusb/VS2022/MS32/static" }
 
+filter { "system:windows", "configurations:Debug", "platforms:x86_64" }
+  links { "libusb-1.0" }
+  libdirs { "../External/libusb/VS2022/MS64/static" }
+
 filter { "system:windows", "configurations:Release or Dist", "platforms:x86" }
   links { "libusb-1.0" }
   libdirs { "../External/libusb/VS2022/MS32/static" }
+
+filter { "system:windows", "configurations:Release or Dist", "platforms:x86_64" }
+  links { "libusb-1.0" }
+  libdirs { "../External/libusb/VS2022/MS64/static" }
 
 -- Linux or macOS
 

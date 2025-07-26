@@ -107,9 +107,9 @@ filter "platforms:x86"
   system "Windows"
   architecture "x86"
 
--- filter "platforms:x86_64"
---     system "Windows"
---     architecture "x86_64"
+filter "platforms:x86_64"
+  system "Windows"
+  architecture "x86_64"
 
 filter "system:windows"
   files { '../Windows/Resources/resources.rc', '**.ico' }
@@ -123,7 +123,6 @@ filter "system:windows"
     "../External/SDL2/include",
     "../External/libusb/include"
   }
-  linkoptions { "libusb-1.0.dll.a" }
   links {
     "winmm.lib",
     "setupapi.lib",
@@ -137,10 +136,6 @@ filter "system:windows"
   prebuildcommands {
     "powershell -ExecutionPolicy Bypass -File increment-build.ps1"
   }
-  postbuildcommands {
-    -- "{COPYFILE} \"../External/libusb/MinGW32/dll/libusb-1.0.dll\" \"%{cfg.targetdir}\"",
-    "{COPYFILE} \"../External/libusb/INL/dll/libusb-1.0.dll\" \"%{cfg.targetdir}\""
-  }
 
 filter { "system:windows", "configurations:Debug", "platforms:x86" }
   links {
@@ -152,9 +147,15 @@ filter { "system:windows", "configurations:Debug", "platforms:x86" }
     "../External/libusb/VS2022/MS32/static",
   }
 
--- filter { "system:windows", "configurations:Debug", "platforms:x86_64" }
---   links { "SDL2-staticd" }
---   libdirs { "../External/SDL2/lib/x64-static-debug" }
+filter { "system:windows", "configurations:Debug", "platforms:x86_64" }
+  links {
+    "SDL2-staticd",
+    "libusb-1.0"
+  }
+  libdirs {
+    "../External/SDL2/lib/x64-static-debug",
+    "../External/libusb/VS2022/MS64/static",
+  }
 
 filter { "system:windows", "configurations:Release or Dist", "platforms:x86" }
   links {
@@ -166,9 +167,15 @@ filter { "system:windows", "configurations:Release or Dist", "platforms:x86" }
     "../External/libusb/VS2022/MS32/static",
   }
 
--- filter { "system:windows", "configurations:Release or Dist", "platforms:x86_64" }
---   links { "SDL2-static" }
---   libdirs { "../External/SDL2/lib/x64-static-release" }
+filter { "system:windows", "configurations:Release or Dist", "platforms:x86_64" }
+  links {
+    "SDL2-static",
+    "libusb-1.0"
+  }
+  libdirs {
+    "../External/SDL2/lib/x64-static-release",
+    "../External/libusb/VS2022/MS64/static",
+  }
 
 -- Linux
 
