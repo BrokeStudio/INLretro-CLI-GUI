@@ -12,6 +12,8 @@
 
 #define clean_errno() (errno == 0 ? "None" : strerror(errno))
 
+// not using _DEBUG here to avoid flood
+// #define DEBUG 1
 #ifdef DEBUG
 
 #define debug(L, M, ...) (L)->add(LogTypes_Info, "DEBUG %s:%d: " M, \

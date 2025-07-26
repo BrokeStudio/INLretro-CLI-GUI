@@ -22,9 +22,10 @@ jobs:
   windows:
     strategy:
       matrix:
-        platform: [
+        platform:
+          [
             { arch: "Win32", SDL2libPath: "x86", binPath: "x86" },
-            # { arch: "x64", SDL2libPath: "x64", binPath: "x86_64" },
+            { arch: "x64", SDL2libPath: "x64", binPath: "x86_64" },
           ]
       fail-fast: false
     runs-on: windows-2025

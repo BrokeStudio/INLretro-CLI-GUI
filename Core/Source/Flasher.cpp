@@ -510,7 +510,7 @@ int Flasher::inlprog_opt(const t_INLoptions_std &opts)
         "Cannot run config. file: %s", lua_tostring(L, -1));
 
   // Any value > 0 for libusb_log also prints debug statements in open_usb_device function.
-  libusb_log = 0; // getglobint(L, "libusb_log");
+  // libusb_log = 0; // getglobint(L, "libusb_log");
   check(&log, ((libusb_log >= LIBUSB_LOG_LEVEL_NONE) && (libusb_log <= LIBUSB_LOG_LEVEL_DEBUG)),
         "Invalid LIBUSB_LOG_LEVEL: %d, must be from 0 to 4", libusb_log);
 
