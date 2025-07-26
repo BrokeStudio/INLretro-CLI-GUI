@@ -160,6 +160,11 @@ namespace Settings
 
     if (ImGui::BeginTable("rom_dump_table", 2, ImGuiTableFlags_SizingStretchProp))
     {
+      // Setup table columns sizes
+      ImVec2 text_max_size = ImGui::CalcTextSize("Firmware update script");
+      ImGui::TableSetupColumn("one", ImGuiTableColumnFlags_WidthFixed, text_max_size.x);
+      ImGui::TableSetupColumn("two", ImGuiTableColumnFlags_WidthStretch);
+
       // theme
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
