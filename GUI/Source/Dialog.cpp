@@ -11,7 +11,7 @@ namespace Dialog
 
   void render()
   {
-    // open ROM file dialog
+    // open file dialog
     if (showFileOpen)
       ImGui::OpenPopup("Open File");
 
@@ -28,7 +28,7 @@ namespace Dialog
 
     showFileOpen = false;
 
-    // save ROM file dialog
+    // save file dialog
     if (showFileSave)
       ImGui::OpenPopup("Save File");
 

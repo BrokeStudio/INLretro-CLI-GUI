@@ -133,7 +133,7 @@ void Console::render_rom_dump()
     ImGui::TextUnformatted("Destination file");
     ImGui::TableSetColumnIndex(1);
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    Browse("##rom_dump_rom_write_file", rom_dump_INLOptions.rom_dump_file, std::bind(&Console::cb_rom_dump_file_dialog, this, _1, _2));
+    Browse("##rom_dump_rom_write_file", rom_dump_INLOptions.rom_dump_file, false, std::bind(&Console::cb_rom_dump_file_dialog, this, _1, _2));
 
     // Mapper
     if (mappers.size() != 0)
@@ -254,7 +254,7 @@ void Console::render_rom_write()
     ImGui::TextUnformatted("Source file");
     ImGui::TableSetColumnIndex(1);
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    Browse("##rom_write_rom_write_file", rom_write_INLOptions.rom_write_file, std::bind(&Console::cb_rom_write_file_dialog, this, _1, _2));
+    Browse("##rom_write_rom_write_file", rom_write_INLOptions.rom_write_file, true, std::bind(&Console::cb_rom_write_file_dialog, this, _1, _2));
 
     // Mapper
     if (mappers.size() != 0)
@@ -407,7 +407,7 @@ void Console::render_ram_dump()
     ImGui::TextUnformatted("Destination file");
     ImGui::TableSetColumnIndex(1);
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    Browse("##ram_dump_ram_dump_file", ram_dump_INLOptions.ram_dump_file, std::bind(&Console::cb_ram_dump_file_dialog, this, _1, _2));
+    Browse("##ram_dump_ram_dump_file", ram_dump_INLOptions.ram_dump_file, false, std::bind(&Console::cb_ram_dump_file_dialog, this, _1, _2));
 
     // Mapper
     if (mappers.size() != 0)
@@ -510,7 +510,7 @@ void Console::render_ram_write()
     ImGui::TextUnformatted("Source file");
     ImGui::TableSetColumnIndex(1);
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    Browse("##ram_write_ram_write_file", ram_write_INLOptions.ram_write_file, std::bind(&Console::cb_ram_write_file_dialog, this, _1, _2));
+    Browse("##ram_write_ram_write_file", ram_write_INLOptions.ram_write_file, true, std::bind(&Console::cb_ram_write_file_dialog, this, _1, _2));
 
     // Mapper
     if (mappers.size() != 0)
@@ -640,7 +640,7 @@ int Console::get_mapper_index_by_script_name(const std::string &script_name)
   return -1;
 }
 
-void Console::Browse(const char *label, std::string &file, std::function<void(const std::string &path, const std::string &filename)> callback)
+void Console::Browse(const char *label, std::string &file, bool openFile, std::function<void(const std::string &path, const std::string &filename)> callback)
 {
 #define BROWSE_TEXT "Browse..."
 
@@ -659,7 +659,8 @@ void Console::Browse(const char *label, std::string &file, std::function<void(co
   {
     Dialog::fileExt = this->rom_file_ext;
     Dialog::callback = callback;
-    Dialog::showFileOpen = true;
+    Dialog::showFileOpen = openFile;
+    Dialog::showFileSave = !openFile;
   }
   style.FramePadding = backup_frame_padding;
 
