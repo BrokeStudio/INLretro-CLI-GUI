@@ -7,6 +7,9 @@
 #include "version.h"
 #include "build.h"
 
+#include "SDL_version.h"
+#include "libusb.h"
+
 namespace Settings
 {
 
@@ -173,7 +176,7 @@ namespace Settings
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("Theme");
       ImGui::TableSetColumnIndex(1);
-      // ImGuiStyle &style = ImGui::GetStyle();
+      ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
       static int style_idx = 0;
       if (ImGui::Combo("##settings_theme", &style_idx, "Dark\0Light\0Classic\0"))
       {
@@ -193,6 +196,7 @@ namespace Settings
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("Firmware update script");
       ImGui::TableSetColumnIndex(1);
+      ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
       ImGui::InputText("##settings_firmware_update_script", &settings.firmware_update_script);
 
       // save settings on exit
@@ -251,6 +255,11 @@ namespace Settings
     ImGui::SameLine();
     ImGui::Text("v" IMGUI_VERSION);
     ImGui::Text("by Omar Cornut");
+    ImGui::Separator();
+    ImGui::Text("SDL2 v%d.%d.%d", SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL);
+    const libusb_version *libusbVersion = libusb_get_version();
+    ImGui::Text("libusb v%d.%d.%d", libusbVersion->major, libusbVersion->minor, libusbVersion->micro);
+
     ImGui::EndChild();
   }
 
