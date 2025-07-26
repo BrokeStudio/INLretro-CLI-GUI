@@ -9,3 +9,7 @@ binary_to_compressed_c.exe -base85 fa-solid-900.ttf fa_solid_900 > fa_solid_900.
 
 :: RobotoMono-Regular.ttf
 binary_to_compressed_c.exe -base85 RobotoMono-Regular.ttf RobotoMonoRegular > RobotoMonoRegular.h
+
+:: Rubik-Regular.ttf
+binary_to_compressed_c.exe -base85 Rubik-Regular.ttf RubikRegular > RubikRegular.h
+

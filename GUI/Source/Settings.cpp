@@ -13,6 +13,7 @@ namespace Settings
   t_Settings settings = {
       "dark", // theme
       "",     // firmware_update_script
+      0,      // Roboto Mono Regular as default font
       true,   // save_on_exit
       false   // imgui_demo
   };
@@ -58,6 +59,8 @@ namespace Settings
       else if (value == "classic")
         set_theme(2);
     }
+    else if (key == "font")
+      settings.font = std::stoi(value) < 2 ? std::stoi(value) : 0;
     else if (key == "save_on_exit")
       settings.save_on_exit = value == "true" ? true : false;
     else if (key == "firmware_update_script")
@@ -176,6 +179,14 @@ namespace Settings
       {
         set_theme(style_idx);
       }
+
+      // font
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      ImGui::TextUnformatted("Font");
+      ImGui::TableSetColumnIndex(1);
+      ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+      ImGui::Combo("##settings_font", &settings.font, "Roboto Mono Regular\0Rubik Regular\0");
 
       // firmware update script
       ImGui::TableNextRow();

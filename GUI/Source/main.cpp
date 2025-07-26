@@ -24,6 +24,7 @@
 #include "fa_regular_400.h"
 #include "fa_solid_900.h"
 #include "RobotoMonoRegular.h"
+#include "RubikRegular.h"
 
 // INLretro
 #include "usb_operations.h"
@@ -211,11 +212,8 @@ int main(int argc, char **argv)
 
   float baseFontSize = 18.0f; // 13.0f is the size of the default font. Change to the font size you use.
 
-  // add OpenSans-Regular fonts
-  ImFontConfig font_config;
-  font_config.MergeMode = false;
-  font_config.PixelSnapH = true;
-  ImFont *RobotoMonoRegularFont = io.Fonts->AddFontFromMemoryCompressedBase85TTF(RobotoMonoRegular_compressed_data_base85, baseFontSize, &font_config);
+  // add Roboto Mono Regular font
+  ImFont *RobotoMonoRegularFont = io.Fonts->AddFontFromMemoryCompressedBase85TTF(RobotoMonoRegular_compressed_data_base85, baseFontSize);
 
   // add FontAwesome fonts
   float iconFontSize = baseFontSize * 2.0f / 3.0f; // FontAwesome fonts need to have their sizes reduced by 2.0f/3.0f in order to align correctly
@@ -226,6 +224,15 @@ int main(int argc, char **argv)
   icons_config.GlyphMinAdvanceX = iconFontSize;
   io.Fonts->AddFontFromMemoryCompressedBase85TTF(fa_regular_400_compressed_data_base85, iconFontSize, &icons_config, icons_ranges);
   io.Fonts->AddFontFromMemoryCompressedBase85TTF(fa_solid_900_compressed_data_base85, iconFontSize, &icons_config, icons_ranges);
+
+  // add Rubik Regular font
+  ImFont *RubikRegularFont = io.Fonts->AddFontFromMemoryCompressedBase85TTF(RubikRegular_compressed_data_base85, baseFontSize);
+
+  // add FontAwesome fonts
+  io.Fonts->AddFontFromMemoryCompressedBase85TTF(fa_regular_400_compressed_data_base85, iconFontSize, &icons_config, icons_ranges);
+  io.Fonts->AddFontFromMemoryCompressedBase85TTF(fa_solid_900_compressed_data_base85, iconFontSize, &icons_config, icons_ranges);
+
+  ImFont *fonts[] = {RobotoMonoRegularFont, RubikRegularFont};
 
   // Our state
   ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -304,7 +311,7 @@ int main(int argc, char **argv)
     ImGui_ImplOpenGL2_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
-    ImGui::PushFont(RobotoMonoRegularFont);
+    ImGui::PushFont(fonts[Settings::settings.font]);
 
     // #if 0
     ImGuiViewport *viewport = ImGui::GetMainViewport();

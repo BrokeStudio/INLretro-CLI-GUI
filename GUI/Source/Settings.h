@@ -14,6 +14,7 @@ namespace Settings
   {
     std::string theme;
     std::string firmware_update_script;
+    int font;
     bool save_on_exit;
     bool imgui_demo;
   };

@@ -119,7 +119,7 @@ namespace Ini
       }
     }
 
-    // a bit hacky ...
+    // TODO: a bit hacky ...
     if (section.name != "")
     {
       sections.push_back(section);
@@ -174,6 +174,8 @@ namespace Ini
         {
           if (property.first == "theme")
             property.second = Settings::settings.theme;
+          else if (property.first == "font")
+            property.second = std::to_string(Settings::settings.font);
           else if (property.first == "save_on_exit")
             property.second = Settings::settings.save_on_exit ? "true" : "false";
           else if (property.first == "firmware_update_script")
