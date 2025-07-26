@@ -8,7 +8,11 @@
 #include "build.h"
 
 #include "SDL_version.h"
+#if defined(_WIN32)
 #include "libusb.h"
+#else
+#include <libusb-1.0/libusb.h>
+#endif
 
 namespace Settings
 {

@@ -111,7 +111,7 @@ jobs:
           name: INLretroGUI_macOS
           path: Binaries/macosx-universal/Dist/app
 
-      - name: Delete GUI executable and .ini files
+      - name: Delete GUI executable and .ini file
         run: |
           rm Binaries/macosx-universal/Dist/INLretro/INLretroGUI
           rm Binaries/macosx-universal/Dist/INLretro/INLretro.ini

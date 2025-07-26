@@ -190,7 +190,7 @@ filter "system:linux"
     "SDL2"
   }
   prebuildcommands {
-    "./increment-build.sh"
+    "sh ./increment-build.sh"
   }
 
 filter { "system:linux", "configurations:Dist" }

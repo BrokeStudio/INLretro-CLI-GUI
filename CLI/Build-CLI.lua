@@ -134,7 +134,7 @@ filter "system:linux"
     "pthread"
   }
   prebuildcommands {
-    "./increment-build.sh"
+    "sh ./increment-build.sh"
   }
 
 -- macOS
