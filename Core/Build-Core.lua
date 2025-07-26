@@ -32,8 +32,6 @@ includedirs
 
   "../External/lua",
   "../External/termcolor",
-  -- "../External/libusb/include",
-  -- "../External/libusb/INL/include",
   "../INLretro-files/shared",
 }
 
@@ -80,7 +78,16 @@ filter "system:windows"
   libdirs
   {
     "../External/libusb/INL/static",
+    "../External/libusb/include"
   }
+
+filter { "system:windows", "configurations:Debug", "platforms:x86" }
+  links { "libusb-1.0" }
+  libdirs { "../External/libusb/VS2022/MS32/static" }
+
+filter { "system:windows", "configurations:Release or Dist", "platforms:x86" }
+  links { "libusb-1.0" }
+  libdirs { "../External/libusb/VS2022/MS32/static" }
 
 -- Linux or macOS
 

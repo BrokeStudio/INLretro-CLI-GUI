@@ -104,20 +104,17 @@ filter "system:windows"
   vpaths { ["Resources"] = { "../Windows/Resources/*.rc", "../Windows/Resources/*.ico" } }
   systemversion "latest"
   defines { "_CRT_SECURE_NO_WARNINGS" }
-  includedirs
   {
     "../External/libusb/INL/include"
-  }
   linkoptions { "libusb-1.0.dll.a" }
   links {
     "opengl32",
   }
   libdirs {
-    "../External/libusb/INL/static",
-  }
-  prebuildcommands {
-    "{COPYFILE} \"../External/libusb/INL/dll/libusb-1.0.dll\" \"%{cfg.targetdir}\"",
-  }
+
+filter { "system:windows", "configurations:Debug", "platforms:x86_64" }
+  links { "libusb-1.0" }
+  libdirs { "../External/libusb/VS2022/MS64/static" }
 
 -- Linux
 

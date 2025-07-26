@@ -104,8 +104,8 @@ filter { "system:windows", "configurations:Dist" }
   entrypoint "mainCRTStartup"
 
 filter "platforms:x86"
-    system "Windows"
-    architecture "x86"
+  system "Windows"
+  architecture "x86"
 
 -- filter "platforms:x86_64"
 --     system "Windows"
@@ -121,7 +121,7 @@ filter "system:windows"
   }
   includedirs {
     "../External/SDL2/include",
-    "../External/libusb/INL/include",
+    "../External/libusb/include"
   }
   linkoptions { "libusb-1.0.dll.a" }
   links {
@@ -143,16 +143,28 @@ filter "system:windows"
   }
 
 filter { "system:windows", "configurations:Debug", "platforms:x86" }
-  links { "SDL2-staticd" }
-  libdirs { "../External/SDL2/lib/x86-static-debug" }
+  links {
+    "SDL2-staticd",
+    "libusb-1.0"
+  }
+  libdirs {
+    "../External/SDL2/lib/x86-static-debug",
+    "../External/libusb/VS2022/MS32/static",
+  }
 
 -- filter { "system:windows", "configurations:Debug", "platforms:x86_64" }
 --   links { "SDL2-staticd" }
 --   libdirs { "../External/SDL2/lib/x64-static-debug" }
 
 filter { "system:windows", "configurations:Release or Dist", "platforms:x86" }
-  links { "SDL2-static" }
-  libdirs { "../External/SDL2/lib/x86-static-release" }
+  links {
+    "SDL2-static",
+    "libusb-1.0"
+  }
+  libdirs {
+    "../External/SDL2/lib/x86-static-release",
+    "../External/libusb/VS2022/MS32/static",
+  }
 
 -- filter { "system:windows", "configurations:Release or Dist", "platforms:x86_64" }
 --   links { "SDL2-static" }
