@@ -39,14 +39,14 @@ jobs:
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v1.1
 
-      - name: Build SDL2 statically
-        run: |
-          git clone https://github.com/libsdl-org/SDL.git
-          cd SDL
-          git checkout release-2.32.x
-          cmake -S . -B build -DSDL_STATIC=ON -DSDL_SHARED=OFF -DSDL_TEST_LIBRARY=OFF -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded" -A ${{ matrix.platform.arch }}
-          cmake --build build --config Release
-          Copy-Item "build\Release\SDL2-static.lib" -destination "..\External\SDL2\lib\${{ matrix.platform.SDL2libPath }}-static-release" -force
+      # - name: Build SDL2 statically
+      #   run: |
+      #     git clone https://github.com/libsdl-org/SDL.git
+      #     cd SDL
+      #     git checkout release-2.32.x
+      #     cmake -S . -B build -DSDL_STATIC=ON -DSDL_SHARED=OFF -DSDL_TEST_LIBRARY=OFF -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded" -A ${{ matrix.platform.arch }}
+      #     cmake --build build --config Release
+      #     Copy-Item "build\Release\SDL2-static.lib" -destination "..\External\SDL2\lib\${{ matrix.platform.SDL2libPath }}-static-release" -force
 
       - name: Prepare MSVC project files
         run: premake5 --file=Build.lua vs2022
