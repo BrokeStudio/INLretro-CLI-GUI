@@ -34,12 +34,16 @@ It provides both a command-line interface (CLI) and a graphical user interface (
 |                  | 18 - SS880066  | ✓        | ✓         | ✓        | ✓         |
 |                  | 24 - VRC6a     | ✓        | ✓         | ✓        | ✓         |
 |                  | 28 - Action 53 | ✓        | ✓         | ✓        | ✓         |
+|                  | 30 - UNROM-512 | ✓        | ✓         | ✓        | ✓         |
+|                  | 34 - BNROM     | ✓        | ✓         | ✓        | ✓         |
+|                  | 111 - GTROM    | ✓        | ✓         | ✓        | ✓         |
+|                  | 682 - Rainbow  | ✓        | ✓         | ✓        | ✓         |
 |                  |                |          |           |          |           |
 | Game Boy (Color) | 32KB           | ✓        | ✓         | ✓        | ✓         |
 |                  | MBC1           | ✓        | ✓         | ✓        | ✓         |
 |                  | MBC5           | ✓        | ✓         | ✓        | ✓         |
 |                  |                |          |           |          |           |
-| Genesis / MD     | 4MB (+SRAM)    | ✓        | ✓         | ✓        | ✓         |
+| Genesis / MD     | 32Mb (+SRAM)   | ✓        | ✓         | ✓        | ✓         |
 |                  |                |          |           |          |           |
 | SNES / SFC       | LoRom / HiRom  | ✓        | ✖         | ✖        | ✖         |
 |                  |                |          |           |          |           |
