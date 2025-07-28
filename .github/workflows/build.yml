@@ -37,8 +37,8 @@ jobs:
 
       - name: Update firmware binary file
         run: |
-          echo -n "AV04" | dd of=build_stm/inlretro_stm.bin bs=1 seek=$((0x800)) conv=notrunc
-          cp build_stm/inlretro_stm.bin build_stm/inlretro_stm_AV04.bin
+          echo -n "AV04" | dd of=firmware/build_stm/inlretro_stm.bin bs=1 seek=$((0x800)) conv=notrunc
+          cp firmware/build_stm/inlretro_stm.bin firmware/build_stm/inlretro_stm_AV04.bin
 
       - name: Upload INLretro firmware
         uses: actions/upload-artifact@v4
