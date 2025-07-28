@@ -1,0 +1,975 @@
+Archive member included to satisfy reference by file (symbol)
+
+/home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(unwind-arm.o)
+                              /tmp/ccJz10up.o (__aeabi_unwind_cpp_pr0)
+/home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(libunwind.o)
+                              /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(unwind-arm.o) (restore_core_regs)
+/home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(pr-support.o)
+                              /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(unwind-arm.o) (__gnu_unwind_execute)
+/home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-abort.o)
+                              /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(unwind-arm.o) (abort)
+/home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-exit.o)
+                              /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/crt0.o (exit)
+/home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-impure.o)
+                              /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-exit.o) (_global_impure_ptr)
+/home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-init.o)
+                              /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/crt0.o (__libc_init_array)
+/home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-memcpy-stub.o)
+                              /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(unwind-arm.o) (memcpy)
+/home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-memset.o)
+                              /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/crt0.o (memset)
+/home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-signal.o)
+                              /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-abort.o) (raise)
+/home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-signalr.o)
+                              /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-signal.o) (_kill_r)
+/home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-__call_atexit.o)
+                              /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-exit.o) (__call_exitprocs)
+/home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-atexit.o)
+                              /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-__call_atexit.o) (atexit)
+/home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-fini.o)
+                              /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-__call_atexit.o) (__libc_fini_array)
+/home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-lock.o)
+                              /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-__call_atexit.o) (__retarget_lock_acquire_recursive)
+/home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-mallocr.o)
+                              /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-signal.o) (_malloc_r)
+/home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-mlock.o)
+                              /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-mallocr.o) (__malloc_lock)
+/home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-reent.o)
+                              /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-signalr.o) (errno)
+/home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-sbrkr.o)
+                              /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-mallocr.o) (_sbrk_r)
+/home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-__atexit.o)
+                              /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-atexit.o) (__register_exitproc)
+/home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-freer.o)
+                              /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-mallocr.o) (_free_r)
+/home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(getpid.o)
+                              /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-signalr.o) (_getpid)
+/home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(kill.o)
+                              /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-signalr.o) (_kill)
+/home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(sbrk.o)
+                              /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-sbrkr.o) (_sbrk)
+/home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(_exit.o)
+                              /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-abort.o) (_exit)
+/home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(_thumb1_case_uqi.o)
+                              /tmp/ccSlakmW.ltrans0.ltrans.o (__gnu_thumb1_case_uqi)
+/home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(_thumb1_case_uhi.o)
+                              /tmp/ccSlakmW.ltrans0.ltrans.o (__gnu_thumb1_case_uhi)
+/home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(_thumb1_case_si.o)
+                              /tmp/ccSlakmW.ltrans0.ltrans.o (__gnu_thumb1_case_si)
+
+Allocating common symbols
+Common symbol       size              file
+
+cur_addr_lo         0x2               source/gba.o (symbol from plugin)
+buff3               0x14              source/buffer.o (symbol from plugin)
+__lock___atexit_recursive_mutex
+                    0x1               /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-lock.o)
+cur_buff            0x4               source/buffer.o (symbol from plugin)
+__lock___arc4random_mutex
+                    0x1               /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-lock.o)
+tdo_pin             0x1               source/jtag.o (symbol from plugin)
+errno               0x4               /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-reent.o)
+pbje_status         0x1               source/jtag.o (symbol from plugin)
+pbje_command        0x1               source/jtag.o (symbol from plugin)
+tck_base            0x4               source/jtag.o (symbol from plugin)
+tck_pin             0x1               source/jtag.o (symbol from plugin)
+bank_table          0x2               source/nes.o (symbol from plugin)
+addrh               0x2               source/bootload.o (symbol from plugin)
+buff1               0x14              source/buffer.o (symbol from plugin)
+incoming_bytes_remain
+                    0x1               source/buffer.o (symbol from plugin)
+__lock___env_recursive_mutex
+                    0x1               /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-lock.o)
+__lock___sinit_recursive_mutex
+                    0x1               /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-lock.o)
+pbje_cmd_update_flag
+                    0x1               source/jtag.o (symbol from plugin)
+tms_pin             0x1               source/jtag.o (symbol from plugin)
+__lock___malloc_recursive_mutex
+                    0x1               /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-lock.o)
+tdi_base            0x4               source/jtag.o (symbol from plugin)
+tdo_base            0x4               source/jtag.o (symbol from plugin)
+num_prg_banks       0x1               source/nes.o (symbol from plugin)
+cur_addr_hi         0x1               source/gba.o (symbol from plugin)
+buff2               0x14              source/buffer.o (symbol from plugin)
+cur_bank            0x1               source/gameboy.o (symbol from plugin)
+addr_ptr            0x4               source/bootload.o (symbol from plugin)
+tdi_pin             0x1               source/jtag.o (symbol from plugin)
+lfsr                0x4               source/stuff.o (symbol from plugin)
+buff0               0x14              source/buffer.o (symbol from plugin)
+raw_bank_status     0x10              source/buffer.o (symbol from plugin)
+oper_info_struct    0x20              source/operation.o (symbol from plugin)
+raw_buffer16        0x200             source/buffer.o (symbol from plugin)
+tms_base            0x4               source/jtag.o (symbol from plugin)
+swim_base           0x4               source/swim.o (symbol from plugin)
+swim_pin            0x1               source/swim.o (symbol from plugin)
+__lock___at_quick_exit_mutex
+                    0x1               /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-lock.o)
+cur_usb_load_buff   0x4               source/buffer.o (symbol from plugin)
+pbje_numclk         0x1               source/jtag.o (symbol from plugin)
+__lock___dd_hash_mutex
+                    0x1               /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-lock.o)
+__lock___tz_mutex   0x1               /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-lock.o)
+n64_bank            0x2               source/n64.o (symbol from plugin)
+pbje_data           0x20              source/jtag.o (symbol from plugin)
+__lock___sfp_recursive_mutex
+                    0x1               /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-lock.o)
+
+Discarded input sections
+
+ .text          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/crti.o
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/crti.o
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/crti.o
+ .text          0x0000000000000000       0x48 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/crtbegin.o
+ .data          0x0000000000000000        0x4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/crtbegin.o
+ .bss           0x0000000000000000       0x1c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/crtbegin.o
+ .init_array    0x0000000000000000        0x4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/crtbegin.o
+ .fini_array    0x0000000000000000        0x4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/crtbegin.o
+ .eh_frame      0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/crtbegin.o
+ .ARM.attributes
+                0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/crtbegin.o
+ .text          0x0000000000000000       0x78 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/crt0.o
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/crt0.o
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/crt0.o
+ .ARM.extab     0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/crt0.o
+ .ARM.exidx     0x0000000000000000        0x8 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/crt0.o
+ .ARM.attributes
+                0x0000000000000000       0x1b /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/crt0.o
+ .text          0x0000000000000000        0x0 /tmp/ccdCYHuB.o
+ .data          0x0000000000000000        0x0 /tmp/ccdCYHuB.o
+ .bss           0x0000000000000000        0x0 /tmp/ccdCYHuB.o
+ .stack         0x0000000000000000      0xc00 /tmp/ccdCYHuB.o
+ .heap          0x0000000000000000        0x0 /tmp/ccdCYHuB.o
+ .debug_line    0x0000000000000000       0x7c /tmp/ccdCYHuB.o
+ .debug_info    0x0000000000000000       0x22 /tmp/ccdCYHuB.o
+ .debug_abbrev  0x0000000000000000       0x12 /tmp/ccdCYHuB.o
+ .debug_aranges
+                0x0000000000000000       0x28 /tmp/ccdCYHuB.o
+ .debug_str     0x0000000000000000       0x50 /tmp/ccdCYHuB.o
+ .debug_ranges  0x0000000000000000       0x20 /tmp/ccdCYHuB.o
+ .ARM.attributes
+                0x0000000000000000       0x1b /tmp/ccdCYHuB.o
+ .text          0x0000000000000000        0x0 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .data          0x0000000000000000        0x0 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss           0x0000000000000000        0x0 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.snes_3v_buffer_wr
+                0x0000000000000000        0x2 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text          0x0000000000000000        0x4 /tmp/ccJz10up.o
+ .data          0x0000000000000000        0x0 /tmp/ccJz10up.o
+ .bss           0x0000000000000000        0x0 /tmp/ccJz10up.o
+ .ARM.extab     0x0000000000000000        0x0 /tmp/ccJz10up.o
+ .ARM.exidx     0x0000000000000000        0x8 /tmp/ccJz10up.o
+ .debug_line    0x0000000000000000       0x49 /tmp/ccJz10up.o
+ .debug_info    0x0000000000000000       0x26 /tmp/ccJz10up.o
+ .debug_abbrev  0x0000000000000000       0x14 /tmp/ccJz10up.o
+ .debug_aranges
+                0x0000000000000000       0x20 /tmp/ccJz10up.o
+ .debug_str     0x0000000000000000       0x4d /tmp/ccJz10up.o
+ .ARM.attributes
+                0x0000000000000000       0x21 /tmp/ccJz10up.o
+ .data          0x0000000000000000        0x0 /tmp/ccpOGIfL.o
+ .bss           0x0000000000000000        0x0 /tmp/ccpOGIfL.o
+ .ARM.extab     0x0000000000000000        0x0 /tmp/ccpOGIfL.o
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(unwind-arm.o)
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(unwind-arm.o)
+ .debug_frame   0x0000000000000000      0x2b4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(unwind-arm.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(unwind-arm.o)
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(libunwind.o)
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(libunwind.o)
+ .ARM.attributes
+                0x0000000000000000       0x1e /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(libunwind.o)
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(pr-support.o)
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(pr-support.o)
+ .debug_frame   0x0000000000000000       0xf4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(pr-support.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(pr-support.o)
+ .text          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-abort.o)
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-abort.o)
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-abort.o)
+ .debug_frame   0x0000000000000000       0x28 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-abort.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-abort.o)
+ .text          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-exit.o)
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-exit.o)
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-exit.o)
+ .text.exit     0x0000000000000000       0x20 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-exit.o)
+ .debug_frame   0x0000000000000000       0x28 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-exit.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-exit.o)
+ .text          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-impure.o)
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-impure.o)
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-impure.o)
+ .rodata._global_impure_ptr
+                0x0000000000000000        0x4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-impure.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-impure.o)
+ .text          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-init.o)
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-init.o)
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-init.o)
+ .text.__libc_init_array
+                0x0000000000000000       0x48 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-init.o)
+ .debug_frame   0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-init.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-init.o)
+ .text          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-memcpy-stub.o)
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-memcpy-stub.o)
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-memcpy-stub.o)
+ .debug_frame   0x0000000000000000       0x30 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-memcpy-stub.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-memcpy-stub.o)
+ .text          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-memset.o)
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-memset.o)
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-memset.o)
+ .text.memset   0x0000000000000000       0x9c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-memset.o)
+ .debug_frame   0x0000000000000000       0x30 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-memset.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-memset.o)
+ .text          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-signal.o)
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-signal.o)
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-signal.o)
+ .text._init_signal_r.part.0
+                0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-signal.o)
+ .text._init_signal_r
+                0x0000000000000000       0x1c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-signal.o)
+ .text._signal_r
+                0x0000000000000000       0x3c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-signal.o)
+ .text.__sigtramp_r
+                0x0000000000000000       0x50 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-signal.o)
+ .text.signal   0x0000000000000000       0x18 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-signal.o)
+ .text._init_signal
+                0x0000000000000000       0x20 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-signal.o)
+ .text.__sigtramp
+                0x0000000000000000       0x14 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-signal.o)
+ .debug_frame   0x0000000000000000       0xf8 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-signal.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-signal.o)
+ .text          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-signalr.o)
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-signalr.o)
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-signalr.o)
+ .debug_frame   0x0000000000000000       0x44 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-signalr.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-signalr.o)
+ .text          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-__call_atexit.o)
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-__call_atexit.o)
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-__call_atexit.o)
+ .text.startup.register_fini
+                0x0000000000000000       0x18 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-__call_atexit.o)
+ .init_array.00000
+                0x0000000000000000        0x4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-__call_atexit.o)
+ .text.__call_exitprocs
+                0x0000000000000000      0x118 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-__call_atexit.o)
+ .data.__atexit_recursive_mutex
+                0x0000000000000000        0x4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-__call_atexit.o)
+ .debug_frame   0x0000000000000000       0x54 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-__call_atexit.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-__call_atexit.o)
+ .text          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-atexit.o)
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-atexit.o)
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-atexit.o)
+ .text.atexit   0x0000000000000000       0x10 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-atexit.o)
+ .debug_frame   0x0000000000000000       0x28 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-atexit.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-atexit.o)
+ .text          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-fini.o)
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-fini.o)
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-fini.o)
+ .text.__libc_fini_array
+                0x0000000000000000       0x34 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-fini.o)
+ .debug_frame   0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-fini.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-fini.o)
+ .text          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-lock.o)
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-lock.o)
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-lock.o)
+ .text.__retarget_lock_init
+                0x0000000000000000        0x4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-lock.o)
+ .text.__retarget_lock_init_recursive
+                0x0000000000000000        0x4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-lock.o)
+ .text.__retarget_lock_close
+                0x0000000000000000        0x4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-lock.o)
+ .text.__retarget_lock_close_recursive
+                0x0000000000000000        0x4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-lock.o)
+ .text.__retarget_lock_acquire
+                0x0000000000000000        0x4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-lock.o)
+ .text.__retarget_lock_acquire_recursive
+                0x0000000000000000        0x4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-lock.o)
+ .text.__retarget_lock_try_acquire
+                0x0000000000000000        0x4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-lock.o)
+ .text.__retarget_lock_try_acquire_recursive
+                0x0000000000000000        0x4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-lock.o)
+ .text.__retarget_lock_release
+                0x0000000000000000        0x4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-lock.o)
+ .text.__retarget_lock_release_recursive
+                0x0000000000000000        0x4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-lock.o)
+ .debug_frame   0x0000000000000000       0xb0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-lock.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-lock.o)
+ COMMON         0x0000000000000000       0x21 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-lock.o)
+ .text          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-mallocr.o)
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-mallocr.o)
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-mallocr.o)
+ .text._malloc_r
+                0x0000000000000000      0x554 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-mallocr.o)
+ .bss.__malloc_current_mallinfo
+                0x0000000000000000       0x28 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-mallocr.o)
+ .bss.__malloc_max_sbrked_mem
+                0x0000000000000000        0x4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-mallocr.o)
+ .bss.__malloc_max_total_mem
+                0x0000000000000000        0x4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-mallocr.o)
+ .bss.__malloc_top_pad
+                0x0000000000000000        0x4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-mallocr.o)
+ .data.__malloc_av_
+                0x0000000000000000      0x408 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-mallocr.o)
+ .data.__malloc_sbrk_base
+                0x0000000000000000        0x4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-mallocr.o)
+ .data.__malloc_trim_threshold
+                0x0000000000000000        0x4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-mallocr.o)
+ .debug_frame   0x0000000000000000       0x3c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-mallocr.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-mallocr.o)
+ .text          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-mlock.o)
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-mlock.o)
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-mlock.o)
+ .text.__malloc_lock
+                0x0000000000000000       0x10 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-mlock.o)
+ .text.__malloc_unlock
+                0x0000000000000000       0x10 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-mlock.o)
+ .debug_frame   0x0000000000000000       0x40 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-mlock.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-mlock.o)
+ .text          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-reent.o)
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-reent.o)
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-reent.o)
+ .text.cleanup_glue
+                0x0000000000000000       0x1c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-reent.o)
+ .text._reclaim_reent
+                0x0000000000000000       0x94 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-reent.o)
+ .debug_frame   0x0000000000000000       0x48 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-reent.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-reent.o)
+ .text          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-sbrkr.o)
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-sbrkr.o)
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-sbrkr.o)
+ .text._sbrk_r  0x0000000000000000       0x24 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-sbrkr.o)
+ .debug_frame   0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-sbrkr.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-sbrkr.o)
+ .text          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-__atexit.o)
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-__atexit.o)
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-__atexit.o)
+ .text.__register_exitproc
+                0x0000000000000000       0xf4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-__atexit.o)
+ .debug_frame   0x0000000000000000       0x3c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-__atexit.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-__atexit.o)
+ .text          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-freer.o)
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-freer.o)
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-freer.o)
+ .text._malloc_trim_r
+                0x0000000000000000       0xa0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-freer.o)
+ .text._free_r  0x0000000000000000      0x1d4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-freer.o)
+ .debug_frame   0x0000000000000000       0x58 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-freer.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-freer.o)
+ .text          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(getpid.o)
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(getpid.o)
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(getpid.o)
+ .stab          0x0000000000000000       0x24 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(getpid.o)
+ .debug_frame   0x0000000000000000       0x20 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(getpid.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(getpid.o)
+ .text          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(kill.o)
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(kill.o)
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(kill.o)
+ .stab          0x0000000000000000       0x18 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(kill.o)
+                                         0x24 (size before relaxing)
+ .debug_frame   0x0000000000000000       0x20 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(kill.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(kill.o)
+ .text          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(sbrk.o)
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(sbrk.o)
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(sbrk.o)
+ .text._sbrk    0x0000000000000000       0x1c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(sbrk.o)
+ .bss.heap_end.4102
+                0x0000000000000000        0x4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(sbrk.o)
+ .debug_frame   0x0000000000000000       0x20 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(sbrk.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(sbrk.o)
+ .text          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(_exit.o)
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(_exit.o)
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(_exit.o)
+ .debug_frame   0x0000000000000000       0x20 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(_exit.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(_exit.o)
+ .text          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/crtend.o
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/crtend.o
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/crtend.o
+ .eh_frame      0x0000000000000000        0x4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/crtend.o
+ .ARM.attributes
+                0x0000000000000000       0x2c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/crtend.o
+ .text          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/crtn.o
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/crtn.o
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/crtn.o
+ .init          0x0000000000000000        0x8 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/crtn.o
+ .fini          0x0000000000000000        0x8 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/crtn.o
+ .ARM.attributes
+                0x0000000000000000       0x1e /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/crtn.o
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(_thumb1_case_uqi.o)
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(_thumb1_case_uqi.o)
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(_thumb1_case_uhi.o)
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(_thumb1_case_uhi.o)
+ .data          0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(_thumb1_case_si.o)
+ .bss           0x0000000000000000        0x0 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(_thumb1_case_si.o)
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+FLASH            0x0000000008000000 0x0000000000008000 xr
+RAM              0x0000000020000000 0x0000000000001800 xrw
+*default*        0x0000000000000000 0xffffffffffffffff
+
+Linker script and memory map
+
+LOAD /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/crti.o
+LOAD /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/crtbegin.o
+LOAD /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/crt0.o
+LOAD /tmp/ccdCYHuB.o
+LOAD /tmp/ccSlakmW.ltrans0.ltrans.o
+LOAD /tmp/ccJz10up.o
+LOAD /tmp/ccpOGIfL.o
+START GROUP
+LOAD /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a
+LOAD /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a
+LOAD /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libc.a
+END GROUP
+START GROUP
+LOAD /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a
+LOAD /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libc.a
+LOAD /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a
+END GROUP
+LOAD /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/crtend.o
+LOAD /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/crtn.o
+
+.text           0x0000000008000000     0x6388
+ *(.isr_vector)
+ .isr_vector    0x0000000008000000       0xc0 /tmp/ccdCYHuB.o
+                0x0000000008000000                __isr_vector
+ *(.usb_driver)
+ .usb_driver    0x00000000080000c0      0x3bc /tmp/ccSlakmW.ltrans0.ltrans.o
+                0x0000000008000198                USB_IRQHandler
+ *(.usb_desc)
+ .usb_desc      0x000000000800047c       0xb8 /tmp/ccSlakmW.ltrans0.ltrans.o
+ *(.hardfault)
+ .hardfault     0x0000000008000534        0x2 /tmp/ccdCYHuB.o
+                0x0000000008000534                TIM1_CC_IRQHandler
+                0x0000000008000534                TSC_IRQHandler
+                0x0000000008000534                ADC1_COMP_IRQHandler
+                0x0000000008000534                SysTick_Handler
+                0x0000000008000534                PendSV_Handler
+                0x0000000008000534                NMI_Handler
+                0x0000000008000534                I2C1_IRQHandler
+                0x0000000008000534                RCC_CRS_IRQHandler
+                0x0000000008000534                SPI1_IRQHandler
+                0x0000000008000534                TIM6_DAC_IRQHandler
+                0x0000000008000534                USART3_4_IRQHandler
+                0x0000000008000534                EXTI2_3_IRQHandler
+                0x0000000008000534                I2C2_IRQHandler
+                0x0000000008000534                TIM17_IRQHandler
+                0x0000000008000534                CEC_CAN_IRQHandler
+                0x0000000008000534                PVD_VDDIO2_IRQHandler
+                0x0000000008000534                DMA1_Channel4_5_6_7_IRQHandler
+                0x0000000008000534                TIM16_IRQHandler
+                0x0000000008000534                TIM3_IRQHandler
+                0x0000000008000534                EXTI4_15_IRQHandler
+                0x0000000008000534                DMA1_Channel1_IRQHandler
+                0x0000000008000534                Default_Handler
+                0x0000000008000534                TIM14_IRQHandler
+                0x0000000008000534                TIM7_IRQHandler
+                0x0000000008000534                TIM15_IRQHandler
+                0x0000000008000534                EXTI0_1_IRQHandler
+                0x0000000008000534                SPI2_IRQHandler
+                0x0000000008000534                SVC_Handler
+                0x0000000008000534                RTC_IRQHand
+                0x0000000008000534                WWDG_IRQHandler
+                0x0000000008000534                TIM2_IRQHandler
+                0x0000000008000534                DEF_IRQHandler
+                0x0000000008000534                DMA1_Channel2_3_IRQHandler
+                0x0000000008000534                USART2_IRQHandler
+                0x0000000008000534                FLASH_IRQHandler
+                0x0000000008000534                USART1_IRQHandler
+                0x0000000008000534                TIM1_BRK_UP_TRG_COM_IRQHandler
+ *fill*         0x0000000008000536        0x2 ff
+ .hardfault     0x0000000008000538        0xc /tmp/ccSlakmW.ltrans0.ltrans.o
+                0x0000000008000538                HardFault_Handler
+ *_thumb1_case_uqi.o()
+ .text          0x0000000008000544       0x14 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(_thumb1_case_uqi.o)
+                0x0000000008000544                __gnu_thumb1_case_uqi
+ .ARM.attributes
+                0x0000000008000558       0x1e /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(_thumb1_case_uqi.o)
+ *_thumb1_case_shi.o()
+ *_thumb1_case_uhi.o()
+ *fill*         0x0000000008000576        0x2 ff
+ .text          0x0000000008000578       0x14 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(_thumb1_case_uhi.o)
+                0x0000000008000578                __gnu_thumb1_case_uhi
+ .ARM.attributes
+                0x000000000800058c       0x1e /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(_thumb1_case_uhi.o)
+ *(.fw_update)
+ *fill*         0x00000000080005aa        0x2 ff
+ .fw_update     0x00000000080005ac      0x150 /tmp/ccSlakmW.ltrans0.ltrans.o
+                0x0000000000000770                . = 0x770
+ *fill*         0x00000000080006fc       0x74 ff
+ *(.fw_up_main)
+ .fw_up_main    0x0000000008000770       0x70 /tmp/ccSlakmW.ltrans0.ltrans.o
+                0x0000000000000800                . = 0x800
+ *fill*         0x00000000080007e0       0x20 ff
+ *(.appver)
+                0x0000000000000804                . = 0x804
+ *fill*         0x0000000008000800        0x4 ff
+ *(.reset_handler)
+ .reset_handler
+                0x0000000008000804       0x3c /tmp/ccdCYHuB.o
+                0x0000000008000804                Reset_Handler
+ *(.usbFuncWrite)
+ .usbFuncWrite  0x0000000008000840       0x44 /tmp/ccSlakmW.ltrans0.ltrans.o
+ *(.usbFuncSetup)
+ .usbFuncSetup  0x0000000008000884     0x20e8 /tmp/ccSlakmW.ltrans0.ltrans.o
+ *(.text*)
+ .text.snes_page_rd_poll.constprop.33
+                0x000000000800296c       0x70 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.nes_ppu_page_rd_poll.constprop.29
+                0x00000000080029dc       0x70 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.append_pairity
+                0x0000000008002a4c       0x1e /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.delay_us
+                0x0000000008002a6a       0x14 /tmp/ccSlakmW.ltrans0.ltrans.o
+ *fill*         0x0000000008002a7e        0x2 ff
+ .text.lfsr_32  0x0000000008002a80       0x30 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.snes_wr  0x0000000008002ab0       0x60 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.snes_rd  0x0000000008002b10       0x48 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.write_page_snes.constprop.39
+                0x0000000008002b58      0x194 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.write_page_buffer.constprop.38
+                0x0000000008002cec       0x94 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.snes_3v_verify_wr
+                0x0000000008002d80       0x50 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.snes_3v_flash_wr
+                0x0000000008002dd0       0x50 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.snes_5v_flash_wr
+                0x0000000008002e20       0x50 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.genesis_page_rd
+                0x0000000008002e70       0x94 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.gen_flash_wr
+                0x0000000008002f04       0x9c /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.gen_set_bank
+                0x0000000008002fa0       0x38 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.gen_rom_rd.constprop.42
+                0x0000000008002fd8       0x7c /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.gen_sst_flash_wr
+                0x0000000008003054       0x50 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.gen_time_wr
+                0x00000000080030a4       0xa0 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.mmc3s_prgrom_flash_wr
+                0x0000000008003144        0x4 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.nes_dualport_wr
+                0x0000000008003148       0x50 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.nes_dualport_rd
+                0x0000000008003198       0x38 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.nes_ppu_wr
+                0x00000000080031d0       0x50 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.nes_ppu_rd
+                0x0000000008003220       0x38 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.nrom_chrrom_flash_wr
+                0x0000000008003258       0x44 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.rnbw_tssop_chrrom_flash_wr
+                0x000000000800329c       0x2a /tmp/ccSlakmW.ltrans0.ltrans.o
+ *fill*         0x00000000080032c6        0x2 ff
+ .text.rnbw_chrrom_flash_wr
+                0x00000000080032c8       0x44 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.mmc3_chrrom_flash_wr
+                0x000000000800330c        0x8 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.nes_m2_high_wr
+                0x0000000008003314       0x60 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.nes_cpu_wr
+                0x0000000008003374       0x74 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.cdream_chrrom_flash_wr
+                0x00000000080033e8       0x8c /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.mmc4_chrrom_flash_wr
+                0x0000000008003474       0x74 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.cnrom_chrrom_flash_wr
+                0x00000000080034e8       0x7c /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.nes_cpu_rd
+                0x0000000008003564       0x40 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.nes_cpu_page_rd_poll.constprop.32
+                0x00000000080035a4       0x44 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.a53_tssop_prgrom_flash_wr
+                0x00000000080035e8       0x2a /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.tssop_prgrom_flash_wr
+                0x0000000008003612        0x8 /tmp/ccSlakmW.ltrans0.ltrans.o
+ *fill*         0x000000000800361a        0x2 ff
+ .text.a53_512k_prgrom_flash_wr
+                0x000000000800361c       0x5c /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.gtrom_prgrom_flash_wr
+                0x0000000008003678       0x4c /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.map30_prgrom_flash_wr
+                0x00000000080036c4       0x74 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.mmc4_prgrom_flash_wr
+                0x0000000008003738       0x54 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.mmc3_prgrom_flash_wr
+                0x000000000800378c       0x50 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.rnbw_tssop_prgrom_flash_wr
+                0x00000000080037dc       0x2a /tmp/ccSlakmW.ltrans0.ltrans.o
+ *fill*         0x0000000008003806        0x2 ff
+ .text.rnbw_prgrom_flash_wr
+                0x0000000008003808       0x44 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.vrc6_prgrom_flash_wr
+                0x000000000800384c        0x8 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.disc_push_exp0_prgrom_wr
+                0x0000000008003854       0x48 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.discrete_exp0_prgrom_wr
+                0x000000000800389c       0x58 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.unrom_prgrom_flash_wr
+                0x00000000080038f4       0x64 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.nrom_prgrom_flash_wr
+                0x0000000008003958       0x44 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.n64_latch_addr
+                0x000000000800399c       0x60 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.pbje_scan
+                0x00000000080039fc      0x10c /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.pbje_state_change
+                0x0000000008003b08       0x88 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.jtag_init_pbje
+                0x0000000008003b90       0xe0 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.jtag_run_pbje.part.0
+                0x0000000008003c70       0xb8 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.io_reset
+                0x0000000008003d28      0x174 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.gba_rd   0x0000000008003e9c       0x4c /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.gameboy_pin31_wr
+                0x0000000008003ee8       0x84 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.gameboy_wr
+                0x0000000008003f6c       0x60 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.gameboy_rd
+                0x0000000008003fcc       0x48 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.gameboy_flash_pin31_wr
+                0x0000000008004014       0x6c /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.gameboy_flash_wr
+                0x0000000008004080       0x44 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.gameboy_3v_flash_pin31_wr
+                0x00000000080040c4       0x54 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.write_page
+                0x0000000008004118       0x34 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.write_page_verify
+                0x000000000800414c       0x5c /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.get_next_buff
+                0x00000000080041a8       0x54 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.mmc1_wr.constprop.15
+                0x00000000080041fc       0x22 /tmp/ccSlakmW.ltrans0.ltrans.o
+ *fill*         0x000000000800421e        0x2 ff
+ .text.mmc1_chrrom_flash_wr
+                0x0000000008004220       0x60 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.mmc1_prgrom_flash_wr
+                0x0000000008004280       0x80 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.swim_wotf
+                0x0000000008004300       0xb4 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.swim_rotf
+                0x00000000080043b4       0xac /tmp/ccSlakmW.ltrans0.ltrans.o
+ .text.startup.main
+                0x0000000008004460      0xd70 /tmp/ccSlakmW.ltrans0.ltrans.o
+                0x0000000008004460                main
+ .text          0x00000000080051d0      0x154 /tmp/ccpOGIfL.o
+                0x00000000080051d0                swim_xfr
+ .text          0x0000000008005324      0xa08 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(unwind-arm.o)
+                0x00000000080055e0                _Unwind_GetCFA
+                0x00000000080055e4                __gnu_Unwind_RaiseException
+                0x0000000008005638                __gnu_Unwind_ForcedUnwind
+                0x000000000800564c                __gnu_Unwind_Resume
+                0x0000000008005694                __gnu_Unwind_Resume_or_Rethrow
+                0x00000000080056b0                _Unwind_Complete
+                0x00000000080056b4                _Unwind_DeleteException
+                0x00000000080056c4                _Unwind_VRS_Get
+                0x000000000800570c                _Unwind_VRS_Set
+                0x0000000008005754                __gnu_Unwind_Backtrace
+                0x0000000008005aa4                __aeabi_unwind_cpp_pr0
+                0x0000000008005ab0                __aeabi_unwind_cpp_pr1
+                0x0000000008005abc                __aeabi_unwind_cpp_pr2
+                0x0000000008005ac8                _Unwind_VRS_Pop
+ .text          0x0000000008005d2c      0x144 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(libunwind.o)
+                0x0000000008005d2c                __restore_core_regs
+                0x0000000008005d2c                restore_core_regs
+                0x0000000008005d58                __gnu_Unwind_Restore_VFP
+                0x0000000008005d5c                __gnu_Unwind_Save_VFP
+                0x0000000008005d60                __gnu_Unwind_Restore_VFP_D
+                0x0000000008005d64                __gnu_Unwind_Save_VFP_D
+                0x0000000008005d68                __gnu_Unwind_Restore_VFP_D_16_to_31
+                0x0000000008005d6c                __gnu_Unwind_Save_VFP_D_16_to_31
+                0x0000000008005d70                __gnu_Unwind_Restore_WMMXD
+                0x0000000008005d74                __gnu_Unwind_Save_WMMXD
+                0x0000000008005d78                __gnu_Unwind_Restore_WMMXC
+                0x0000000008005d7c                __gnu_Unwind_Save_WMMXC
+                0x0000000008005d80                ___Unwind_RaiseException
+                0x0000000008005d80                _Unwind_RaiseException
+                0x0000000008005db0                ___Unwind_Resume
+                0x0000000008005db0                _Unwind_Resume
+                0x0000000008005de0                _Unwind_Resume_or_Rethrow
+                0x0000000008005de0                ___Unwind_Resume_or_Rethrow
+                0x0000000008005e10                ___Unwind_ForcedUnwind
+                0x0000000008005e10                _Unwind_ForcedUnwind
+                0x0000000008005e40                _Unwind_Backtrace
+                0x0000000008005e40                ___Unwind_Backtrace
+ .text          0x0000000008005e70      0x39c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(pr-support.o)
+                0x0000000008005ec4                __gnu_unwind_execute
+                0x00000000080061b4                __gnu_unwind_frame
+                0x00000000080061dc                _Unwind_GetRegionStart
+                0x00000000080061e8                _Unwind_GetLanguageSpecificData
+                0x00000000080061fc                _Unwind_GetDataRelBase
+                0x0000000008006204                _Unwind_GetTextRelBase
+ .text.abort    0x000000000800620c       0x10 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-abort.o)
+                0x000000000800620c                abort
+ .text.memcpy   0x000000000800621c       0x88 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-memcpy-stub.o)
+                0x000000000800621c                memcpy
+ .text._raise_r
+                0x00000000080062a4       0x5c /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-signal.o)
+                0x00000000080062a4                _raise_r
+ .text.raise    0x0000000008006300       0x14 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-signal.o)
+                0x0000000008006300                raise
+ .text._kill_r  0x0000000008006314       0x28 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-signalr.o)
+                0x0000000008006314                _kill_r
+ .text._getpid_r
+                0x000000000800633c        0x8 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-signalr.o)
+                0x000000000800633c                _getpid_r
+ .text._getpid  0x0000000008006344       0x10 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(getpid.o)
+                0x0000000008006344                _getpid
+ .text._kill    0x0000000008006354       0x10 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(kill.o)
+                0x0000000008006354                _kill
+ .text._exit    0x0000000008006364        0x4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(_exit.o)
+                0x0000000008006364                _exit
+ .text          0x0000000008006368       0x18 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(_thumb1_case_si.o)
+                0x0000000008006368                __gnu_thumb1_case_si
+ *(.init)
+ .init          0x0000000008006380        0x4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/crti.o
+                0x0000000008006380                _init
+ *(.fini)
+ .fini          0x0000000008006384        0x4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/crti.o
+                0x0000000008006384                _fini
+ *crtbegin.o(.ctors)
+ *crtbegin?.o(.ctors)
+ *(EXCLUDE_FILE(*crtend.o *crtend?.o) .ctors)
+ *(SORT_BY_NAME(.ctors.*))
+ *(.ctors)
+ *crtbegin.o(.dtors)
+ *crtbegin?.o(.dtors)
+ *(EXCLUDE_FILE(*crtend.o *crtend?.o) .dtors)
+ *(SORT_BY_NAME(.dtors.*))
+ *(.dtors)
+ *(.rodata*)
+ *(.eh_frame*)
+
+.glue_7         0x0000000008006388        0x0
+ .glue_7        0x0000000008006388        0x0 linker stubs
+
+.glue_7t        0x0000000008006388        0x0
+ .glue_7t       0x0000000008006388        0x0 linker stubs
+
+.vfp11_veneer   0x0000000008006388        0x0
+ .vfp11_veneer  0x0000000008006388        0x0 linker stubs
+
+.v4_bx          0x0000000008006388        0x0
+ .v4_bx         0x0000000008006388        0x0 linker stubs
+
+.iplt           0x0000000008006388        0x0
+ .iplt          0x0000000008006388        0x0 /tmp/ccdCYHuB.o
+
+.ARM.extab      0x0000000008006388       0x30
+ *(.ARM.extab* .gnu.linkonce.armextab.*)
+ .ARM.extab     0x0000000008006388       0x24 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(unwind-arm.o)
+ .ARM.extab     0x00000000080063ac        0xc /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(pr-support.o)
+                0x00000000080063b8                __exidx_start = .
+
+.ARM.exidx      0x00000000080063b8       0xd0
+ *(.ARM.exidx* .gnu.linkonce.armexidx.*)
+ .ARM.exidx     0x00000000080063b8        0x8 /tmp/ccpOGIfL.o
+                                         0x10 (size before relaxing)
+ .ARM.exidx     0x00000000080063c0       0x98 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(unwind-arm.o)
+                                         0xd8 (size before relaxing)
+ .ARM.exidx     0x0000000008006458       0x30 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(pr-support.o)
+                                         0x48 (size before relaxing)
+                0x0000000008006488                __exidx_end = .
+                0x0000000008006488                __etext = ALIGN (0x4)
+
+.rel.dyn        0x0000000008006488        0x0
+ .rel.iplt      0x0000000008006488        0x0 /tmp/ccdCYHuB.o
+
+.data           0x0000000020000000      0x430 load address 0x0000000008006488
+                0x0000000020000000                __data_start__ = .
+ *(vtable)
+ *(.data*)
+ .data._impure_ptr
+                0x0000000020000000        0x4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-impure.o)
+                0x0000000020000000                _impure_ptr
+ *fill*         0x0000000020000004        0x4 
+ .data.impure_data
+                0x0000000020000008      0x428 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-impure.o)
+                0x0000000020000430                . = ALIGN (0x4)
+                0x0000000020000430                PROVIDE (__preinit_array_start = .)
+ *(.preinit_array)
+                0x0000000020000430                PROVIDE (__preinit_array_end = .)
+                0x0000000020000430                . = ALIGN (0x4)
+                0x0000000020000430                PROVIDE (__init_array_start = .)
+ *(SORT_BY_NAME(.init_array.*))
+ *(.init_array)
+                0x0000000020000430                PROVIDE (__init_array_end = .)
+                0x0000000020000430                . = ALIGN (0x4)
+                0x0000000020000430                PROVIDE (__fini_array_start = .)
+ *(SORT_BY_NAME(.fini_array.*))
+ *(.fini_array)
+                0x0000000020000430                PROVIDE (__fini_array_end = .)
+                0x0000000020000430                . = ALIGN (0x4)
+ *(.fastrun)
+                0x0000000020000430                __data_end__ = .
+
+.igot.plt       0x0000000020000430        0x0 load address 0x00000000080068b8
+ .igot.plt      0x0000000020000430        0x0 /tmp/ccdCYHuB.o
+
+.bss            0x0000000020000430      0x30c load address 0x00000000080068b8
+                0x0000000020000430                . = ALIGN (0x4)
+                0x0000000020000430                __bss_start__ = .
+ *(.bss*)
+ .bss.addr_ptr  0x0000000020000430        0x4 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss.addrh     0x0000000020000434        0x2 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss.bank_table
+                0x0000000020000436        0x2 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss.buff0     0x0000000020000438       0x14 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss.buff1     0x000000002000044c       0x14 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss.buff2     0x0000000020000460       0x14 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss.buff3     0x0000000020000474       0x14 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss.cur_addr_hi
+                0x0000000020000488        0x1 /tmp/ccSlakmW.ltrans0.ltrans.o
+ *fill*         0x0000000020000489        0x1 
+ .bss.cur_addr_lo
+                0x000000002000048a        0x2 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss.cur_bank  0x000000002000048c        0x1 /tmp/ccSlakmW.ltrans0.ltrans.o
+ *fill*         0x000000002000048d        0x3 
+ .bss.cur_buff  0x0000000020000490        0x4 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss.cur_usb_load_buff
+                0x0000000020000494        0x4 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss.incoming_bytes_remain
+                0x0000000020000498        0x1 /tmp/ccSlakmW.ltrans0.ltrans.o
+ *fill*         0x0000000020000499        0x3 
+ .bss.lfsr      0x000000002000049c        0x4 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss.n64_bank  0x00000000200004a0        0x2 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss.num_buff.5211
+                0x00000000200004a2        0x1 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss.num_prg_banks
+                0x00000000200004a3        0x1 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss.oper_info_struct
+                0x00000000200004a4       0x20 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss.pbje_command
+                0x00000000200004c4        0x1 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss.pbje_data
+                0x00000000200004c5       0x20 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss.pbje_numclk
+                0x00000000200004e5        0x1 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss.pbje_status
+                0x00000000200004e6        0x1 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss.raw_bank_status
+                0x00000000200004e7       0x10 /tmp/ccSlakmW.ltrans0.ltrans.o
+ *fill*         0x00000000200004f7        0x1 
+ .bss.raw_buffer16
+                0x00000000200004f8      0x200 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss.rv16.4759
+                0x00000000200006f8        0x8 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss.rv16.5131
+                0x0000000020000700        0x8 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss.sega_addr
+                0x0000000020000708        0x2 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss.sega_bank
+                0x000000002000070a        0x2 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss.stm_debug_disable
+                0x000000002000070c        0x1 /tmp/ccSlakmW.ltrans0.ltrans.o
+ *fill*         0x000000002000070d        0x3 
+ .bss.swim_base
+                0x0000000020000710        0x4 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss.swim_pin  0x0000000020000714        0x1 /tmp/ccSlakmW.ltrans0.ltrans.o
+ *fill*         0x0000000020000715        0x3 
+ .bss.tck_base  0x0000000020000718        0x4 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss.tck_pin   0x000000002000071c        0x1 /tmp/ccSlakmW.ltrans0.ltrans.o
+ *fill*         0x000000002000071d        0x3 
+ .bss.tdi_base  0x0000000020000720        0x4 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss.tdi_pin   0x0000000020000724        0x1 /tmp/ccSlakmW.ltrans0.ltrans.o
+ *fill*         0x0000000020000725        0x3 
+ .bss.tdo_base  0x0000000020000728        0x4 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss.tdo_pin   0x000000002000072c        0x1 /tmp/ccSlakmW.ltrans0.ltrans.o
+ *fill*         0x000000002000072d        0x3 
+ .bss.tms_base  0x0000000020000730        0x4 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .bss.tms_pin   0x0000000020000734        0x1 /tmp/ccSlakmW.ltrans0.ltrans.o
+ *(COMMON)
+ *fill*         0x0000000020000735        0x3 
+ COMMON         0x0000000020000738        0x4 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libg.a(lib_a-reent.o)
+                0x0000000020000738                errno
+                0x000000002000073c                . = ALIGN (0x4)
+                0x000000002000073c                __bss_end__ = .
+
+.heap           0x000000002000073c        0x0
+                0x000000002000073c                __end__ = .
+                0x000000002000073c                PROVIDE (end = .)
+ *(.heap*)
+                0x000000002000073c                __HeapLimit = .
+
+.stack_dummy    0x000000002000073c        0x0
+ *(.stack*)
+                0x0000000020001800                __StackTop = (ORIGIN (RAM) + LENGTH (RAM))
+                0x0000000020001800                __StackLimit = (__StackTop - SIZEOF (.stack_dummy))
+                0x0000000020001800                PROVIDE (__stack = __StackTop)
+                0x0000000000000001                ASSERT ((__StackLimit >= __HeapLimit), region RAM overflowed with stack)
+OUTPUT(build_stm/inlretro_stm.elf elf32-littlearm)
+
+.ARM.attributes
+                0x0000000000000000       0x28
+ .ARM.attributes
+                0x0000000000000000       0x1e /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/crti.o
+ .ARM.attributes
+                0x000000000000001e       0x2f /tmp/ccSlakmW.ltrans0.ltrans.o
+ .ARM.attributes
+                0x000000000000004d       0x21 /tmp/ccpOGIfL.o
+ .ARM.attributes
+                0x000000000000006e       0x1e /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/thumb/v6-m/libgcc.a(_thumb1_case_si.o)
+
+.comment        0x0000000000000000       0x7f
+ .comment       0x0000000000000000       0x7f /tmp/ccSlakmW.ltrans0.ltrans.o
+                                         0x80 (size before relaxing)
+
+.debug_info     0x0000000000000000     0x6adf
+ .debug_info    0x0000000000000000     0x6ab9 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .debug_info    0x0000000000006ab9       0x26 /tmp/ccpOGIfL.o
+
+.debug_abbrev   0x0000000000000000      0x6eb
+ .debug_abbrev  0x0000000000000000      0x6d7 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .debug_abbrev  0x00000000000006d7       0x14 /tmp/ccpOGIfL.o
+
+.debug_loc      0x0000000000000000     0xa442
+ .debug_loc     0x0000000000000000     0xa442 /tmp/ccSlakmW.ltrans0.ltrans.o
+
+.debug_aranges  0x0000000000000000      0x2a0
+ .debug_aranges
+                0x0000000000000000      0x280 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .debug_aranges
+                0x0000000000000280       0x20 /tmp/ccpOGIfL.o
+
+.debug_ranges   0x0000000000000000      0xf98
+ .debug_ranges  0x0000000000000000      0xf98 /tmp/ccSlakmW.ltrans0.ltrans.o
+
+.debug_line     0x0000000000000000     0x20a4
+ .debug_line    0x0000000000000000     0x1fb1 /tmp/ccSlakmW.ltrans0.ltrans.o
+ .debug_line    0x0000000000001fb1       0xf3 /tmp/ccpOGIfL.o
+
+.debug_str      0x0000000000000000     0x1466
+ .debug_str     0x0000000000000000     0x141d /tmp/ccSlakmW.ltrans0.ltrans.o
+                                       0x1522 (size before relaxing)
+ .debug_str     0x000000000000141d       0x49 /tmp/ccpOGIfL.o
+
+.debug_frame    0x0000000000000000      0x854
+ .debug_frame   0x0000000000000000      0x854 /tmp/ccSlakmW.ltrans0.ltrans.o
+
+.stabstr        0x0000000000000000       0x76
+ .stabstr       0x0000000000000000       0x76 /home/antoine/gcc-arm-none-eabi-7-2018-q2-update/bin/../lib/gcc/arm-none-eabi/7.3.1/../../../../arm-none-eabi/lib/thumb/v6-m/libnosys.a(getpid.o)

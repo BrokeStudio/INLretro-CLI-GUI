@@ -1,0 +1,79 @@
+# Name: Makefile
+# Project: custom-class example
+# Author: Christian Starkjohann
+# Creation Date: 2008-04-07
+# Tabsize: 4
+# Copyright: (c) 2008 by OBJECTIVE DEVELOPMENT Software GmbH
+# License: GNU GPL v2 (see License.txt), GNU GPL v3 or proprietary (CommercialLicense.txt)
+
+DEVICE  = atmega164a
+F_CPU   = 16000000	# in Hz
+PROJ	= avr_kazzo
+BUILD	= build_avr
+# Fuses and ISP programming handled in bootloader firmware build
+
+#SOURCES=$(wildcard source/**/*.c source/*.c)
+SOURCES=$(wildcard source/*.c)
+CFLAGS  = -Iusbdrv_Vusb -Isource -DDEBUG_LEVEL=0 -DAVR_CORE -DAVR_KAZZO
+USBOBJ = usbdrv_Vusb/usbdrv.o usbdrv_Vusb/usbdrvasm.o usbdrv_Vusb/oddebug.o
+OBJECTS=$(patsubst %.c,%.o,$(SOURCES)) $(USBOBJ)
+
+COMPILE = avr-gcc -Wall -Os -DF_CPU=$(F_CPU) $(CFLAGS) -mmcu=$(DEVICE)
+
+# symbolic targets:
+help:
+	@echo "This Makefile has no default rule. Use one of the following:"
+	@echo "make hex ............ to build $(BUILD)/$(PROJ).hex"
+	@echo "make program ........ flash firmware via bootloader"
+	@echo "make clean .......... to delete objects and hex file"
+
+hex: $(BUILD)/$(PROJ).hex
+
+program: $(BUILD)/$(PROJ).hex
+	../avr_bootloader/commandline/bootloadHID -r $<
+
+dir:
+	mkdir -p $(BUILD)
+
+# rule for deleting dependent files (those which can be built by Make):
+clean:
+	rm -rf $(BUILD) $(OBJECTS) $(BUILD)/$(PROJ).s usbdrv_Vusb/oddebug.s usbdrv_Vusb/usbdrv.s source/shared_*
+
+# Generic rule for compiling C files:
+.c.o:
+	$(COMPILE) -c $< -o $@
+
+# Generic rule for assembling Assembler source files:
+.S.o:
+	$(COMPILE) -x assembler-with-cpp -c $< -o $@
+# "-x assembler-with-cpp" should not be necessary since this is the default
+# file type for the .S (with capital S) extension. However, upper case
+# characters are not always preserved on Windows. To ensure WinAVR
+# compatibility define the file type manually.
+
+# Generic rule for compiling C to assembler, used for debugging only.
+.c.s:
+	$(COMPILE) -S $< -o $@
+
+# file targets:
+
+$(BUILD)/$(PROJ).elf: dir shared $(OBJECTS)
+	$(COMPILE) -o $(BUILD)/$(PROJ).elf $(OBJECTS)
+
+$(BUILD)/$(PROJ).hex: $(BUILD)/$(PROJ).elf
+	rm -f $(BUILD)/$(PROJ).hex $(BUILD)/$(PROJ).eep.hex
+	avr-objcopy -j .text -j .data -O ihex $(BUILD)/$(PROJ).elf $(BUILD)/$(PROJ).hex
+#	avr-size -C --mcu=${DEVICE} $(BUILD)/$(PROJ).elf
+	avr-size $(BUILD)/$(PROJ).elf
+
+# debugging targets:
+
+disasm:	$(BUILD)/$(PROJ).elf
+	avr-objdump -d $(BUILD)/$(PROJ).elf
+
+cpp:
+	$(COMPILE) -E $(BUILD)/$(PROJ).c
+
+#copy shared .h files which are used in host and firmware
+shared:
+	cp -r ../shared/* source/

@@ -1,0 +1,104 @@
+
+#Build directory
+BUILD = build_stm
+
+#project name
+#doesn't need to be associated with any file names
+PROJ = inlretro_stm
+
+
+# Selecting Core
+CORTEX_M=0
+
+# Use newlib-nano. To disable it, specify USE_NANO=
+#USE_NANO=--specs=nano.specs
+USE_NANO=
+
+# Use seimhosting or not
+USE_SEMIHOST=--specs=rdimon.specs
+USE_NOHOST=--specs=nosys.specs
+
+CORE=CM$(CORTEX_M)
+BASE=.
+
+# Compiler & Linker
+CC=arm-none-eabi-gcc
+CXX=arm-none-eabi-g++
+OBJCOPY=arm-none-eabi-objcopy
+SIZE=arm-none-eabi-size
+
+# Options for specific architecture
+ARCH_FLAGS=-mthumb -mcpu=cortex-m$(CORTEX_M)
+
+# Startup code
+STARTUP=$(BASE)/include_stm/startup_ARM$(CORE).S
+
+# -Os -flto -ffunction-sections -fdata-sections to compile for code size
+CFLAGS=$(ARCH_FLAGS) $(STARTUP_DEFS) -Os -flto -ffunction-sections -fdata-sections -g
+CXXFLAGS=$(CFLAGS)
+
+# Link for code size
+GC=-Wl,--gc-sections
+
+# Create map file
+MAP=-Wl,-Map=$(BUILD)/$(PROJ).map
+
+STARTUP_DEFS=-D__STARTUP_CLEAR_BSS -D__START=main -D__NO_SYSTEM_INIT
+
+LDSCRIPTS=-L. -L$(BASE)/include_stm -T nokeep.ld
+LFLAGS=$(USE_NANO) $(USE_NOHOST) $(LDSCRIPTS) $(GC) $(MAP)
+
+DEFINE+=\
+	-DSTM32F070x6 \
+	-DF_CPU=48000000 \
+	-DSTM_CORE \
+	-DSTM_ADAPTER #stm32 to kazzo adapter board
+#	-DSTM32F070x6 \ #32KB version of both packages (TSSOP-20,LQFP-48)
+#	-DSTM32F072x8 \ #64KB version of all packages (LQFP-48,64,100)
+#	-DSTM32F070xB \ #128KB version of both packages (LQFP-48,64)
+INCLUDE=-I ./include_stm
+CFLAGS+= $(DEFINE) $(INCLUDE) 
+
+#SOURCES=$(wildcard source/**/*.c source/*.c)
+SOURCES=$(wildcard source/*.c source_stm_only/*.c)
+OBJECTS=$(patsubst %.c,%.o,$(SOURCES))
+
+ASM_SRC=$(wildcard source/asm_stm/*.s)
+
+#all: dir shared $(BUILD)/$(PROJ).axf $(BUILD)/$(PROJ).elf $(BUILD)/$(PROJ).hex $(BUILD)/$(PROJ).bin size 
+all: dir shared $(BUILD)/$(PROJ).elf $(BUILD)/$(PROJ).hex $(BUILD)/$(PROJ).bin size 
+
+#build axf file output (basically elf with DWARF debug info)
+# $@ is shortcut for the target, $^ is shortcut for prereqs
+#             TARGET: PREREQS
+$(BUILD)/$(PROJ).axf: $(STARTUP) $(OBJECTS)
+	$(CC) $^ $(ASM_SRC) $(CFLAGS) $(LFLAGS) -o $@
+
+$(BUILD)/$(PROJ).elf: $(STARTUP) $(OBJECTS)
+	$(CC) $^ $(ASM_SRC) $(CFLAGS) $(LFLAGS) -o $@
+
+$(BUILD)/$(PROJ).hex: $(BUILD)/$(PROJ).elf
+	$(OBJCOPY) -O ihex $^ $@
+
+$(BUILD)/$(PROJ).bin: $(BUILD)/$(PROJ).elf
+	$(OBJCOPY) -O binary $^ $@
+
+dir:
+	mkdir -p $(BUILD)
+
+#copy shared .h files which are used in host and firmware
+shared:
+	cp -r ../shared/* source/
+
+size:	$(BUILD)/$(PROJ).elf
+	$(SIZE) -t $^
+
+program: all
+	ST-LINK_CLI.exe -c -P $(BUILD)\$(PROJ).hex 0x08000000 -Rst
+
+disassm: all
+	arm-none-eabi-objdump $(BUILD)\$(PROJ).elf -d -g
+
+clean: 
+	rm -rf $(BUILD)
+	rm -f $(OBJECTS)
