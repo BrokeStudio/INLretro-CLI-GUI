@@ -1,123 +1,36 @@
-name: build
+name: Build Firmware
 
 on:
   push:
-    branches: ["master"]
+    branches: [master]
   pull_request:
-    branches: ["master"]
-
-env:
-  # Path to the solution file relative to the root of the project.
-  SOLUTION_FILE_PATH: INLretro.sln
-
-  # Configuration type to build.
-  # You can convert this to a build matrix if you need coverage of multiple configuration types.
-  # https://docs.github.com/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-  BUILD_CONFIGURATION: Dist
-
-permissions:
-  contents: read
+    branches: [master]
 
 jobs:
-  windows:
-    strategy:
-      matrix:
-        platform:
-          [
-            { arch: "Win32", SDL2libPath: "x86", binPath: "x86" },
-            { arch: "x64", SDL2libPath: "x64", binPath: "x86_64" },
-          ]
-      fail-fast: false
-    runs-on: windows-2025
-    steps:
-      - uses: actions/checkout@v3
-
-      - uses: abel0b/setup-premake@v2.4
-        with:
-          version: "5.0.0-beta2"
-
-      - name: Add MSBuild to PATH
-        uses: microsoft/setup-msbuild@v1.1
-
-      # - name: Build SDL2 statically
-      #   run: |
-      #     git clone https://github.com/libsdl-org/SDL.git
-      #     cd SDL
-      #     git checkout release-2.32.x
-      #     cmake -S . -B build -DSDL_STATIC=ON -DSDL_SHARED=OFF -DSDL_TEST_LIBRARY=OFF -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded" -A ${{ matrix.platform.arch }}
-      #     cmake --build build --config Release
-      #     Copy-Item "build\Release\SDL2-static.lib" -destination "..\External\SDL2\lib\${{ matrix.platform.SDL2libPath }}-static-release" -force
-
-      - name: Prepare MSVC project files
-        run: premake5 --file=Build.lua vs2022
-
-      - name: Build
-        run: msbuild INLretro.sln -nologo -t:rebuild -verbosity:detailed -clp:ForceConsoleColor -m -property:Configuration=Dist -p:Platform=${{ matrix.platform.arch }}
-
-      - name: Upload INLretroGUI
-        uses: actions/upload-artifact@v4
-        with:
-          name: INLretroGUI+CLI_Windows_${{ matrix.platform.arch }}
-          path: Binaries/windows-${{ matrix.platform.binPath }}/Dist/INLretro
-
-  linux-ubuntu64:
-    runs-on: ubuntu-22.04
+  build:
+    runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-
-      - uses: abel0b/setup-premake@v2.4
-        with:
-          version: "5.0.0-beta2"
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: sudo apt-get install libsdl2-dev libusb-1.0-0-dev
+        run: sudo apt-get update && sudo apt-get install -y build-essential wget tar
 
-      - name: Generate make file
-        run: premake5 --cc=clang --file=Build.lua gmake2
-
-      - name: Build
-        run: make config=dist
-
-      - name: Upload INLretroGUI
-        uses: actions/upload-artifact@v4
-        with:
-          name: INLretroGUI+CLI_Linux
-          path: Binaries/linux-x86_64/Dist/INLretro
-
-  macos:
-    runs-on: macos-13
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - uses: abel0b/setup-premake@v2.4
-        with:
-          version: "5.0.0-beta2"
-
-      - name: Install Dependencies
-        run: brew install sdl2
-        # libusb
-
-      - name: Prepare make file
-        run: premake5 --file=Build.lua gmake2
-
-      - name: Build
-        run: make config=dist
-
-      - name: Upload INLretroGUI (app)
-        uses: actions/upload-artifact@v4
-        with:
-          name: INLretroGUI_macOS
-          path: Binaries/macosx-universal/Dist/app
-
-      - name: Delete GUI executable and .ini file
+      - name: Install arm-none-eabi-gcc 7.3.1
         run: |
-          rm Binaries/macosx-universal/Dist/INLretro/INLretroGUI
-          rm Binaries/macosx-universal/Dist/INLretro/INLretro.ini
+          GCC_VERSION="7-2018q2"
+          GCC_DIR="gcc-arm-none-eabi-7-2018-q2-update"
+          GCC_TAR="${GCC_DIR}-linux.tar.bz2"
+          wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/${GCC_VERSION}/${GCC_TAR}
+          tar -xjf ${GCC_TAR}
+          echo "$PWD/${GCC_DIR}/bin" >> $GITHUB_PATH
+          # export PATH="$PWD/${GCC_DIR}/bin:$PATH" // sous linux
 
-      - name: Upload INLretro CLI
-        uses: actions/upload-artifact@v4
-        with:
-          name: INLretroCLI_macOS
-          path: Binaries/macosx-universal/Dist/INLretro
+      - name: Verify compiler version
+        run: arm-none-eabi-gcc --version
+
+      - name: Build project
+        run: |
+          cd firmware
+          make stm6clean
