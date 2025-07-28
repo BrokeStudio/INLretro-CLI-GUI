@@ -47,7 +47,8 @@ USBDESC const uint8_t device_desc[DEVICE_DESC_LEN] = {
 					//0x00, 0x02,	early development version
 					//0x01, 0x02,	//first public release 7SEP2018
 					//0x02, 0x02,	//second public release 16NOV2018
-					0x03, 0x02,	//third public release 30NOV2018
+					// 0x03, 0x02,	//third public release 30NOV2018
+          0x04, 0x02,	//fourth public release XXYYY2025 (Broke Studio)
 							//v2.3 is first to contain switchless USB firmware updates
 							//application version numbers also included in this release
 							//application version are meant to tack onto end of usb version

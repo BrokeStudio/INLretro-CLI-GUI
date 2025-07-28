@@ -34,14 +34,17 @@ jobs:
         run: |
           cd firmware
           make stm6clean
+        # make all
 
       - name: Update firmware binary file
         run: |
-          echo -n "AV04" | dd of=firmware/build_stm/inlretro_stm.bin bs=1 seek=$((0x800)) conv=notrunc
-          cp firmware/build_stm/inlretro_stm.bin firmware/build_stm/inlretro_stm_AV04.bin
+          echo -n "AV04" | dd of=firmware/build_stm6/inlretro_stm.bin bs=1 seek=$((0x800)) conv=notrunc
+          cp firmware/build_stm6/inlretro_stm.bin firmware/release/inlretro_stm6_AV04.bin
+        # echo -n "AV04" | dd of=firmware/build_stmn/inlretro_stm.bin bs=1 seek=$((0x800)) conv=notrunc
+        # cp firmware/build_stmn/inlretro_stm.bin firmware/release/inlretro_stmn_AV04.bin
 
       - name: Upload INLretro firmware
         uses: actions/upload-artifact@v4
         with:
-          name: INLretro-firmware-AV04-stm6
-          path: firmware/build_stm
+          name: INLretro-firmware-AV04
+          path: firmware/release

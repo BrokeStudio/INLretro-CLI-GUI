@@ -9,19 +9,19 @@ all:
 
 avr:
 	make -f Make_avr clean all
-  # program
+	# program
 stm6:
 	make -f Make_stm_inl6 all
-  # program
+	# program
 stm6clean:
 	make -f Make_stm_inl6 clean all
-  # program
+	cp -r build_stm/* build_stm6
 stm6p:
 	make -f Make_stm_inl6p clean all
-  # program
+	# program
 stmad:
 	make -f Make_stm_adapter clean all
-  # program
+	# program
 stmn:
 	make -f Make_stm_nes clean all
-  # program
+	# program
