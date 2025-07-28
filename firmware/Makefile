@@ -8,20 +8,20 @@ all:
 	make -f Make_avr clean hex
 
 avr:
-	make -f Make_avr clean
+	make -f Make_avr clean all
   # program
 stm6:
-	make -f Make_stm_inl6
+	make -f Make_stm_inl6 all
   # program
 stm6clean:
-	make -f Make_stm_inl6 clean
+	make -f Make_stm_inl6 clean all
   # program
 stm6p:
-	make -f Make_stm_inl6p clean
+	make -f Make_stm_inl6p clean all
   # program
 stmad:
-	make -f Make_stm_adapter clean
+	make -f Make_stm_adapter clean all
   # program
 stmn:
-	make -f Make_stm_nes clean
+	make -f Make_stm_nes clean all
   # program
