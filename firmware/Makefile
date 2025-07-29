@@ -2,8 +2,10 @@
 
 all:
 	make -f Make_stm_nes clean all
+	mkdir -p build_stmn
 	cp -r build_stm/* build_stmn
 	make -f Make_stm_inl6 clean all
+	mkdir -p build_stm6
 	cp -r build_stm/* build_stm6
 	make -f Make_avr clean hex
 

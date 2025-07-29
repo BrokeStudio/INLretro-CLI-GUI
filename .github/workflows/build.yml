@@ -33,8 +33,7 @@ jobs:
       - name: Build project
         run: |
           cd firmware
-          make stm6clean
-        # make all
+          make all
 
       - name: Update firmware binary file
         run: |
