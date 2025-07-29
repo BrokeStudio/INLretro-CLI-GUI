@@ -25,12 +25,12 @@ uint8_t pinport_call( uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_
 	//create pointer to first two bytes of return data array
 	uint16_t *ret_hword = (uint16_t*) &rdata[RD0];
 
-	switch (opcode) { 
+	switch (opcode) {
 
 		//============================
 		//CONTROL PORT INDIVIDUAL PIN ACCESS
 		//opcode: type of pin operation
-		//operand: pin number to act on 
+		//operand: pin number to act on
 		//============================
 		case CTL_ENABLE_:	CTL_ENABLE();		break;
 		case CTL_IP_PU_:
@@ -55,9 +55,9 @@ uint8_t pinport_call( uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_
 				case 12: CTL_IP_PU(C12bank,C12); break;
 				#endif
 				#ifndef C13nodef
-				case 13: CTL_IP_PU(C13bank,C13); 
+				case 13: CTL_IP_PU(C13bank,C13);
 					#ifdef PURPLE_KAZZO
-					CTL_IP_PU(C3bank,C3); 
+					CTL_IP_PU(C3bank,C3);
 					#endif
 					 break;
 				#endif
@@ -114,9 +114,9 @@ uint8_t pinport_call( uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_
 				case 12: CTL_IP_FL(C12bank,C12); break;
 				#endif
 				#ifndef C13nodef
-				case 13: CTL_IP_FL(C13bank,C13); 
+				case 13: CTL_IP_FL(C13bank,C13);
 					#ifdef PURPLE_KAZZO
-					CTL_IP_FL(C3bank,C3); 
+					CTL_IP_FL(C3bank,C3);
 					#endif
 					 break;
 				#endif
@@ -174,7 +174,7 @@ uint8_t pinport_call( uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_
 				#ifndef C13nodef
 				case 13: CTL_OP(C13bank,C13);
 					#ifdef PURPLE_KAZZO
-					CTL_OP(C3bank,C3); 
+					CTL_OP(C3bank,C3);
 					#endif
 					 break;
 				#endif
@@ -250,7 +250,7 @@ uint8_t pinport_call( uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_
 				#ifndef C13nodef
 				case 13: CTL_SET_LO(C13bank,C13);
 					#ifdef PURPLE_KAZZO
-					CTL_SET_LO(C3bank,C3); 
+					CTL_SET_LO(C3bank,C3);
 					#endif
 					 break;
 				#endif
@@ -308,7 +308,7 @@ uint8_t pinport_call( uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_
 				#ifndef C13nodef
 				case 13: CTL_SET_HI(C13bank,C13);
 					#ifdef PURPLE_KAZZO
-					CTL_SET_HI(C3bank,C3); 
+					CTL_SET_HI(C3bank,C3);
 					#endif
 					 break;
 				#endif
@@ -394,7 +394,7 @@ uint8_t pinport_call( uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_
 				case 22: CTL_RD(C22bank,C22, *ret_hword); break;
 				#endif
 // BROKE STUDIO
-				default: rdata[RD_LEN] = 0; 
+				default: rdata[RD_LEN] = 0;
 					return ERR_CTL_PIN_NOT_PRESENT;
 			}
 			break;
@@ -417,6 +417,7 @@ uint8_t pinport_call( uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_
 		//opcode: type of operation
 		//operand: value to place on bus
 		//============================
+#ifdef STM_INL6	//DATA16 not present when there's no 16bit console connector
 		case DATA16_ENABLE_:	DATA16_ENABLE();		break;
 		//case DATA16_IP_PU_: 	DATA16_IP_PU();		break;
 		case DATA16_IP_: 		DATA16_IP();		break;
@@ -424,6 +425,7 @@ uint8_t pinport_call( uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_
 		case DATA16_SET_: 	DATA16L_SET(operand); operand = operand >> 8; DATA16H_SET(operand); break;
 		case DATA16_RD_:		DATA16L_RD(rdata[RD0]); DATA16H_RD(rdata[RD1]);
 					rdata[RD_LEN] = 2;	break;
+#endif
 
 		//============================
 		//ADDR PORT 16bit WIDE ACCESS
@@ -480,7 +482,7 @@ uint8_t pinport_call( uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_
 			 //macro doesn't exist or isn't on this PCB version
 			 return ERR_UNKN_PP_OPCODE;
 	}
-	
+
 	return SUCCESS;
 }
 
@@ -492,8 +494,8 @@ uint8_t pinport_call( uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_
  * 	goal is to make board versions 'identical'
  * 	to do this we assume higher level functions will have already
  * 	placed desired latch value on PORTB "Dbank->PORT"
- * 	we need to juggle this data around and not stomp on anything 
- * Pre: DATA_OP() set 	
+ * 	we need to juggle this data around and not stomp on anything
+ * Pre: DATA_OP() set
  * 	curAHLaddr set by software_AHL_CLK
  * 	Dbank->PORT contains desired value to be latched by EXP FF
  * 	AXHL might not be set as O/P
@@ -515,7 +517,7 @@ void software_AXL_CLK()
 	//first store current DATA & ADDR values
 	curAXLaddr = Dbank->PORT;	//This is desired AXL value
 	uint8_t orig_addr = ALbank->PORT;	//PORTA
-	
+
 	//Put current AHL latched value on DATA as that's where it'll be relatched
 	//software_AHL_CLK function is one to maintain this value
 	Dbank->PORT = curAHLaddr;
@@ -539,7 +541,7 @@ void software_AXL_CLK()
 /* Desc: Same premise as software_AXL_CLK above.
  * 	this is a little simpler as data has already been feed with AHL value.
  * 	just need to make sure AXL latch doesn't get corrupted.
- * Pre: DATA_OP() set 	
+ * Pre: DATA_OP() set
  * 	curAXLaddr set by software_AXL_CLK
  * 	Dbank->PORT contains desired value to be latched by ADDRMID FF
  * 	AXHL is already set to O/P
@@ -554,7 +556,7 @@ void software_AHL_CLK()
 	//first store current DATA & ADDR values
 	curAHLaddr = Dbank->PORT;	//This is desired AHL value (store it for other function's use)
 	uint8_t orig_addr = ALbank->PORT;	//PORTA
-	
+
 	//Desired AHL latch value should have already been placed on Dbank->PORT.
 
 	//set ADDR as O/P and place curAXLaddr on bus other function should have updated it last latch
