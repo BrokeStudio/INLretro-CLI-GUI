@@ -63,19 +63,21 @@
 // #define log_info(L, M, ...) fprintf(stderr, "[INFO] (%s:%d) " M "\n", \
 //                                  __FILE__, __LINE__, ##__VA_ARGS__)
 
-#define check(L, A, M, ...)       \
-  if (!(A))                       \
-  {                               \
-    log_err(L, M, ##__VA_ARGS__); \
-    errno = 0;                    \
-    goto error;                   \
+#define check(L, A, M, ...)         \
+  if (!(A))                         \
+  {                                 \
+    if (L)                          \
+      log_err(L, M, ##__VA_ARGS__); \
+    errno = 0;                      \
+    goto error;                     \
   }
 
-#define sentinel(L, M, ...)       \
-  {                               \
-    log_err(L, M, ##__VA_ARGS__); \
-    errno = 0;                    \
-    goto error;                   \
+#define sentinel(L, M, ...)         \
+  {                                 \
+    if (L)                          \
+      log_err(L, M, ##__VA_ARGS__); \
+    errno = 0;                      \
+    goto error;                     \
   }
 
 #define check_mem(L, A) check((L), (A), "Out of memory.")

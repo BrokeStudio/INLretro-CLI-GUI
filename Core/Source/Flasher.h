@@ -32,17 +32,12 @@ public:
 
   // public methods
   int t_inlprog_opt(const t_INLoptions_std &opts);
-  // int t_inlprog_opt(t_INLoptions_std opts);
   int inlprog_opt(const t_INLoptions_std &opts);
-  // int t_inlprog_cli(const t_INLoptions &opts);
-  // int inlprog_opt(t_INLoptions opts);
   bool exec(t_INLoptions_std opts);
 
 private:
   // private methods
-  // int is_valid_rom_size(int x, int min);
-  void cleanup(USBtransfer *transfer); // , lua_State* L);
-  // t_INLoptions convert_INLOptions(t_INLoptions_std *_opts);
+  void cleanup(USBtransfer *transfer);
 
   // static methods
   static USBtransfer *usb_inldevice_open(int libusb_log, char *retroprog_id, Log *log);

@@ -242,7 +242,7 @@ namespace Settings
 #if defined(_DEBUG) || defined(_RELEASE)
     ImGui::Text(ICON_FA_MICROCHIP " INLretro GUI v%s-dev+build.%d", INLRETRO_GUI_VERSION, INLRETRO_GUI_BUILD);
 #else
-    ImGui::Text(ICON_FA_MICROCHIP " INLretro GUI v%s", INLRETRO_GUI_VERSION, INLRETRO_GUI_BUILD);
+    ImGui::Text(ICON_FA_MICROCHIP " INLretro GUI v%s", INLRETRO_GUI_VERSION);
 #endif
     ImGui::Separator();
     ImGui::Text("2024-2025, Broke Studio");

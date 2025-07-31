@@ -33,13 +33,10 @@ namespace Menu
     }
 
     menu_order.push_back("Flashers");
-    Menu::menu["Flashers"] = {false, &Settings::render_flashers};
+    Menu::menu["Flashers"] = {true, &Settings::render_flashers};
 
     menu_order.push_back("Settings");
     Menu::menu["Settings"] = {false, &Settings::render_settings};
-
-    // menu_order.push_back("Log");
-    // Menu::menu["Log"] = { true, &AppLog::render };
 
     menu_order.push_back("About");
     Menu::menu["About"] = {false, &Settings::render_about};

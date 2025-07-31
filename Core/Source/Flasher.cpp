@@ -192,7 +192,7 @@ void Flasher::clear_list()
 
 void Flasher::detect_all()
 {
-  // clrear flasher list
+  // clear flasher list
   clear_list();
 
   // try to detect INL Retro-Prog flasher
@@ -259,13 +259,13 @@ void Flasher::exec_all(t_INLoptions_std opts)
  * @param id Flasher ID, last character of the USB device name (INL Retro-Pro_)
  * @param isActive Flasher to be used or not
  */
-Flasher::Flasher(const std::string &_id, bool _isActive)
+Flasher::Flasher(const std::string &id, bool isActive)
 {
-  id = _id;
-  isActive = _isActive;
+  this->id = id;
+  this->isActive = isActive;
   lua.setLog(&this->log);
 
-  isFlashing = false;
+  this->isFlashing = false;
 }
 
 /**
@@ -347,7 +347,6 @@ bool Flasher::detect(char *retroprog_id)
  *
  * @param opts
  */
-// bool Flasher::flash(INLOptions *opts)
 bool Flasher::exec(t_INLoptions_std opts)
 {
   // // Check for sane user input.

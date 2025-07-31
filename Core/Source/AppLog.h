@@ -12,10 +12,7 @@
 
 namespace AppLog
 {
-  // extern bool cliOutput;
   extern Log log;
-  // void render();
-  // void sys_add(LogTypes type, const char *fmt, ...);
 }
 
 #endif
