@@ -1,6 +1,7 @@
 #include "IconsFontAwesome6.h"
 
 #include "AppLog.h"
+#include "Dialog.h"
 #include "Flasher.h"
 #include "Ini.h"
 #include "Settings.h"
@@ -13,6 +14,11 @@
 #else
 #include <libusb-1.0/libusb.h>
 #endif
+
+#define STM6_FIRMWARE "firmware/inlretro_stm6.bin"
+#define STMN_FIRMWARE "firmware/inlretro_stmn.bin"
+
+using namespace std::placeholders; // for `_1`, `_2`
 
 namespace Settings
 {
@@ -104,12 +110,14 @@ namespace Settings
     else
     {
 
-      if (ImGui::BeginTable("flashers_table", 3, ImGuiTableFlags_SizingStretchProp))
+      if (ImGui::BeginTable("flashers_table", 5, ImGuiTableFlags_SizingStretchProp))
       {
         // Header
         ImGui::TableSetupColumn("Name");
         ImGui::TableSetupColumn("Active");
+        ImGui::TableSetupColumn("Type");
         ImGui::TableSetupColumn("Firmware");
+        ImGui::TableSetupColumn("");
         ImGui::TableHeadersRow();
 
         // Flashers
@@ -121,23 +129,65 @@ namespace Settings
           ImGui::TableSetColumnIndex(0);
           char label[32];
           snprintf(label, sizeof(label), "INL Retro-Pro%s", flasher->id.c_str());
-          ImGui::TextUnformatted(label);
+          if (flasher->hardwareType == HW_UNKW)
+          {
+            ImGui::BeginGroup();
+            ImGui::TextColored(ImVec4(1.0f, 0.734f, 0.189f, 1.0f), ICON_FA_TRIANGLE_EXCLAMATION);
+            ImGui::SameLine();
+            ImGui::TextUnformatted(label);
+            ImGui::EndGroup();
+            ImGui::SetItemTooltip("The firmware is outdated and needs to be updated to be compatible.");
+          }
+          else
+          {
+            ImGui::TextUnformatted(label);
+          }
           ImGui::TableSetColumnIndex(1);
           snprintf(label, sizeof(label), "##flasher_is_active%s", flasher->id.c_str());
           ImGui::Checkbox(label, &flasher->isActive);
           ImGui::TableSetColumnIndex(2);
+          char *models[] = {"UNKNOWN", "HW_STM6", "HW_STMN", "HW_STM6P", "HW_AVR"};
+          ImGui::Text("%s", models[flasher->hardwareType]);
+          ImGui::TableSetColumnIndex(3);
+          ImGui::Text("v2.%d", flasher->firmwareVersion);
+          // ImGui::Text("v%d.%d", (flasher->firmwareVersion & 0xff00) >> 8, flasher->firmwareVersion & 0xff);
+          ImGui::TableSetColumnIndex(4);
           if (!flasher->isActive)
             ImGui::BeginDisabled();
-          snprintf(label, sizeof(label), "Update firmware##inlretropro%s", flasher->id.c_str());
-          if (ImGui::Button(label))
+
+          snprintf(label, sizeof(label), "Update firmware...##inlretropro%s", flasher->id.c_str());
+
+          if (ImGui::BeginPopupContextItem("custom update firmware"))
           {
-            // scripts/inlretro_inl6fwupdate.lua
-            t_INLoptions_std firmware_INLOptions;
-            firmware_INLOptions.gui = true;
-            firmware_INLOptions.retroprog_id = flasher->id;
-            firmware_INLOptions.lua_file = Settings::settings.firmware_update_script; // "scripts/inlretro_fwupdate.lua";
-            flasher->exec(firmware_INLOptions);
+            ImGui::Text("Select your flasher model:");
+            ImGui::Separator();
+            if (flasher->hardwareType == HW_UNKW || flasher->hardwareType == HW_STM6)
+              if (ImGui::Selectable("INLretro 6 connectors"))
+                flasher->update_firmware(STM6_FIRMWARE);
+
+            if (flasher->hardwareType == HW_UNKW || flasher->hardwareType == HW_STMN)
+              if (ImGui::Selectable("INLretro NESmaker edition"))
+                flasher->update_firmware(STMN_FIRMWARE);
+
+            // ImGui::BeginDisabled(true);
+            // ImGui::Selectable("INL Kazzo");
+            // ImGui::EndDisabled();
+            ImGui::Separator();
+
+            if (ImGui::Selectable("Use custom file..."))
+            {
+              Dialog::fileExt = ".bin";
+              Dialog::callback = std::bind(&Flasher::cb_custom_firmware_update, flasher, _1, _2);
+              Dialog::showFileOpen = true;
+              Dialog::showFileSave = false;
+            }
+
+            ImGui::EndPopup();
           }
+
+          if (ImGui::Button(label))
+            ImGui::OpenPopup("custom update firmware");
+
           if (!flasher->isActive)
             ImGui::EndDisabled();
 
@@ -157,6 +207,10 @@ namespace Settings
     }
     ImGui::EndDisabled();
     ImGui::EndChild();
+
+    // Always center this window when appearing
+    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
   }
 
   /**

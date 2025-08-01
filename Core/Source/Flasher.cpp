@@ -24,172 +24,6 @@ void Flasher::clear_list()
   list.clear();
 }
 
-// static char check_device(libusb_device *dev, libusb_device_handle *handle)
-// {
-//   char result = '\0';
-//   char inl_prod_id = '\0';
-//   libusb_device_descriptor desc; // struct
-//   char manf_str[256] = {0};
-//   char prod_str[256] = {0};
-//   char inl_manf_str[] = "InfiniteNesLives.com";
-//   char inl_prod_str[] = "INL Retro-Pro"; // g"; // last character remove to support multiple flashers
-//   uint16_t min_fw_ver = 0x200;
-//   int ret;
-
-//   // get device descriptor
-//   ret = libusb_get_device_descriptor(dev, &desc);
-//   if (ret < 0)
-//   {
-//     fprintf(stderr, "failed to get device descriptor");
-//     return result;
-//   }
-
-//   // check device vendor id and product it
-//   if ((desc.idVendor == 0x16C0) && (desc.idProduct == 0x05DC))
-//   {
-//     // try to open device if needed
-//     if (!handle)
-//     {
-//       ret = libusb_open(dev, &handle);
-//       if (ret < 0)
-//       {
-//         fprintf(stderr, "failed to open device");
-//         return result;
-//       }
-//     }
-
-//     // read manufacturer string
-//     if (desc.iManufacturer)
-//     {
-//       ret = libusb_get_string_descriptor_ascii(handle, desc.iManufacturer, (unsigned char *)manf_str, sizeof(manf_str));
-//       // if (ret > 0)
-//       //   printf("  Manufacturer:              %s\n", manf_str);
-//     }
-
-//     // read product string
-//     if (desc.iProduct)
-//     {
-//       ret = libusb_get_string_descriptor_ascii(handle, desc.iProduct, (unsigned char *)prod_str, sizeof(prod_str));
-//       // if (ret > 0)
-//       //   printf("  Product:                   %s\n", prod_str);
-//     }
-
-//     // check manufacturer id
-//     if (strcmp(manf_str, inl_manf_str) == 0)
-//     {
-//       // save and clear the last character so we can support multiple flasher
-//       // the last character is then used to differentiate the flashers
-//       inl_prod_id = prod_str[13];
-//       prod_str[13] = '\0';
-
-//       // check product id
-//       if (strcmp(prod_str, inl_prod_str) == 0)
-//       {
-//         // check firmware version
-//         if (desc.bcdDevice >= min_fw_ver)
-//         {
-//           result = inl_prod_id;
-//         }
-//       }
-//     }
-//   }
-
-//   if (handle)
-//   {
-//     libusb_close(handle);
-//   }
-
-//   return result;
-// }
-
-// void Flasher::detect_all_2()
-// {
-//   const char *device_name = NULL;
-//   libusb_device **devs;
-//   ssize_t cnt;
-
-//   cnt = libusb_get_device_list(NULL, &devs);
-//   if (cnt < 0)
-//   {
-//     return;
-//   }
-
-//   // search for INL flashers
-//   for (int i = 0; i < cnt; i++)
-//   {
-//     libusb_device *dev = devs[i];
-//     libusb_device_handle *handle = NULL;
-
-//     char id = check_device(dev, handle);
-//     if (id != '\0')
-//     {
-//       list.push_back(new Flasher(std::string(1, id), true));
-//     }
-
-//     // struct libusb_device_descriptor desc;
-//     // unsigned char string[256];
-//     // int ret;
-
-//     // // get device descriptor
-//     // ret = libusb_get_device_descriptor(dev, &desc);
-//     // if (ret < 0)
-//     // {
-//     //   fprintf(stderr, "failed to get device descriptor");
-//     //   return;
-//     // }
-
-//     // // check if device is INLretroprog
-//     // if ((desc.idVendor == 0x16C0) && (desc.idProduct == 0x05DC))
-//     // {
-//     //   // try to open device if needed
-//     //   if (!handle)
-//     //   {
-//     //     ret = libusb_open(dev, &handle);
-//     //     printf("libusb_open ret val: %i\n", ret);
-//     //     if (ret < 0)
-//     //     {
-//     //       fprintf(stderr, "failed to get open device");
-//     //       return;
-//     //     }
-//     //   }
-
-//     //   // read manufacturer string
-//     //   if (desc.iManufacturer)
-//     //   {
-//     //     ret = libusb_get_string_descriptor_ascii(handle, desc.iManufacturer, string, sizeof(string));
-//     //     // if (ret > 0)
-//     //     printf("  Manufacturer:              %s\n", (char *)string);
-//     //   }
-
-//     //   // read product string
-//     //   if (desc.iProduct)
-//     //   {
-//     //     ret = libusb_get_string_descriptor_ascii(handle, desc.iProduct, string, sizeof(string));
-//     //     // if (ret > 0)
-//     //     printf("  Product:                   %s\n", (char *)string);
-//     //   }
-//     // }
-
-//     // if (handle)
-//     // {
-//     //   // for (int j = 0; i < sizeof(string); i++)
-//     //   // {
-//     //   //  if(string[j] == 0) break;
-//     //   //     if(j==sizeof(string))
-//     //   //     {
-//     //   //       j = -1;
-//     //   //       break;
-//     //   //     }
-//     //   //     j++;
-//     //   // }
-//     //   // list.push_back(new Flasher("g", true));
-//     //   libusb_close(handle);
-//     // }
-//   }
-
-//   libusb_free_device_list(devs, 1);
-// }
-
 void Flasher::detect_all()
 {
   // clear flasher list
@@ -211,7 +45,7 @@ void Flasher::detect_all()
     if (detect(id))
     {
       list.push_back(new Flasher(id, true));
-      APP_LOG(LogTypes_Success, "[SYS] Flasher 'INLretropro" + std::string(id) + "' detected");
+      APP_LOG(LogTypes_Success, "[SYS] Flasher 'INLretropro%d' detected", id);
     }
   }
 }
@@ -263,6 +97,8 @@ Flasher::Flasher(const std::string &id, bool isActive)
 {
   this->id = id;
   this->isActive = isActive;
+  this->firmwareVersion = get_device_version(this->id.c_str()[0]);
+  this->hardwareType = get_device_hardware_type(this->id.c_str()[0]);
   lua.setLog(&this->log);
 
   this->isFlashing = false;
@@ -349,46 +185,6 @@ bool Flasher::detect(char *retroprog_id)
  */
 bool Flasher::exec(t_INLoptions_std opts)
 {
-  // // Check for sane user input.
-  // if (strcmp("nes", opts.console_name) == 0)
-  // {
-  //   // ROM sizes must be non-zero, power of 2, and greater than 16.
-  //   if (!is_valid_rom_size(opts.prg_rom_size_kb, 16))
-  //   {
-  //     printf("PRG-ROM must be non-zero power of 2, 16kb or greater.\n");
-  //     return false;
-  //   }
-  //   // Not having CHR-ROM is normal for certain types of carts.
-  //   // TODO: Update these checks with known info about mappers/carts.
-  //   if (!is_valid_rom_size(opts.chr_rom_size_kb, 8) && opts.chr_rom_size_kb != 0)
-  //   {
-  //     printf("CHR-ROM must be zero or power of 2, 8kb or greater.\n");
-  //     return false;
-  //   }
-
-  //   // Not having WRAM is very normal.
-  //   if (!is_valid_rom_size(opts.wram_size_kb, 8) && opts.wram_size_kb != 0)
-  //   {
-  //     printf("WRAM must be zero or power of 2, 8kb or greater.\n");
-  //     return false;
-  //   }
-  // }
-
-  // if ((strcmp("gba", opts.console_name) == 0) ||
-  //     (strcmp("n64", opts.console_name) == 0))
-  // {
-  //   if (opts.rom_size_kb <= 0)
-  //   {
-  //     printf("ROM size must be greater than 0 kilobytes.\n");
-  //     return false;
-  //   }
-  //   if (opts.rom_size_kb % 128)
-  //   {
-  //     printf("ROM size for this system must translate into megabits with no kilobyte remainder.\n");
-  //     return false;
-  //   }
-  // }
-
   // clear log
   log.clear();
 
@@ -402,11 +198,20 @@ bool Flasher::exec(t_INLoptions_std opts)
   }
   else
   {
-    // t_INLoptions _opts = convert_INLOptions(&opts);
     inlprog_opt(opts);
   }
 
   return true;
+}
+
+void Flasher::update_firmware(std::string firmware_file)
+{
+  t_INLoptions_std firmware_INLOptions;
+  firmware_INLOptions.gui = true;
+  firmware_INLOptions.retroprog_id = this->id;
+  firmware_INLOptions.rom_write_file = firmware_file;
+  firmware_INLOptions.lua_file = "scripts/inlretro_fwupdate.lua";
+  this->exec(firmware_INLOptions);
 }
 
 /**
@@ -417,37 +222,10 @@ bool Flasher::exec(t_INLoptions_std opts)
  */
 int Flasher::t_inlprog_opt(const t_INLoptions_std &opts)
 {
-  // TODO...
-  // t_INLoptions _opts = convert_INLOptions(&opts);
   int r = inlprog_opt(opts);
   isFlashing = false;
   return r;
-  // return 0;
 }
-
-// t_INLoptions Flasher::convert_INLOptions(t_INLoptions_std *_opts)
-// {
-//   // convert options from t_INLoptions_std to t_INLoptions
-//   t_INLoptions opts = {0};
-//   opts.additional_opts = (char *)_opts->additional_opts.c_str();
-//   opts.chr_rom_size_kb = _opts->chr_rom_size_kb;
-//   opts.console_name = (char *)_opts->console_name.c_str();
-//   opts.debug = _opts->debug;
-//   opts.display_help = _opts->display_help;
-//   opts.gui = _opts->gui;
-//   opts.lua_file = (char *)_opts->lua_file.c_str();
-//   opts.mapper_name = (char *)_opts->mapper_name.c_str();
-//   opts.prg_rom_size_kb = _opts->prg_rom_size_kb;
-//   opts.ram_dump_file = (char *)_opts->ram_dump_file.c_str();
-//   opts.ram_write_file = (char *)_opts->ram_write_file.c_str();
-//   opts.retroprog_id = (char *)_opts->retroprog_id.c_str();
-//   opts.rom_dump_file = (char *)_opts->rom_dump_file.c_str();
-//   opts.rom_size_kb = _opts->rom_size_kb;
-//   opts.rom_write_file = (char *)_opts->rom_write_file.c_str();
-//   opts.verify = _opts->verify;
-//   opts.wram_size_kb = _opts->wram_size_kb;
-//   return opts;
-// }
 
 /**
  * @brief
@@ -513,7 +291,12 @@ int Flasher::inlprog_opt(const t_INLoptions_std &opts)
   check(&log, ((libusb_log >= LIBUSB_LOG_LEVEL_NONE) && (libusb_log <= LIBUSB_LOG_LEVEL_DEBUG)),
         "Invalid LIBUSB_LOG_LEVEL: %d, must be from 0 to 4", libusb_log);
 
+  // USBtransfer *transfer = (USBtransfer *)calloc(1, sizeof(USBtransfer));
+
   transfer = usb_inldevice_open(libusb_log, (char *)opts.retroprog_id.c_str(), &log);
+
+  // transfer->handle = usb_open(opts.retroprog_id.c_str()[0]);
+
   check_mem(&log, transfer);
   /*if (transfer->handle == NULL) {
     printf("oops");
@@ -573,15 +356,3 @@ void Flasher::cleanup(USBtransfer *transfer)
   usb_inldevice_close(transfer);
   lua.close();
 }
-
-/**
- * @brief Returns true if given number is a power of 2, and at least minimum size.
- *
- * @param x
- * @param min
- * @return int
- */
-// int Flasher::is_valid_rom_size(int x, int min)
-// {
-//   return ((x & (x - 1)) == 0) && x >= min;
-// }

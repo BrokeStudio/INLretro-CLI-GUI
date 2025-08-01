@@ -6,9 +6,208 @@
 #define SYMBOL_POINT "▸ " // ">"
 #define SYMBOL_WARNING "‼ "
 
+#define ID_VENDOR 0x16C0
+#define ID_PRODUCT 0x05DC
+#define MANF_STR "InfiniteNesLives.com"
+#define PROD_STR "INL Retro-Prog"
+
 // On Windows, due to internal usage of <windows.h>, global namespace could be polluted with min/max macros.
 // If such effect is desireable, please consider using #define NOMINMAX before #include <termcolor.hpp>
 #include "termcolor.hpp"
+
+bool is_device_flasher(libusb_device *device, char retroprog_id)
+{
+  libusb_device_handle *handle = NULL;
+  char buffer[256];
+  char prod_str[sizeof(PROD_STR)] = PROD_STR; // last character used to support multiple flashers
+  prod_str[sizeof(PROD_STR) - 2] = retroprog_id;
+
+  // get device description
+  struct libusb_device_descriptor desc;
+  if (libusb_get_device_descriptor(device, &desc) != LIBUSB_SUCCESS)
+    return false;
+
+  // check vendor id and product id
+  if (desc.idVendor != ID_VENDOR || desc.idProduct != ID_PRODUCT)
+    return false;
+
+  // open device
+  if (libusb_open(device, &handle) != LIBUSB_SUCCESS)
+    goto error;
+
+  // check manufacturer name
+  if (!desc.iManufacturer)
+    goto error;
+  if (libusb_get_string_descriptor_ascii(handle, desc.iManufacturer, reinterpret_cast<unsigned char *>(buffer), sizeof(buffer)) == 0)
+    goto error;
+  if (strcmp(buffer, MANF_STR) != 0)
+    goto error;
+
+  // check product name
+  if (!desc.iProduct)
+    goto error;
+  if (libusb_get_string_descriptor_ascii(handle, desc.iProduct, reinterpret_cast<unsigned char *>(buffer), sizeof(buffer)) == 0)
+    goto error;
+  if (strcmp(buffer, prod_str) != 0)
+    goto error;
+
+  libusb_close(handle);
+
+  return true;
+
+error:
+  libusb_close(handle);
+
+  return false;
+}
+
+bool find_device(char retroprog_id)
+{
+  bool rv = false;
+  libusb_device **list = NULL;
+  libusb_device *found = NULL;
+
+  ssize_t count = libusb_get_device_list(NULL, &list);
+  if (count < 0)
+    return false;
+
+  for (ssize_t i = 0; i < count; ++i)
+  {
+    if (is_device_flasher(list[i], retroprog_id))
+    {
+      // libusb_free_device_list(list, 1);
+      rv = true;
+      break;
+    }
+  }
+
+  libusb_free_device_list(list, 1);
+
+  return rv;
+}
+
+libusb_device_handle *usb_open(char retroprog_id)
+{
+  libusb_device_handle *handle = NULL;
+  libusb_device **list = NULL;
+  libusb_device *found = NULL;
+
+  ssize_t count = libusb_get_device_list(NULL, &list); // TODO: add check
+  if (count < 0)
+    return NULL;
+
+  for (ssize_t i = 0; i < count; ++i)
+  {
+    if (is_device_flasher(list[i], retroprog_id))
+    {
+      libusb_open(list[i], &handle); // TODO: add check
+      break;
+    }
+  }
+
+  libusb_free_device_list(list, 1);
+
+  return handle;
+}
+
+// void usb_close(libusb_device_handle **handle)
+// {
+//   if (handle && *handle)
+//   {
+//     libusb_close(*handle);
+//     *handle = NULL;
+//   }
+// }
+
+uint8_t get_device_hardware_type(char retroprog_id)
+{
+  uint8_t data_buff[MAX_VUSB] = {0};
+  int count = 0;
+  uint8_t rv = 0;
+  USBtransfer transfer;
+
+  transfer.handle = usb_open(retroprog_id);
+  if (!transfer.handle)
+    return 0xff; // TODO: add log
+
+  transfer.endpoint = LIBUSB_ENDPOINT_IN;
+  transfer.request = 10; // DICT_BOOTLOAD
+  transfer.wValue = 13;  // GET_HW_TYPE
+  transfer.wIndex = 0;
+  transfer.wLength = 3; // number of bytes returned (error code, length, value(s))
+  transfer.data = data_buff;
+
+  // TODO: add check
+  count = usb_vendor_transfer(&transfer, NULL); // this->log);
+
+  if (transfer.data[0] != 0x8A) // ERR_UNKN_BOOTLOAD_OPCODE
+    rv = transfer.data[2];
+
+  if (transfer.handle)
+    libusb_close(transfer.handle);
+  transfer.handle = NULL;
+
+  return rv;
+}
+
+uint8_t get_device_version(char retroprog_id)
+{
+  uint8_t data_buff[MAX_VUSB] = {0};
+  int count = 0;
+  uint8_t rv = 0;
+  USBtransfer transfer;
+
+  transfer.handle = usb_open(retroprog_id);
+  if (!transfer.handle)
+    return 0xff; // TODO: add log
+
+  transfer.endpoint = LIBUSB_ENDPOINT_IN;
+  transfer.request = 10; // DICT_BOOTLOAD
+  transfer.wValue = 12;  // GET_APP_VER
+  transfer.wIndex = 0;
+  transfer.wLength = 3; // number of bytes returned (error code, length, value(s))
+  transfer.data = data_buff;
+
+  // TODO: add check
+  count = usb_vendor_transfer(&transfer, NULL); // this->log);
+
+  if (transfer.data[0] != 0x8A) // ERR_UNKN_BOOTLOAD_OPCODE
+    rv = transfer.data[2];
+
+  if (transfer.handle)
+    libusb_close(transfer.handle);
+  transfer.handle = NULL;
+
+  return rv;
+}
+
+// int get_device_version(char retroprog_id)
+// {
+//   int version = -1;
+//   libusb_device_handle *handle = usb_open(retroprog_id);
+//   if (!handle)
+//     return -1;
+
+//   libusb_device *device = libusb_get_device(handle);
+//   if (!device)
+//     return -1;
+
+//   struct libusb_device_descriptor desc;
+//   if (libusb_get_device_descriptor(device, &desc) == LIBUSB_SUCCESS)
+//     version = desc.bcdDevice;
+
+//   libusb_close(handle);
+//   handle = NULL;
+
+//   return version;
+// }
+
+bool get_string_descriptor(libusb_device_handle *handle, uint8_t desc_index, unsigned char *buffer)
+{
+  if (desc_index == 0)
+    return false;
+  return libusb_get_string_descriptor_ascii(handle, desc_index, buffer, 256) == LIBUSB_SUCCESS;
+}
 
 // static libusb_device_handle *lua_usb_handle = NULL;
 
@@ -115,25 +314,6 @@ libusb_device_handle *open_usb_device(int log_level, char *retroprog_id, Log *lo
     debug(log, "Successfully retrieved USB device list");
   }
 
-  // int i = 0;
-
-  // libusb_device *retroprog = NULL;
-  // libusb_device *device = NULL;
-  // struct libusb_device_descriptor desc;
-  // const char manf[256] = "";	//used to hold manf/prod strings
-  // const char prod[256] = "";	//used to hold manf/prod strings
-  // 	//Original kazzo
-  // 	// manf_ascii: obdev.at prod_ascii: kazzo bcd Device: 100
-  // 	//INL Retro-Prog v1.0
-  // 	// manf_ascii: InfiniteNesLives.com prod_ascii: INL Retro-Prog bcd Device: 100
-  // 	//INL Retro-Prog v2.0 v2.0 released late 2016 (only ver supported by this app
-  // 	// manf_ascii: InfiniteNesLives.com prod_ascii: INL Retro-Prog bcd Device: 200
-  // const char *kazzo_manf = "obdev.at";
-  // const char *kazzo_prod = "kazzo";
-  // const char *inl_manf = "InfiniteNesLives.com";
-  // char rprog_prod[] = "INL Retro-Prog";
-  // uint16_t min_fw_ver = 0x200;
-
   if (log_level > 0)
   {
     debug(log, "Searching %lld total devices", dev_count - 1);
@@ -157,7 +337,7 @@ libusb_device_handle *open_usb_device(int log_level, char *retroprog_id, Log *lo
     {
       debug(log, "checking %x product", desc.idProduct);
     }
-    if ((desc.idVendor == 0x16C0) && (desc.idProduct == 0x05DC))
+    if ((desc.idVendor == ID_VENDOR) && (desc.idProduct == ID_PRODUCT))
     {
       // Found a V-USB device with default VID/PID now see if it's actually a kazzo
       // printf("found matching VID PID pair\n");

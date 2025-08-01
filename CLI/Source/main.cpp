@@ -42,8 +42,7 @@ int main(int argc, char **argv)
   AppLog::log.cliOutput = true;
 
   // Setup USB
-  // int usb_init = libusb_init_context(/*ctx=*/NULL, /*options=*/NULL, /*num_options=*/0);
-  int usb_init = libusb_init(/*ctx=*/NULL);
+  int usb_init = libusb_init_context(NULL, NULL, 0);
   // if (usb_init < 0)
   // {
   //   printf("Error: %s\n", libusb_error_name(usb_init));
@@ -66,7 +65,6 @@ int main(int argc, char **argv)
     opts->gui = false;
     Flasher flasher(std::string(opts->retroprog_id), true);
     flasher.log.cliOutput = true;
-    // t_INLoptions _opts = Flasher::convert_INLOptions(opts);
     int res = flasher.inlprog_opt(*opts);
     APP_LOG_SYS(LogTypes_None, "");
     APP_LOG_SYS(LogTypes_Success, "Done !");

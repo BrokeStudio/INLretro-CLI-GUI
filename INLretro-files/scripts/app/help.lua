@@ -8,7 +8,7 @@ local help = {}
 -- local functions
 local function get_script_path()
   local str = debug.getinfo(1).source:sub(2)
-  local sep = package.config:sub(1,1)
+  local sep = package.config:sub(1, 1)
   local pattern
   if sep == "\\" then
     pattern = "(.*\\)"
@@ -32,10 +32,10 @@ end
 local function exists(path)
   local ok, err, code = os.rename(path, path)
   if not ok then
-     if code == 13 then
-        -- Permission denied, but it exists
-        return true
-     end
+    if code == 13 then
+      -- Permission denied, but it exists
+      return true
+    end
   end
   return ok, err
 end
@@ -127,12 +127,12 @@ local function copy_table(orig)
   local orig_type = type(orig)
   local copy
   if orig_type == 'table' then
-      copy = {}
-      for orig_key, orig_value in pairs(orig) do
-          copy[orig_key] = orig_value
-      end
+    copy = {}
+    for orig_key, orig_value in pairs(orig) do
+      copy[orig_key] = orig_value
+    end
   else -- number, string, boolean, etc
-      copy = orig
+    copy = orig
   end
   return copy
 end
@@ -144,15 +144,15 @@ local function dump_table(o, l)
     tab = tab .. " "
   end
   if type(o) == 'table' then
-     local s = '{ ' .. '\n'
-     for k,v in pairs(o) do
-        if type(k) ~= 'number' then k = '"'..k..'"' end
-        s = s .. tab .. '['..k..'] = ' .. dump_table(v, l + 1) .. ',' .. '\n'
-     end
-     return s .. tab:sub(1, -3) .. '}'
+    local s = '{ ' .. '\n'
+    for k, v in pairs(o) do
+      if type(k) ~= 'number' then k = '"' .. k .. '"' end
+      s = s .. tab .. '[' .. k .. '] = ' .. dump_table(v, l + 1) .. ',' .. '\n'
+    end
+    return s .. tab:sub(1, -3) .. '}'
   else
     local t = tostring(o)
-    if type(o) ~= 'number' and type(o) ~= 'boolean' then t = '"'..t..'"' end
+    if type(o) ~= 'number' and type(o) ~= 'boolean' then t = '"' .. t .. '"' end
     return tostring(t)
   end
 end
@@ -180,8 +180,10 @@ local function parse_additional_opts(str)
       t[string.lower(kv)] = true
     else
       for k, v in string.gmatch(kv, "([%w_]+)=([%w_]+)") do
-            if(string.lower(v) == "true")   then v = true
-        elseif(string.lower(v) == "false")  then v = false
+        if (string.lower(v) == "true") then
+          v = true
+        elseif (string.lower(v) == "false") then
+          v = false
         end
         t[string.lower(k)] = v
       end
@@ -206,22 +208,22 @@ end
 -- call functions desired to run when script is called/imported
 
 -- functions other modules are able to call
-help.parse_filename         = parse_filename
-help.hex                    = hex
-help.hex_0x2                = hex_0x2
-help.hex_0x4                = hex_0x4
-help.hex_0x6                = hex_0x6
-help.hex_0x8                = hex_0x8
-help.file_wr_bin            = file_wr_bin
-help.file_exists            = file_exists
-help.exists                 = exists
-help.file_copy              = file_copy
-help.parse_str_args         = parse_str_args
-help.dump_table             = dump_table
-help.copy_table             = copy_table
-help.sleep                  = sleep
-help.parse_additional_opts  = parse_additional_opts
-help.get_script_path        = get_script_path
+help.parse_filename        = parse_filename
+help.hex                   = hex
+help.hex_0x2               = hex_0x2
+help.hex_0x4               = hex_0x4
+help.hex_0x6               = hex_0x6
+help.hex_0x8               = hex_0x8
+help.file_wr_bin           = file_wr_bin
+help.file_exists           = file_exists
+help.exists                = exists
+help.file_copy             = file_copy
+help.parse_str_args        = parse_str_args
+help.dump_table            = dump_table
+help.copy_table            = copy_table
+help.sleep                 = sleep
+help.parse_additional_opts = parse_additional_opts
+help.get_script_path       = get_script_path
 
 -- return the module's table
 return help

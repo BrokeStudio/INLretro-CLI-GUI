@@ -24,7 +24,7 @@
 
 -- support detection
 local function isWindows()
-  return type(package) == 'table' and type(package.config) == 'string' and package.config:sub(1,1) == '\\'
+  return type(package) == 'table' and type(package.config) == 'string' and package.config:sub(1, 1) == '\\'
 end
 
 local supported = not isWindows()
@@ -33,15 +33,15 @@ supported = true -- forced to true!
 
 local keys = {
   -- reset
-  reset =      0,
+  reset     = 0,
 
   -- misc
-  bright     = 1,
-  dim        = 2,
-  underline  = 4,
-  blink      = 5,
-  reverse    = 7,
-  hidden     = 8,
+  bright    = 1,
+  dim       = 2,
+  underline = 4,
+  blink     = 5,
+  reverse   = 7,
+  hidden    = 8,
 
   -- foreground colors
   black     = 30,
@@ -70,7 +70,6 @@ local function escapeNumber(number)
 end
 
 local function escapeKeys(str)
-
   if not supported then return "" end
 
   local buffer = {}
@@ -78,24 +77,23 @@ local function escapeKeys(str)
   for word in str:gmatch("%w+") do
     number = keys[word]
     assert(number, "Unknown key: " .. word)
-    table.insert(buffer, escapeNumber(number) )
+    table.insert(buffer, escapeNumber(number))
   end
 
   return table.concat(buffer)
 end
 
 local function replaceCodes(str)
-  str = string.gsub(str,"(%%{(.-)})", function(_, str) return escapeKeys(str) end )
+  str = string.gsub(str, "(%%{(.-)})", function(_, str) return escapeKeys(str) end)
   return str
 end
 
 -- public
 
-local function ansicolors( str )
+local function ansicolors(str)
   str = tostring(str or '')
 
   return replaceCodes('%{reset}' .. str .. '%{reset}')
 end
 
-
-return setmetatable({noReset = replaceCodes}, {__call = function (_, str) return ansicolors (str) end})
+return setmetatable({ noReset = replaceCodes }, { __call = function(_, str) return ansicolors(str) end })

@@ -35,7 +35,7 @@ local function erase_main()
     end
     dict.fwupdate("ERASE_1KB_PAGE", curpage)
 
-    --rv = dict.fwupdate("GET_FLASH_ADDR") 
+    --rv = dict.fwupdate("GET_FLASH_ADDR")
     --log.info("flash addr:", string.format("%X", rv) )
 
     curpage = curpage + 1
@@ -131,7 +131,7 @@ local function update_firmware(newbuild, skip, forceup)
     if true then
       --both these options work, but the later is limited to reading 64KByte space
       readdata = dict.bootload("RD_PTR_OFF_UP", offset)
-      --readdata = dict.bootload("RD_PTR_OFFSET", byte_num>>1) --shift by one 16bit read 
+      --readdata = dict.bootload("RD_PTR_OFFSET", byte_num>>1) --shift by one 16bit read
 
       --log.info("read data:", string.format("%X", readdata) )
       if readdata ~= data then
@@ -149,7 +149,7 @@ local function update_firmware(newbuild, skip, forceup)
           break
         end
       --else
-      --	log.info("verified byte number", help.hex(byte_num), 
+      --	log.info("verified byte number", help.hex(byte_num),
       --		" of flash ", help.hex(data), help.hex(readdata))
       end
     end
@@ -212,16 +212,16 @@ local function update_firmware(newbuild, skip, forceup)
       dict.fwupdate("WR_HWORD", data, offset)
 
       if true then
-        readdata = dict.fwupdate("READ_FLASH", byte_num, 0x00) 
+        readdata = dict.fwupdate("READ_FLASH", byte_num, 0x00)
       --	log.info("read data:", string.format("%X", readdata) )
         if readdata ~= data then
-          log.error("ERROR!!!! flashing byte number", help.hex(byte_num), 
+          log.error("ERROR!!!! flashing byte number", help.hex(byte_num),
             " to flash expected:", help.hex(data), "was:", help.hex(readdata))
           log.error("exiting before causing more damage...")
           error = true
           break
         --else
-        --	log.info("verified byte number", help.hex(byte_num), 
+        --	log.info("verified byte number", help.hex(byte_num),
         --		" to flash ", help.hex(data), help.hex(readdata))
         end
       end
@@ -238,8 +238,12 @@ local function update_firmware(newbuild, skip, forceup)
   -- close file
   assert(file:close())
 
-  log.section("Resetting device")
+  log.section("Reseting device")
   log.warning("IGNORE the errors that comes next...")
+
+  if(opts.gui) then
+    log.warning("You should refresh the flasher list after a firmware update.")
+  end
 
   --TODO maybe don't reset if we got an error, allow for correction while fwupdate still has control..?
   dict.fwupdate("RESET_DEVICE")

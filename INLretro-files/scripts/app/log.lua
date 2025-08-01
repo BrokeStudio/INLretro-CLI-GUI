@@ -1,75 +1,75 @@
 -- create the module's table
-local log = {}
+local log        = {}
 
 -- import required modules
-local ansicolors  = require 'scripts.app.ansicolors'
-local help        = require 'scripts.app.help'
+local ansicolors = require 'scripts.app.ansicolors'
+local help       = require 'scripts.app.help'
 
 -- file constants and global variables
 
 -- local functions
 
 local function isWindows()
-	return type(package) == 'table' and type(package.config) == 'string' and package.config:sub(1, 1) == '\\'
+  return type(package) == 'table' and type(package.config) == 'string' and package.config:sub(1, 1) == '\\'
 end
 
 local symbols = {
-	ballotDisabled = '☒',
-	ballotOff = '☐',
-	ballotOn = '☑',
-	bullet = '•',
-	bulletWhite = '◦',
-	fullBlock = '█',
-	heart = '❤',
-	identicalTo = '≡',
-	line = '─',
-	mark = '※',
-	middot = '·',
-	minus = '－',
-	multiplication = '×',
-	obelus = '÷',
-	pencilDownRight = '✎',
-	pencilRight = '✏',
-	pencilUpRight = '✐',
-	percent = '%',
-	pilcrow2 = '❡',
-	pilcrow = '¶',
-	plusMinus = '±',
-	section = '§',
-	starsOff = '☆',
-	starsOn = '★',
-	upDownArrow = '↕',
-	none = ''
+  ballotDisabled = '☒',
+  ballotOff = '☐',
+  ballotOn = '☑',
+  bullet = '•',
+  bulletWhite = '◦',
+  fullBlock = '█',
+  heart = '❤',
+  identicalTo = '≡',
+  line = '─',
+  mark = '※',
+  middot = '·',
+  minus = '－',
+  multiplication = '×',
+  obelus = '÷',
+  pencilDownRight = '✎',
+  pencilRight = '✏',
+  pencilUpRight = '✐',
+  percent = '%',
+  pilcrow2 = '❡',
+  pilcrow = '¶',
+  plusMinus = '±',
+  section = '§',
+  starsOff = '☆',
+  starsOn = '★',
+  upDownArrow = '↕',
+  none = ''
 };
 
 if isWindows then
-	symbols.check = '√'
-	symbols.cross = '×'
-	symbols.ellipsisLarge = '...'
-	symbols.ellipsis = '...'
-	symbols.info = 'i'
-	symbols.question = '?'
-	symbols.questionSmall = '?'
-	symbols.pointer = '▸' -- '>'
-	symbols.pointerSmall = '»'
-	symbols.radioOff = '( )'
-	symbols.radioOn = '(*)'
-	symbols.warning = '‼'
+  symbols.check = '√'
+  symbols.cross = '×'
+  symbols.ellipsisLarge = '...'
+  symbols.ellipsis = '...'
+  symbols.info = 'i'
+  symbols.question = '?'
+  symbols.questionSmall = '?'
+  symbols.pointer = '▸' -- '>'
+  symbols.pointerSmall = '»'
+  symbols.radioOff = '( )'
+  symbols.radioOn = '(*)'
+  symbols.warning = '‼'
 else
-	symbols.ballotCross = '✘'
-	symbols.check = '✔'
-	symbols.cross = '✖'
-	symbols.ellipsisLarge = '⋯'
-	symbols.ellipsis = '…'
-	symbols.info = 'ℹ'
-	symbols.question = '?'
-	symbols.questionFull = '？'
-	symbols.questionSmall = '﹖'
-	symbols.pointer = '▸' -- isLinux ? '▸' : '❯'
-	symbols.pointerSmall = '▸' -- isLinux ? '‣' : '›'
-	symbols.radioOff = '◯'
-	symbols.radioOn = '◉'
-	symbols.warning = '⚠'
+  symbols.ballotCross = '✘'
+  symbols.check = '✔'
+  symbols.cross = '✖'
+  symbols.ellipsisLarge = '⋯'
+  symbols.ellipsis = '…'
+  symbols.info = 'ℹ'
+  symbols.question = '?'
+  symbols.questionFull = '？'
+  symbols.questionSmall = '﹖'
+  symbols.pointer = '▸' -- isLinux ? '▸' : '❯'
+  symbols.pointerSmall = '▸' -- isLinux ? '‣' : '›'
+  symbols.radioOff = '◯'
+  symbols.radioOn = '◉'
+  symbols.warning = '⚠'
 end
 
 local LogTypes = {
@@ -98,7 +98,7 @@ local function section(...)
   local text = help.parse_str_args("\t", ...)
   if (opts.gui == nil or opts.gui == false) then
     -- CLI
-	  _print(" ")
+    _print(" ")
     _print(ansicolors('%{bright magenta}' .. symbols.line .. ' ' .. text))
   else
     -- GUI
@@ -178,8 +178,8 @@ end
 -- end
 
 local function custom(color, symbol, ...)
-	if color == nil then color = "white" end
-	if symbol == nil then symbol = "" else symbol = symbols[symbol] end
+  if color == nil then color = "white" end
+  if symbol == nil then symbol = "" else symbol = symbols[symbol] end
   _print(ansicolors('%{' .. color .. '}' .. symbol .. ' ' .. help.parse_str_args("\t", ...)))
 end
 

@@ -262,7 +262,6 @@ local function gb_exec(process_opts, console_opts)
     log.error("UNSUPPORTED MAPPER: ", console_opts.mapper)
   else
     -- Attempt requested operations with hardware!
-    -- TODO: Do plumbing for interacting with RAM.
     m.process(process_opts, gb_console_opts)
   end
 end
@@ -349,7 +348,6 @@ local function genesis_exec(process_opts, console_opts)
     log.error("UNSUPPORTED MAPPER: ", console_opts.mapper)
   else
     -- Attempt requested operations with hardware!
-    -- TODO: Do plumbing for interacting with RAM.
     m.process(process_opts, genesis_console_opts)
   end
 end
@@ -388,7 +386,6 @@ local function nes_exec(process_opts, console_opts)
       local chrNesRomSizeKb = math.floor(nes.header.chrRomSize / 1024)
       -- local mult = 0
       local bytesToCopy = 0
-      local romSizeInBytes = 0
       local flash_file_bin = process_opts.rom_write_file.path .. process_opts.rom_write_file.base .. "-" .. process_opts.retroprog_id .. ".bin"
 
       process_opts.rom_write_file = help.parse_filename(flash_file_bin)
@@ -462,8 +459,6 @@ local function nes_exec(process_opts, console_opts)
     wram_size_kb            = console_opts.wram_size_kb,
     prg_rom_size_kb         = console_opts.prg_rom_size_kb,
     chr_rom_size_kb         = console_opts.chr_rom_size_kb,
-    -- console_process_script  = console_opts.console_process_script,
-    -- mapper                  = console_opts.mapper_name,
   }
 
   local mappers = {
@@ -500,9 +495,6 @@ local function nes_exec(process_opts, console_opts)
     log.error("UNSUPPORTED MAPPER: ", console_opts.mapper)
   else
     -- Attempt requested operations with hardware!
-
-    -- TODO: Do plumbing for interacting with RAM.
-    -- m.process(process_opts, console_opts)
     m.process(process_opts, nes_console_opts)
   end
 end
@@ -525,14 +517,14 @@ local function main()
   --  mapper_name:          string, name of mapper.
   --  rom_dump_file:        string, filename used for writing dumped data.
   --  rom_write_file:       string, filename containing data to write cartridge.
-  --  do_verify:            bool, 0: don't verify data flashed, anything else: verify data flashed
+  --  do_verify:            bool, 0: don't verify data flashed, anything else: verify data flashed.
   --  ram_dump_file:        string, filename used for writing dumped ram data.
   --  ram_write_file:       string, filename containing data to write to ram on cartridge.
   --  nes_prg_rom_size_kb:  int, size of cartridge PRG-ROM in kilobytes.
   --  nes_chr_rom_size_kb:  int, size of cartridge CHR-ROM in kilobytes.
   --  nes_wram_size_kb:     int, size of cartridge WRAM in kilobytes.
   --  rom_size_kb:          int, size of cartridge ROM in kilobytes.
-  --  additional_opts:      string, additional options (ex: for NES, address bank table for BxROM mapper).
+  --  additional_opts:      string, additional options (ex: for NES, bank table address for BxROM mapper).
 
   -- check if options has been passed
   if (opts == nil) then

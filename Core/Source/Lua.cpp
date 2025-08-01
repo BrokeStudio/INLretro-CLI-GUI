@@ -281,7 +281,7 @@ int Lua::usb_vend_xfr(lua_State *L)
     unsigned char	*data;
   } USBtransfer;
   */
-  uint8_t data_buff[MAX_VUSB];
+  uint8_t data_buff[MAX_VUSB] = {0};
   int i;
   const char *lua_out_string;
   int xfr_count = 0; // return count
@@ -304,14 +304,6 @@ int Lua::usb_vend_xfr(lua_State *L)
     for (i = 0; i < usb_xfr.wLength; i++)
     {
       data_buff[i] = lua_out_string[i];
-    }
-  }
-  else
-  {
-    // IN transfer, zero out buffer
-    for (i = 0; i < MAX_VUSB; i++)
-    {
-      data_buff[i] = 0;
     }
   }
   usb_xfr.data = data_buff;
