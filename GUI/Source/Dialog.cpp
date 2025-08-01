@@ -9,13 +9,15 @@ namespace Dialog
   imgui_addons::ImGuiFileBrowser file_dialog;
   std::function<void(const std::string &path, const std::string &filename)> callback;
 
-  void render()
+  void render(float scale)
   {
+    ImVec2 dialog_size = {700 * scale, 310 * scale};
+
     // open file dialog
     if (showFileOpen)
       ImGui::OpenPopup("Open File");
 
-    if (file_dialog.showFileDialog("Open File", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ImVec2(700, 310), fileExt))
+    if (file_dialog.showFileDialog("Open File", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, dialog_size, fileExt))
     {
       // std::cout << file_dialog.selected_fn << std::endl;	 // The name of the selected file or directory in case of Select Directory dialog mode
       // std::cout << file_dialog.selected_path << std::endl; // The absolute path to the selected file
@@ -32,7 +34,7 @@ namespace Dialog
     if (showFileSave)
       ImGui::OpenPopup("Save File");
 
-    if (file_dialog.showFileDialog("Save File", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE, ImVec2(700, 310), fileExt))
+    if (file_dialog.showFileDialog("Save File", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE, dialog_size, fileExt))
     {
       // std::cout << file_dialog.selected_fn << std::endl;	 // The name of the selected file or directory in case of Select Directory dialog mode
       // std::cout << file_dialog.selected_path << std::endl; // The absolute path to the selected file

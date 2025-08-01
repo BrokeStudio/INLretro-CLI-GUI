@@ -397,7 +397,7 @@ int main(int argc, char **argv)
 #endif
 
     // file dialog
-    Dialog::render();
+    Dialog::render(main_scale);
 
     // TOP
     ImGui::SetNextWindowSizeConstraints(ImVec2(0, top_size_min.y), ImVec2(FLT_MAX, top_size_max.y));

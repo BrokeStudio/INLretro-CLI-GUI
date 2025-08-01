@@ -14,7 +14,7 @@ namespace Dialog
   extern imgui_addons::ImGuiFileBrowser file_dialog;
   extern std::function<void(const std::string &path, const std::string &filename)> callback;
 
-  void render();
+  void render(float scale);
 }
 
 #endif
