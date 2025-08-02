@@ -52,7 +52,7 @@ jobs:
         run: premake5 --file=Build.lua vs2022
 
       - name: Build
-        run: msbuild INLretro.sln -nologo -t:rebuild -verbosity:detailed -clp:ForceConsoleColor -m -property:Configuration=Dist -p:Platform=${{ matrix.platform.arch }}
+        run: msbuild INLretro.sln -nologo -t:rebuild -verbosity:normal -clp:ForceConsoleColor -m -property:Configuration=Dist -p:Platform=${{ matrix.platform.arch }}
 
       - name: Upload INLretroGUI
         uses: actions/upload-artifact@v4

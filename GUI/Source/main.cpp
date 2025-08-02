@@ -102,8 +102,7 @@ int main(int argc, char **argv)
 {
 
   // Setup USB
-  // int usb_init = libusb_init_context(/*ctx=*/NULL, /*options=*/NULL, /*num_options=*/0);
-  int usb_init = libusb_init(/*ctx=*/NULL);
+  int usb_init = libusb_init(NULL);
   // check(usb_init == LIBUSB_SUCCESS, "Failed to initialize libusb: %s", libusb_strerror((libusb_error)usb_init));
   if (usb_init < 0)
   {
@@ -276,17 +275,17 @@ int main(int argc, char **argv)
     // static ImVec2 middle_size(FLT_MAX, MIDDLE_MIN_Y);
     // static ImVec2 bottom_size(FLT_MAX, BOTTOM_MIN_Y);
 
-    static ImVec2 top_size_min(FLT_MAX, (int)(TOP_MIN_Y * main_scale));
-    static ImVec2 middle_size_min(FLT_MAX, (int)(MIDDLE_MIN_Y * main_scale));
-    static ImVec2 bottom_size_min((int)(TOP_MAX_Y * main_scale), (int)(BOTTOM_MIN_Y * main_scale));
+    static ImVec2 top_size_min(FLT_MAX, TOP_MIN_Y * main_scale);
+    static ImVec2 middle_size_min(FLT_MAX, MIDDLE_MIN_Y * main_scale);
+    static ImVec2 bottom_size_min(TOP_MAX_Y * main_scale, BOTTOM_MIN_Y * main_scale);
 
-    static ImVec2 top_size(FLT_MAX, (int)(TOP_MAX_Y * main_scale));
-    static ImVec2 middle_size(FLT_MAX, (int)(MIDDLE_MIN_Y * main_scale));
-    static ImVec2 bottom_size((int)(TOP_MAX_Y * main_scale), (int)(BOTTOM_MIN_Y * main_scale));
+    static ImVec2 top_size(FLT_MAX, TOP_MAX_Y * main_scale);
+    static ImVec2 middle_size(FLT_MAX, MIDDLE_MIN_Y * main_scale);
+    static ImVec2 bottom_size(TOP_MAX_Y * main_scale, BOTTOM_MIN_Y * main_scale);
 
-    static ImVec2 top_size_max(FLT_MAX, (int)(TOP_MAX_Y * main_scale));
-    // static ImVec2 middle_size_max(FLT_MAX, (int)(MIDDLE_MIN_Y * main_scale));
-    static ImVec2 bottom_size_max((int)(TOP_MAX_Y * main_scale), (int)(BOTTOM_MAX_Y * main_scale));
+    static ImVec2 top_size_max(FLT_MAX, TOP_MAX_Y * main_scale);
+    // static ImVec2 middle_size_max(FLT_MAX, MIDDLE_MIN_Y * main_scale);
+    static ImVec2 bottom_size_max(TOP_MAX_Y * main_scale, BOTTOM_MAX_Y * main_scale);
 
     // check if flashing
     static bool isFlashing;
@@ -402,7 +401,7 @@ int main(int argc, char **argv)
     // TOP
     ImGui::SetNextWindowSizeConstraints(ImVec2(0, top_size_min.y), ImVec2(FLT_MAX, top_size_max.y));
     ImGui::BeginChild("Top", ImVec2(0, top_size_max.y), ImGuiChildFlags_ResizeY); // TOP start
-    ImGui::BeginChild("MenuPanel", ImVec2((int)(220 * main_scale), 0), ImGuiChildFlags_Border);
+    ImGui::BeginChild("MenuPanel", ImVec2(220 * main_scale, 0), ImGuiChildFlags_Border);
     Menu::render_tree(isFlashing);
     ImGui::EndChild(); // MenuPanel end
     ImGui::SameLine();

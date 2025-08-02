@@ -117,7 +117,7 @@ Flasher::~Flasher() {}
  * @param retroprog_id
  * @return USBtransfer*
  */
-USBtransfer *Flasher::usb_inldevice_open(int libusb_log, char *retroprog_id, Log *log)
+USBtransfer *Flasher::usb_inldevice_open(int libusb_log, const char *retroprog_id, Log *log)
 {
   // Create USBtransfer struct to hold all transfer info
   USBtransfer *transfer = (USBtransfer *)calloc(1, sizeof(USBtransfer));
@@ -153,7 +153,7 @@ void Flasher::usb_inldevice_close(USBtransfer *transfer)
  * @return true if USB device has been detected
  * @return false if USB device has NOT been detected
  */
-bool Flasher::detect(char *retroprog_id)
+bool Flasher::detect(const char *retroprog_id)
 {
   // USB variables
   USBtransfer *transfer = NULL;

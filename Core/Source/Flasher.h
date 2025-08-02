@@ -31,7 +31,7 @@ public:
   ~Flasher();
 
   // static methods
-  static bool detect(char *retroprog_id);
+  static bool detect(const char *retroprog_id);
   static void detect_all();
   static bool is_flashing();
   static int count_flashing();
@@ -54,7 +54,7 @@ private:
   void cleanup(USBtransfer *transfer);
 
   // static methods
-  static USBtransfer *usb_inldevice_open(int libusb_log, char *retroprog_id, Log *log);
+  static USBtransfer *usb_inldevice_open(int libusb_log, const char *retroprog_id, Log *log);
   static void usb_inldevice_close(USBtransfer *transfer);
 };
 

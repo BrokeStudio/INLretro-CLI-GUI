@@ -42,7 +42,7 @@ int main(int argc, char **argv)
   AppLog::log.cliOutput = true;
 
   // Setup USB
-  int usb_init = libusb_init_context(NULL, NULL, 0);
+  int usb_init = libusb_init(NULL);
   // if (usb_init < 0)
   // {
   //   printf("Error: %s\n", libusb_error_name(usb_init));

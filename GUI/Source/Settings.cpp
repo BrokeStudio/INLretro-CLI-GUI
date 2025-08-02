@@ -146,7 +146,7 @@ namespace Settings
           snprintf(label, sizeof(label), "##flasher_is_active%s", flasher->id.c_str());
           ImGui::Checkbox(label, &flasher->isActive);
           ImGui::TableSetColumnIndex(2);
-          char *models[] = {"UNKNOWN", "HW_STM6", "HW_STMN", "HW_STM6P", "HW_AVR"};
+          const char *models[] = {"UNKNOWN", "HW_STM6", "HW_STMN", "HW_STM6P", "HW_AVR"};
           ImGui::Text("%s", models[flasher->hardwareType]);
           ImGui::TableSetColumnIndex(3);
           ImGui::Text("v2.%d", flasher->firmwareVersion);

@@ -152,8 +152,7 @@ void Lua::error(const char *fmt, ...)
   vfprintf(stderr, fmt, argp);
   va_end(argp);
   char errmsg[1024];
-  // sprintf_s(errmsg, fmt, argp);
-  sprintf(errmsg, fmt, argp);
+  snprintf(errmsg, sizeof(errmsg), fmt, argp);
   this->log->add(LogTypes_Error, errmsg);
   lua_close(this->L);
   exit(EXIT_FAILURE);
@@ -192,7 +191,7 @@ int Lua::l_log_add(lua_State *LL)
     // if (lua_isinteger(LL, i))
     if (lua_type(LL, i) == LUA_TNUMBER)
     {
-      logType = lua_tointeger(LL, i);
+      logType = static_cast<int>(lua_tointeger(LL, i));
     }
     // else if (lua_isstring(LL, i))
     else if (lua_type(LL, i) == LUA_TSTRING)
@@ -288,12 +287,12 @@ int Lua::usb_vend_xfr(lua_State *L)
   int rv = 0;        // number of return values
 
   USBtransfer usb_xfr;
-  usb_xfr.handle = this->usb_handle;         // lua_usb_handle;
-  usb_xfr.endpoint = luaL_checknumber(L, 1); /* get endpoint argument */
-  usb_xfr.request = luaL_checknumber(L, 2);  /* get request argument */
-  usb_xfr.wValue = luaL_checknumber(L, 3);   /* get wValue argument */
-  usb_xfr.wIndex = luaL_checknumber(L, 4);   /* get wIndex argument */
-  usb_xfr.wLength = luaL_checknumber(L, 5);  /* get wLength argument */
+  usb_xfr.handle = this->usb_handle;                                // lua_usb_handle;
+  usb_xfr.endpoint = static_cast<uint8_t>(luaL_checkinteger(L, 1)); // luaL_checknumber(L, 1); /* get endpoint argument */
+  usb_xfr.request = static_cast<uint8_t>(luaL_checkinteger(L, 2));  // luaL_checknumber(L, 2);  /* get request argument */
+  usb_xfr.wValue = static_cast<uint16_t>(luaL_checkinteger(L, 3));   // luaL_checknumber(L, 3);   /* get wValue argument */
+  usb_xfr.wIndex = static_cast<uint16_t>(luaL_checkinteger(L, 4));   // luaL_checknumber(L, 4);   /* get wIndex argument */
+  usb_xfr.wLength = static_cast<uint16_t>(luaL_checkinteger(L, 5));  // luaL_checknumber(L, 5);  /* get wLength argument */
   check(this->log, (usb_xfr.wLength <= MAX_VUSB), "Can't transfer more than %d bytes!", MAX_VUSB);
   if (usb_xfr.endpoint == LIBUSB_ENDPOINT_OUT)
   {

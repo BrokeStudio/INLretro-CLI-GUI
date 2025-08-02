@@ -49,6 +49,7 @@ Console::Console(const t_Console &console)
   this->rom_file_ext = console.rom_file_ext;
   this->ram_file_ext = console.ram_file_ext;
   this->mappers = console.mappers;
+  memset(buf, 0, sizeof(buf));
 
   rom_dump_INLOptions.prg_rom_size_kb = rom_write_INLOptions.prg_rom_size_kb = ram_dump_INLOptions.prg_rom_size_kb = ram_write_INLOptions.prg_rom_size_kb = 0;
   rom_dump_INLOptions.chr_rom_size_kb = rom_write_INLOptions.chr_rom_size_kb = ram_dump_INLOptions.chr_rom_size_kb = ram_write_INLOptions.chr_rom_size_kb = 0;
@@ -355,7 +356,7 @@ void Console::render_rom_write()
 
   if (Flasher::list.size() > 1)
   {
-    if (ImGui::BeginTable("rom_dump_table", Flasher::list.size(), ImGuiTableFlags_SizingStretchSame))
+    if (ImGui::BeginTable("rom_dump_table", static_cast<int>(Flasher::list.size()), ImGuiTableFlags_SizingStretchSame))
     {
       ImGui::TableNextRow();
       int i = 0;
@@ -594,11 +595,11 @@ void Console::render_ram_write()
  */
 int Console::get_mapper_index_by_mapper_id(int mapper_id)
 {
-  for (int i = 0; i < this->mappers.size(); i++)
+  for (size_t i = 0; i < this->mappers.size(); i++)
   {
     if (this->mappers[i].id == mapper_id)
     {
-      return i;
+      return static_cast<int>(i);
     }
   }
   return -1;
@@ -612,11 +613,11 @@ int Console::get_mapper_index_by_mapper_id(int mapper_id)
  */
 int Console::get_mapper_index_by_mapper_name(const std::string &mapper_name)
 {
-  for (int i = 0; i < this->mappers.size(); i++)
+  for (size_t i = 0; i < this->mappers.size(); i++)
   {
     if (this->mappers[i].name == mapper_name)
     {
-      return i;
+      return static_cast<int>(i);
     }
   }
   return -1;
@@ -630,11 +631,11 @@ int Console::get_mapper_index_by_mapper_name(const std::string &mapper_name)
  */
 int Console::get_mapper_index_by_script_name(const std::string &script_name)
 {
-  for (int i = 0; i < this->mappers.size(); i++)
+  for (size_t i = 0; i < this->mappers.size(); i++)
   {
     if (this->mappers[i].script_name == script_name)
     {
-      return i;
+      return static_cast<int>(i);
     }
   }
   return -1;

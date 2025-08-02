@@ -231,7 +231,7 @@ bool get_string_descriptor(libusb_device_handle *handle, uint8_t desc_index, uns
 // LIBUSB_ENDPOINT_IN		In: device-to-host.
 // LIBUSB_ENDPOINT_OUT		Out: host-to-device.
 
-libusb_device_handle *open_usb_device(int log_level, char *retroprog_id, Log *log)
+libusb_device_handle *open_usb_device(int log_level, const char *retroprog_id, Log *log)
 {
   int rv = 0;
   libusb_device_handle *handle = NULL;
@@ -294,8 +294,8 @@ libusb_device_handle *open_usb_device(int log_level, char *retroprog_id, Log *lo
       break;
     }
   }
-  libusb_set_debug(NULL, log_level);
-  // libusb_set_option(NULL, LIBUSB_OPTION_LOG_LEVEL, log_level);
+  // libusb_set_debug(NULL, log_level);
+  libusb_set_option(NULL, LIBUSB_OPTION_LOG_LEVEL, log_level);
 
   // discover all usb devices
   // ssize_t libusb_get_device_list (libusb_context *ctx, libusb_device ***list)

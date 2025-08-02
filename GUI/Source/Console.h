@@ -64,7 +64,7 @@ public:
   void render_ram_write();
 
 protected:
-  char buf[256];
+  char buf[256] = {0};
 
   t_INLoptions_std rom_dump_INLOptions;
   t_INLoptions_std rom_write_INLOptions;
