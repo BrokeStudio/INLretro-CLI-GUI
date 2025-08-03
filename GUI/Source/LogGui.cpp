@@ -16,7 +16,7 @@ ImColor LogColors[LogTypes_Count] = {
     ImColor(17, 168, 205, 255),  // bullet / blue
 };
 
-std::string LogSymbols[LogTypes_Count] = {
+const char *LogSymbols[LogTypes_Count] = {
     "  ",                         // none
     ICON_FA_MINUS,                // section
     ICON_FA_INFO,                 // info
@@ -82,9 +82,8 @@ void Log::render()
     for (const LogMessage item : ItemsCopy)
     {
       ImVec4 color = LogColors[item.type];
-      std::string symbol = LogSymbols[item.type];
       ImGui::PushStyleColor(ImGuiCol_Text, color);
-      ImGui::TextUnformatted(symbol.c_str());
+      ImGui::TextUnformatted(LogSymbols[item.type]);
       ImGui::SameLine();
       ImGui::TextUnformatted(item.message.c_str());
       ImGui::PopStyleColor();
@@ -99,25 +98,17 @@ void Log::render()
       ImVec2 pos = ImGui::GetCursorScreenPos();
       ImGuiStyle &style = ImGui::GetStyle();
 
-      ImVec2 start_pos = ImVec2(pos.x, pos.y); // pos.x + wrap_width, pos.y);
+      ImVec2 start_pos = ImVec2(pos.x, pos.y);
       ImVec2 end_pos = ImVec2(pos.x + ImGui::GetWindowWidth(), pos.y + ImGui::GetTextLineHeight() + style.FramePadding.y);
       draw_list->AddRectFilled(start_pos, end_pos, IM_COL32(229, 229, 229, 255));
       ImVec4 color = ImColor(0, 0, 0, 255);
       ImGui::PushStyleColor(ImGuiCol_Text, color);
-      auto windowWidth = ImGui::GetWindowSize().x;
-      auto textWidth = ImGui::CalcTextSize(spinner).x;
+      float windowWidth = ImGui::GetWindowSize().x;
+      float textWidth = ImGui::CalcTextSize(spinner).x;
 
       ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
       ImGui::TextUnformatted(spinner);
       ImGui::PopStyleColor();
-
-      // ImVec2 sz = ImVec2(-FLT_MIN, 0.0f);
-      // ImGui::BeginDisabled();
-      // ImGui::Button(spinner, sz);
-      // ImGui::EndDisabled();
-
-      // You can call ImGui::CalcTextSize() and then add style.FramePadding * 2 if it's a framed element.
-      // ImGui::TextUnformatted(spinner);
     }
 
     // Keep up at the bottom of the scroll region if we were already at the bottom at the beginning of the frame.

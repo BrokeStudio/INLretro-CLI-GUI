@@ -523,7 +523,6 @@ int main(int argc, char **argv)
     libusb_exit(NULL);
   }
 
-  // Cleanup
   ImGui_ImplOpenGL2_Shutdown();
   ImGui_ImplSDL2_Shutdown();
   ImGui::DestroyContext();

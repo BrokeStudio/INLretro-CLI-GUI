@@ -1,7 +1,6 @@
 #include "imgui.h"
 #include "IconsFontAwesome6.h"
 
-// #include "AppLog.h"
 #include "Console.h"
 #include "Menu.h"
 #include "Settings.h"
@@ -110,12 +109,12 @@ namespace Menu
     if (menuItem == menu.end())
       return;
 
-    for (auto &subIitem : menuItem->second.subMenu)
+    for (auto &subItem : menuItem->second.subMenu)
     {
-      if (subIitem.first == sub_menu_name)
-        subIitem.second.active = true;
+      if (subItem.first == sub_menu_name)
+        subItem.second.active = true;
       else
-        subIitem.second.active = false;
+        subItem.second.active = false;
     }
   }
 
