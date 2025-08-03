@@ -235,6 +235,7 @@ int main(int argc, char **argv)
 
   // Our state
   ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+  std::string droppedFilename = "";
 
   // init consoles
   Ini::load();
@@ -291,6 +292,9 @@ int main(int argc, char **argv)
     static bool isFlashing;
     isFlashing = Flasher::is_flashing();
 
+    // reset dropped filename
+    droppedFilename = "";
+
     // Poll and handle events (inputs, window resize, etc.)
     // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
     // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application, or clear/overwrite your copy of the mouse data.
@@ -302,8 +306,12 @@ int main(int argc, char **argv)
       ImGui_ImplSDL2_ProcessEvent(&event);
       if (event.type == SDL_QUIT)
         done = true;
+
       if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
         done = true;
+
+      if (event.type == SDL_DROPFILE)
+        droppedFilename = std::string(event.drop.file);
     }
 
     // Start the Dear ImGui frame
@@ -406,7 +414,7 @@ int main(int argc, char **argv)
     ImGui::EndChild(); // MenuPanel end
     ImGui::SameLine();
     ImGui::BeginChild("Content", ImVec2(0, 0), ImGuiChildFlags_Border);
-    Menu::render_content();
+    Menu::render_content(droppedFilename);
     ImGui::EndChild(); // Content end
     ImGui::EndChild(); // TOP end
     top_size = ImGui::GetItemRectSize();

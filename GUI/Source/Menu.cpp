@@ -5,6 +5,8 @@
 #include "Menu.h"
 #include "Settings.h"
 
+using namespace std::placeholders; // for `_1`, `_2`
+
 namespace Menu
 {
 
@@ -22,13 +24,13 @@ namespace Menu
       menu_order.push_back(console->full_name);
       Menu::menu[console->full_name] = {false, nullptr};
       if (console->actions & ConsoleActions_RomDump)
-        Menu::menu[console->full_name].subMenu["Dump ROM"] = {false, std::bind(&Console::render_rom_dump, console)};
+        Menu::menu[console->full_name].subMenu["Dump ROM"] = {false, std::bind(&Console::render_rom_dump, console, _1)};
       if (console->actions & ConsoleActions_RomWrite)
-        Menu::menu[console->full_name].subMenu["Write ROM"] = {false, std::bind(&Console::render_rom_write, console)};
+        Menu::menu[console->full_name].subMenu["Write ROM"] = {false, std::bind(&Console::render_rom_write, console, _1)};
       if (console->actions & ConsoleActions_RamDump)
-        Menu::menu[console->full_name].subMenu["Dump RAM"] = {false, std::bind(&Console::render_ram_dump, console)};
+        Menu::menu[console->full_name].subMenu["Dump RAM"] = {false, std::bind(&Console::render_ram_dump, console, _1)};
       if (console->actions & ConsoleActions_RamWrite)
-        Menu::menu[console->full_name].subMenu["Write RAM"] = {false, std::bind(&Console::render_ram_write, console)};
+        Menu::menu[console->full_name].subMenu["Write RAM"] = {false, std::bind(&Console::render_ram_write, console, _1)};
     }
 
     menu_order.push_back("Flashers");
@@ -122,7 +124,7 @@ namespace Menu
    * @brief Renders the content of the selected menu
    *
    */
-  void render_content()
+  void render_content(std::string droppedFilename)
   {
     ImVec2 button_sz(50, 50);
 
@@ -150,7 +152,9 @@ namespace Menu
 
         if (subItem.second.fn_render != nullptr)
         {
-          subItem.second.fn_render();
+          // TODO: here we're assuming that the submenu is always for a console
+          // it can be an issue to pass a string if it's not the case
+          subItem.second.fn_render(droppedFilename);
           break;
         }
         else

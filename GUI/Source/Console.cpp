@@ -111,7 +111,7 @@ void Console::render_additional_options_popup(t_INLoptions_std *INLoptions)
  * @brief Render the rom dump view
  *
  */
-void Console::render_rom_dump()
+void Console::render_rom_dump(std::string droppedFilename)
 {
   bool isFlashing = Flasher::is_flashing();
   snprintf(this->buf, sizeof(this->buf), "%s - ROM dump", this->full_name.c_str());
@@ -134,6 +134,8 @@ void Console::render_rom_dump()
     ImGui::TextUnformatted("Destination file");
     ImGui::TableSetColumnIndex(1);
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+    if (droppedFilename != "")
+      rom_dump_INLOptions.rom_dump_file = droppedFilename;
     Browse("##rom_dump_rom_write_file", rom_dump_INLOptions.rom_dump_file, false, std::bind(&Console::cb_rom_dump_file_dialog, this, _1, _2));
 
     // Mapper
@@ -232,7 +234,7 @@ void Console::render_rom_dump()
  * @brief Render the rom write view
  *
  */
-void Console::render_rom_write()
+void Console::render_rom_write(std::string droppedFilename)
 {
   bool isFlashing = Flasher::is_flashing();
   snprintf(this->buf, sizeof(this->buf), "%s - ROM write", this->full_name.c_str());
@@ -255,6 +257,8 @@ void Console::render_rom_write()
     ImGui::TextUnformatted("Source file");
     ImGui::TableSetColumnIndex(1);
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+    if (droppedFilename != "")
+      rom_write_INLOptions.rom_write_file = droppedFilename;
     Browse("##rom_write_rom_write_file", rom_write_INLOptions.rom_write_file, true, std::bind(&Console::cb_rom_write_file_dialog, this, _1, _2));
 
     // Mapper
@@ -385,7 +389,7 @@ void Console::render_rom_write()
  * @brief Render the ram dump view
  *
  */
-void Console::render_ram_dump()
+void Console::render_ram_dump(std::string droppedFilename)
 {
   bool isFlashing = Flasher::is_flashing();
   snprintf(this->buf, sizeof(this->buf), "%s - RAM dump", this->full_name.c_str());
@@ -408,6 +412,8 @@ void Console::render_ram_dump()
     ImGui::TextUnformatted("Destination file");
     ImGui::TableSetColumnIndex(1);
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+    if (droppedFilename != "")
+      ram_dump_INLOptions.ram_dump_file = droppedFilename;
     Browse("##ram_dump_ram_dump_file", ram_dump_INLOptions.ram_dump_file, false, std::bind(&Console::cb_ram_dump_file_dialog, this, _1, _2));
 
     // Mapper
@@ -488,7 +494,7 @@ void Console::render_ram_dump()
  * @brief Render the ram write view
  *
  */
-void Console::render_ram_write()
+void Console::render_ram_write(std::string droppedFilename)
 {
   bool isFlashing = Flasher::is_flashing();
   snprintf(this->buf, sizeof(this->buf), "%s - RAM write", this->full_name.c_str());
@@ -511,6 +517,8 @@ void Console::render_ram_write()
     ImGui::TextUnformatted("Source file");
     ImGui::TableSetColumnIndex(1);
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+    if (droppedFilename != "")
+      ram_write_INLOptions.ram_write_file = droppedFilename;
     Browse("##ram_write_ram_write_file", ram_write_INLOptions.ram_write_file, true, std::bind(&Console::cb_ram_write_file_dialog, this, _1, _2));
 
     // Mapper

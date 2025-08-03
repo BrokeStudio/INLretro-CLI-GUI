@@ -12,9 +12,8 @@ namespace Menu
   struct t_MenuSubItem
   {
     bool active = false;
-    std::function<void()> fn_render;
+    std::function<void(std::string)> fn_render;
   };
-
 
   struct t_MenuItem
   {
@@ -27,7 +26,7 @@ namespace Menu
 
   void init();
   void render_tree(bool disabled);
-  void render_content();
+  void render_content(std::string droppedFilename);
 
   void set_menu_active(const std::string &menu_name, bool value);
   void set_sub_menu_active(const std::string &menu_name, const std::string &sub_menu_name);

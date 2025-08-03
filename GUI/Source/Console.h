@@ -58,10 +58,10 @@ public:
   static void add(Console *console);
   static void clear_list();
 
-  void render_rom_dump();
-  void render_rom_write();
-  void render_ram_dump();
-  void render_ram_write();
+  void render_rom_dump(std::string droppedFilename = "");
+  void render_rom_write(std::string droppedFilename = "");
+  void render_ram_dump(std::string droppedFilename = "");
+  void render_ram_write(std::string droppedFilename = "");
 
 protected:
   char buf[256] = {0};
