@@ -26,17 +26,17 @@ It provides both a command-line interface (CLI) and a graphical user interface (
 
 | System           | Mapper         | ROM dump | ROM write | RAM dump | RAM write |
 | ---------------- | -------------- | -------- | --------- | -------- | --------- |
-| NES / FC         | 0 - NROM       | ✓        | ✓         | ✓        | ✓         |
+| NES / FC         | 0 - NROM       | ✓        | ✓         | −        | −         |
 |                  | 1 - MMC1       | ✓        | ✓         | ✓        | ✓         |
-|                  | 2 - UxROM      | ✓        | ✓         | ✓        | ✓         |
-|                  | 3 - CxROM      | ✓        | ✓         | ✓        | ✓         |
+|                  | 2 - UxROM      | ✓        | ✓         | −        | −         |
+|                  | 3 - CxROM      | ✓        | ✓         | −        | −         |
 |                  | 4 - MMC3       | ✓        | ✓         | ✓        | ✓         |
-|                  | 18 - SS880066  | ✓        | ✓         | ✓        | ✓         |
+|                  | 18 - SS88006   | ✓        | ✓         | ✓        | ✓         |
 |                  | 24 - VRC6a     | ✓        | ✓         | ✓        | ✓         |
-|                  | 28 - Action 53 | ✓        | ✓         | ✓        | ✓         |
-|                  | 30 - UNROM-512 | ✓        | ✓         | ✓        | ✓         |
-|                  | 34 - BNROM     | ✓        | ✓         | ✓        | ✓         |
-|                  | 111 - GTROM    | ✓        | ✓         | ✓        | ✓         |
+|                  | 28 - Action 53 | ✓        | ✓         | −        | −         |
+|                  | 30 - UNROM-512 | ✓        | ✓         | −        | −         |
+|                  | 34 - BNROM     | ✓        | ✓         | −        | −         |
+|                  | 111 - GTROM    | ✓        | ✓         | −        | −         |
 |                  | 682 - Rainbow  | ✓        | ✓         | ✓        | ✓         |
 |                  |                |          |           |          |           |
 | Game Boy (Color) | 32KB           | ✓        | ✓         | ✓        | ✓         |

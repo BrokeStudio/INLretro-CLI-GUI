@@ -26,7 +26,8 @@ The `Scripts/` directory contains build scripts for Windows and Linux, and the `
 ├── Windows/                # Windows specific files
 │   ├── WinUSB_driver/      # Windows USB driver
 ├── Vendor/                 # Premake and build tools
-├── Build.lua               # Build configuration
+├── Build.lua               # Premake build configuration
+├── COMPILING.md
 └── README.md
 ```
 
@@ -40,14 +41,14 @@ For Windows, _SDL2_ and _libusb_ pre-compiled libraries are included in `Externa
 
 ## Linux
 
-To build under Linux you need a version of Clang or GCC that supports C++17.
-Additionally, SDL2 and libusb must also be installed.
-Once SDL2 and libusb are installed, run `make config=release` to compile with Clang.
+To build under Linux you need a version of Clang or GCC that supports C++17.  
+Additionally, SDL2 and libusb must also be installed.  
+Once SDL2 and libusb are installed, run `make config=release` to compile with Clang.  
 `config` can be set to `debug`, `release` or `dist` depending on what you want to do.
 
 ## macOS
 
-To build under macOS, install SDL2 and libusb (i.e via Homebrew).
-Once SDL2 and libusb are installed, run `make config=release`.
-`config` can be set to `debug`, `release` or `dist` depending on what you want to do.
+To build under macOS, install SDL2 and libusb (i.e via Homebrew).  
+Once SDL2 and libusb are installed, run `make config=release`.  
+`config` can be set to `debug`, `release` or `dist` depending on what you want to do.  
 On macOS, `make config=dist` will build `.app` packaged application for the GUI.
