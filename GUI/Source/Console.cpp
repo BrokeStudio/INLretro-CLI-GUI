@@ -136,7 +136,7 @@ void Console::render_rom_dump(std::string droppedFilename)
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     if (droppedFilename != "")
       rom_dump_INLOptions.rom_dump_file = droppedFilename;
-    Browse("##rom_dump_rom_write_file", rom_dump_INLOptions.rom_dump_file, false, std::bind(&Console::cb_rom_dump_file_dialog, this, _1, _2));
+    Browse("##rom_dump_rom_write_file", rom_dump_INLOptions.rom_dump_file, false, droppedFilename != "", std::bind(&Console::cb_rom_dump_file_dialog, this, _1, _2));
 
     // Mapper
     if (mappers.size() != 0)
@@ -259,7 +259,7 @@ void Console::render_rom_write(std::string droppedFilename)
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     if (droppedFilename != "")
       rom_write_INLOptions.rom_write_file = droppedFilename;
-    Browse("##rom_write_rom_write_file", rom_write_INLOptions.rom_write_file, true, std::bind(&Console::cb_rom_write_file_dialog, this, _1, _2));
+    Browse("##rom_write_rom_write_file", rom_write_INLOptions.rom_write_file, true, droppedFilename != "", std::bind(&Console::cb_rom_write_file_dialog, this, _1, _2));
 
     // Mapper
     if (mappers.size() != 0)
@@ -414,7 +414,7 @@ void Console::render_ram_dump(std::string droppedFilename)
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     if (droppedFilename != "")
       ram_dump_INLOptions.ram_dump_file = droppedFilename;
-    Browse("##ram_dump_ram_dump_file", ram_dump_INLOptions.ram_dump_file, false, std::bind(&Console::cb_ram_dump_file_dialog, this, _1, _2));
+    Browse("##ram_dump_ram_dump_file", ram_dump_INLOptions.ram_dump_file, false, droppedFilename != "", std::bind(&Console::cb_ram_dump_file_dialog, this, _1, _2));
 
     // Mapper
     if (mappers.size() != 0)
@@ -519,7 +519,7 @@ void Console::render_ram_write(std::string droppedFilename)
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     if (droppedFilename != "")
       ram_write_INLOptions.ram_write_file = droppedFilename;
-    Browse("##ram_write_ram_write_file", ram_write_INLOptions.ram_write_file, true, std::bind(&Console::cb_ram_write_file_dialog, this, _1, _2));
+    Browse("##ram_write_ram_write_file", ram_write_INLOptions.ram_write_file, true, droppedFilename != "", std::bind(&Console::cb_ram_write_file_dialog, this, _1, _2));
 
     // Mapper
     if (mappers.size() != 0)
@@ -649,9 +649,39 @@ int Console::get_mapper_index_by_script_name(const std::string &script_name)
   return -1;
 }
 
-void Console::Browse(const char *label, std::string &file, bool openFile, std::function<void(const std::string &path, const std::string &filename)> callback)
+/**
+ * @brief Linear interpolation between two vectors
+ *
+ * @param a source vector
+ * @param b destination vector
+ * @param t interpolation factor
+ * @return ImVec4
+ */
+ImVec4 LerpImVec4(const ImVec4 &a, const ImVec4 &b, float t)
+{
+  return ImVec4(
+      a.x + (b.x - a.x) * t,
+      a.y + (b.y - a.y) * t,
+      a.z + (b.z - a.z) * t,
+      a.w + (b.w - a.w) * t);
+}
+
+/**
+ * @brief Custom widget (test input + button) for browsing files
+ *
+ * @param label widget label
+ * @param file destination string
+ * @param openFile true if the dialog box should select a file to open, false if the dialog box should select a file to save
+ * @param startFade start a fade on the text input (used when drag & droping file in the app)
+ * @param callback callback function called after the file selection
+ */
+void Console::Browse(const char *label, std::string &file, bool openFile, bool startFade, std::function<void(const std::string &path, const std::string &filename)> callback)
 {
 #define BROWSE_TEXT "Browse..."
+
+  static ImVec4 fadeColor = {1.0f, 1.0f, 1.0f, 1.0f};
+  static float t = 0.0f; // interpolation factor
+  static bool fade = false;
 
   ImGuiStyle &style = ImGui::GetStyle();
 
@@ -660,7 +690,35 @@ void Console::Browse(const char *label, std::string &file, bool openFile, std::f
   ImGui::PushID(label);
   ImGui::SetNextItemWidth(IM_MAX(1.0f, ImGui::CalcItemWidth() - browse_text_size - style.FramePadding.x * 2.0f)); // -style.ItemInnerSpacing.x));
 
+  if (startFade)
+  {
+    t = 0.0f;
+    fade = true;
+  }
+
+  if (fade)
+  {
+    ImVec4 color;
+    float speed = 1.0f; // fade duration (1 second)
+    float dt = ImGui::GetIO().DeltaTime;
+    t += dt / speed;
+    if (t >= 1.0f)
+      t = 1.0f;
+    color = LerpImVec4(fadeColor, ImGui::GetStyleColorVec4(ImGuiCol_FrameBg), t);
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, color);
+    color = LerpImVec4(fadeColor, ImGui::GetStyleColorVec4(ImGuiCol_Text), t);
+    ImGui::PushStyleColor(ImGuiCol_Text, color);
+  }
+
   ImGui::InputText(label, &file);
+
+  if (fade)
+  {
+    ImGui::PopStyleColor(2);
+    if (t == 1.0f)
+      fade = false;
+  }
+
   const ImVec2 backup_frame_padding = style.FramePadding;
   style.FramePadding.x = style.FramePadding.y;
   ImGui::SameLine(0, style.ItemInnerSpacing.x);
