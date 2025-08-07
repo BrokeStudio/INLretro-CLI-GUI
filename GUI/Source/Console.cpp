@@ -75,6 +75,23 @@ Console::Console(const t_Console &console)
 Console::~Console() {}
 
 /**
+ * @brief Get the file name from path string
+ *
+ * @param path file absolute path
+ * @return std::string file name
+ */
+std::string get_filename_from_path(std::string &path)
+{
+  std::string filename = "";
+  std::replace(path.begin(), path.end(), '\\', '/');
+  size_t slashPos = path.find_last_of('/');
+  if (slashPos == std::string::npos)
+    return filename; // TODO: not good, need to handle error
+  filename = path.substr(slashPos + 1);
+  return filename;
+}
+
+/**
  * @brief Render the additional options popup
  *
  * @param INLoptions depends on the current view (rom dump, rom write, ram dump, ram write)
@@ -138,7 +155,7 @@ void Console::render_rom_dump(std::string droppedFilename)
     ImGui::TableSetColumnIndex(1);
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     if (droppedFilename != "")
-      rom_dump_INLOptions.rom_dump_file = droppedFilename;
+      cb_rom_dump_file_dialog(droppedFilename, get_filename_from_path(droppedFilename));
     Browse("##rom_dump_rom_write_file", rom_dump_INLOptions.rom_dump_file, false, droppedFilename != "", std::bind(&Console::cb_rom_dump_file_dialog, this, _1, _2));
 
     // Mapper
@@ -261,7 +278,7 @@ void Console::render_rom_write(std::string droppedFilename)
     ImGui::TableSetColumnIndex(1);
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     if (droppedFilename != "")
-      rom_write_INLOptions.rom_write_file = droppedFilename;
+      cb_rom_write_file_dialog(droppedFilename, get_filename_from_path(droppedFilename));
     Browse("##rom_write_rom_write_file", rom_write_INLOptions.rom_write_file, true, droppedFilename != "", std::bind(&Console::cb_rom_write_file_dialog, this, _1, _2));
 
     // Mapper
@@ -416,7 +433,7 @@ void Console::render_ram_dump(std::string droppedFilename)
     ImGui::TableSetColumnIndex(1);
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     if (droppedFilename != "")
-      ram_dump_INLOptions.ram_dump_file = droppedFilename;
+      cb_ram_dump_file_dialog(droppedFilename, get_filename_from_path(droppedFilename));
     Browse("##ram_dump_ram_dump_file", ram_dump_INLOptions.ram_dump_file, false, droppedFilename != "", std::bind(&Console::cb_ram_dump_file_dialog, this, _1, _2));
 
     // Mapper
@@ -521,7 +538,7 @@ void Console::render_ram_write(std::string droppedFilename)
     ImGui::TableSetColumnIndex(1);
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     if (droppedFilename != "")
-      ram_write_INLOptions.ram_write_file = droppedFilename;
+      cb_ram_write_file_dialog(droppedFilename, get_filename_from_path(droppedFilename));
     Browse("##ram_write_ram_write_file", ram_write_INLOptions.ram_write_file, true, droppedFilename != "", std::bind(&Console::cb_ram_write_file_dialog, this, _1, _2));
 
     // Mapper
@@ -670,7 +687,7 @@ ImVec4 LerpImVec4(const ImVec4 &a, const ImVec4 &b, float t)
 }
 
 /**
- * @brief Custom widget (test input + button) for browsing files
+ * @brief Custom widget (text input + button) for browsing files
  *
  * @param label widget label
  * @param file destination string
@@ -691,7 +708,7 @@ void Console::Browse(const char *label, std::string &file, bool openFile, bool s
   const float browse_text_size = ImGui::CalcTextSize(BROWSE_TEXT).x;
 
   ImGui::PushID(label);
-  ImGui::SetNextItemWidth(IM_MAX(1.0f, ImGui::CalcItemWidth() - browse_text_size - style.FramePadding.x * 2.0f)); // -style.ItemInnerSpacing.x));
+  ImGui::SetNextItemWidth(IM_MAX(1.0f, ImGui::CalcItemWidth() - browse_text_size - style.FramePadding.x * 2.0f));
 
   if (startFade)
   {
