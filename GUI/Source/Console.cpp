@@ -79,20 +79,23 @@ Console::~Console() {}
  *
  * @param INLoptions depends on the current view (rom dump, rom write, ram dump, ram write)
  */
-void Console::render_additional_options_popup(t_INLoptions_std *INLoptions)
+void Console::render_additional_options_popup(t_INLoptions_std *INLoptions, ConsoleActions consoleAction)
 {
   // Additional options
   if (ImGui::BeginPopupContextItem("additional_options_popup"))
   {
     trim(INLoptions->additional_opts);
-    if (ImGui::Selectable("force_wram_test"))
-      INLoptions->additional_opts += ",force_wram_test";
+    if (consoleAction == ConsoleActions_RomWrite || consoleAction == ConsoleActions_RamWrite)
+      if (ImGui::Selectable("force_wram_test"))
+        INLoptions->additional_opts += ",force_wram_test";
 
-    if (ImGui::Selectable("force_flash_test"))
-      INLoptions->additional_opts += ",force_flash_test";
+    if (consoleAction == ConsoleActions_RomDump)
+      if (ImGui::Selectable("force_flash_test"))
+        INLoptions->additional_opts += ",force_flash_test";
 
-    if (ImGui::Selectable("bank_table"))
-      INLoptions->additional_opts += ",bank_table=0x0000";
+    if (consoleAction == ConsoleActions_RomWrite || consoleAction == ConsoleActions_RomDump)
+      if (ImGui::Selectable("bank_table"))
+        INLoptions->additional_opts += ",bank_table=0x0000";
 
     trim(INLoptions->additional_opts);
     if (INLoptions->additional_opts != "" && INLoptions->additional_opts.at(0) == ',')
@@ -203,7 +206,7 @@ void Console::render_rom_dump(std::string droppedFilename)
     ImGui::TextUnformatted("Additional Options");
     ImGui::TableSetColumnIndex(1);
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    AdditionalOptions("##rom_dump_additional_opts", &rom_dump_INLOptions);
+    AdditionalOptions("##rom_dump_additional_opts", &rom_dump_INLOptions, ConsoleActions_RomDump);
 
     // Command line
     ImGui::TableNextRow();
@@ -326,7 +329,7 @@ void Console::render_rom_write(std::string droppedFilename)
     ImGui::TextUnformatted("Additional Options");
     ImGui::TableSetColumnIndex(1);
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    AdditionalOptions("##rom_write_additional_opts", &rom_write_INLOptions);
+    AdditionalOptions("##rom_write_additional_opts", &rom_write_INLOptions, ConsoleActions_RomWrite);
 
     // Verify
     ImGui::TableNextRow();
@@ -462,7 +465,7 @@ void Console::render_ram_dump(std::string droppedFilename)
     ImGui::TextUnformatted("Additional Options");
     ImGui::TableSetColumnIndex(1);
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    AdditionalOptions("##ram_dump_additional_opts", &ram_dump_INLOptions);
+    AdditionalOptions("##ram_dump_additional_opts", &ram_dump_INLOptions, ConsoleActions_RamDump);
 
     // Command line
     ImGui::TableNextRow();
@@ -567,7 +570,7 @@ void Console::render_ram_write(std::string droppedFilename)
     ImGui::TextUnformatted("Additional Options");
     ImGui::TableSetColumnIndex(1);
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    AdditionalOptions("##ram_write_additional_opts", &ram_write_INLOptions);
+    AdditionalOptions("##ram_write_additional_opts", &ram_write_INLOptions, ConsoleActions_RamWrite);
 
     // Command line
     ImGui::TableNextRow();
@@ -734,7 +737,14 @@ void Console::Browse(const char *label, std::string &file, bool openFile, bool s
   ImGui::PopID();
 }
 
-void Console::AdditionalOptions(const char *label, t_INLoptions_std *INLoptions)
+/**
+ * @brief Custom widget (text input + button) for additional options
+ *
+ * @param label widget label
+ * @param INLoptions INLretro options
+ * @param consoleAction console action (rom/ram dump/write) so we can display options depending on the action
+ */
+void Console::AdditionalOptions(const char *label, t_INLoptions_std *INLoptions, ConsoleActions consoleAction)
 {
   ImGuiStyle &style = ImGui::GetStyle();
 
@@ -753,7 +763,7 @@ void Console::AdditionalOptions(const char *label, t_INLoptions_std *INLoptions)
 
   style.FramePadding = backup_frame_padding;
 
-  render_additional_options_popup(INLoptions);
+  render_additional_options_popup(INLoptions, consoleAction);
 
   ImGui::PopID();
 }

@@ -71,7 +71,10 @@ protected:
   t_INLoptions_std ram_dump_INLOptions;
   t_INLoptions_std ram_write_INLOptions;
 
-  virtual void cb_rom_dump_file_dialog(const std::string &path, const std::string &filename) { rom_dump_INLOptions.rom_dump_file = path; }
+  virtual void cb_rom_dump_file_dialog(const std::string &path, const std::string &filename)
+  {
+    rom_dump_INLOptions.rom_dump_file = path;
+  }
   virtual void cb_rom_write_file_dialog(const std::string &path, const std::string &filename)
   {
     rom_write_INLOptions.rom_write_file = path;
@@ -84,7 +87,10 @@ protected:
     file.seekg(0, file.beg);
     file.close();
   }
-  virtual void cb_ram_dump_file_dialog(const std::string &path, const std::string &filename) { ram_dump_INLOptions.ram_dump_file = path; }
+  virtual void cb_ram_dump_file_dialog(const std::string &path, const std::string &filename)
+  {
+    ram_dump_INLOptions.ram_dump_file = path;
+  }
   virtual void cb_ram_write_file_dialog(const std::string &path, const std::string &filename)
   {
     ram_write_INLOptions.ram_write_file = path;
@@ -104,8 +110,8 @@ protected:
 
 private:
   void Browse(const char *label, std::string &file, bool openFile, bool startFade, std::function<void(const std::string &path, const std::string &filename)> callback);
-  void AdditionalOptions(const char *label, t_INLoptions_std *INLoptions);
-  void render_additional_options_popup(t_INLoptions_std *INLoptions);
+  void AdditionalOptions(const char *label, t_INLoptions_std *INLoptions, ConsoleActions consoleAction);
+  void render_additional_options_popup(t_INLoptions_std *INLoptions, ConsoleActions consoleAction);
 };
 
 #endif
