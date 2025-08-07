@@ -30,7 +30,6 @@ namespace Menu
 
   void set_menu_active(const std::string &menu_name, bool value);
   void set_sub_menu_active(const std::string &menu_name, const std::string &sub_menu_name);
-
 }
 
 #endif

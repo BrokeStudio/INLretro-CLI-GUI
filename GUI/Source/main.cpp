@@ -322,8 +322,17 @@ int main(int argc, char **argv)
 
     // #if 0
     ImGuiViewport *viewport = ImGui::GetMainViewport();
-    ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
-    ImGui::SetNextWindowSize(viewport->Size); // ImGui::GetIO().DisplaySize);
+    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+      ImGui::SetNextWindowPos(viewport->Pos);
+      ImGui::SetNextWindowSize(viewport->Size);
+      ImGui::SetNextWindowViewport(viewport->ID);
+    }
+    else
+    {
+      ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
+      ImGui::SetNextWindowSize(viewport->Size); // ImGui::GetIO().DisplaySize);
+    }
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
     ImGui::Begin("Main", 0, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize); // ImGuiWindowFlags_MenuBar
                                                                                         // #endif
