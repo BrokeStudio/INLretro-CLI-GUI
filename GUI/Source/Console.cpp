@@ -248,6 +248,7 @@ void Console::render_rom_dump(std::string droppedFilename)
   ImGui::EndDisabled();
 
   ImGui::EndChild(); // ConsoleContent
+  render_header_window();
 }
 
 /**
@@ -276,6 +277,18 @@ void Console::render_rom_write(std::string droppedFilename)
     ImGui::TableSetColumnIndex(0);
     ImGui::TextUnformatted("Source file");
     ImGui::TableSetColumnIndex(1);
+
+    ImGuiStyle &style = ImGui::GetStyle();
+
+    const float button_size = ImGui::GetFrameHeight();
+    const ImVec2 backup_frame_padding = style.FramePadding;
+    style.FramePadding.x = style.FramePadding.y;
+    if (ImGui::Button("i", ImVec2(button_size, button_size)))
+      this->display_header_window = true;
+    ImGui::SetItemTooltip("Display file header details.");
+    style.FramePadding = backup_frame_padding;
+    ImGui::SameLine(0, style.ItemInnerSpacing.x);
+
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     if (droppedFilename != "")
       cb_rom_write_file_dialog(droppedFilename, get_filename_from_path(droppedFilename));
@@ -403,6 +416,7 @@ void Console::render_rom_write(std::string droppedFilename)
   }
 
   ImGui::EndChild(); // ConsoleContent
+  render_header_window();
 }
 
 /**
@@ -508,6 +522,7 @@ void Console::render_ram_dump(std::string droppedFilename)
   ImGui::EndDisabled();
 
   ImGui::EndChild(); // ConsoleContent
+  render_header_window();
 }
 
 /**
@@ -613,6 +628,7 @@ void Console::render_ram_write(std::string droppedFilename)
   ImGui::EndDisabled();
 
   ImGui::EndChild(); // ConsoleContent
+  render_header_window();
 }
 
 /**
@@ -783,4 +799,24 @@ void Console::AdditionalOptions(const char *label, t_INLoptions_std *INLoptions,
   render_additional_options_popup(INLoptions, consoleAction);
 
   ImGui::PopID();
+}
+
+/**
+ * @brief
+ *
+ */
+void Console::render_header_window()
+{
+  snprintf(this->buf, sizeof(this->buf), "%s header details##header_window", this->full_name.c_str());
+  if (this->display_header_window)
+  {
+    ImGui::OpenPopup(this->buf);
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+  }
+
+  if (ImGui::BeginPopupModal(this->buf, &this->display_header_window, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove))
+  {
+    this->render_header_content();
+    ImGui::EndPopup();
+  }
 }
