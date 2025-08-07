@@ -221,6 +221,10 @@ private:
     return true;
   }
 
+  /**
+   * @brief render header properties
+   *
+   */
   void render_header_content()
   {
     if (!this->header.isValid)

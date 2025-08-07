@@ -322,14 +322,14 @@ private:
     {
       this->buf[i] = header.bytes[i + 0xBC];
     }
-    header.device_support.assign(this->buf, 12);
+    header.modem_support.assign(this->buf, 12);
 
     // region support
     for (size_t i = 0; i < 12; i++)
     {
       this->buf[i] = header.bytes[i + 0xF0];
     }
-    header.device_support = std::string(this->buf);
+    header.region_support = std::string(this->buf);
 
     // check if ROM checksum is valid
     if (!header.check_rom_checksum())
@@ -355,6 +355,149 @@ private:
     }
 
     return true;
+  }
+
+  /**
+   * @brief render header properties
+   *
+   */
+  void render_header_content()
+  {
+    if (!this->header.isValid)
+      return ImGui::Text("The file header is not valid.");
+
+    if (ImGui::BeginTable("md_header_table", 2, ImGuiTableFlags_Borders))
+    {
+      ImGui::TableSetupColumn("Property", ImGuiTableColumnFlags_WidthFixed, 250.0f);
+      ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthFixed, 250.0f);
+
+      ImGui::TableHeadersRow();
+
+      // system type
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      ImGui::TextUnformatted("Ssytem type");
+      ImGui::TableSetColumnIndex(1);
+      ImGui::TextUnformatted(this->header.system_type.c_str());
+
+      // Copyright and release date
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      ImGui::TextUnformatted("Copyright and release date");
+      ImGui::TableSetColumnIndex(1);
+      ImGui::TextUnformatted(this->header.copyright_release_date.c_str());
+
+      // Game title (domestic)
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      ImGui::TextUnformatted("Game title (domestic)");
+      ImGui::TableSetColumnIndex(1);
+      ImGui::TextUnformatted(this->header.game_title_domestic.c_str());
+
+      // Game title (overseas)
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      ImGui::TextUnformatted("Game title (overseas)");
+      ImGui::TableSetColumnIndex(1);
+      ImGui::TextUnformatted(this->header.game_title_overseas.c_str());
+
+      // Serial number
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      ImGui::TextUnformatted("Serial number");
+      ImGui::TableSetColumnIndex(1);
+      ImGui::TextUnformatted(this->header.serial_number.c_str());
+
+      // Software type
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      ImGui::TextUnformatted("Software type");
+      ImGui::TableSetColumnIndex(1);
+      ImGui::TextUnformatted(this->softwareTypes.at(this->header.serial_number.substr(0, 2)).c_str());
+
+      // ROM checksum
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      ImGui::TextUnformatted("ROM checksum");
+      ImGui::TableSetColumnIndex(1);
+      ImGui::Text("%04x", this->header.rom_checksum);
+
+      // Device support
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      ImGui::TextUnformatted("Device support");
+      ImGui::TableSetColumnIndex(1);
+      ImGui::TextUnformatted(this->header.device_support.c_str());
+
+      // Device type
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      ImGui::TextUnformatted("Device type");
+      ImGui::TableSetColumnIndex(1);
+      ImGui::TextUnformatted(this->deviceTypes.at(this->header.device_support.substr(0, 1)).c_str());
+
+      // ROM address range
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      ImGui::TextUnformatted("ROM address range");
+      ImGui::TableSetColumnIndex(1);
+      ImGui::Text("%08x", this->header.rom_address_range);
+
+      // RAM address range
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      ImGui::TextUnformatted("RAM address range");
+      ImGui::TableSetColumnIndex(1);
+      ImGui::Text("%08x", this->header.ram_address_range);
+
+      // SRAM
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      ImGui::TextUnformatted("SRAM");
+      ImGui::TableSetColumnIndex(1);
+      ImGui::Text("%s", this->header.has_sram() ? "Yes" : "No");
+
+      // Battery
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      ImGui::TextUnformatted("Battery");
+      ImGui::TableSetColumnIndex(1);
+      ImGui::Text("%s", this->header.has_battery() ? "Yes" : "No");
+
+      // Modem support
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      ImGui::TextUnformatted("Modem support");
+      ImGui::TableSetColumnIndex(1);
+      ImGui::TextUnformatted(this->header.modem_support.c_str());
+
+      // Region support
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      ImGui::TextUnformatted("Region support");
+      ImGui::TableSetColumnIndex(1);
+      ImGui::TextUnformatted(this->header.region_support.c_str());
+
+      // Region type
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      ImGui::TextUnformatted("Region type");
+      ImGui::TableSetColumnIndex(1);
+      std::string regions = "";
+      for (size_t i = 0; i < 3; i++)
+      {
+        auto it = this->regionTypes.find(this->header.region_support.substr(i, 1));
+        if (it != this->regionTypes.end())
+        {
+          if (i)
+            regions += ", ";
+          regions += this->regionTypes.at(this->header.region_support.substr(i, 1));
+        }
+      }
+      ImGui::TextUnformatted(regions.c_str());
+
+      ImGui::EndTable();
+    }
   }
 };
 
