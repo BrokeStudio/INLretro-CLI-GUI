@@ -94,7 +94,7 @@ private:
     MirroringType mirroringType;
   };
 
-  HeaderProperties header;
+  HeaderProperties header = {};
 
   /**
    * @brief Parse the header data from the current ROM file
