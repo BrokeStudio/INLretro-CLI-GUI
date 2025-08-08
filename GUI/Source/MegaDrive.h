@@ -85,7 +85,7 @@ private:
   {
     // struct SerialNumber {
     //   std::string software_type;
-    //   std::string serial_number;
+    //   std::string serialNumber;
     //   std::string revision;
     // };
 
@@ -107,19 +107,19 @@ private:
     uint8_t bytes[256];
     bool isValid;
 
-    std::string system_type;
-    std::string copyright_release_date;
-    std::string game_title_domestic;
-    std::string game_title_overseas;
-    // SerialNumber serial_number;
-    std::string serial_number;
-    uint16_t rom_checksum;
-    std::string device_support;
-    AddressRange rom_address_range;
-    AddressRange ram_address_range;
-    ExtraMemory extra_memory;
-    std::string modem_support;
-    std::string region_support;
+    std::string systemType;
+    std::string copyrightReleaseDate;
+    std::string gameTitleDomestic;
+    std::string gameTitleOverseas;
+    // SerialNumber serialNumber;
+    std::string serialNumber;
+    uint16_t romChecksum;
+    std::string deviceSupport;
+    AddressRange romAddressRange;
+    AddressRange ramAddressRange;
+    ExtraMemory extraMemory;
+    std::string modemSupport;
+    std::string regionSupport;
 
     uint16_t file_checksum;
     std::streamoff file_size;
@@ -129,29 +129,63 @@ private:
       return "32mb";
     }
 
+    std::string get_software_type()
+    {
+      auto it = softwareTypes.find(this->serialNumber.substr(0, 2));
+      if (it != softwareTypes.end())
+        return softwareTypes.at(this->serialNumber.substr(0, 2));
+      else
+        return "Unknown software type";
+    }
+
+    std::string get_device_type()
+    {
+      auto it = deviceTypes.find(this->deviceSupport.substr(0, 1));
+      if (it != deviceTypes.end())
+        return deviceTypes.at(this->deviceSupport.substr(0, 1));
+      else
+        return "Unknown device type";
+    }
+
+    std::string get_regions()
+    {
+      std::string regions = "";
+      for (size_t i = 0; i < 3; i++)
+      {
+        auto it = regionTypes.find(this->regionSupport.substr(i, 1));
+        if (it != regionTypes.end())
+        {
+          if (i)
+            regions += ", ";
+          regions += regionTypes.at(this->regionSupport.substr(i, 1));
+        }
+      }
+      return regions;
+    }
+
     // return a value in KB
     uint32_t get_rom_size()
     {
-      return (this->rom_address_range.end + 1 - this->rom_address_range.start) >> 10;
+      return (this->romAddressRange.end + 1 - this->romAddressRange.start) >> 10;
     }
 
     // return a value in KB
     uint32_t get_ram_size()
     {
-      return (this->ram_address_range.end + 1 - this->ram_address_range.start) >> 10;
+      return (this->ramAddressRange.end + 1 - this->ramAddressRange.start) >> 10;
     }
 
     bool has_sram()
     {
       if (
-          this->extra_memory.ra == "RA" &&
-          this->extra_memory._x20 == 0x20 &&
-          (this->extra_memory.type == 0xA0 || // no save  16-bit
-           this->extra_memory.type == 0xB0 || // no save   8-bit  even addresses
-           this->extra_memory.type == 0xB8 || // no save   8-bit  odd addresses
-           this->extra_memory.type == 0xE0 || // save     16-bit
-           this->extra_memory.type == 0xF0 || // save      8-bit  even addresses
-           this->extra_memory.type == 0xF8    // save      8-bit  odd addresses
+          this->extraMemory.ra == "RA" &&
+          this->extraMemory._x20 == 0x20 &&
+          (this->extraMemory.type == 0xA0 || // no save  16-bit
+           this->extraMemory.type == 0xB0 || // no save   8-bit  even addresses
+           this->extraMemory.type == 0xB8 || // no save   8-bit  odd addresses
+           this->extraMemory.type == 0xE0 || // save     16-bit
+           this->extraMemory.type == 0xF0 || // save      8-bit  even addresses
+           this->extraMemory.type == 0xF8    // save      8-bit  odd addresses
            ))
         return true;
       else
@@ -161,18 +195,18 @@ private:
     // return true or false
     bool has_battery()
     {
-      if (this->extra_memory.type == 0xE0 || // save     16-bit
-          this->extra_memory.type == 0xF0 || // save      8-bit  even addresses
-          this->extra_memory.type == 0xF8)   // save      8-bit  odd addresses
+      if (this->extraMemory.type == 0xE0 || // save     16-bit
+          this->extraMemory.type == 0xF0 || // save      8-bit  even addresses
+          this->extraMemory.type == 0xF8)   // save      8-bit  odd addresses
         return true;
 
       return false;
     }
 
     // return true or false
-    bool check_rom_checksum()
+    bool check_romChecksum()
     {
-      if (this->rom_checksum == this->file_checksum)
+      if (this->romChecksum == this->file_checksum)
         return true;
       else
         return false;
@@ -188,7 +222,7 @@ private:
     }
   };
 
-  HeaderProperties header;
+  HeaderProperties header = {};
 
   /**
    * @brief Parse the header data from the current ROM file
@@ -233,106 +267,114 @@ private:
     rom.close();
 
     // system type
+    memset(this->buf, 0, sizeof(this->buf));
     for (size_t i = 0; i < 16; i++)
     {
       this->buf[i] = header.bytes[i];
     }
-    header.system_type.assign(this->buf, 16);
+    header.systemType.assign(this->buf, 16);
 
     // copyright and release_date
+    memset(this->buf, 0, sizeof(this->buf));
     for (size_t i = 0; i < 16; i++)
     {
       this->buf[i] = header.bytes[i + 0x10];
     }
-    header.copyright_release_date.assign(this->buf, 16);
+    header.copyrightReleaseDate.assign(this->buf, 16);
 
     // game title (domestic)
+    memset(this->buf, 0, sizeof(this->buf));
     for (size_t i = 0; i < 48; i++)
     {
       this->buf[i] = header.bytes[i + 0x20];
     }
-    header.game_title_domestic.assign(this->buf, 48);
+    header.gameTitleDomestic.assign(this->buf, 48);
 
     // game title (overseas)
+    memset(this->buf, 0, sizeof(this->buf));
     for (size_t i = 0; i < 48; i++)
     {
       this->buf[i] = header.bytes[i + 0x50];
     }
-    header.game_title_overseas.assign(this->buf, 48);
+    header.gameTitleOverseas.assign(this->buf, 48);
 
     // serial number
+    memset(this->buf, 0, sizeof(this->buf));
     for (size_t i = 0; i < 14; i++)
     {
       this->buf[i] = header.bytes[i + 0x80];
     }
-    header.serial_number.assign(this->buf, 14);
+    header.serialNumber.assign(this->buf, 14);
 
     // rom checksum
-    header.rom_checksum = header.bytes[0x8E] << 8;
-    header.rom_checksum |= header.bytes[0x8F];
+    header.romChecksum = header.bytes[0x8E] << 8;
+    header.romChecksum |= header.bytes[0x8F];
 
     // device support
+    memset(this->buf, 0, sizeof(this->buf));
     for (size_t i = 0; i < 16; i++)
     {
       this->buf[i] = header.bytes[i + 0x90];
     }
-    header.device_support.assign(this->buf, 16);
+    header.deviceSupport.assign(this->buf, 16);
 
     // rom address range
-    header.rom_address_range.start = header.bytes[0xA0] << 24;
-    header.rom_address_range.start |= header.bytes[0xA1] << 16;
-    header.rom_address_range.start |= header.bytes[0xA2] << 8;
-    header.rom_address_range.start |= header.bytes[0xA3];
+    header.romAddressRange.start = header.bytes[0xA0] << 24;
+    header.romAddressRange.start |= header.bytes[0xA1] << 16;
+    header.romAddressRange.start |= header.bytes[0xA2] << 8;
+    header.romAddressRange.start |= header.bytes[0xA3];
 
-    header.rom_address_range.end = header.bytes[0xA4] << 24;
-    header.rom_address_range.end |= header.bytes[0xA5] << 16;
-    header.rom_address_range.end |= header.bytes[0xA6] << 8;
-    header.rom_address_range.end |= header.bytes[0xA7];
+    header.romAddressRange.end = header.bytes[0xA4] << 24;
+    header.romAddressRange.end |= header.bytes[0xA5] << 16;
+    header.romAddressRange.end |= header.bytes[0xA6] << 8;
+    header.romAddressRange.end |= header.bytes[0xA7];
 
     // ram address range
-    header.ram_address_range.start = header.bytes[0xA8] << 24;
-    header.ram_address_range.start |= header.bytes[0xA9] << 16;
-    header.ram_address_range.start |= header.bytes[0xAA] << 8;
-    header.ram_address_range.start |= header.bytes[0xAB];
+    header.ramAddressRange.start = header.bytes[0xA8] << 24;
+    header.ramAddressRange.start |= header.bytes[0xA9] << 16;
+    header.ramAddressRange.start |= header.bytes[0xAA] << 8;
+    header.ramAddressRange.start |= header.bytes[0xAB];
 
-    header.ram_address_range.end = header.bytes[0xAC] << 24;
-    header.ram_address_range.end |= header.bytes[0xAD] << 16;
-    header.ram_address_range.end |= header.bytes[0xAE] << 8;
-    header.ram_address_range.end |= header.bytes[0xAF];
+    header.ramAddressRange.end = header.bytes[0xAC] << 24;
+    header.ramAddressRange.end |= header.bytes[0xAD] << 16;
+    header.ramAddressRange.end |= header.bytes[0xAE] << 8;
+    header.ramAddressRange.end |= header.bytes[0xAF];
 
     // extra memory
     this->buf[0] = header.bytes[0xB0];
     this->buf[1] = header.bytes[0xB1];
-    header.extra_memory.ra.assign(this->buf, 2);
-    header.extra_memory.type = header.bytes[0xB2];
-    header.extra_memory._x20 = header.bytes[0xB3];
+    header.extraMemory.ra.assign(this->buf, 2);
+    header.extraMemory.type = header.bytes[0xB2];
+    header.extraMemory._x20 = header.bytes[0xB3];
 
-    header.extra_memory.start = header.bytes[0xB4] << 24;
-    header.extra_memory.start |= header.bytes[0xB5] << 16;
-    header.extra_memory.start |= header.bytes[0xB6] << 8;
-    header.extra_memory.start |= header.bytes[0xB7];
+    header.extraMemory.start = header.bytes[0xB4] << 24;
+    header.extraMemory.start |= header.bytes[0xB5] << 16;
+    header.extraMemory.start |= header.bytes[0xB6] << 8;
+    header.extraMemory.start |= header.bytes[0xB7];
 
-    header.extra_memory.end = header.bytes[0xB8] << 24;
-    header.extra_memory.end |= header.bytes[0xB9] << 16;
-    header.extra_memory.end |= header.bytes[0xBA] << 8;
-    header.extra_memory.end |= header.bytes[0xBB];
+    header.extraMemory.end = header.bytes[0xB8] << 24;
+    header.extraMemory.end |= header.bytes[0xB9] << 16;
+    header.extraMemory.end |= header.bytes[0xBA] << 8;
+    header.extraMemory.end |= header.bytes[0xBB];
 
     // modem support
+    memset(this->buf, 0, sizeof(this->buf));
     for (size_t i = 0; i < 12; i++)
     {
       this->buf[i] = header.bytes[i + 0xBC];
     }
-    header.modem_support.assign(this->buf, 12);
+    header.modemSupport.assign(this->buf, 12);
 
     // region support
+    memset(this->buf, 0, sizeof(this->buf));
     for (size_t i = 0; i < 12; i++)
     {
       this->buf[i] = header.bytes[i + 0xF0];
     }
-    header.region_support = std::string(this->buf);
+    header.regionSupport = std::string(this->buf);
 
     // check if ROM checksum is valid
-    if (!header.check_rom_checksum())
+    if (!header.check_romChecksum())
     {
       APP_LOG(LogTypes_Warning, "Header ROM checksum is not valid");
       header.isValid = false;
@@ -376,79 +418,79 @@ private:
       // system type
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
-      ImGui::TextUnformatted("Ssytem type");
+      ImGui::TextUnformatted("System type");
       ImGui::TableSetColumnIndex(1);
-      ImGui::TextUnformatted(this->header.system_type.c_str());
+      ImGui::TextUnformatted(this->header.systemType.c_str());
 
       // Copyright and release date
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("Copyright and release date");
       ImGui::TableSetColumnIndex(1);
-      ImGui::TextUnformatted(this->header.copyright_release_date.c_str());
+      ImGui::TextUnformatted(this->header.copyrightReleaseDate.c_str());
 
       // Game title (domestic)
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("Game title (domestic)");
       ImGui::TableSetColumnIndex(1);
-      ImGui::TextUnformatted(this->header.game_title_domestic.c_str());
+      ImGui::TextUnformatted(this->header.gameTitleDomestic.c_str());
 
       // Game title (overseas)
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("Game title (overseas)");
       ImGui::TableSetColumnIndex(1);
-      ImGui::TextUnformatted(this->header.game_title_overseas.c_str());
+      ImGui::TextUnformatted(this->header.gameTitleOverseas.c_str());
 
       // Serial number
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("Serial number");
       ImGui::TableSetColumnIndex(1);
-      ImGui::TextUnformatted(this->header.serial_number.c_str());
+      ImGui::TextUnformatted(this->header.serialNumber.c_str());
 
       // Software type
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("Software type");
       ImGui::TableSetColumnIndex(1);
-      ImGui::TextUnformatted(this->softwareTypes.at(this->header.serial_number.substr(0, 2)).c_str());
+      ImGui::TextUnformatted(this->header.get_software_type().c_str());
 
       // ROM checksum
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("ROM checksum");
       ImGui::TableSetColumnIndex(1);
-      ImGui::Text("%04x", this->header.rom_checksum);
+      ImGui::Text("0x%04x", this->header.romChecksum);
 
       // Device support
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("Device support");
       ImGui::TableSetColumnIndex(1);
-      ImGui::TextUnformatted(this->header.device_support.c_str());
+      ImGui::TextUnformatted(this->header.deviceSupport.c_str());
 
       // Device type
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("Device type");
       ImGui::TableSetColumnIndex(1);
-      ImGui::TextUnformatted(this->deviceTypes.at(this->header.device_support.substr(0, 1)).c_str());
+      ImGui::TextUnformatted(this->header.get_device_type().c_str());
 
       // ROM address range
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("ROM address range");
       ImGui::TableSetColumnIndex(1);
-      ImGui::Text("%08x", this->header.rom_address_range);
+      ImGui::Text("0x%08x", this->header.romAddressRange);
 
       // RAM address range
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("RAM address range");
       ImGui::TableSetColumnIndex(1);
-      ImGui::Text("%08x", this->header.ram_address_range);
+      ImGui::Text("0x%08x", this->header.ramAddressRange);
 
       // SRAM
       ImGui::TableNextRow();
@@ -469,32 +511,22 @@ private:
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("Modem support");
       ImGui::TableSetColumnIndex(1);
-      ImGui::TextUnformatted(this->header.modem_support.c_str());
+      ImGui::TextUnformatted(this->header.modemSupport.c_str());
 
       // Region support
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("Region support");
       ImGui::TableSetColumnIndex(1);
-      ImGui::TextUnformatted(this->header.region_support.c_str());
+      ImGui::TextUnformatted(this->header.regionSupport.c_str());
 
       // Region type
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("Region type");
       ImGui::TableSetColumnIndex(1);
-      std::string regions = "";
-      for (size_t i = 0; i < 3; i++)
-      {
-        auto it = this->regionTypes.find(this->header.region_support.substr(i, 1));
-        if (it != this->regionTypes.end())
-        {
-          if (i)
-            regions += ", ";
-          regions += this->regionTypes.at(this->header.region_support.substr(i, 1));
-        }
-      }
-      ImGui::TextUnformatted(regions.c_str());
+      ImGui::TextUnformatted(this->header.get_regions().c_str());
+      ImGui::Text("(%s)", this->header.regionSupport.c_str());
 
       ImGui::EndTable();
     }
