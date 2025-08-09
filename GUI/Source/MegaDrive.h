@@ -403,7 +403,7 @@ private:
    * @brief render header properties
    *
    */
-  void render_header_content()
+  void render_header_content() override
   {
     if (!this->header.isValid)
       return ImGui::Text("The file header is not valid.");
@@ -483,14 +483,14 @@ private:
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("ROM address range");
       ImGui::TableSetColumnIndex(1);
-      ImGui::Text("0x%08x", this->header.romAddressRange);
+      ImGui::Text("0x%08x-%08x", this->header.romAddressRange.start, this->header.romAddressRange.end);
 
       // RAM address range
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("RAM address range");
       ImGui::TableSetColumnIndex(1);
-      ImGui::Text("0x%08x", this->header.ramAddressRange);
+      ImGui::Text("0x%08x-%08x", this->header.ramAddressRange.start, this->header.ramAddressRange.end);
 
       // SRAM
       ImGui::TableNextRow();

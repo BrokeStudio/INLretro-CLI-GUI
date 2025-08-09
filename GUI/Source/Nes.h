@@ -225,7 +225,7 @@ private:
    * @brief render header properties
    *
    */
-  void render_header_content()
+  void render_header_content() override
   {
     if (!this->header.isValid)
       return ImGui::Text("The file header is not valid.");

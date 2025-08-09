@@ -561,7 +561,7 @@ private:
    * @brief render header properties
    *
    */
-  void render_header_content()
+  void render_header_content() override
   {
     if (!this->header.isValid)
       return ImGui::Text("The file header is not valid.");
@@ -642,7 +642,7 @@ private:
       ImGui::TextUnformatted("New licensee code");
       ImGui::TableSetColumnIndex(1);
       ImGui::TextUnformatted(this->header.get_new_licensee_code().c_str());
-      ImGui::Text("(%s)", this->header.newLicenseeCode);
+      ImGui::Text("(%s)", this->header.newLicenseeCode.c_str());
 
       // SGB support
       ImGui::TableNextRow();
@@ -673,7 +673,7 @@ private:
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("Old licensee code");
       ImGui::TableSetColumnIndex(1);
-      ImGui::TextWrapped(this->header.get_old_licensee_code().c_str());
+      ImGui::TextWrapped("%s", this->header.get_old_licensee_code().c_str());
       ImGui::Text("(0x%02x)", this->header.oldLicenseeCode);
 
       // Mask ROM version number
