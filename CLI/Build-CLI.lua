@@ -91,13 +91,8 @@ filter { "system:windows" }
     "powershell -ExecutionPolicy Bypass -File increment-build.ps1"
   }
 
-filter "platforms:x86"
-  system "Windows"
-  architecture "x86"
-
-filter "platforms:x86_64"
-  system "Windows"
-  architecture "x86_64"
+filter { "system:windows", "platforms:x86" }
+  linkoptions { "/SAFESEH:NO" } -- Image Has Safe Exception Handers: No
 
 filter "system:windows"
   files { '../Windows/Resources/resources.rc', '**.ico' }
