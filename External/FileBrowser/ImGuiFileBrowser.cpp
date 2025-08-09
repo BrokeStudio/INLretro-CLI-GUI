@@ -242,7 +242,7 @@ namespace imgui_addons
       {
         // If last button clicked, nothing happens
         if (i != current_dirlist.size() - 1)
-          show_error |= !(onNavigationButtonClick(i));
+          show_error |= !(onNavigationButtonClick(static_cast<int>(i)));
       }
 
       // Draw Arrow Buttons
@@ -272,7 +272,7 @@ namespace imgui_addons
               {
                 if (ImGui::Selectable(current_dirlist[j].c_str(), false) && j != current_dirlist.size() - 1)
                 {
-                  show_error |= !(onNavigationButtonClick(j));
+                  show_error |= !(onNavigationButtonClick(static_cast<int>(j)));
                   ImGui::CloseCurrentPopup();
                 }
               }
@@ -289,7 +289,7 @@ namespace imgui_addons
         {
           ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1.0f, 1.0f, 1.0f, 0.01f));
           ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
-          ImGui::PushID(i);
+          ImGui::PushID(static_cast<int>(i));
           ImGui::ArrowButtonEx("##Right", ImGuiDir_Right, ImVec2(frame_height, frame_height), ImGuiItemFlags_Disabled);
           ImGui::PopID();
           ImGui::SameLine(0, 0);
@@ -362,7 +362,7 @@ namespace imgui_addons
         items++;
         if (ImGui::Selectable(filtered_dirs[i]->name.c_str(), selected_idx == static_cast<int>(i) && is_dir, ImGuiSelectableFlags_AllowDoubleClick))
         {
-          selected_idx = i;
+          selected_idx = static_cast<int>(i);
           is_dir = true;
 
           // If dialog mode is SELECT then copy the selected dir name to the input text bar
@@ -371,7 +371,7 @@ namespace imgui_addons
 
           if (ImGui::IsMouseDoubleClicked(0))
           {
-            show_error |= !(onDirClick(i));
+            show_error |= !(onDirClick(static_cast<int>(i)));
             break;
           }
         }
@@ -390,7 +390,7 @@ namespace imgui_addons
         if (ImGui::Selectable(filtered_files[i]->name.c_str(), selected_idx == static_cast<int>(i) && !is_dir, ImGuiSelectableFlags_AllowDoubleClick))
         {
           // int len = filtered_files[i]->name.length();
-          selected_idx = i;
+          selected_idx = static_cast<int>(i);
           is_dir = false;
 
           // If dialog mode is OPEN/SAVE then copy the selected file name to the input text bar
@@ -677,7 +677,7 @@ namespace imgui_addons
         if (ImGui::Selectable(label_text.c_str(), selected_ext_idx == static_cast<int>(i)))
         {
           show_all_valid_files = (label_text == ALL_VALID_FILES_EXT_TXT);
-          selected_ext_idx = i;
+          selected_ext_idx = static_cast<int>(i);
           // Automatically append extension to input filename when changing extensions from dropdown
           if (dialog_mode == DialogMode::SAVE)
           {
