@@ -53,6 +53,18 @@ I'll try to add support to more mapper in the future but feel free to let me kno
 
 ---
 
+## Screenshots
+
+![INLretroGUI - screenshot 1](Images/INLretroGUI-screenshot-1.png)
+
+![INLretroGUI - screenshot 2](Images/INLretroGUI-screenshot-2.png)
+
+![INLretroGUI - screenshot 3](Images/INLretroGUI-screenshot-3.png)
+
+![INLretroGUI - screenshot 4](Images/INLretroGUI-screenshot-4.png)
+
+---
+
 ## Important note
 
 If you own an INLretro programmer-dumper and want to use this CLI/GUI solution, please follow these steps:
