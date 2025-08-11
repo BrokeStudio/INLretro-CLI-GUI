@@ -1,2 +1,2 @@
 #pragma once
-#define INLRETRO_CLI_BUILD 31
+#define INLRETRO_CLI_BUILD 34

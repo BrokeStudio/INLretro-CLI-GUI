@@ -1,7 +1,7 @@
 #!/bin/sh
 
 BUILD_FILE="build.txt"
-HEADER_FILE="Source\build.h"
+HEADER_FILE="Source/build.h"
 
 # Crée le fichier s'il n'existe pas
 if [ ! -f "$BUILD_FILE" ]; then

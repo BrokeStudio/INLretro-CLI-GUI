@@ -1,30 +1,27 @@
 $buildFile = "build.txt"
 $headerFile = "Source\build.h"
 
-# Crée le fichier s’il n’existe pas
+# create file if it doesn't exist
 if (-not (Test-Path $buildFile)) {
-    Set-Content -Path $buildFile -Value "0"
+    "0`n" | Set-Content -Path $buildFile -NoNewline
 }
 
-# Lire et valider le contenu
-$raw = Get-Content $buildFile
+# read and control file content
+$raw = Get-Content $buildFile -Raw
 if ($raw -match '^\d+$') {
     $num = [int]$raw
 } else {
     $num = 0
 }
 
-# Incrémenter
+# increment build number
 $num++
 
-# Écrire dans le fichier texte
-Set-Content -Path $buildFile -Value $num
+# write it back to text file
+($num.ToString() + "`n") | Set-Content $buildFile -NoNewline
 
-# Générer le header
-$headerContent = @"
-#pragma once
-#define INLRETRO_GUI_BUILD $num
-"@
-Set-Content -Path $headerFile -Value $headerContent
+# create header file
+("#pragma once`n#define INLRETRO_GUI_BUILD $NUM`n") |
+    Set-Content $headerFile -NoNewline
 
 Write-Host "Build number updated to $num in $buildFile and $headerFile)"
