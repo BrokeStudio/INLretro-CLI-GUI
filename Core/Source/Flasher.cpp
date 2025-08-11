@@ -8,7 +8,7 @@
 #include "lua.hpp"
 #include "Lua.h"
 
-#if __APPLE__
+#ifdef __APPLE__
 #include "macos.h"
 #endif
 
@@ -33,7 +33,7 @@ void Flasher::detect_all()
   if (detect("g"))
   {
     list.push_back(new Flasher("g", true));
-    APP_LOG(LogTypes_Success, "[SYS] Flasher 'INLretroprog' detected");
+    APP_LOG(LogTypes_Success, L_SYS "Flasher 'INLretroprog' detected");
   }
 
   // try to detect INL Retro-Pro[0-9] flashers
@@ -45,7 +45,7 @@ void Flasher::detect_all()
     if (detect(id))
     {
       list.push_back(new Flasher(id, true));
-      APP_LOG(LogTypes_Success, "[SYS] Flasher 'INLretropro%d' detected", id);
+      APP_LOG(LogTypes_Success, L_SYS "Flasher 'INLretropro%d' detected", id);
     }
   }
 }
@@ -188,6 +188,28 @@ bool Flasher::exec(t_INLoptions_std opts)
   // clear log
   log.clear();
 
+  // update path if on macOS
+#ifdef __APPLE__
+  std::string applePath;
+
+#ifdef _DIST
+  if (getResourcesPath(applePath) == -1)
+  {
+    APP_LOG(LogTypes_Error, L_SYS "Couldn't get resources path");
+    return false;
+  }
+#else
+  if (getExecutablePath(applePath) == -1)
+  {
+    APP_LOG(LogTypes_Error, L_SYS "Couldn't get executable path");
+    return false;
+  }
+#endif
+  opts.lua_path = applePath;
+#else
+  opts.lua_path = "./";
+#endif
+
   // start script in a separate thread
   isFlashing = true;
   opts.retroprog_id = id;
@@ -245,19 +267,12 @@ int Flasher::inlprog_opt(const t_INLoptions_std &opts)
   lua_State *L = NULL;
 
   // Default script
-  std::string cur_path;
-  std::string resourcesPath;
   std::string luaScript = "";
   std::string luaUsbScript;
 
-#if __APPLE__
-  if (getResourcesPath(resourcesPath) == -1)
-  {
-    APP_LOG(LogTypes_Error, L_INI "Couldn't get resources path");
-    goto error;
-  }
-  luaUsbScript = resourcesPath + "scripts/app/usb_device.lua";
-  luaScript = resourcesPath;
+#ifdef __APPLE__
+  luaUsbScript = opts.lua_path + "scripts/app/usb_device.lua";
+  luaScript = opts.lua_path;
 #else
   luaUsbScript = "scripts/app/usb_device.lua";
 #endif
@@ -265,13 +280,14 @@ int Flasher::inlprog_opt(const t_INLoptions_std &opts)
   // Start up Lua.
   L = lua.init(opts);
 
-#if __APPLE__
+#ifdef __APPLE__
   // set the package path for 'require' to work correctly
+  std::string cur_path;
   lua_getglobal(L, "package");
   lua_getfield(L, -1, "path");    // get field "path" from table at top of stack (-1)
   cur_path = lua_tostring(L, -1); // grab path string from top of stack
   cur_path.append(";");           // do your path magic here
-  cur_path.append(resourcesPath);
+  cur_path.append(opts.lua_path);
   cur_path.append("?.lua");
   lua_pop(L, 1);                       // get rid of the string on the stack we just pushed on line 5
   lua_pushstring(L, cur_path.c_str()); // push the new one

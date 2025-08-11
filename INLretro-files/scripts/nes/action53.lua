@@ -26,7 +26,7 @@ local mapname = "A53"
 ██║╚██╔╝██║██║╚════██║██║         ██╔══╝  ██║   ██║██║╚██╗██║██║     ╚════██║
 ██║ ╚═╝ ██║██║███████║╚██████╗    ██║     ╚██████╔╝██║ ╚████║╚██████╗███████║
 ╚═╝     ╚═╝╚═╝╚══════╝ ╚═════╝    ╚═╝      ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝╚══════╝
-                                                                             
+
 --]]
 
 -- initialize mapper for dump/flash routines
@@ -128,7 +128,7 @@ end
 ██╔═══╝ ██╔══██╗██║   ██║╚════╝██╔══██╗██║   ██║██║╚██╔╝██║
 ██║     ██║  ██║╚██████╔╝      ██║  ██║╚██████╔╝██║ ╚═╝ ██║
 ╚═╝     ╚═╝  ╚═╝ ╚═════╝       ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝
-                                                           
+
 --]]
 
 -- read PRG-ROM flash ID
@@ -221,7 +221,7 @@ local function og_prg_rom_dump( file, rom_size_KB, debug )
     dict.nes("NES_CPU_WR", 0x8000, cur_bank)
     --dict.nes("NES_CPU_WR", 0x5000, 0x54)
 
-    --[[  This version of the code dumps a single byte at a time but doesn't require 
+    --[[  This version of the code dumps a single byte at a time but doesn't require
     --    specific functions in the firmware
     print("This is slow as molasses, but gets the job done")
 
@@ -314,7 +314,7 @@ local function og_prg_rom_flash(file, rom_size_KB, debug)
 
     --have the device write a bank worth of data
 
-    --[[  This version of the code programs a single byte at a time but doesn't require 
+    --[[  This version of the code programs a single byte at a time but doesn't require
     --  MMC3 specific functions in the firmware
     print("This is slow as molasses, but gets the job done")
     byte_num = 0  --current byte within the bank
@@ -335,7 +335,7 @@ local function og_prg_rom_flash(file, rom_size_KB, debug)
       --dict.nes("A53_TSSOP_FLASH_WR", base_addr+byte_num, data)  --3.8KBps (5.5x faster than above)
       --NEXT STEP: firmware write page/bank function can use function pointer for the function above
       --  this may cause issues with more complex algos
-      --  sometimes cur bank is needed 
+      --  sometimes cur bank is needed
       --  for this to work, need to have function post conditions meet the preconditions
       --  that way host intervention is only needed for bank controls
       --  Is there a way to allow for double buffering though..?
@@ -438,7 +438,7 @@ local function read_gift( base, len )
 
   local i = 0
 
-  while i < len do 
+  while i < len do
     rv = dict.nes("NES_CPU_RD", base+i)
     io.write(string.char(rv))
     i = i+1
@@ -448,7 +448,7 @@ local function read_gift( base, len )
 
   print("")
 
-  while i < len do 
+  while i < len do
     rv = dict.nes("NES_CPU_RD", base+i)
     io.write(string.format("%X.", rv))
     i = i+1
@@ -584,7 +584,7 @@ end
 ██║     ██╔══██║██╔══██╗╚════╝██╔══██╗██╔══██║██║╚██╔╝██║
 ╚██████╗██║  ██║██║  ██║      ██║  ██║██║  ██║██║ ╚═╝ ██║
  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝      ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝
-                                                         
+
 --]]
 
 -- select different chr-ram banks and verify all banks are present
@@ -655,7 +655,7 @@ local function chr_ram_exercise(chr_ram_size, retroprog_id, debug)
   end
 
   -- open file
-  local filename = "ignore/nes_chr_ram_dump-" .. retroprog_id .. ".bin"
+  local filename = opts.lua_path .. "ignore/nes_chr_ram_dump-" .. retroprog_id .. ".bin"
   local file = assert(io.open(filename, "wb"))
 
   -- dump CHR-RAM
@@ -666,7 +666,7 @@ local function chr_ram_exercise(chr_ram_size, retroprog_id, debug)
   assert(file:close())
 
   -- re-open & compare dump with known lsfr bitstream
-  local goodfile = "ignore/lfsr_32KB.bin"
+  local goodfile = opts.lua_path .. "ignore/lfsr_32KB.bin"
 
   -- compare the flash file vs post dump file
   if files.compare(filename, goodfile, false) then
@@ -686,7 +686,7 @@ end
 ██╔═══╝ ██╔══██╗██║   ██║██║     ██╔══╝  ╚════██║╚════██║
 ██║     ██║  ██║╚██████╔╝╚██████╗███████╗███████║███████║
 ╚═╝     ╚═╝  ╚═╝ ╚═════╝  ╚═════╝╚══════╝╚══════╝╚══════╝
-                                                         
+
 --]]
 
 -- Cart should be in reset state upon calling this function
@@ -730,10 +730,10 @@ local function process(process_opts, console_opts)
   init_mapper()
 
 --[[
-888888 888888 .dP"Y8 888888 
-  88   88__   `Ybo."   88   
-  88   88""   o.`Y8b   88   
-  88   888888 8bodP'   88   
+888888 888888 .dP"Y8 888888
+  88   88__   `Ybo."   88
+  88   88""   o.`Y8b   88
+  88   888888 8bodP'   88
 --]]
 
   -- test cart
@@ -780,10 +780,10 @@ local function process(process_opts, console_opts)
   end
 
 --[[
-88""Yb    db    8b    d8     8888b.  88   88 8b    d8 88""Yb 
-88__dP   dPYb   88b  d88      8I  Yb 88   88 88b  d88 88__dP 
-88"Yb   dP__Yb  88YbdP88      8I  dY Y8   8P 88YbdP88 88"""  
-88  Yb dP""""Yb 88 YY 88     8888Y"  `YbodP' 88 YY 88 88     
+88""Yb    db    8b    d8     8888b.  88   88 8b    d8 88""Yb
+88__dP   dPYb   88b  d88      8I  Yb 88   88 88b  d88 88__dP
+88"Yb   dP__Yb  88YbdP88      8I  dY Y8   8P 88YbdP88 88"""
+88  Yb dP""""Yb 88 YY 88     8888Y"  `YbodP' 88 YY 88 88
 --]]
 
   -- dump cart RAM to file
@@ -795,10 +795,10 @@ local function process(process_opts, console_opts)
   end
 
 --[[
-88""Yb    db    8b    d8     Yb        dP 88""Yb 88 888888 888888 
-88__dP   dPYb   88b  d88      Yb  db  dP  88__dP 88   88   88__   
-88"Yb   dP__Yb  88YbdP88       YbdPYbdP   88"Yb  88   88   88""   
-88  Yb dP""""Yb 88 YY 88        YP  YP    88  Yb 88   88   888888 
+88""Yb    db    8b    d8     Yb        dP 88""Yb 88 888888 888888
+88__dP   dPYb   88b  d88      Yb  db  dP  88__dP 88   88   88__
+88"Yb   dP__Yb  88YbdP88       YbdPYbdP   88"Yb  88   88   88""
+88  Yb dP""""Yb 88 YY 88        YP  YP    88  Yb 88   88   888888
 --]]
 
   -- write file to the cart RAM
@@ -811,10 +811,10 @@ local function process(process_opts, console_opts)
 
 
 --[[
-88""Yb  dP"Yb  8b    d8     8888b.  88   88 8b    d8 88""Yb 
-88__dP dP   Yb 88b  d88      8I  Yb 88   88 88b  d88 88__dP 
-88"Yb  Yb   dP 88YbdP88      8I  dY Y8   8P 88YbdP88 88"""  
-88  Yb  YbodP  88 YY 88     8888Y"  `YbodP' 88 YY 88 88     
+88""Yb  dP"Yb  8b    d8     8888b.  88   88 8b    d8 88""Yb
+88__dP dP   Yb 88b  d88      8I  Yb 88   88 88b  d88 88__dP
+88"Yb  Yb   dP 88YbdP88      8I  dY Y8   8P 88YbdP88 88"""
+88  Yb  YbodP  88 YY 88     8888Y"  `YbodP' 88 YY 88 88
 --]]
 
   -- dump cart ROM to file
@@ -845,10 +845,10 @@ local function process(process_opts, console_opts)
   end
 
 --[[
-88""Yb  dP"Yb  8b    d8     888888 88""Yb    db    .dP"Y8 888888 
-88__dP dP   Yb 88b  d88     88__   88__dP   dPYb   `Ybo." 88__   
-88"Yb  Yb   dP 88YbdP88     88""   88"Yb   dP__Yb  o.`Y8b 88""   
-88  Yb  YbodP  88 YY 88     888888 88  Yb dP""""Yb 8bodP' 888888 
+88""Yb  dP"Yb  8b    d8     888888 88""Yb    db    .dP"Y8 888888
+88__dP dP   Yb 88b  d88     88__   88__dP   dPYb   `Ybo." 88__
+88"Yb  Yb   dP 88YbdP88     88""   88"Yb   dP__Yb  o.`Y8b 88""
+88  Yb  YbodP  88 YY 88     888888 88  Yb dP""""Yb 8bodP' 888888
 --]]
 
   -- erase the cart
@@ -880,10 +880,10 @@ local function process(process_opts, console_opts)
   end
 
 --[[
-88""Yb  dP"Yb  8b    d8     Yb        dP 88""Yb 88 888888 888888 
-88__dP dP   Yb 88b  d88      Yb  db  dP  88__dP 88   88   88__   
-88"Yb  Yb   dP 88YbdP88       YbdPYbdP   88"Yb  88   88   88""   
-88  Yb  YbodP  88 YY 88        YP  YP    88  Yb 88   88   888888 
+88""Yb  dP"Yb  8b    d8     Yb        dP 88""Yb 88 888888 888888
+88__dP dP   Yb 88b  d88      Yb  db  dP  88__dP 88   88   88__
+88"Yb  Yb   dP 88YbdP88       YbdPYbdP   88"Yb  88   88   88""
+88  Yb  YbodP  88 YY 88        YP  YP    88  Yb 88   88   888888
 --]]
 
   -- program file to the cart
@@ -938,10 +938,10 @@ local function process(process_opts, console_opts)
   end
 
 --[[
-Yb    dP 888888 88""Yb 88 888888 Yb  dP 
- Yb  dP  88__   88__dP 88 88__    YbdP  
-  YbdP   88""   88"Yb  88 88""     8P   
-   YP    888888 88  Yb 88 88      dP    
+Yb    dP 888888 88""Yb 88 888888 Yb  dP
+ Yb  dP  88__   88__dP 88 88__    YbdP
+  YbdP   88""   88"Yb  88 88""     8P
+   YP    888888 88  Yb 88 88      dP
 --]]
 
   -- verify what we just flashed
@@ -995,7 +995,7 @@ Yb    dP 888888 88""Yb 88 888888 Yb  dP
 
 
 
-  
+
 --[[
     nes.cpu_wr(0x5000, 0x81)
     nes.cpu_wr(0x8000, 7)
@@ -1070,7 +1070,7 @@ Yb    dP 888888 88""Yb 88 888888 Yb  dP
 
     local i = 0
 
-    -- TODO create some function to pass the read value 
+    -- TODO create some function to pass the read value
     -- that's smart enough to figure out if the board is actually erasing or not
     while ( rv ~= 0xFF ) do
       rv = dict.nes("NES_CPU_RD", 0x8000)
@@ -1109,7 +1109,7 @@ nes.cpu_rd(0xf4f6)
 
     --open file
     file = assert(io.open(flashfile, "rb"))
-    --determine if auto-doubling, deinterleaving, etc, 
+    --determine if auto-doubling, deinterleaving, etc,
     --needs done to make board compatible with rom
 
     --not susceptible to bus conflicts

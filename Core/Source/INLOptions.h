@@ -29,6 +29,27 @@ struct t_INLoptions_std
   std::string additional_opts;
 
   std::string lua_file;
+  std::string lua_path;
+
+  t_INLoptions_std()
+  {
+    this->console_name = "";
+    this->display_help = false;
+    this->debug = false;
+    this->gui = false;
+    this->chr_rom_size_kb = 0;
+    this->prg_rom_size_kb = 0;
+    this->wram_size_kb = 0;
+    this->rom_size_kb = 0;
+    this->rom_dump_file = "";
+    this->rom_write_file = "";
+    this->ram_dump_file = "";
+    this->ram_write_file = "";
+    this->verify = false;
+    this->additional_opts = "";
+    this->lua_file = "";
+    this->lua_path = "";
+  }
 };
 
 #endif

@@ -23,7 +23,7 @@ local function check_IDCODE(debug)
 
 	--by default jtag should be in IDCODE or BYPASS if IDCODE not present
 	--The TDI pin doesn't even have to be working to scan out IDCODE by this means
-	
+
 	--let's just put in IDCODE mode
 	---[[
 	--Mach XO verify ID code
@@ -86,7 +86,7 @@ local function check_IDCODE(debug)
 	else
 		print("no match for IDCODE")
 	end
-	
+
 	--xilinx IDCODE command is different
 	--//Loading device with 'idcode' instruction.
 	--SIR 8 TDI (fe) SMASK (ff) ;
@@ -111,10 +111,10 @@ local function run_jtag( debug )
 	--initialize JTAG port on USB device
 	dict.io("JTAG_INIT", "JTAG_ON_EXP0_3") --NES
 	--dict.io("JTAG_INIT", "JTAG_ON_SNES_CTL") --SNES
-	
+
 	--open jedec file
-	local filename = "ignore/TKROM_prod_p512_w8_crom256_v4_0_0_currelease.jed"
-	--local filename = "ignore/8mb_v2_0p.jed"
+	local filename = opts.lua_path .. "ignore/TKROM_prod_p512_w8_crom256_v4_0_0_currelease.jed"
+	--local filename = opts.lua_path .. "ignore/8mb_v2_0p.jed"
 
 	--first put/verify jtag statemachine is in RESET
 	pbje.goto_state("RESET")
@@ -139,11 +139,11 @@ local function run_jtag( debug )
 	assert(jed_file:close())
 	--]]
 
-	
+
 	--verify programming
 	--open jedec file
-	--local jed_file = assert(io.open("ignore/8mb_v2_0p.jed", "rb"))
-	--local jed_file = assert(io.open("ignore/TKROM_prod_p512_w8_crom256_v4_0_0_currelease.jed", "rb"))
+	--local jed_file = assert(io.open(path .. "ignore/8mb_v2_0p.jed", "rb"))
+	--local jed_file = assert(io.open(path .. "ignore/TKROM_prod_p512_w8_crom256_v4_0_0_currelease.jed", "rb"))
 	local jed_file = assert(io.open(filename, "rb"))
 
 	--check_IDCODE()
@@ -163,7 +163,7 @@ local function run_jtag( debug )
 	--can usercode be verified when secured..? NOPE!
 	--verify programming
 	--open jedec file
-	local jed_file = assert(io.open("ignore/8mb_v2_0p.jed", "rb"))
+	local jed_file = assert(io.open(path .. "ignore/8mb_v2_0p.jed", "rb"))
 
 	check_IDCODE()
 	--find and consume the "L00000" start of usemap token in jedec file
@@ -173,7 +173,7 @@ local function run_jtag( debug )
 
 	--close jedec file
 	assert(jed_file:close())
-	
+
 	--]]
 
 end

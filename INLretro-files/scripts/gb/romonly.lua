@@ -25,7 +25,7 @@ local mapname = "ROMONLY"
 ██║╚██╔╝██║██║╚════██║██║         ██╔══╝  ██║   ██║██║╚██╗██║██║     ╚════██║
 ██║ ╚═╝ ██║██║███████║╚██████╗    ██║     ╚██████╔╝██║ ╚████║╚██████╗███████║
 ╚═╝     ╚═╝╚═╝╚══════╝ ╚═════╝    ╚═╝      ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝╚══════╝
-                                                                             
+
 --]]
 
 --[[
@@ -35,7 +35,7 @@ local mapname = "ROMONLY"
 ██╔══██╗██║   ██║██║╚██╔╝██║
 ██║  ██║╚██████╔╝██║ ╚═╝ ██║
 ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝
-                            
+
 --]]
 
 -- read ROM flash ID
@@ -155,7 +155,7 @@ end
 ██╔══██╗██╔══██║██║╚██╔╝██║
 ██║  ██║██║  ██║██║ ╚═╝ ██║
 ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝
-                           
+
 --]]
 
 -- dump the RAM, assumes the RAM was enabled as desired prior to calling
@@ -284,7 +284,7 @@ local function ram_exercise(ram_size, retroprog_id, debug)
   spinner.clear()
 
   -- open file
-  local filename = "ignore/gb_ram_dump-" .. retroprog_id .. ".bin"
+  local filename = opts.lua_path .. "ignore/gb_ram_dump-" .. retroprog_id .. ".bin"
   local file = assert(io.open(filename, "wb"))
 
   -- dump RAM
@@ -295,7 +295,7 @@ local function ram_exercise(ram_size, retroprog_id, debug)
   assert(file:close())
 
   -- re-open & compare dump with known lsfr bitstream
-  local goodfile = "ignore/lfsr_32KB.bin"
+  local goodfile = opts.lua_path .. "ignore/lfsr_32KB.bin"
 
   -- compare the flash file vs post dump file
   if files.compare(filename, goodfile, false, debug) then
@@ -315,7 +315,7 @@ end
 ██╔═══╝ ██╔══██╗██║   ██║██║     ██╔══╝  ╚════██║╚════██║
 ██║     ██║  ██║╚██████╔╝╚██████╗███████╗███████║███████║
 ╚═╝     ╚═╝  ╚═╝ ╚═════╝  ╚═════╝╚══════╝╚══════╝╚══════╝
-                                                         
+
 --]]
 
 -- Cart should be in reset state upon calling this function
@@ -354,10 +354,10 @@ local function process(process_opts, console_opts)
   dict.io("GB_POWER_5V")  -- Gameboy carts prob run fine at 3v if want to be safe
 
 --[[
-888888 888888 .dP"Y8 888888 
-  88   88__   `Ybo."   88   
-  88   88""   o.`Y8b   88   
-  88   888888 8bodP'   88   
+888888 888888 .dP"Y8 888888
+  88   88__   `Ybo."   88
+  88   88""   o.`Y8b   88
+  88   888888 8bodP'   88
 --]]
 
   -- test cart
@@ -410,10 +410,10 @@ local function process(process_opts, console_opts)
   end
 
 --[[
-88""Yb    db    8b    d8     8888b.  88   88 8b    d8 88""Yb 
-88__dP   dPYb   88b  d88      8I  Yb 88   88 88b  d88 88__dP 
-88"Yb   dP__Yb  88YbdP88      8I  dY Y8   8P 88YbdP88 88"""  
-88  Yb dP""""Yb 88 YY 88     8888Y"  `YbodP' 88 YY 88 88     
+88""Yb    db    8b    d8     8888b.  88   88 8b    d8 88""Yb
+88__dP   dPYb   88b  d88      8I  Yb 88   88 88b  d88 88__dP
+88"Yb   dP__Yb  88YbdP88      8I  dY Y8   8P 88YbdP88 88"""
+88  Yb dP""""Yb 88 YY 88     8888Y"  `YbodP' 88 YY 88 88
 --]]
 
   -- dump cart RAM to file
@@ -440,10 +440,10 @@ local function process(process_opts, console_opts)
   end
 
 --[[
-88""Yb    db    8b    d8     Yb        dP 88""Yb 88 888888 888888 
-88__dP   dPYb   88b  d88      Yb  db  dP  88__dP 88   88   88__   
-88"Yb   dP__Yb  88YbdP88       YbdPYbdP   88"Yb  88   88   88""   
-88  Yb dP""""Yb 88 YY 88        YP  YP    88  Yb 88   88   888888 
+88""Yb    db    8b    d8     Yb        dP 88""Yb 88 888888 888888
+88__dP   dPYb   88b  d88      Yb  db  dP  88__dP 88   88   88__
+88"Yb   dP__Yb  88YbdP88       YbdPYbdP   88"Yb  88   88   88""
+88  Yb dP""""Yb 88 YY 88        YP  YP    88  Yb 88   88   888888
 --]]
 
   -- write file to the cart RAM
@@ -470,10 +470,10 @@ local function process(process_opts, console_opts)
 
 
 --[[
-88""Yb  dP"Yb  8b    d8     8888b.  88   88 8b    d8 88""Yb 
-88__dP dP   Yb 88b  d88      8I  Yb 88   88 88b  d88 88__dP 
-88"Yb  Yb   dP 88YbdP88      8I  dY Y8   8P 88YbdP88 88"""  
-88  Yb  YbodP  88 YY 88     8888Y"  `YbodP' 88 YY 88 88     
+88""Yb  dP"Yb  8b    d8     8888b.  88   88 8b    d8 88""Yb
+88__dP dP   Yb 88b  d88      8I  Yb 88   88 88b  d88 88__dP
+88"Yb  Yb   dP 88YbdP88      8I  dY Y8   8P 88YbdP88 88"""
+88  Yb  YbodP  88 YY 88     8888Y"  `YbodP' 88 YY 88 88
 --]]
 
   -- dump cart ROM to file
@@ -497,10 +497,10 @@ local function process(process_opts, console_opts)
   end
 
 --[[
-88""Yb  dP"Yb  8b    d8     888888 88""Yb    db    .dP"Y8 888888 
-88__dP dP   Yb 88b  d88     88__   88__dP   dPYb   `Ybo." 88__   
-88"Yb  Yb   dP 88YbdP88     88""   88"Yb   dP__Yb  o.`Y8b 88""   
-88  Yb  YbodP  88 YY 88     888888 88  Yb dP""""Yb 8bodP' 888888 
+88""Yb  dP"Yb  8b    d8     888888 88""Yb    db    .dP"Y8 888888
+88__dP dP   Yb 88b  d88     88__   88__dP   dPYb   `Ybo." 88__
+88"Yb  Yb   dP 88YbdP88     88""   88"Yb   dP__Yb  o.`Y8b 88""
+88  Yb  YbodP  88 YY 88     888888 88  Yb dP""""Yb 8bodP' 888888
 --]]
 
   -- erase the cart
@@ -533,10 +533,10 @@ local function process(process_opts, console_opts)
   end
 
 --[[
-88""Yb  dP"Yb  8b    d8     Yb        dP 88""Yb 88 888888 888888 
-88__dP dP   Yb 88b  d88      Yb  db  dP  88__dP 88   88   88__   
-88"Yb  Yb   dP 88YbdP88       YbdPYbdP   88"Yb  88   88   88""   
-88  Yb  YbodP  88 YY 88        YP  YP    88  Yb 88   88   888888 
+88""Yb  dP"Yb  8b    d8     Yb        dP 88""Yb 88 888888 888888
+88__dP dP   Yb 88b  d88      Yb  db  dP  88__dP 88   88   88__
+88"Yb  Yb   dP 88YbdP88       YbdPYbdP   88"Yb  88   88   88""
+88  Yb  YbodP  88 YY 88        YP  YP    88  Yb 88   88   888888
 --]]
 
   -- program file to the cart
@@ -559,10 +559,10 @@ local function process(process_opts, console_opts)
 
 
 --[[
-Yb    dP 888888 88""Yb 88 888888 Yb  dP 
- Yb  dP  88__   88__dP 88 88__    YbdP  
-  YbdP   88""   88"Yb  88 88""     8P   
-   YP    888888 88  Yb 88 88      dP    
+Yb    dP 888888 88""Yb 88 888888 Yb  dP
+ Yb  dP  88__   88__dP 88 88__    YbdP
+  YbdP   88""   88"Yb  88 88""     8P
+   YP    888888 88  Yb 88 88      dP
 --]]
 
   -- verify what we just flashed
@@ -607,7 +607,7 @@ Yb    dP 888888 88""Yb 88 888888 Yb  dP
 
 
 
-  
+
 
   --[[ RAM TESTS
 

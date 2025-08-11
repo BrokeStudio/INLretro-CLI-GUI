@@ -26,7 +26,7 @@ local mapname = "GTROM"
 ██║╚██╔╝██║██║╚════██║██║         ██╔══╝  ██║   ██║██║╚██╗██║██║     ╚════██║
 ██║ ╚═╝ ██║██║███████║╚██████╗    ██║     ╚██████╔╝██║ ╚████║╚██████╗███████║
 ╚═╝     ╚═╝╚═╝╚══════╝ ╚═════╝    ╚═╝      ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝╚══════╝
-                                                                             
+
 --]]
 
 local function create_header(file, prgKB, chrKB)
@@ -55,10 +55,10 @@ local function mirror_test(retroprog_id, debug)
   -- 4 screen
   local test = true
 
-  local filenameA = "ignore/nes_ppu_ntA_dump-" .. retroprog_id .. ".bin"
-  local filenameB = "ignore/nes_ppu_ntB_dump-" .. retroprog_id .. ".bin"
-  local filenameC = "ignore/nes_ppu_ntC_dump-" .. retroprog_id .. ".bin"
-  local filenameD = "ignore/nes_ppu_ntD_dump-" .. retroprog_id .. ".bin"
+  local filenameA = opts.lua_path .. "ignore/nes_ppu_ntA_dump-" .. retroprog_id .. ".bin"
+  local filenameB = opts.lua_path .. "ignore/nes_ppu_ntB_dump-" .. retroprog_id .. ".bin"
+  local filenameC = opts.lua_path .. "ignore/nes_ppu_ntC_dump-" .. retroprog_id .. ".bin"
+  local filenameD = opts.lua_path .. "ignore/nes_ppu_ntD_dump-" .. retroprog_id .. ".bin"
 
   local fileA = assert(io.open(filenameA, "wb"))
   local fileB = assert(io.open(filenameB, "wb"))
@@ -150,7 +150,7 @@ end
 ██╔═══╝ ██╔══██╗██║   ██║╚════╝██╔══██╗██║   ██║██║╚██╔╝██║
 ██║     ██║  ██║╚██████╔╝      ██║  ██║╚██████╔╝██║ ╚═╝ ██║
 ╚═╝     ╚═╝  ╚═╝ ╚═════╝       ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝
-                                                           
+
 --]]
 
 -- read PRG-ROM flash ID
@@ -299,7 +299,7 @@ end
 ██║     ██╔══██║██╔══██╗╚════╝██╔══██╗██╔══██║██║╚██╔╝██║
 ╚██████╗██║  ██║██║  ██║      ██║  ██║██║  ██║██║ ╚═╝ ██║
  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝      ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝
-                                                         
+
 --]]
 
 
@@ -359,7 +359,7 @@ local function chr_ram_exercise(chr_ram_size, retroprog_id, debug)
   end
 
   -- dump CHR-RAM
-  local filename = "ignore/nes_chr_ram_dump-" .. retroprog_id .. ".bin"
+  local filename = opts.lua_path .. "ignore/nes_chr_ram_dump-" .. retroprog_id .. ".bin"
   local file = assert(io.open(filename, "wb"))
   log.point("Dumping CHR-RAM")
   chr_dump(file, chr_ram_size, debug)
@@ -368,7 +368,7 @@ local function chr_ram_exercise(chr_ram_size, retroprog_id, debug)
   assert(file:close())
 
   -- re-open & compare dump with known lsfr bitstream
-  local goodfile = "ignore/lfsr_32KB.bin"
+  local goodfile = opts.lua_path .. "ignore/lfsr_32KB.bin"
 
   -- compare the flash file vs post dump file
   if files.compare(filename, goodfile, false) then
@@ -395,16 +395,16 @@ end
 --   dict.nes("NES_PPU_WR", 0x2000, 0x33) --NT write
 
 --   --read back
---   local test = true 
+--   local test = true
 --   dict.nes("NES_CPU_WR", 0x5000, 0x00) --CHR bank 0
 --   rv = dict.nes("NES_PPU_RD", 0x0000)
---   if rv ~= 0xAA then 
+--   if rv ~= 0xAA then
 --     print( "\nFAIL CHR-RAM BANKING TEST!!!\n")
 --     print("PT bank0 read:", string.format("%X", rv))
 --     test = false
 --   end
 --   rv = dict.nes("NES_PPU_RD", 0x2000)
---   if rv ~= 0xCC then 
+--   if rv ~= 0xCC then
 --     print( "\nFAIL CHR-RAM BANKING TEST!!!\n")
 --     print("NT bank0 read:", string.format("%X", rv))
 --     test = false
@@ -412,13 +412,13 @@ end
 
 --   dict.nes("NES_CPU_WR", 0x5000, 0x30) --CHR bank 1
 --   rv = dict.nes("NES_PPU_RD", 0x0000)
---   if rv ~= 0x55 then 
+--   if rv ~= 0x55 then
 --     print( "\nFAIL CHR-RAM BANKING TEST!!!\n")
 --     print("PT bank1 read:", string.format("%X", rv))
 --     test = false
 --   end
 --   rv = dict.nes("NES_PPU_RD", 0x2000)
---   if rv ~= 0x33 then 
+--   if rv ~= 0x33 then
 --     print( "\nFAIL CHR-RAM BANKING TEST!!!\n")
 --     print("NT bank1 read:", string.format("%X", rv))
 --     test = false
@@ -471,10 +471,10 @@ local function process(process_opts, console_opts)
   dict.io("NES_INIT")
 
 --[[
-888888 888888 .dP"Y8 888888 
-  88   88__   `Ybo."   88   
-  88   88""   o.`Y8b   88   
-  88   888888 8bodP'   88   
+888888 888888 .dP"Y8 888888
+  88   88__   `Ybo."   88
+  88   88""   o.`Y8b   88
+  88   888888 8bodP'   88
 --]]
 
   -- test cart
@@ -514,10 +514,10 @@ local function process(process_opts, console_opts)
   end
 
 --[[
-88""Yb  dP"Yb  8b    d8     8888b.  88   88 8b    d8 88""Yb 
-88__dP dP   Yb 88b  d88      8I  Yb 88   88 88b  d88 88__dP 
-88"Yb  Yb   dP 88YbdP88      8I  dY Y8   8P 88YbdP88 88"""  
-88  Yb  YbodP  88 YY 88     8888Y"  `YbodP' 88 YY 88 88     
+88""Yb  dP"Yb  8b    d8     8888b.  88   88 8b    d8 88""Yb
+88__dP dP   Yb 88b  d88      8I  Yb 88   88 88b  d88 88__dP
+88"Yb  Yb   dP 88YbdP88      8I  dY Y8   8P 88YbdP88 88"""
+88  Yb  YbodP  88 YY 88     8888Y"  `YbodP' 88 YY 88 88
 --]]
 
   -- dump cart ROM to file
@@ -544,10 +544,10 @@ local function process(process_opts, console_opts)
   end
 
 --[[
-88""Yb  dP"Yb  8b    d8     888888 88""Yb    db    .dP"Y8 888888 
-88__dP dP   Yb 88b  d88     88__   88__dP   dPYb   `Ybo." 88__   
-88"Yb  Yb   dP 88YbdP88     88""   88"Yb   dP__Yb  o.`Y8b 88""   
-88  Yb  YbodP  88 YY 88     888888 88  Yb dP""""Yb 8bodP' 888888 
+88""Yb  dP"Yb  8b    d8     888888 88""Yb    db    .dP"Y8 888888
+88__dP dP   Yb 88b  d88     88__   88__dP   dPYb   `Ybo." 88__
+88"Yb  Yb   dP 88YbdP88     88""   88"Yb   dP__Yb  o.`Y8b 88""
+88  Yb  YbodP  88 YY 88     888888 88  Yb dP""""Yb 8bodP' 888888
 --]]
 
   -- erase the cart
@@ -576,10 +576,10 @@ local function process(process_opts, console_opts)
 
 
 --[[
-88""Yb  dP"Yb  8b    d8     Yb        dP 88""Yb 88 888888 888888 
-88__dP dP   Yb 88b  d88      Yb  db  dP  88__dP 88   88   88__   
-88"Yb  Yb   dP 88YbdP88       YbdPYbdP   88"Yb  88   88   88""   
-88  Yb  YbodP  88 YY 88        YP  YP    88  Yb 88   88   888888 
+88""Yb  dP"Yb  8b    d8     Yb        dP 88""Yb 88 888888 888888
+88__dP dP   Yb 88b  d88      Yb  db  dP  88__dP 88   88   88__
+88"Yb  Yb   dP 88YbdP88       YbdPYbdP   88"Yb  88   88   88""
+88  Yb  YbodP  88 YY 88        YP  YP    88  Yb 88   88   888888
 --]]
 
   -- program file to the cart
@@ -599,10 +599,10 @@ local function process(process_opts, console_opts)
   end
 
 --[[
-Yb    dP 888888 88""Yb 88 888888 Yb  dP 
- Yb  dP  88__   88__dP 88 88__    YbdP  
-  YbdP   88""   88"Yb  88 88""     8P   
-   YP    888888 88  Yb 88 88      dP    
+Yb    dP 888888 88""Yb 88 888888 Yb  dP
+ Yb  dP  88__   88__dP 88 88__    YbdP
+  YbdP   88""   88"Yb  88 88""     8P
+   YP    888888 88  Yb 88 88      dP
 --]]
 
   -- verify what we just flashed

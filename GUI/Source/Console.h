@@ -41,7 +41,7 @@ struct t_Console
     this->short_name = "";
     this->full_name = "";
     this->actions = 0;
-    this->ram_file_ext = ".bin";
+    this->rom_file_ext = ".bin";
     this->ram_file_ext = ".bin";
     this->mappers.clear();
   }

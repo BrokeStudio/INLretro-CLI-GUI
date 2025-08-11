@@ -1,4 +1,4 @@
-#if __APPLE__
+#ifdef __APPLE__
 #include <TargetConditionals.h>
 #if TARGET_OS_MAC
 #include <libgen.h>
@@ -14,7 +14,7 @@ static int getExecutablePath(std::string &outputPath)
 {
   outputPath.clear();
 
-#if __APPLE__
+#ifdef __APPLE__
   char exePath[2048];
   uint32_t bufSize = sizeof(exePath);
   int result = _NSGetExecutablePath(exePath, &bufSize);

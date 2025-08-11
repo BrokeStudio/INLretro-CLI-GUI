@@ -15,7 +15,7 @@
 #include "Nes.h"
 #include "Settings.h"
 
-#if __APPLE__
+#ifdef __APPLE__
 #include "macos.h"
 #endif
 
@@ -50,24 +50,27 @@ namespace Ini
     section.clear();
 
     // try to open INI file
+    std::string iniFilePath;
 
 #ifdef __APPLE__
 
-    std::string iniFilePath;
 #ifdef _DIST
     if (getResourcesPath(iniFilePath) == -1)
-#else
-    if (getExecutablePath(iniFilePath) == -1)
-#endif
     {
       APP_LOG(LogTypes_Error, L_INI "Couldn't get resources path");
-
       return false;
     }
+#else
+    if (getExecutablePath(iniFilePath) == -1)
+    {
+      APP_LOG(LogTypes_Error, L_INI "Couldn't get executable path");
+      return false;
+    }
+#endif
 
     iniFilePath += INI_FILENAME;
 #else
-    std::string iniFilePath = INI_FILENAME;
+    iniFilePath = INI_FILENAME;
 #endif
 
     std::ifstream file(iniFilePath.c_str(), std::ifstream::in);
@@ -141,17 +144,26 @@ namespace Ini
   bool save()
   {
     // try to open INI file
-
-#if __APPLE__
     std::string iniFilePath;
+
+#ifdef __APPLE__
+#ifdef _DIST
     if (getResourcesPath(iniFilePath) == -1)
     {
       APP_LOG(LogTypes_Error, L_INI "Couldn't get resources path");
       return false;
     }
+#else
+    if (getExecutablePath(iniFilePath) == -1)
+    {
+      APP_LOG(LogTypes_Error, L_INI "Couldn't get executable path");
+      return false;
+    }
+#endif
+
     iniFilePath += INI_FILENAME;
 #else
-    std::string iniFilePath = INI_FILENAME;
+    iniFilePath = INI_FILENAME;
 #endif
 
     std::ofstream file(iniFilePath.c_str(), std::ifstream::trunc);
@@ -207,8 +219,30 @@ namespace Ini
       if (section.name.substr(0, 9) == "[Console]")
       {
         t_Console console;
-        console.clear();
-        console.name = section.name.substr(10, section.name.rfind(']') - 10);
+
+        size_t first_bracket_end = section.name.find(']');
+        if (first_bracket_end == std::string::npos)
+        {
+          APP_LOG(LogTypes_Error, L_INI "Malformed section name: " + section.name);
+          continue;
+        }
+
+        size_t second_bracket_start = section.name.find('[', first_bracket_end);
+        if (second_bracket_start == std::string::npos)
+        {
+          APP_LOG(LogTypes_Error, L_INI "Malformed section name: " + section.name);
+          continue;
+        }
+
+        size_t second_bracket_end = section.name.find(']', second_bracket_start);
+        if (second_bracket_end == std::string::npos)
+        {
+          APP_LOG(LogTypes_Error, L_INI "Malformed section name: " + section.name);
+          continue;
+        }
+
+        console.name = section.name.substr(second_bracket_start + 1, second_bracket_end - (second_bracket_start + 1));
+
         for (auto &property : section.properties)
         {
           if (property.first == "short_name")

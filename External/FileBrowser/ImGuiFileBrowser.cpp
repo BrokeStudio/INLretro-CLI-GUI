@@ -1242,8 +1242,12 @@ namespace imgui_addons
     if (path_max_def)
       buffer = new char[PATH_MAX];
 
-#if __APPLE__
+#ifdef __APPLE__
+#ifdef _DIST
+    getBundlePath(current_path);
+#else
     getExecutablePath(current_path);
+#endif
     current_path.pop_back(); // remove final /
     char *real_path = realpath(current_path.c_str(), buffer);
 #else

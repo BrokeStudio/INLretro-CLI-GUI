@@ -311,12 +311,12 @@ local function rom_manf_id()
 end
 
 --[[
-                         __                      
-  _ __ __ _ _ __ ___    / _|_   _ _ __   ___ ___ 
+                         __
+  _ __ __ _ _ __ ___    / _|_   _ _ __   ___ ___
  | '__/ _` | '_ ` _ \  | |_| | | | '_ \ / __/ __|
  | | | (_| | | | | | | |  _| |_| | | | | (__\__ \
  |_|  \__,_|_| |_| |_| |_|  \__,_|_| |_|\___|___/
-                                                 
+
 --]]
 -- dump the SEGA battery RAM starting at the provided bank
 local function ram_dump(file, start_bank, ram_size_KB, debug)
@@ -422,7 +422,7 @@ local function sram_exercise(ram_size, retroprog_id, debug)
   dict.sega("GEN_PAGE_RAM_WR_LFSR", 0x00)
 
   --dump sram into file
-  local filename = "ignore/gen_sram_dump-" .. retroprog_id .. ".bin"
+  local filename = opts.lua_path .. "ignore/gen_sram_dump-" .. retroprog_id .. ".bin"
   local file = assert(io.open(filename, "wb"))
   log.point("Dumping SRAM")
   ram_dump(file, addr_hi, ram_size, false)
@@ -433,7 +433,7 @@ local function sram_exercise(ram_size, retroprog_id, debug)
   assert(file:close())
 
   -- re-open & compare dump with known lsfr bitstream
-  local goodfile = "ignore/lfsr_32KB.bin"
+  local goodfile = opts.lua_path .. "ignore/lfsr_32KB.bin"
 
   -- compare the flash file vs post dump file
   if files.compare(filename, goodfile, true) then
@@ -447,12 +447,12 @@ local function sram_exercise(ram_size, retroprog_id, debug)
 end
 
 --[[
-                         __                      
-  _ __ ___  _ __ ___    / _|_   _ _ __   ___ ___ 
+                         __
+  _ __ ___  _ __ ___    / _|_   _ _ __   ___ ___
  | '__/ _ \| '_ ` _ \  | |_| | | | '_ \ / __/ __|
  | | | (_) | | | | | | |  _| |_| | | | | (__\__ \
  |_|  \___/|_| |_| |_| |_|  \__,_|_| |_|\___|___/
-                                                 
+
 --]]
 
 -- write a single byte to GENESIS ROM flash
@@ -579,12 +579,12 @@ local function rom_write(file, rom_size_KB, debug)
 end
 
 --[[
-                                    
-  _ __  _ __ ___   ___ ___  ___ ___ 
+
+  _ __  _ __ ___   ___ ___  ___ ___
  | '_ \| '__/ _ \ / __/ _ \/ __/ __|
  | |_) | | | (_) | (_|  __/\__ \__ \
  | .__/|_|  \___/ \___\___||___/___/
- |_|                                
+ |_|
 --]]
 -- Cart should be in reset state upon calling this function
 -- this function processes all user requests for this specific board/mapper
@@ -620,12 +620,12 @@ local function process(process_opts, console_opts)
   dict.io("SEGA_INIT")
 
   --[[
-    _            _   
-   | |_ ___  ___| |_ 
+    _            _
+   | |_ ___  ___| |_
    | __/ _ \/ __| __|
-   | ||  __/\__ \ |_ 
+   | ||  __/\__ \ |_
     \__\___||___/\__|
-                     
+
   --]]
   if do_test then
 
@@ -682,12 +682,12 @@ local function process(process_opts, console_opts)
   end
 
   --[[
-                              _                       
-    _ __ ___  _ __ ___     __| |_   _ _ __ ___  _ __  
-   | '__/ _ \| '_ ` _ \   / _` | | | | '_ ` _ \| '_ \ 
+                              _
+    _ __ ___  _ __ ___     __| |_   _ _ __ ___  _ __
+   | '__/ _ \| '_ ` _ \   / _` | | | | '_ ` _ \| '_ \
    | | | (_) | | | | | | | (_| | |_| | | | | | | |_) |
-   |_|  \___/|_| |_| |_|  \__,_|\__,_|_| |_| |_| .__/ 
-                                               |_|    
+   |_|  \___/|_| |_| |_|  \__,_|\__,_|_| |_| |_| .__/
+                                               |_|
   --]]
   -- dump the cart ROM to file
   if do_rom_dump then
@@ -721,12 +721,12 @@ local function process(process_opts, console_opts)
   end
 
   --[[
-                                                  
-    _ __ ___  _ __ ___     ___ _ __ __ _ ___  ___ 
+
+    _ __ ___  _ __ ___     ___ _ __ __ _ ___  ___
    | '__/ _ \| '_ ` _ \   / _ \ '__/ _` / __|/ _ \
    | | | (_) | | | | | | |  __/ | | (_| \__ \  __/
    |_|  \___/|_| |_| |_|  \___|_|  \__,_|___/\___|
-                                                  
+
   --]]
   -- erase the cart
   if do_erase then
@@ -784,12 +784,12 @@ local function process(process_opts, console_opts)
   end
 
   --[[
-                                        _ _       
-    _ __ ___  _ __ ___   __      ___ __(_) |_ ___ 
+                                        _ _
+    _ __ ___  _ __ ___   __      ___ __(_) |_ ___
    | '__/ _ \| '_ ` _ \  \ \ /\ / / '__| | __/ _ \
    | | | (_) | | | | | |  \ V  V /| |  | | ||  __/
    |_|  \___/|_| |_| |_|   \_/\_/ |_|  |_|\__\___|
-                                                  
+
   --]]
   -- write rom file to cart
   if do_rom_write then
@@ -813,12 +813,12 @@ local function process(process_opts, console_opts)
   end
 
   --[[
-                   _  __       
-   __   _____ _ __(_)/ _|_   _ 
+                   _  __
+   __   _____ _ __(_)/ _|_   _
    \ \ / / _ \ '__| | |_| | | |
     \ V /  __/ |  | |  _| |_| |
      \_/ \___|_|  |_|_|  \__, |
-                         |___/ 
+                         |___/
   --]]
   -- verify flashed file on the cart
   if do_verify then
@@ -858,12 +858,12 @@ local function process(process_opts, console_opts)
   end
 
   --[[
-                                        _ _       
-    _ __ __ _ _ __ ___   __      ___ __(_) |_ ___ 
+                                        _ _
+    _ __ __ _ _ __ ___   __      ___ __(_) |_ ___
    | '__/ _` | '_ ` _ \  \ \ /\ / / '__| | __/ _ \
    | | | (_| | | | | | |  \ V  V /| |  | | ||  __/
    |_|  \__,_|_| |_| |_|   \_/\_/ |_|  |_|\__\___|
-                                                  
+
   --]]
   -- write ram file to cart
   if do_ram_write then
@@ -882,12 +882,12 @@ local function process(process_opts, console_opts)
   end
 
   --[[
-                              _                       
-    _ __ __ _ _ __ ___     __| |_   _ _ __ ___  _ __  
-   | '__/ _` | '_ ` _ \   / _` | | | | '_ ` _ \| '_ \ 
+                              _
+    _ __ __ _ _ __ ___     __| |_   _ _ __ ___  _ __
+   | '__/ _` | '_ ` _ \   / _` | | | | '_ ` _ \| '_ \
    | | | (_| | | | | | | | (_| | |_| | | | | | | |_) |
-   |_|  \__,_|_| |_| |_|  \__,_|\__,_|_| |_| |_| .__/ 
-                                               |_|    
+   |_|  \__,_|_| |_| |_|  \__,_|\__,_|_| |_| |_| .__/
+                                               |_|
   --]]
   -- dump the cart RAM to file
   if do_ram_dump then

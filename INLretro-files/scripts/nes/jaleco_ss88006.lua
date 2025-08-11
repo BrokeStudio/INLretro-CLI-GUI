@@ -602,7 +602,7 @@ local function prg_ram_test(wram_size, retroprog_id, debug)
   end
 
   -- open file
-  local filename = "ignore/nes_prg_ram_dump-" .. retroprog_id .. ".bin"
+  local filename = opts.lua_path .. "ignore/nes_prg_ram_dump-" .. retroprog_id .. ".bin"
   local file = assert(io.open(filename, "wb"))
 
   -- dump PRG-RAM
@@ -616,7 +616,7 @@ local function prg_ram_test(wram_size, retroprog_id, debug)
   dict.nes("NES_CPU_WR", 0x9002, 0x00)
 
   -- re-open & compare dump with known lsfr bitstream
-  local goodfile = "ignore/lfsr_32KB.bin"
+  local goodfile = opts.lua_path .. "ignore/lfsr_32KB.bin"
 
   -- compare the flash file vs post dump file
   if files.compare(filename, goodfile, false) then
@@ -741,7 +741,7 @@ local function chr_ram_exercise(chr_ram_size, retroprog_id, debug)
   spinner.clear()
 
   -- dump CHR-RAM
-  local filename = "ignore/nes_chr_ram_dump-" .. retroprog_id .. ".bin"
+  local filename = opts.lua_path .. "ignore/nes_chr_ram_dump-" .. retroprog_id .. ".bin"
   local file = assert(io.open(filename, "wb"))
   log.point("Dumping CHR-RAM")
   chr_dump(file, chr_ram_size, debug)
@@ -750,7 +750,7 @@ local function chr_ram_exercise(chr_ram_size, retroprog_id, debug)
   assert(file:close())
 
   -- re-open & compare dump with known lsfr bitstream
-  local goodfile = "ignore/lfsr_32KB.bin"
+  local goodfile = opts.lua_path .. "ignore/lfsr_32KB.bin"
 
   -- compare the flash file vs post dump file
   if files.compare(filename, goodfile, false, debug) then

@@ -26,7 +26,7 @@ local mapname = "NROM"
 ██║╚██╔╝██║██║╚════██║██║         ██╔══╝  ██║   ██║██║╚██╗██║██║     ╚════██║
 ██║ ╚═╝ ██║██║███████║╚██████╗    ██║     ╚██████╔╝██║ ╚████║╚██████╗███████║
 ╚═╝     ╚═╝╚═╝╚══════╝ ╚═════╝    ╚═╝      ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝╚══════╝
-                                                                             
+
 --]]
 
 local function create_header(file, prgKB, chrKB)
@@ -43,7 +43,7 @@ end
 ██╔═══╝ ██╔══██╗██║   ██║╚════╝██╔══██╗██║   ██║██║╚██╔╝██║
 ██║     ██║  ██║╚██████╔╝      ██║  ██║╚██████╔╝██║ ╚═╝ ██║
 ╚═╝     ╚═╝  ╚═╝ ╚═════╝       ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝
-                                                           
+
 --]]
 
 --read PRG-ROM flash ID
@@ -177,7 +177,7 @@ end
 ██║     ██╔══██║██╔══██╗╚════╝██╔══██╗██║   ██║██║╚██╔╝██║
 ╚██████╗██║  ██║██║  ██║      ██║  ██║╚██████╔╝██║ ╚═╝ ██║
  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝      ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝
-                                                          
+
 --]]
 
 -- read CHR-ROM flash ID
@@ -309,7 +309,7 @@ end
 ██╔═══╝ ██╔══██╗██║   ██║██║     ██╔══╝  ╚════██║╚════██║
 ██║     ██║  ██║╚██████╔╝╚██████╗███████╗███████║███████║
 ╚═╝     ╚═╝  ╚═╝ ╚═════╝  ╚═════╝╚══════╝╚══════╝╚══════╝
-                                                         
+
 --]]
 
 -- Cart should be in reset state upon calling this function
@@ -473,7 +473,7 @@ local function process(process_opts, console_opts)
 
       i = 0
 
-      -- TODO create some function to pass the read value 
+      -- TODO create some function to pass the read value
       -- that's smart enough to figure out if the board is actually erasing or not
       while rv ~= dict.nes("NES_PPU_RD", 0x0000) do
         spinner.update("Erasing")

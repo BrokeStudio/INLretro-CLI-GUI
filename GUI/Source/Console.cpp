@@ -40,32 +40,20 @@ void Console::clear_list()
   Console::list.clear();
 }
 
-Console::Console(const t_Console &console)
+Console::Console(const t_Console &console) : t_Console(console)
 {
-  this->name = console.name;
-  this->short_name = console.short_name;
-  this->full_name = console.full_name;
-  this->actions = console.actions;
-  this->rom_file_ext = console.rom_file_ext;
-  this->ram_file_ext = console.ram_file_ext;
-  this->mappers = console.mappers;
-  memset(buf, 0, sizeof(buf));
+  rom_dump_INLOptions.console_name = console.name;
+  rom_write_INLOptions.console_name = console.name;
+  ram_dump_INLOptions.console_name = console.name;
+  ram_write_INLOptions.console_name = console.name;
 
-  rom_dump_INLOptions.prg_rom_size_kb = rom_write_INLOptions.prg_rom_size_kb = ram_dump_INLOptions.prg_rom_size_kb = ram_write_INLOptions.prg_rom_size_kb = 0;
-  rom_dump_INLOptions.chr_rom_size_kb = rom_write_INLOptions.chr_rom_size_kb = ram_dump_INLOptions.chr_rom_size_kb = ram_write_INLOptions.chr_rom_size_kb = 0;
-  rom_dump_INLOptions.rom_size_kb = rom_write_INLOptions.rom_size_kb = ram_dump_INLOptions.rom_size_kb = ram_write_INLOptions.rom_size_kb = 0;
-  rom_dump_INLOptions.wram_size_kb = rom_write_INLOptions.wram_size_kb = ram_dump_INLOptions.wram_size_kb = ram_write_INLOptions.wram_size_kb = 0;
-  rom_dump_INLOptions.verify = ram_dump_INLOptions.verify = ram_write_INLOptions.verify = false;
   rom_write_INLOptions.verify = true;
-  rom_dump_INLOptions.debug = rom_write_INLOptions.debug = ram_dump_INLOptions.debug = ram_write_INLOptions.debug = false;
-  rom_dump_INLOptions.display_help = rom_write_INLOptions.display_help = ram_dump_INLOptions.display_help = ram_write_INLOptions.display_help = false;
-  rom_dump_INLOptions.console_name = rom_write_INLOptions.console_name = ram_dump_INLOptions.console_name = ram_write_INLOptions.console_name = name;
-  rom_dump_INLOptions.rom_dump_file = rom_write_INLOptions.rom_dump_file = ram_dump_INLOptions.rom_dump_file = ram_write_INLOptions.ram_dump_file = "";
-  rom_dump_INLOptions.rom_write_file = rom_write_INLOptions.rom_write_file = ram_dump_INLOptions.rom_write_file = ram_write_INLOptions.rom_write_file = "";
-  rom_dump_INLOptions.ram_dump_file = rom_write_INLOptions.ram_dump_file = ram_dump_INLOptions.ram_dump_file = ram_write_INLOptions.ram_dump_file = "";
-  rom_dump_INLOptions.ram_write_file = rom_write_INLOptions.ram_write_file = ram_dump_INLOptions.ram_write_file = ram_write_INLOptions.ram_write_file = "";
+
   // TODO: should it be done only in the flasher file?
-  rom_dump_INLOptions.gui = rom_write_INLOptions.gui = ram_dump_INLOptions.gui = ram_write_INLOptions.gui = true;
+  rom_dump_INLOptions.gui = true;
+  rom_write_INLOptions.gui = true;
+  ram_dump_INLOptions.gui = true;
+  ram_write_INLOptions.gui = true;
 }
 
 /**
@@ -242,7 +230,7 @@ void Console::render_rom_dump(std::string droppedFilename)
   ImGui::BeginDisabled(Flasher::count_flashing() == Flasher::list.size());
   if (ImGui::Button(ICON_FA_DOWNLOAD " Dump", ImVec2(-FLT_MIN, 50)))
   {
-    trim(rom_write_INLOptions.additional_opts);
+    trim(rom_dump_INLOptions.additional_opts);
     Flasher::exec_all(rom_dump_INLOptions);
   }
   ImGui::EndDisabled();
@@ -515,7 +503,7 @@ void Console::render_ram_dump(std::string droppedFilename)
   ImGui::BeginDisabled(Flasher::count_flashing() == Flasher::list.size());
   if (ImGui::Button(ICON_FA_DOWNLOAD " Dump", ImVec2(-FLT_MIN, 50)))
   {
-    trim(rom_write_INLOptions.additional_opts);
+    trim(ram_dump_INLOptions.additional_opts);
     Flasher::exec_all(ram_dump_INLOptions);
   }
 
@@ -622,7 +610,7 @@ void Console::render_ram_write(std::string droppedFilename)
   snprintf(this->buf, sizeof(this->buf), ICON_FA_UPLOAD " Write");
   if (ImGui::Button(buf, ImVec2(-FLT_MIN, 50)))
   {
-    trim(rom_write_INLOptions.additional_opts);
+    trim(ram_write_INLOptions.additional_opts);
     Flasher::exec_all(ram_write_INLOptions);
   }
   ImGui::EndDisabled();

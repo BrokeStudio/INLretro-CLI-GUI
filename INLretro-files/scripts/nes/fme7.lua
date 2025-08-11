@@ -26,7 +26,7 @@ local mapname = "FME7"
 ██║╚██╔╝██║██║╚════██║██║         ██╔══╝  ██║   ██║██║╚██╗██║██║     ╚════██║
 ██║ ╚═╝ ██║██║███████║╚██████╗    ██║     ╚██████╔╝██║ ╚████║╚██████╗███████║
 ╚═╝     ╚═╝╚═╝╚══════╝ ╚═════╝    ╚═╝      ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝╚══════╝
-                                                                             
+
 --]]
 
 local function create_header(file, prgKB, chrKB)
@@ -35,7 +35,7 @@ local function create_header(file, prgKB, chrKB)
 end
 
 -- disables PRG-RAM, selects Vertical mirroring
--- sets up CHR-ROM flash PT0 for DATA, Commands: $5555->$1555  $2AAA->$1AAA 
+-- sets up CHR-ROM flash PT0 for DATA, Commands: $5555->$1555  $2AAA->$1AAA
 -- sets up PRG-ROM flash DATA: $8000-9FFF, Commands: $5555->D555  $2AAA->$AAAA
 -- leaves $8000 control reg selected to IRQ value selected so $A000 writes don't affect banking
 local function init_mapper()
@@ -181,7 +181,7 @@ end
 ██╔═══╝ ██╔══██╗██║   ██║╚════╝██╔══██╗██║   ██║██║╚██╔╝██║
 ██║     ██║  ██║╚██████╔╝      ██║  ██║╚██████╔╝██║ ╚═╝ ██║
 ╚═╝     ╚═╝  ╚═╝ ╚═════╝       ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝
-                                                           
+
 --]]
 
 -- read PRG-ROM flash ID
@@ -339,7 +339,7 @@ end
 ██║     ██╔══██║██╔══██╗╚════╝██╔══██╗██║   ██║██║╚██╔╝██║
 ╚██████╗██║  ██║██║  ██║      ██║  ██║╚██████╔╝██║ ╚═╝ ██║
  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝      ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝
-                                                          
+
 --]]
 
 -- read CHR-ROM flash ID
@@ -494,7 +494,7 @@ end
 ██╔═══╝ ██╔══██╗██║   ██║╚════╝██╔══██╗██╔══██║██║╚██╔╝██║
 ██║     ██║  ██║╚██████╔╝      ██║  ██║██║  ██║██║ ╚═╝ ██║
 ╚═╝     ╚═╝  ╚═╝ ╚═════╝       ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝
-                                                          
+
 --]]
 
 -- dump the PRG-RAM, assumes the PRG-RAM was enabled as desired prior to calling
@@ -703,7 +703,7 @@ local function prg_ram_exercise(wram_size, retroprog_id, debug)
   end
 
   -- open file
-  local filename = "ignore/nes_prg_ram_dump-" .. retroprog_id .. ".bin"
+  local filename = opts.lua_path .. "ignore/nes_prg_ram_dump-" .. retroprog_id .. ".bin"
   local file = assert(io.open(filename, "wb"))
 
   -- dump PRG-RAM
@@ -717,7 +717,7 @@ local function prg_ram_exercise(wram_size, retroprog_id, debug)
   dict.nes("NES_CPU_WR", 0xA000, 0x00)
 
   -- re-open & compare dump with known lsfr bitstream
-  local goodfile = "ignore/lfsr_32KB.bin"
+  local goodfile = opts.lua_path .. "ignore/lfsr_32KB.bin"
 
   -- compare the flash file vs post dump file
   if files.compare(filename, goodfile, false, debug) then
@@ -737,7 +737,7 @@ end
 ██╔═══╝ ██╔══██╗██║   ██║██║     ██╔══╝  ╚════██║╚════██║
 ██║     ██║  ██║╚██████╔╝╚██████╗███████╗███████║███████║
 ╚═╝     ╚═╝  ╚═╝ ╚═════╝  ╚═════╝╚══════╝╚══════╝╚══════╝
-                                                         
+
 --]]
 
 -- Cart should be in reset state upon calling this function
@@ -781,10 +781,10 @@ local function process(process_opts, console_opts)
   init_mapper()
 
 --[[
-888888 888888 .dP"Y8 888888 
-  88   88__   `Ybo."   88   
-  88   88""   o.`Y8b   88   
-  88   888888 8bodP'   88   
+888888 888888 .dP"Y8 888888
+  88   88__   `Ybo."   88
+  88   88""   o.`Y8b   88
+  88   888888 8bodP'   88
 --]]
 
   -- test cart
@@ -853,10 +853,10 @@ local function process(process_opts, console_opts)
   end
 
 --[[
-88""Yb    db    8b    d8     8888b.  88   88 8b    d8 88""Yb 
-88__dP   dPYb   88b  d88      8I  Yb 88   88 88b  d88 88__dP 
-88"Yb   dP__Yb  88YbdP88      8I  dY Y8   8P 88YbdP88 88"""  
-88  Yb dP""""Yb 88 YY 88     8888Y"  `YbodP' 88 YY 88 88     
+88""Yb    db    8b    d8     8888b.  88   88 8b    d8 88""Yb
+88__dP   dPYb   88b  d88      8I  Yb 88   88 88b  d88 88__dP
+88"Yb   dP__Yb  88YbdP88      8I  dY Y8   8P 88YbdP88 88"""
+88  Yb dP""""Yb 88 YY 88     8888Y"  `YbodP' 88 YY 88 88
 --]]
 
   -- dump cart RAM to file
@@ -886,10 +886,10 @@ local function process(process_opts, console_opts)
   end
 
 --[[
-88""Yb    db    8b    d8     Yb        dP 88""Yb 88 888888 888888 
-88__dP   dPYb   88b  d88      Yb  db  dP  88__dP 88   88   88__   
-88"Yb   dP__Yb  88YbdP88       YbdPYbdP   88"Yb  88   88   88""   
-88  Yb dP""""Yb 88 YY 88        YP  YP    88  Yb 88   88   888888 
+88""Yb    db    8b    d8     Yb        dP 88""Yb 88 888888 888888
+88__dP   dPYb   88b  d88      Yb  db  dP  88__dP 88   88   88__
+88"Yb   dP__Yb  88YbdP88       YbdPYbdP   88"Yb  88   88   88""
+88  Yb dP""""Yb 88 YY 88        YP  YP    88  Yb 88   88   888888
 --]]
 
   -- write file to the cart RAM
@@ -916,10 +916,10 @@ local function process(process_opts, console_opts)
   end
 
 --[[
-88""Yb  dP"Yb  8b    d8     8888b.  88   88 8b    d8 88""Yb 
-88__dP dP   Yb 88b  d88      8I  Yb 88   88 88b  d88 88__dP 
-88"Yb  Yb   dP 88YbdP88      8I  dY Y8   8P 88YbdP88 88"""  
-88  Yb  YbodP  88 YY 88     8888Y"  `YbodP' 88 YY 88 88     
+88""Yb  dP"Yb  8b    d8     8888b.  88   88 8b    d8 88""Yb
+88__dP dP   Yb 88b  d88      8I  Yb 88   88 88b  d88 88__dP
+88"Yb  Yb   dP 88YbdP88      8I  dY Y8   8P 88YbdP88 88"""
+88  Yb  YbodP  88 YY 88     8888Y"  `YbodP' 88 YY 88 88
 --]]
 
   -- dump cart ROM to file
@@ -958,10 +958,10 @@ local function process(process_opts, console_opts)
   end
 
 --[[
-88""Yb  dP"Yb  8b    d8     888888 88""Yb    db    .dP"Y8 888888 
-88__dP dP   Yb 88b  d88     88__   88__dP   dPYb   `Ybo." 88__   
-88"Yb  Yb   dP 88YbdP88     88""   88"Yb   dP__Yb  o.`Y8b 88""   
-88  Yb  YbodP  88 YY 88     888888 88  Yb dP""""Yb 8bodP' 888888 
+88""Yb  dP"Yb  8b    d8     888888 88""Yb    db    .dP"Y8 888888
+88__dP dP   Yb 88b  d88     88__   88__dP   dPYb   `Ybo." 88__
+88"Yb  Yb   dP 88YbdP88     88""   88"Yb   dP__Yb  o.`Y8b 88""
+88  Yb  YbodP  88 YY 88     888888 88  Yb dP""""Yb 8bodP' 888888
 --]]
 
   -- erase the cart
@@ -1006,7 +1006,7 @@ local function process(process_opts, console_opts)
 
       i = 0
 
-      -- TODO create some function to pass the read value 
+      -- TODO create some function to pass the read value
       -- that's smart enough to figure out if the board is actually erasing or not
       while rv ~= dict.nes("NES_PPU_RD", 0x0000) do
         spinner.update("Erasing")
@@ -1020,10 +1020,10 @@ local function process(process_opts, console_opts)
   end
 
 --[[
-88""Yb  dP"Yb  8b    d8     Yb        dP 88""Yb 88 888888 888888 
-88__dP dP   Yb 88b  d88      Yb  db  dP  88__dP 88   88   88__   
-88"Yb  Yb   dP 88YbdP88       YbdPYbdP   88"Yb  88   88   88""   
-88  Yb  YbodP  88 YY 88        YP  YP    88  Yb 88   88   888888 
+88""Yb  dP"Yb  8b    d8     Yb        dP 88""Yb 88 888888 888888
+88__dP dP   Yb 88b  d88      Yb  db  dP  88__dP 88   88   88__
+88"Yb  Yb   dP 88YbdP88       YbdPYbdP   88"Yb  88   88   88""
+88  Yb  YbodP  88 YY 88        YP  YP    88  Yb 88   88   888888
 --]]
 
   -- program file to the cart
@@ -1051,10 +1051,10 @@ local function process(process_opts, console_opts)
   end
 
 --[[
-Yb    dP 888888 88""Yb 88 888888 Yb  dP 
- Yb  dP  88__   88__dP 88 88__    YbdP  
-  YbdP   88""   88"Yb  88 88""     8P   
-   YP    888888 88  Yb 88 88      dP    
+Yb    dP 888888 88""Yb 88 888888 Yb  dP
+ Yb  dP  88__   88__dP 88 88__    YbdP
+  YbdP   88""   88"Yb  88 88""     8P
+   YP    888888 88  Yb 88 88      dP
 --]]
 
   -- verify what we just flashed

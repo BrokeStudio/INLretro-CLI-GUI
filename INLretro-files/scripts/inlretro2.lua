@@ -525,6 +525,7 @@ local function main()
   --  nes_wram_size_kb:     int, size of cartridge WRAM in kilobytes.
   --  rom_size_kb:          int, size of cartridge ROM in kilobytes.
   --  additional_opts:      string, additional options (ex: for NES, bank table address for BxROM mapper).
+  --  lua_path:             string, needed for macOS app package.
 
   -- check if options has been passed
   if (opts == nil) then
@@ -602,6 +603,7 @@ local function main()
     ram_dump_file   = opts.ram_dump_file,
     ram_write_file  = opts.ram_write_file,
     verify_file     = opts.verify_file,
+    path            = opts.lua_path,
   }
 
   -- parse additional options
