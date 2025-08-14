@@ -45,9 +45,9 @@ It provides both a command-line interface (CLI) and a graphical user interface (
 |                  |                |          |           |          |           |
 | Genesis / MD     | 32Mb (+SRAM)   | ✓        | ✓         | ✓        | ✓         |
 |                  |                |          |           |          |           |
-| SNES / SFC       | LoRom / HiRom  | ✓        | ✖         | ✖        | ✖         |
+| SNES / SFC       | LoRom / HiRom  | ✓        | ✗         | ✗        | ✗         |
 |                  |                |          |           |          |           |
-| N64              |                | ✓        | ✖         | ✖        | ✖         |
+| N64              |                | ✓        | ✗         | ✗        | ✗         |
 
 I'll try to add support to more mapper in the future but feel free to let me know if you have specific needs.
 
