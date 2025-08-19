@@ -45,7 +45,7 @@ void Flasher::detect_all()
     if (detect(id))
     {
       list.push_back(new Flasher(id, true));
-      APP_LOG(LogTypes_Success, L_SYS "Flasher 'INLretropro%d' detected", id);
+      APP_LOG(LogTypes_Success, L_SYS "Flasher 'INLretropro%c' detected", id[0]);
     }
   }
 }
