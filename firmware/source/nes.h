@@ -51,12 +51,11 @@ void ppu_page_wr_lfsr(uint16_t addr, uint8_t data);
 void cpu_page_wr_lfsr(uint16_t addr, uint8_t data);
 void a53_512k_prgrom_flash_wr(uint16_t addr, uint8_t data);
 uint8_t a53_tssop_prgrom_flash_wr(uint16_t addr, uint8_t data);
+uint8_t a53_prgrom_flash_wr(uint16_t addr, uint8_t data);
 uint8_t tssop_prgrom_flash_wr(uint16_t addr, uint8_t data);
 uint8_t mmc5_prgram_wr(uint16_t addr, uint8_t data);
 void rnbw_prgrom_flash_wr(uint16_t addr, uint8_t data);
-void rnbw_tssop_prgrom_flash_wr(uint16_t addr, uint8_t data);
 void rnbw_chrrom_flash_wr(uint16_t addr, uint8_t data);
-void rnbw_tssop_chrrom_flash_wr(uint16_t addr, uint8_t data);
 void vrc6_prgrom_flash_wr(uint16_t addr, uint8_t data);
 
 #define A10_BYTE 0x04

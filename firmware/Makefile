@@ -14,9 +14,12 @@ avr:
 	# program
 stm6:
 	make -f Make_stm_inl6 all
+	mkdir -p build_stm6
+	cp -r build_stm/* build_stm6
 	# program
 stm6clean:
 	make -f Make_stm_inl6 clean all
+	mkdir -p build_stm6
 	cp -r build_stm/* build_stm6
 stm6p:
 	make -f Make_stm_inl6p clean all

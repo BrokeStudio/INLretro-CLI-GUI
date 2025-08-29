@@ -59,18 +59,25 @@
 //	PC1  "ROMSEL"	Cartridge rom enable
 	#define	C1_		1
 	#define	ROMSEL_		1
+  #define GEN_C_CE_ 1
+  #define GB_RAM_CS_ 1
 //	PC2  "PRGRW"	NES CPU R/W signal
 	#define	C2_		2
 	#define	PRGRW_		2
+  #define	GEN_LDSW_		2
 //	PC3  "FREE"	purple kazzo EXP flipflop latch, FREE on most AVR/adapter kazzos
 	#define	C3_		3
 	#define	FREE_		3
 //	PC4  "CSRD"	NES CHR/SNES /RD
 	#define	C4_		4
 	#define	CSRD_		4
+  #define GEN_C_OE_ 4
+  #define GB_RD_ 4
 //	PC5  "CSWR"	NES CHR/SNES /WR
 	#define	C5_		5
 	#define	CSWR_		5
+  #define	GEN_UDSW_		5
+  #define	GB_WR_		5
 //	PC6  "CICE" 	NES CIRAM /CE
 	#define	C6_		6
 	#define	CICE_		6

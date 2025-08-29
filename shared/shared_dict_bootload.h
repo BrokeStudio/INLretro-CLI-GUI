@@ -84,4 +84,15 @@
 //  #define	APP_VERSION	3	//released 8/16 with N64 dump fix and MMC2/4 support
 #define APP_VERSION 4 // release for INLretro CLI+GUI by Broke Studio
 
+// hardware type (stm6/stmn/stm6p/avr)
+// this is updated more frequently than the USB firmware version
+#define GET_HW_TYPE 13 // RL=3  0-error, 1-len, 2-type
+
+// HARDWARE TYPES
+#define HW_UNKN 0
+#define HW_STM6 1
+#define HW_STMN 2
+#define HW_STM6P 3
+#define HW_AVR 4
+
 #endif

@@ -116,7 +116,7 @@
 #define GET_BANK_TABLE 0x86		 // RL=4 16bit value so 2 bytes need returned
 #define GET_NUM_PRG_BANKS 0x87 // RL=3
 
-#define MMC5_PRG_RAM_WR 0x88 // RL=3 Enable writting to PRG-RAM and then write a single byte
+#define MMC5_PRG_RAM_WR 0x88 // RL=3 Enable writing to PRG-RAM and then write a single byte
 // after written read back for verification as a timeout would cause fail
 
 #endif

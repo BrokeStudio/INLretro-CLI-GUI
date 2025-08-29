@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include "bootload.h"
 
 //=================================================================================================
@@ -44,7 +45,7 @@ uint8_t bootload_call( uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8
 
 	pFunction JumpToApplication;
 
-	switch (opcode) { 
+	switch (opcode) {
 #ifdef STM_CORE
 		//case JUMP_BL:		jump_to_bootloader();		break;
 					//device won't respond after this point so actually expect an error to result
@@ -57,11 +58,11 @@ uint8_t bootload_call( uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8
 			JumpToApplication();
 			break;
 					//device may not respond depending on the address/function being jumped to
-		
-		case PREP_FWUPDATE:	
+
+		case PREP_FWUPDATE:
 			//while we are directly jumping to fwupdate section
 			//it should be okay since it's in a fixed location
-			return fwupdate_forever();	break;	
+			return fwupdate_forever();	break;
 			//this function hijacked the stack frame to steal execution
 			//after returing from the current USB ISR
 			//it returns SUCCESS if it found and modified
@@ -70,7 +71,7 @@ uint8_t bootload_call( uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8
 			//space and caused a hardfault.
 			//Once the USB ISR is completed, exectution left main application code for good
 			//will respond to usb interrupts, but are directed to fwupdater
-			
+
 		case SET_PTR_HI:
 			addr_ptr = (uint16_t*) ((((uint32_t)addr_ptr) & 0x0000FFFF) | (operand<<16));
 			break;
@@ -132,11 +133,26 @@ uint8_t bootload_call( uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8
 			//rdata[RD3] = (uint8_t)'3';
 			break;
 
+		case GET_HW_TYPE:
+			rdata[RD_LEN] = BYTE_LEN;
+#ifdef STM_INL6
+      rdata[RD0] = HW_STM6;
+#elif STM_NES
+      rdata[RD0] = HW_STMN;
+#elif AVR_KAZZO
+      rdata[RD0] = HW_AVR;
+#elif STM_INL6P
+      rdata[RD0] = HW_STM6P;
+#else
+      rdata[RD0] = HW_UNKN;
+#endif
+			break;
+
 		default:
 			 //opcode doesn't exist
 			 return ERR_UNKN_BOOTLOAD_OPCODE;
 	}
-	
+
 	return SUCCESS;
 
 }

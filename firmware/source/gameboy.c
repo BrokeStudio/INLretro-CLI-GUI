@@ -33,53 +33,53 @@ uint8_t gameboy_call(uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_t
 #define BYTE_LEN 1
 #define HWORD_LEN 2
 
-	switch (opcode)
-	{
-		//		//no return value:
-	case GAMEBOY_WR:
-		gameboy_wr(operand, miscdata);
-		break;
+  switch (opcode)
+  {
+    //		//no return value:
+  case GAMEBOY_WR:
+    gameboy_wr(operand, miscdata);
+    break;
 
-	case GAMEBOY_FLASH_WR:
-		gameboy_flash_wr(operand, miscdata);
-		break;
+  case GAMEBOY_FLASH_WR:
+    gameboy_flash_wr(operand, miscdata);
+    break;
 
-	case GAMEBOY_PIN31_WR:
-		gameboy_pin31_wr(operand, miscdata);
-		break;
+  case GAMEBOY_PIN31_WR:
+    gameboy_pin31_wr(operand, miscdata);
+    break;
 
-	case GAMEBOY_FLASH_PIN31_WR:
-		gameboy_flash_pin31_wr(operand, miscdata);
-		break;
+  case GAMEBOY_FLASH_PIN31_WR:
+    gameboy_flash_pin31_wr(operand, miscdata);
+    break;
 
-	case GAMEBOY_UNLOCK_3V_FLASH_PIN31_WR:
-		gameboy_unlock_3v_flash_pin31_wr(operand, miscdata);
-		break;
+  case GAMEBOY_UNLOCK_3V_FLASH_PIN31_WR:
+    gameboy_unlock_3v_flash_pin31_wr(operand, miscdata);
+    break;
 
-	case GAMEBOY_3V_FLASH_PIN31_WR:
-		gameboy_3v_flash_pin31_wr(operand, miscdata);
-		break;
+  case GAMEBOY_3V_FLASH_PIN31_WR:
+    gameboy_3v_flash_pin31_wr(operand, miscdata);
+    break;
 
-	case GAMEBOY_PAGE_WR_LFSR:
-		gameboy_page_wr_lfsr(operand, miscdata);
-		break;
+  case GAMEBOY_PAGE_WR_LFSR:
+    gameboy_page_wr_lfsr(operand, miscdata);
+    break;
 
-	// 8bit return values:
-	case GAMEBOY_RD:
-		rdata[RD_LEN] = BYTE_LEN;
-		rdata[RD0] = gameboy_rd(operand);
-		break;
+  // 8bit return values:
+  case GAMEBOY_RD:
+    rdata[RD_LEN] = BYTE_LEN;
+    rdata[RD0] = gameboy_rd(operand);
+    break;
 
-	case GAMEBOY_SET_CUR_BANK:
-		cur_bank = operand;
-		break;
+  case GAMEBOY_SET_CUR_BANK:
+    cur_bank = operand;
+    break;
 
-	default:
-		// macro doesn't exist
-		return ERR_UNKN_GAMEBOY_OPCODE;
-	}
+  default:
+    // macro doesn't exist
+    return ERR_UNKN_GAMEBOY_OPCODE;
+  }
 
-	return SUCCESS;
+  return SUCCESS;
 }
 
 /* Desc:Gameboy CPU Read without being so slow
@@ -94,44 +94,44 @@ uint8_t gameboy_call(uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_t
  */
 uint8_t gameboy_rd(uint16_t addr)
 {
-	uint8_t read; // return value
+  uint8_t read; // return value
 
-	// cycle would start with clock rise
+  // cycle would start with clock rise
 
-	// set address bus
-	ADDR_SET(addr);
+  // set address bus
+  ADDR_SET(addr);
 
-	// enable /RD pin
-	CSRD_LO();
+  // enable /RD pin
+  GB_RD_LO();
 
-	// set SRAM /CS
-	// low for $A000-BFFF
-	if ((addr >= 0xA000) && (addr < 0xC000))
-	{							 // addressing cart RAM space
-		ROMSEL_LO(); // this is actually the SRAM /CS pin
-	}
+  // set SRAM /CS
+  // low for $A000-BFFF
+  if ((addr >= 0xA000) && (addr < 0xC000))
+  {							 // addressing cart RAM space
+    GB_RAM_CS_LO();
+  }
 
-	// half cycle with clock fall
-	// and /WR low for writes
+  // half cycle with clock fall
+  // and /WR low for writes
 
-	// couple more NOP's waiting for data
-	// zero nop's returned previous databus value
-	NOP(); // one nop got most of the bits right
-	NOP(); // two nop got all the bits right
-	NOP(); // add third nop for some extra
-	NOP(); // one more can't hurt
-	// might need to wait longer for some carts...
+  // couple more NOP's waiting for data
+  // zero nop's returned previous databus value
+  NOP(); // one nop got most of the bits right
+  NOP(); // two nop got all the bits right
+  NOP(); // add third nop for some extra
+  NOP(); // one more can't hurt
+  // might need to wait longer for some carts...
 
-	// latch data
-	DATA_RD(read);
+  // latch data
+  DATA_RD(read);
 
-	// return bus to default
-	ROMSEL_HI();
-	CSRD_HI();
+  // return bus to default
+  GB_RAM_CS_HI();
+  GB_RD_HI();
 
-	// next cycle clock rise
+  // next cycle clock rise
 
-	return read;
+  return read;
 }
 
 /* Desc:Gameboy CPU Write
@@ -145,37 +145,37 @@ uint8_t gameboy_rd(uint16_t addr)
  */
 void gameboy_wr(uint16_t addr, uint8_t data)
 {
-	// cycle would start with clock rise
+  // cycle would start with clock rise
 
-	// set address bus
-	ADDR_SET(addr);
+  // set address bus
+  ADDR_SET(addr);
 
-	// set SRAM /CS
-	// low for $A000-BFFF
-	if ((addr >= 0xA000) && (addr < 0xC000))
-	{							 // addressing cart RAM space
-		ROMSEL_LO(); // this is actually the SRAM /CS pin
-	}
+  // set SRAM /CS
+  // low for $A000-BFFF
+  if ((addr >= 0xA000) && (addr < 0xC000))
+  {							 // addressing cart RAM space
+    GB_RAM_CS_LO();
+  }
 
-	// put data on bus
-	DATA_OP();
-	DATA_SET(data);
+  // put data on bus
+  DATA_OP();
+  DATA_SET(data);
 
-	// half cycle with clock fall
-	// and /WR low for writes
-	CSWR_LO();
+  // half cycle with clock fall
+  // and /WR low for writes
+  GB_WR_LO();
 
-	// give some time
-	NOP();
-	NOP();
-	NOP();
+  // give some time
+  NOP();
+  NOP();
+  NOP();
 
-	// latch data to cart memory/mapper
-	CSWR_HI();
-	ROMSEL_HI();
+  // latch data to cart memory/mapper
+  GB_WR_HI();
+  GB_RAM_CS_HI();
 
-	// Free data bus
-	DATA_IP();
+  // Free data bus
+  DATA_IP();
 }
 
 /* Desc:Gameboy CPU Write
@@ -189,147 +189,151 @@ void gameboy_wr(uint16_t addr, uint8_t data)
  */
 void gameboy_flash_wr(uint16_t addr, uint8_t data)
 {
-	uint8_t rv;
+  uint8_t rv;
 
-	gameboy_wr(0x5555, 0xAA);
-	gameboy_wr(0x2AAA, 0x55);
-	gameboy_wr(0x5555, 0xA0);
-	gameboy_wr(addr, data);
+  gameboy_wr(0x5555, 0xAA);
+  gameboy_wr(0x2AAA, 0x55);
+  gameboy_wr(0x5555, 0xA0);
+  gameboy_wr(addr, data);
 
-	do
-	{
-		rv = gameboy_rd(addr);
-		usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-	} while (rv != gameboy_rd(addr));
-	// TODO handle timeout
+  do
+  {
+    rv = gameboy_rd(addr);
+    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
+  } while (rv != gameboy_rd(addr));
+  // TODO handle timeout
 }
 
 void gameboy_pin31_wr(uint16_t addr, uint8_t data)
 {
-	// cycle would start with clock rise
+  // cycle would start with clock rise
 
-	// set address bus
-	ADDR_SET(addr);
+  // set address bus
+  ADDR_SET(addr);
 
-	// set SRAM /CS
-	// low for $A000-BFFF
-	if ((addr >= 0xA000) && (addr < 0xC000))
-	{							 // addressing cart RAM space
-		ROMSEL_LO(); // this is actually the SRAM /CS pin
-	}
+  // set SRAM /CS
+  // low for $A000-BFFF
+  if ((addr >= 0xA000) && (addr < 0xC000))
+  {							 // addressing cart RAM space
+    GB_RAM_CS_LO();
+  }
 
-	// put data on bus
-	DATA_OP();
-	DATA_SET(data);
+  // put data on bus
+  DATA_OP();
+  DATA_SET(data);
 
-	// half cycle with clock fall
-	// and /WR low for writes
-	// CSWR_LO();
-	CSWR_HI();
-	// use pin 31 (AUDIO in) as Flash /WR instead of normal /WR pin
-	CTL_OP(AUDRbank, AUDR);
-	CTL_SET_LO(AUDRbank, AUDR);
+  // half cycle with clock fall
+  // and /WR low for writes
+  // GB_WR_LO();
+  GB_WR_HI();
+  // use pin 31 (AUDIO in) as Flash /WR instead of normal /WR pin
+  CTL_OP(AUDRbank, AUDR);
+  CTL_SET_LO(AUDRbank, AUDR);
 
-	// give some time
-	NOP();
-	NOP();
-	NOP();
+  // give some time
+  NOP();
+  NOP();
+  NOP();
 
-	// latch data to cart memory/mapper
-	// CSWR_HI();
-	//  use pin 31 (AUDIO in) as Flash /WR instead of normal /WR pin
-	CTL_SET_HI(AUDRbank, AUDR);
-	CTL_IP_FL(AUDRbank, AUDR);
-	ROMSEL_HI();
+  // latch data to cart memory/mapper
+  // GB_WR_HI();
+  //  use pin 31 (AUDIO in) as Flash /WR instead of normal /WR pin
+  CTL_SET_HI(AUDRbank, AUDR);
+  CTL_IP_FL(AUDRbank, AUDR);
+  GB_RAM_CS_HI();
 
-	// Free data bus
-	DATA_IP();
+  // Free data bus
+  DATA_IP();
 }
 
 void gameboy_flash_pin31_wr(uint16_t addr, uint8_t data)
 {
-	uint8_t rv;
+  uint8_t rv;
 
-	if (cur_bank == 0x00)
-		addr = addr & 0x3fff;
+  // clean up address if we're flashing bank 0
+  if (cur_bank == 0x00) addr = addr & 0x3fff;
 
-	gameboy_wr(0x2000, 0x00);
-	gameboy_pin31_wr(0x5555, 0xAA);
-	gameboy_pin31_wr(0x2AAA, 0x55);
-	gameboy_pin31_wr(0x5555, 0xA0);
-	if (cur_bank != 0x00)
-		gameboy_wr(0x2000, cur_bank);
-	gameboy_pin31_wr(addr, data);
+  // program byte sequence
+  gameboy_wr(0x2000, 0x00); // TODO: should be 0x01 instead since MBC1 can't map bank 0?
+  gameboy_pin31_wr(0x5555, 0xAA);
+  gameboy_pin31_wr(0x2AAA, 0x55);
+  gameboy_pin31_wr(0x5555, 0xA0);
 
-	do
-	{
-		rv = gameboy_rd(addr);
-		usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-	} while (rv != gameboy_rd(addr));
-	// TODO handle timeout
+  // set bank if needed
+  if (cur_bank != 0x00) gameboy_wr(0x2000, cur_bank);
+
+  // write the actual data
+  gameboy_pin31_wr(addr, data);
+
+  do
+  {
+    rv = gameboy_rd(addr);
+    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
+  } while (rv != gameboy_rd(addr));
+  // TODO handle timeout
 }
 
 void gameboy_unlock_3v_flash_pin31_wr(uint16_t addr, uint8_t data)
 {
-	uint8_t rv;
-	uint8_t rv2;
-	uint8_t done = 0;
+  uint8_t rv;
+  uint8_t rv2;
+  uint8_t done = 0;
 
-	if (cur_bank == 0x00)
-		addr = addr & 0x3fff;
+  if (cur_bank == 0x00)
+    addr = addr & 0x3fff;
 
-	// gameboy_pin31_wr(0x0AAA, 0xAA);
-	// gameboy_pin31_wr(0x0555, 0x55);
-	// gameboy_pin31_wr(0x0AAA, 0xA0);
-	// if(addr >= 0x4000) gameboy_wr(0x2000, cur_bank);
+  // gameboy_pin31_wr(0x0AAA, 0xAA);
+  // gameboy_pin31_wr(0x0555, 0x55);
+  // gameboy_pin31_wr(0x0AAA, 0xA0);
+  // if(addr >= 0x4000) gameboy_wr(0x2000, cur_bank);
 
-	//gameboy_pin31_wr(0x5000, 0xA0); // could use addr instead of 0x5000
-	gameboy_pin31_wr(addr, 0xA0); // unlock bypass command
-	gameboy_pin31_wr(addr, data);
+  //gameboy_pin31_wr(0x5000, 0xA0); // could use addr instead of 0x5000
+  gameboy_pin31_wr(addr, 0xA0); // unlock bypass command
+  gameboy_pin31_wr(addr, data);
 
-	// check Status Register DQ6 (toggle bit)
-	rv = gameboy_rd(addr) & 0x40;
-	do
-	{
-		rv2 = gameboy_rd(addr) & 0x40;
-		if (rv == rv2)
-			done = 1;
-		rv = rv2;
+  // check Status Register DQ6 (toggle bit)
+  rv = gameboy_rd(addr) & 0x40;
+  do
+  {
+    rv2 = gameboy_rd(addr) & 0x40;
+    if (rv == rv2)
+      done = 1;
+    rv = rv2;
 
-	} while (done == 0);
+  } while (done == 0);
 
-	/*
-		do {
-			rv = gameboy_rd(addr) & 0x40;
-			usbPoll();	//orignal kazzo needs this frequently to slurp up incoming data
-		} while (rv != gameboy_rd(addr));
-	*/
-	// TODO handle timeout
+  /*
+    do {
+      rv = gameboy_rd(addr) & 0x40;
+      usbPoll();	//orignal kazzo needs this frequently to slurp up incoming data
+    } while (rv != gameboy_rd(addr));
+  */
+  // TODO handle timeout
 }
 
 void gameboy_3v_flash_pin31_wr(uint16_t addr, uint8_t data)
 {
-	uint8_t rv;
-	uint8_t rv2;
-	uint8_t done = 0;
+  uint8_t rv;
+  uint8_t rv2;
+  uint8_t done = 0;
 
-	if (cur_bank == 0x00)
-		addr = addr & 0x3fff;
+  if (cur_bank == 0x00)
+    addr = addr & 0x3fff;
 
-	gameboy_pin31_wr(0x0AAA, 0xAA);
-	gameboy_pin31_wr(0x0555, 0x55);
-	gameboy_pin31_wr(0x0AAA, 0xA0);
-	// if(addr >= 0x4000) gameboy_wr(0x2000, cur_bank);
+  gameboy_pin31_wr(0x0AAA, 0xAA);
+  gameboy_pin31_wr(0x0555, 0x55);
+  gameboy_pin31_wr(0x0AAA, 0xA0);
+  // if(addr >= 0x4000) gameboy_wr(0x2000, cur_bank);
 
-	gameboy_pin31_wr(addr, data);
+  gameboy_pin31_wr(addr, data);
 
-	do
-	{
-		rv = gameboy_rd(addr);
-		usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-	} while (rv != gameboy_rd(addr));
+  do
+  {
+    rv = gameboy_rd(addr);
+    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
+  } while (rv != gameboy_rd(addr));
 
-	// TODO handle timeout
+  // TODO handle timeout
 }
 
 /* Desc:GAME BOY WRAM Page Write Random from LFSR
@@ -343,14 +347,14 @@ void gameboy_3v_flash_pin31_wr(uint16_t addr, uint8_t data)
 void gameboy_page_wr_lfsr(uint16_t addr, uint8_t data)
 // TODO give other data sources
 {
-	uint16_t i;
+  uint16_t i;
 
-	for (i = 0; i < 256; i++)
-	{
-		data = lfsr_32();
-		gameboy_wr(addr, data);
-		addr++;
-	}
+  for (i = 0; i < 256; i++)
+  {
+    data = lfsr_32();
+    gameboy_wr(addr, data);
+    addr++;
+  }
 }
 
 /* Desc:GAMEBOY 8bit CPU Page Read with optional USB polling
@@ -366,63 +370,77 @@ void gameboy_page_wr_lfsr(uint16_t addr, uint8_t data)
  */
 uint8_t gameboy_page_rd_poll(uint8_t *data, uint8_t addrH, uint8_t first, uint8_t len, uint8_t poll)
 {
-	uint8_t i;
+  uint8_t i;
 
-	// set address bus
-	ADDRH(addrH);
+  // set address bus
+  ADDRH(addrH);
 
-	// enable /RD pin
-	CSRD_LO();
+  // set lower address bits
+  ADDRL(first); // doing this prior to entry and right after latching
 
-	// set SRAM /CS
-	// low for $A000-BFFF
-	if ((addrH >= 0xA0) && (addrH < 0xC0))
-	{							 // addressing cart RAM space
-		ROMSEL_LO(); // this is actually the SRAM /CS pin
-	}
+  // enable /RD pin
+  GB_RD_LO();
 
-	// set lower address bits
-	ADDRL(first); // doing this prior to entry and right after latching
+  // extra NOP was needed on stm6 as address hadn't settled in time for the very first read
+  NOP();
 
-	// extra NOP was needed on stm6 as address hadn't settled in time for the very first read
-	NOP();
-	// gives longest delay between address out and latching data
-	for (i = 0; i <= len; i++)
-	{
-		// testing shows that having this if statement doesn't affect overall dumping speed
-		if (poll)
-		{
-			usbPoll(); // Call usbdrv.h usb polling while waiting for data
-		}
-		else
-		{
-			NOP(); // couple more NOP's waiting for data
-			NOP(); // one prob good enough considering the if/else
-		}
+  // gives longest delay between address out and latching data
+  for (i = 0; i <= len; i++)
+  {
+    // set SRAM /CS
+    // low for $A000-BFFF
+    if ((addrH >= 0xA0) && (addrH < 0xC0))
+    {
+      GB_RAM_CS_LO();
+    }
 
-		// gameboy needed some extra NOPS
-		NOP();
-		NOP();
-		NOP();
-		NOP();
-		NOP();
-		NOP();
+    // // testing shows that having this if statement doesn't affect overall dumping speed
+    // if (poll)
+    // {
+    //   usbPoll(); // Call usbdrv.h usb polling while waiting for data
+    // }
+    // else
+    // {
+    //   NOP(); // couple more NOP's waiting for data
+    //   NOP(); // one prob good enough considering the if/else
+    // }
 
-		// latch data
-		DATA_RD(data[i]);
+    // gameboy needed some extra NOPS
+    // NOP();
+    // NOP();
+    // NOP();
+    // NOP();
+    // NOP();
+    // NOP();
+    NOP(); // original
+    NOP(); // original
 
-		// set lower address bits
-		// ADDRL(++first);	THIS broke things, on stm adapter because macro expands it twice!
-		first++;
-		ADDRL(first);
-	}
+    // latch data
+    DATA_RD(data[i]);
 
-	// return bus to default
-	CSRD_HI();
-	ROMSEL_HI();
+    // set lower address bits
+    // ADDRL(++first);	THIS broke things, on stm adapter because macro expands it twice!
+    first++;
+    ADDRL(first);
 
-	// return index of last byte read
-	return i;
+    // because some carts use FRAM, we need to toggle RAM /CS between each reads
+    // clear SRAM /CS
+    // high for $A000-BFFF
+    if ((addrH >= 0xA0) && (addrH < 0xC0))
+    {
+      GB_RAM_CS_HI();
+      NOP();
+      NOP();
+    }
+
+  }
+
+  // return bus to default
+  GB_RD_HI();
+  GB_RAM_CS_HI();
+
+  // return index of last byte read
+  return i;
 }
 
 #endif // GB_CONN

@@ -36,6 +36,14 @@ uint8_t pinport_call( uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_
 #define	ALE_L_IP_PU()	CTL_IP_PU(ROMSELbank, ROMSEL)
 #define ALE_L_LO()	CTL_SET_LO(ROMSELbank, ROMSEL)
 #define ALE_L_HI()	CTL_SET_HI(ROMSELbank, ROMSEL)
+// same pin: GENESIS C_CE
+#define	GEN_C_CE_OP()	CTL_OP(ROMSELbank, ROMSEL)
+#define GEN_C_CE_LO()	CTL_SET_LO(ROMSELbank, ROMSEL)
+#define GEN_C_CE_HI()	CTL_SET_HI(ROMSELbank, ROMSEL)
+// same pin: GAME BOY RAM_CS
+#define	GB_RAM_CS_OP()	CTL_OP(ROMSELbank, ROMSEL)
+#define GB_RAM_CS_LO()	CTL_SET_LO(ROMSELbank, ROMSEL)
+#define GB_RAM_CS_HI()	CTL_SET_HI(ROMSELbank, ROMSEL)
 
 //     PC2  "PRGRW"
 #define	PRGRW_IP_PU()	CTL_IP_PU(PRGRWbank, PRGRW)
@@ -49,6 +57,10 @@ uint8_t pinport_call( uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_
 #define	ALE_H_OP()	CTL_OP(PRGRWbank, PRGRW)
 #define ALE_H_LO()	CTL_SET_LO(PRGRWbank, PRGRW)
 #define ALE_H_HI()	CTL_SET_HI(PRGRWbank, PRGRW)
+// same pin: GENESIS LDSW
+#define	GEN_LDSW_OP()	CTL_OP(PRGRWbank, PRGRW)
+#define GEN_LDSW_LO()	CTL_SET_LO(PRGRWbank, PRGRW)
+#define GEN_LDSW_HI()	CTL_SET_HI(PRGRWbank, PRGRW)
 
 //     PC3  "FREE"
 #ifndef C3nodef
@@ -67,6 +79,14 @@ uint8_t pinport_call( uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_
 #define CSRD_LO()	CTL_SET_LO(CSRDbank, CSRD)
 #define CSRD_HI()	CTL_SET_HI(CSRDbank, CSRD)
 #define CSRD_RD(val)	CTL_RD(CSRDbank, CSRD, val)
+// same pin: GENESIS C_OE
+#define	GEN_C_OE_OP()	CTL_OP(CSRDbank, CSRD)
+#define GEN_C_OE_LO()	CTL_SET_LO(CSRDbank, CSRD)
+#define GEN_C_OE_HI()	CTL_SET_HI(CSRDbank, CSRD)
+// same pin: GAME BOY RD
+#define	GB_RD_OP()	CTL_OP(CSRDbank, CSRD)
+#define GB_RD_LO()	CTL_SET_LO(CSRDbank, CSRD)
+#define GB_RD_HI()	CTL_SET_HI(CSRDbank, CSRD)
 
 //     PC5  "CSWR"
 #define	CSWR_IP_PU()	CTL_IP_PU(CSWRbank, CSWR)
@@ -75,6 +95,14 @@ uint8_t pinport_call( uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_
 #define CSWR_LO()	CTL_SET_LO(CSWRbank, CSWR)
 #define CSWR_HI()	CTL_SET_HI(CSWRbank, CSWR)
 #define CSWR_RD(val)	CTL_RD(CSWRbank, CSWR, val)
+// same pin: GENESIS UDSW
+#define	GEN_UDSW_OP()	CTL_OP(CSWRbank, CSWR)
+#define GEN_UDSW_LO()	CTL_SET_LO(CSWRbank, CSWR)
+#define GEN_UDSW_HI()	CTL_SET_HI(CSWRbank, CSWR)
+// same pin: GAME BOY WR
+#define	GB_WR_OP()	CTL_OP(CSWRbank, CSWR)
+#define GB_WR_LO()	CTL_SET_LO(CSWRbank, CSWR)
+#define GB_WR_HI()	CTL_SET_HI(CSWRbank, CSWR)
 
 //     PC6  "CICE" 
 #define	CICE_IP_PU()	CTL_IP_PU(CICEbank, CICE)
@@ -130,6 +158,10 @@ uint8_t pinport_call( uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_
 #define IRQ_LO()	CTL_SET_LO(IRQbank, IRQ)
 #define IRQ_HI()	CTL_SET_HI(IRQbank, IRQ)
 #define IRQ_RD(val)	CTL_RD(IRQbank, IRQ, val)
+// same pin: GENESIS A19
+#define	GEN_A19_OP()	CTL_OP(IRQbank, IRQ)
+#define GEN_A19_LO()	CTL_SET_LO(IRQbank, IRQ)
+#define GEN_A19_HI()	CTL_SET_HI(IRQbank, IRQ)
 
 //     PC11 "CIA10" 
 #define	CIA10_IP_PU()	CTL_IP_PU(CIA10bank, CIA10)

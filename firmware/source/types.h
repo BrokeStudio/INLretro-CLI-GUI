@@ -8,18 +8,19 @@ typedef struct setup_packet{
 	uint8_t		miscdata;	//wValueMSB 
 	uint16_t	operand;	//16bit operand "wIndex"
 	uint16_t	wLength;
-}setup_packet;
+} setup_packet;
 
 
-//write function pointers
-//typedef	void	(*write_funcptr) 	( uint8_t addrH, uint8_t addrL, uint8_t data );
-//typedef	uint8_t	(*read_funcptr)		( uint8_t addrH, uint8_t addrL );
+// write function pointers
+// typedef void  (*write_funcptr)   ( uint8_t addrH, uint8_t addrL, uint8_t data );
+// typedef uint8_t  (*read_funcptr)    ( uint8_t addrH, uint8_t addrL );
 typedef	void	(*write_funcptr) 	( uint16_t addr, uint8_t data );
 typedef	void	(*write_funcptr_pg) 	( uint16_t addr, uint8_t *data );
 typedef	uint8_t	(*write_rv_funcptr) 	( uint16_t addr, uint8_t data );
 typedef	uint8_t	(*read_funcptr)		( uint16_t addr );
 typedef	void	(*write_snes_funcptr) 	( uint16_t addr, uint8_t data, uint8_t romsel );
 typedef	uint8_t	(*read_snes_funcptr)	( uint16_t addr, uint8_t romsel );
+typedef void  (*write_genesis_funcptr)   ( uint16_t addr, uint16_t data );
 
 
 //~16 bytes per buffer...
@@ -37,7 +38,7 @@ typedef struct buffer {
 
 	uint8_t 	*data;		//pointer to base buffer's allocated sram
 
-	//uint8_t 	size;		//size of buffer in bytes (max 256 bytes) THIS DOESN'T work 256B = 9bit value
+  // uint8_t   size;    //size of buffer in bytes (max 256 bytes) THIS DOESN'T work 256B = 9bit value
 	uint8_t 	last_idx;	//index of last byte in buffer used to determine when at end of buffer
 
 
@@ -67,7 +68,7 @@ typedef struct buffer {
 
 	//currently unused
 	uint8_t		function;	//function "pointer" for flash/dump operation control
-}buffer;
+} buffer;
 
 
 typedef struct operation_info {

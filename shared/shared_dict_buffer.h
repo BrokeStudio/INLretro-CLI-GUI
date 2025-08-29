@@ -101,8 +101,10 @@
 #define SNESROM 0x13
 #define SNESRAM 0x14
 #define GENESISROM 0x15
-#define GBROM 0x16
-#define GBROM_FLASH 0x17
+#define GENESISRAM 0x16
+#define GBROM 0x17
+#define GBRAM 0x18
+#define GBROM_FLASH 0x19
 
 // Read specific sections of memory map
 //  4KB/1KB naming designates the granularity of the starting address
@@ -194,7 +196,6 @@
 #define GTROM 111
 #define DxROM 205
 #define RNBW 146	// temporary mapper number
-#define RNBW2 147 // temporary mapper number
 
 #define MM2 253
 #define DPROM 254 // just a random mapper number for whatever I need it for
@@ -223,8 +224,8 @@
 // GAMEBOY mapper definitions
 #define ROMONLY 0
 #define MBC1_DISCRETE 1
-#define MBC1_3V 2
-#define MBC5_3V 2
+#define MBC1 2
+#define MBC5 2
 
 // set function
 // miscdata: buffer number

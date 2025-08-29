@@ -84,9 +84,11 @@ uint8_t pinport_call( uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_
 				#endif
 				case 21: CTL_IP_PU(C21bank,C21); break;
 // BROKE STUDIO
+#ifndef STM_NES
 				#ifndef C22nodef
 				case 22: CTL_IP_PU(C22bank,C22); break;
 				#endif
+#endif
 // BROKE STUDIO
 
 				default: return ERR_CTL_PIN_NOT_PRESENT;
@@ -143,9 +145,11 @@ uint8_t pinport_call( uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_
 				#endif
 				case 21: CTL_IP_FL(C21bank,C21); break;
 // BROKE STUDIO
+#ifndef STM_NES
 				#ifndef C22nodef
 				case 22: CTL_IP_FL(C22bank,C22); break;
 				#endif
+#endif
 // BROKE STUDIO
 				default: return ERR_CTL_PIN_NOT_PRESENT;
 			}
@@ -201,9 +205,11 @@ uint8_t pinport_call( uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_
 				#endif
 				case 21: CTL_OP(C21bank,C21); break;
 // BROKE STUDIO
+#ifndef STM_NES
 				#ifndef C22nodef
 				case 22: CTL_OP(C22bank,C22); break;
 				#endif
+#endif
 // BROKE STUDIO
 				default: return ERR_CTL_PIN_NOT_PRESENT;
 			}
@@ -277,9 +283,11 @@ uint8_t pinport_call( uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_
 				#endif
 				case 21: CTL_SET_LO(C21bank,C21); break;
 // BROKE STUDIO
+#ifndef STM_NES
 				#ifndef C22nodef
 				case 22: CTL_SET_LO(C22bank,C22); break;
 				#endif
+#endif
 // BROKE STUDIO
 				default: return ERR_CTL_PIN_NOT_PRESENT;
 			}
@@ -335,9 +343,11 @@ uint8_t pinport_call( uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_
 				#endif
 				case 21: CTL_SET_HI(C21bank,C21); break;
 // BROKE STUDIO
+#ifndef STM_NES
 				#ifndef C22nodef
 				case 22: CTL_SET_HI(C22bank,C22); break;
 				#endif
+#endif
 // BROKE STUDIO
 				default: return ERR_CTL_PIN_NOT_PRESENT;
 			}
@@ -390,9 +400,11 @@ uint8_t pinport_call( uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_
 				#endif
 				case 21: CTL_RD(C21bank,C21, *ret_hword); break;
 // BROKE STUDIO
+#ifndef STM_NES
 				#ifndef C22nodef
 				case 22: CTL_RD(C22bank,C22, *ret_hword); break;
 				#endif
+#endif
 // BROKE STUDIO
 				default: rdata[RD_LEN] = 0;
 					return ERR_CTL_PIN_NOT_PRESENT;

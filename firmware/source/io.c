@@ -389,12 +389,12 @@ void sega_init()
 	// 		address decode depends on #CART
 	// 		cart normally drives low (00-03),
 	// 		but if driven high (like CD sram cart) decodes to $04_0000 - 07_FFFF
-	ROMSEL_OP();
-	ROMSEL_HI();
+	GEN_C_CE_OP();
+	GEN_C_CE_HI();
 
 	// #C_OE B16  CPU access $00_0000 - 0D_FFFF entire 68k map except bank 0E-FF (64K RAM)
-	CSRD_OP();
-	CSRD_HI();
+	GEN_C_OE_OP();
+	GEN_C_OE_HI();
 
 	// #AS B18  CPU access entire memory map, indicating address bus valid
 	// TODO create another macro over the top of this..
@@ -409,12 +409,12 @@ void sega_init()
 	EXP0_HI();
 
 	// #LDSW B28  CPU D0-7 data strobe
-	PRGRW_OP();
-	PRGRW_HI();
+	GEN_LDSW_OP();
+	GEN_LDSW_HI();
 
 	// #UDSW B29  CPU D8-15 data strobe
-	CSWR_OP();
-	CSWR_HI();
+	GEN_UDSW_OP();
+	GEN_UDSW_HI();
 
 	// #TIME B31  CPU access $A1_3000 - A1_30FF "SSF2 mapper" uses this to decode mapper register writes
 	// TODO FF7
@@ -475,8 +475,8 @@ void sega_init()
 	ADDR_SET(0x0000);
 
 	// A19 (pin B7) SMS power adapter drives this pin for #IORQ
-	IRQ_OP();
-	IRQ_LO(); // A19 low
+	GEN_A19_OP();
+	GEN_A19_LO(); // A19 low
 
 	// memories are now disabled Data bus should be clear
 

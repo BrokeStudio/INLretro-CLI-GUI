@@ -245,7 +245,7 @@ uint16_t swim_rotf(uint8_t speed, uint16_t addr)
 	//write @L high address of write
 	data_pb = append_pairity( addr );
 	//this is a read xfr because device will output data immediately after 
-	//writting last byte of command info
+	//writing last byte of command info
 	spddir_len = ((SWIM_RD|speed)<<16) | 9;
 	ack_data = swim_xfr( data_pb, spddir_len, swim_base, 1<<swim_pin);
 
@@ -297,7 +297,7 @@ uint8_t swim_wotf(uint8_t speed, uint16_t addr, uint8_t data)
 
 	//write @L high address of write
 	data_pb = append_pairity( addr );
-	//writting last byte of command info
+	//writing last byte of command info
 	spddir_len = ((SWIM_WR|speed)<<16) | 9;
 	ack_data = swim_xfr( data_pb, spddir_len, swim_base, 1<<swim_pin);
 
