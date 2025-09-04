@@ -2,7 +2,6 @@
 
 -- initial function called from C main
 local function main()
-
   local fwupdate = require "scripts.app.fwupdate"
 
   -- Firmware update without bootloader
@@ -13,9 +12,7 @@ local function main()
   -- fwupdate.update_firmware("../firmware/build_stm/inlretro_stm.bin", 0x6E8, false) --INL_NES skip ram pointer
   -- fwupdate.update_firmware("firmware/inlretro_stm.bin", nil, true ) --Know what I'm doing? force the update
 
-  fwupdate.update_firmware(opts.rom_write_file, nil, true ) -- Know what I'm doing? force the update
-
+  fwupdate.update_firmware(opts.rom_write_file, nil, true) -- Know what I'm doing? force the update
 end
 
 return main()
-

@@ -1,4 +1,3 @@
-
 -- create the module's table
 local files = {}
 
@@ -15,13 +14,12 @@ local log = require "scripts.app.log"
 -- send that number here to write to the file in binary (interpret as an ascii char)
 local function wr_bin_byte(file, data)
   data = data & 0x00FF --negative and overly large ints need trimmed to 8bits
-  file:write(string.char( data ))
+  file:write(string.char(data))
 end
 
 --always forget how to read a byte from a file even though it's super simple...
 --file must already be open for reading in binary mode
 local function rd_bin_byte(file, debug)
-
   --TODO test & support reading more than 1 byte
   local num_bytes = 1
 
@@ -31,7 +29,6 @@ end
 --compare the two files return true if identical
 --files should be closed prior to calling, files are closed after compared
 local function compare(filename1, filename2, size_must_equal, debug, offset)
-
   --set default values if they're not passed
   offset = offset or 0
   debug = debug or false
@@ -54,8 +51,7 @@ local function compare(filename1, filename2, size_must_equal, debug, offset)
     byte_num = byte_num + offset
   end
 
-  while true do	--exit when end of file 1 reached
-
+  while true do --exit when end of file 1 reached
     --read next byte from the file and convert to binary
     --gotta be a better way to read a half word (16bits) at a time but don't care right now...
     byte_str1 = file1:read(buffsize)
@@ -73,14 +69,15 @@ local function compare(filename1, filename2, size_must_equal, debug, offset)
         local data2 = string.unpack("B", byte_str2, 1)
         if debug then
           log.warning("Failed to verify byte number:\t" .. help.hex(byte_num, 2, "0x"))
-          log.warning(filename1 .. "\twas:\t" .. help.hex(data1, 2, "0x") .. "\t" .. filename2 .. "\twas:\t" .. help.hex(data2, 2, "0x"))
+          log.warning(filename1 ..
+            "\twas:\t" .. help.hex(data1, 2, "0x") .. "\t" .. filename2 .. "\twas:\t" .. help.hex(data2, 2, "0x"))
         end
         rv = false
         break
       end
     elseif byte_str1 and not byte_str2 then
       if size_must_equal then
-        log.warning("End of file:\t" .. filename2 .. "\treached, it's smaller than\t" .. filename1 )
+        log.warning("End of file:\t" .. filename2 .. "\treached, it's smaller than\t" .. filename1)
         log.warning("Files were not the same size")
         rv = false
       else
@@ -90,7 +87,7 @@ local function compare(filename1, filename2, size_must_equal, debug, offset)
       break
     elseif byte_str2 and not byte_str1 then
       if size_must_equal then
-        log.warning("End of file:\t" .. filename1 .. "\treached, it's smaller than\t" .. filename2 )
+        log.warning("End of file:\t" .. filename1 .. "\treached, it's smaller than\t" .. filename2)
         log.warning("Files were not the same size")
         rv = false
       else
@@ -103,7 +100,6 @@ local function compare(filename1, filename2, size_must_equal, debug, offset)
       break
       rv = true
     end
-
   end
 
 
@@ -112,17 +108,15 @@ local function compare(filename1, filename2, size_must_equal, debug, offset)
   assert(file2:close())
 
   return rv
-
 end
 
 --reads file until finds a line that includes the token string
---the line with the token is consumed, the next line that you read from the 
+--the line with the token is consumed, the next line that you read from the
 --file will be the line that follows the line with the token
 --Created to find L00000 line in jedec files
 --RETURN: the line in string format that matched the token
 --addition of returning the string allows for verification of the user code
 local function readtill_line(file, token, debug)
-
   --local temp = string.byte(file:read(10))
   local temp_line = "notnil" --= file:read("*line")
   local line_num = 0
@@ -131,27 +125,24 @@ local function readtill_line(file, token, debug)
   --while line_num < 100 do
   local found_token = false
   while not found_token do
-
     temp_line = file:read("*line")
     line_num = line_num + 1
-  --	if debug then print("line num", line_num, "reads:", temp_line) end
+    -- if debug then print("line num", line_num, "reads:", temp_line) end
 
     if temp_line then
       if string.find(temp_line, token) then
         if debug then print("found token in line num", line_num, "reads:", temp_line) end
         found_token = true
       end
-    else	
+    else
       print("reached end of file, could not find token", token)
       return nil
     end
-
   end
---	temp = file:read("*line")
---	if debug then print("next line:", temp) end
+  -- temp = file:read("*line")
+  -- if debug then print("next line:", temp) end
 
   return temp_line
-
 end
 
 local function nextline(file)
@@ -169,7 +160,11 @@ local function jedec_3ln_2hexstr(file, debug)
   local line1 = nextline(file)
   local line2 = nextline(file)
   local line3 = nextline(file)
-  if debug then print(line1) print(line2) print(line3) end
+  if debug then
+    print(line1)
+    print(line2)
+    print(line3)
+  end
 
   local line1_len = string.len(line1) - 1
   local line2_len = string.len(line2) - 1
@@ -180,7 +175,11 @@ local function jedec_3ln_2hexstr(file, debug)
   line1 = string.sub(line1, 1, line1_len)
   line2 = string.sub(line2, 1, line2_len)
   line3 = string.sub(line3, 1, line3_len)
-  if debug then print(line1) print(line2) print(line3) end
+  if debug then
+    print(line1)
+    print(line2)
+    print(line3)
+  end
 
   --contatenate all the lines together
   --local padding = "1111" -- 172bits = 22.5 Bytes, pad with extra "F"
@@ -189,30 +188,30 @@ local function jedec_3ln_2hexstr(file, debug)
   local bin_len = line1_len + line2_len + line3_len + string.len(padding)
   if debug then print("bin len", bin_len, "bin data", bin_line) end
 
---	print(tonumber(line3,2))
+  -- print(tonumber(line3,2))
 
   --create a hex string that starts with last bit from 3rd line
   local temp_nibble
   local hex_str = ""
   while bin_len > 0 do
     --need to reverse the bit order
-    --temp_nibble = string.sub(bin_line, bin_len, bin_len) .. 
-    --		string.sub(bin_line, bin_len-1, bin_len-1) ..
-    --		string.sub(bin_line, bin_len-2, bin_len-2) ..
-    --		string.sub(bin_line, bin_len-3, bin_len-3)
-    temp_nibble = string.reverse(string.sub(bin_line, bin_len-3, bin_len))
+    --temp_nibble = string.sub(bin_line, bin_len, bin_len) ..
+    --   string.sub(bin_line, bin_len-1, bin_len-1) ..
+    --   string.sub(bin_line, bin_len-2, bin_len-2) ..
+    --   string.sub(bin_line, bin_len-3, bin_len-3)
+    temp_nibble = string.reverse(string.sub(bin_line, bin_len - 3, bin_len))
 
     --temp_nibble = tonumber(string.sub(bin_line, bin_len-3, bin_len), 2) --2 is base (binary)
     temp_nibble = tonumber(temp_nibble, 2) --2 is base (binary)
     if debug then print("decimal", temp_nibble) end
-    temp_nibble =string.format("%1.1X", temp_nibble)
+    temp_nibble = string.format("%1.1X", temp_nibble)
     hex_str = hex_str .. temp_nibble
     if debug then print("hex", temp_nibble) end
     bin_len = bin_len - 4
   end
 
   if debug then print("hex string:", hex_str) end
-  
+
   return hex_str
 end
 

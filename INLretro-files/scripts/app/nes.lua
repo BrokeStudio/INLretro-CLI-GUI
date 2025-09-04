@@ -1,27 +1,27 @@
 -- create the module's table
-local nes = {}
+local nes                         = {}
 
 -- import required modules
-local dict  = require "scripts.app.dict"
-local help  = require "scripts.app.help"
-local log   = require "scripts.app.log"
+local dict                        = require "scripts.app.dict"
+local help                        = require "scripts.app.help"
+local log                         = require "scripts.app.log"
 
 -- file constants and global variables
-local PPU_A13N_HI = 0x8000  --PPU /A13 is connected to mcu A15
-local PPU_A13_HI =  0x2000  --PPU /A13 is connected to mcu A15
-local FC_RF_HI = 0x20    --FC RF audio pin is EXP6 (bit5)
+local PPU_A13N_HI                 = 0x8000 --PPU /A13 is connected to mcu A15
+local PPU_A13_HI                  = 0x2000 --PPU /A13 is connected to mcu A15
+local FC_RF_HI                    = 0x20   --FC RF audio pin is EXP6 (bit5)
 
 -- local variables
-local HEADER_VERSION_NES2_0 = 0
-local HEADER_VERSION_INES = 1
-local HEADER_VERSION_ARCHAIC = 2
+local HEADER_VERSION_NES2_0       = 0
+local HEADER_VERSION_INES         = 1
+local HEADER_VERSION_ARCHAIC      = 2
 
-local MIRRORING_TYPE_HORIZONTAL = 0
-local MIRRORING_TYPE_VERTICAL = 1
-local MIRRORING_TYPE_ONE_SCREEN = 2
+local MIRRORING_TYPE_HORIZONTAL   = 0
+local MIRRORING_TYPE_VERTICAL     = 1
+local MIRRORING_TYPE_ONE_SCREEN   = 2
 local MIRRORING_TYPE_FOUR_SCREENS = 3
 
-local MIRRORING_TYPE_STRING = {
+local MIRRORING_TYPE_STRING       = {
   "HORIZONTAL",
   "VERTICAL",
   "ONE SCREEN",
@@ -36,7 +36,7 @@ local MIRRORING_TYPE_STRING = {
 --   FOUR_SCREENS = 4
 -- }
 
-local header = {
+local header                      = {
   bytes = nil,
   isValid = false,
   version = nil,
@@ -58,7 +58,6 @@ local header = {
 -- pass a file pointer for a file which is already open
 -- leave file open when done
 local function parse_header(file)
-
   local byte_str = file:read(16)
   -- string.rep('B', #byte_str) = 'BBBBBBBBBBBBBBBB' // 16 bytes B
   header.bytes = table.pack(string.unpack(string.rep('B', #byte_str), byte_str))
@@ -87,16 +86,16 @@ local function parse_header(file)
   end
 
   -- mapper ID
-  header.mapperId = ( header.bytes[7] >> 4 ) | (header.bytes[8] & 0xF0)
+  header.mapperId = (header.bytes[7] >> 4) | (header.bytes[8] & 0xF0)
   if (header.version == HEADER_VERSION_NES2_0) then
-    header.mapperId = header.mapperId | ( ( header.bytes[9] & 0x0F ) << 8 )
+    header.mapperId = header.mapperId | ((header.bytes[9] & 0x0F) << 8)
   end
 
   -- battery
-  header.hasBattery = ( header.bytes[7] & 0x02 ) == 0x02
+  header.hasBattery = (header.bytes[7] & 0x02) == 0x02
 
   -- trainer
-  header.hasTrainer = ( header.bytes[7] & 0x04 ) == 0x04
+  header.hasTrainer = (header.bytes[7] & 0x04) == 0x04
 
   -- mirroring
   if (header.bytes[7] & 0x09 == 0) then
@@ -149,7 +148,7 @@ local function parse_header(file)
     if header.prgSaveRamSize == 0 then
       header.prgSaveRamSize = 0
     else
-      header.prgSaveRamSize = 64 << ( header.prgSaveRamSize >> 4 )
+      header.prgSaveRamSize = 64 << (header.prgSaveRamSize >> 4)
     end
   end
 
@@ -176,7 +175,7 @@ local function parse_header(file)
     if header.chrSaveRamSize == 0 then
       header.chrSaveRamSize = 0
     else
-      header.chrSaveRamSize = 64 << ( header.chrSaveRamSize >> 4 )
+      header.chrSaveRamSize = 64 << (header.chrSaveRamSize >> 4)
     end
   else
     -- TODO...
@@ -193,7 +192,6 @@ end
 -- pass a file pointer for a file which is already open
 -- leave file open when done
 local function write_header(file, prgKB, chrKB, mapper, mirroring)
-
   local temp
 
   --bytes 0-3 always "NES <eof>"
@@ -348,7 +346,6 @@ local function write_header(file, prgKB, chrKB, mapper, mirroring)
   --    ---------
   --    ..DD DDDD
   --      ++-++++- Default Expansion Device
-
 end
 
 -- Desc:check if PPU /A13 -> CIRAM /CE jumper present
@@ -356,20 +353,19 @@ end
 -- Pre: nes_init() been called to setup i/o
 -- Post:PPU /A13 left high (disabled), all other ADDRH signals low
 -- Rtn: true if jumper is set
-local function jumper_ciramce_ppuA13n( debug )
-
+local function jumper_ciramce_ppuA13n(debug)
   --check that we can clear CIRAM /CE with PPU /A13
-  dict.pinport( "ADDR_SET", 0x0000 )
+  dict.pinport("ADDR_SET", 0x0000)
   --read CIRAM /CE pin
-  if dict.pinport( "CTL_RD", "CICE" ) ~= 0 then
+  if dict.pinport("CTL_RD", "CICE") ~= 0 then
     if debug then print("CIRAM /CE high when /A13 low ") end
     return false
   end
 
   --set PPU /A13 high
-  dict.pinport( "ADDR_SET", PPU_A13N_HI )
+  dict.pinport("ADDR_SET", PPU_A13N_HI)
   --read CIRAM /CE pin
-  if dict.pinport( "CTL_RD", "CICE" ) == 0 then
+  if dict.pinport("CTL_RD", "CICE") == 0 then
     if debug then print("CIRAM /CE low when /A13 high") end
     return false
   end
@@ -385,20 +381,19 @@ end
 -- Pre: nes_init() been called to setup i/o
 -- Post:PPU A13 left disabled (hi)
 -- Rtn: true if inverted PPU A13 drives CIRAM /CE
-local function ciramce_inv_ppuA13 (debug)
-
+local function ciramce_inv_ppuA13(debug)
   --set PPU A13 low
-  dict.pinport( "ADDR_SET", 0x0000 )
+  dict.pinport("ADDR_SET", 0x0000)
   -- CIRAM /CE should be high if inverted A13 is what drives it
-  if dict.pinport( "CTL_RD", "CICE" ) == 0 then
+  if dict.pinport("CTL_RD", "CICE") == 0 then
     if debug then print("CIRAM /CE low when A13 low") end
     return false
   end
 
   --check that we can clear CIRAM /CE with PPU A13 high
-  dict.pinport( "ADDR_SET", PPU_A13_HI )
+  dict.pinport("ADDR_SET", PPU_A13_HI)
   -- CIRAM /CE should be low if inverted A13 is what drives it
-  if dict.pinport( "CTL_RD", "CICE" ) ~= 0 then
+  if dict.pinport("CTL_RD", "CICE") ~= 0 then
     if debug then print("CIRAM /CE high when A13 high") end
     return false
   end
@@ -424,21 +419,20 @@ end
 -- Test:Works on non-expansion sound carts obviously
 --  Works on VRC6 and VRC7
 --  Others untested
-local function jumper_famicom_sound (debug)
-
+local function jumper_famicom_sound(debug)
   --EXP0 should be floating input
   --AXLOE pin needs to be set as output and
   --EXP FF needs enabled before we can clock it,
   --but don't leave it enabled before exiting function
---
+  --
   --set AXLOE to output
   dict.pinport("EXP_ENABLE")
   --Latch low first
   dict.pinport("EXP_SET", 0x00)
---  pull up FCAPU
+  --  pull up FCAPU
   dict.pinport("CTL_IP_PU", "FCAPU")
   --read EXP0 Famicom APU audio pin
-  if dict.pinport( "CTL_RD", "FCAPU" ) ~= 0 then
+  if dict.pinport("CTL_RD", "FCAPU") ~= 0 then
     if debug then print("RF audio out (EXP6) didn't drive APU audio in (EXP0) low") end
     dict.pinport("EXP_DISABLE")
     dict.pinport("CTL_IP_FL", "EXP0")
@@ -448,7 +442,7 @@ local function jumper_famicom_sound (debug)
   --Latch RF audio sound pin high
   dict.pinport("EXP_SET", FC_RF_HI)
   --read Famicom APU audio pin
-  if dict.pinport( "CTL_RD", "FCAPU" ) == 0 then
+  if dict.pinport("CTL_RD", "FCAPU") == 0 then
     if debug then print("RF audio out (EXP6) didn't drive APU audio in (EXP0) high") end
     dict.pinport("EXP_DISABLE")
     dict.pinport("CTL_IP_FL", "EXP0")
@@ -469,59 +463,58 @@ end
 -- Post:cart mirroring set to found mirroring
 -- Rtn: SUCCESS if nothing bad happened, neg if error with kazzo etc
 local function detect_mapper_mirroring(debug)
-
   local read_0x2000, read_0x2400, read_0x2800, read_0x2C00
 
   -- log.section("Testing mirroring")
 
   -- if(debug) then log.point("attempting to detect NES/FC mapper via mirroring...") end
---    //TODO call mmc3 detection function
---
---    //TODO call mmc1 detection function
---
---    //fme7 and many other ASIC mappers
---
---    //none of ASIC mappers passed, assume fixed/discrete style mirroring
+  --    //TODO call mmc3 detection function
+  --
+  --    //TODO call mmc1 detection function
+  --
+  --    //fme7 and many other ASIC mappers
+  --
+  --    //none of ASIC mappers passed, assume fixed/discrete style mirroring
 
-    dict.pinport("ADDR_SET", 0x2C00)
-    read_0x2C00 = dict.pinport("CTL_RD", "CIA10")
-    dict.pinport("ADDR_SET", 0x2800)
-    read_0x2800 = dict.pinport("CTL_RD", "CIA10")
-    dict.pinport("ADDR_SET", 0x2400)
-    read_0x2400 = dict.pinport("CTL_RD", "CIA10")
-    dict.pinport("ADDR_SET", 0x2000)
-    read_0x2000 = dict.pinport("CTL_RD", "CIA10")
+  dict.pinport("ADDR_SET", 0x2C00)
+  read_0x2C00 = dict.pinport("CTL_RD", "CIA10")
+  dict.pinport("ADDR_SET", 0x2800)
+  read_0x2800 = dict.pinport("CTL_RD", "CIA10")
+  dict.pinport("ADDR_SET", 0x2400)
+  read_0x2400 = dict.pinport("CTL_RD", "CIA10")
+  dict.pinport("ADDR_SET", 0x2000)
+  read_0x2000 = dict.pinport("CTL_RD", "CIA10")
 
+  if debug then
+    print("0x2C00", "0x2800", "0x2400", "0x2000")
+    print(read_0x2C00, read_0x2800, read_0x2400, read_0x2000)
+  end
+
+  ---[[
+  if read_0x2000 == 0 and read_0x2400 == 0 and read_0x2800 == 0 and read_0x2C00 == 0 then
     if debug then
-      print("0x2C00", "0x2800", "0x2400", "0x2000")
-      print(read_0x2C00, read_0x2800, read_0x2400, read_0x2000)
+      log.info("One screen A mirroring sensed")
     end
-
-    ---[[
-    if read_0x2000 == 0 and read_0x2400 == 0 and read_0x2800 == 0 and read_0x2C00 == 0 then
-      if debug then
-        log.info("One screen A mirroring sensed")
-      end
-      return "1SCRNA"
-    elseif read_0x2000 ~= 0 and read_0x2400 ~= 0 and read_0x2800 ~= 0 and read_0x2C00 ~= 0 then
-      if debug then
-        log.info("One screen B mirroring sensed")
-      end
-      return "1SCRNB"
-    elseif read_0x2000 == 0 and read_0x2800 == 0 and read_0x2400 ~= 0 and read_0x2C00 ~= 0 then
-      if debug then
-        log.info("Vertical mirroring sensed")
-      end
-      return "VERT"
-    elseif read_0x2000 == 0 and read_0x2400 == 0 and read_0x2800 ~= 0 and read_0x2C00 ~= 0 then
-      if debug then
-        log.info("Horizontal mirroring sensed")
-      end
-      return "HORZ"
+    return "1SCRNA"
+  elseif read_0x2000 ~= 0 and read_0x2400 ~= 0 and read_0x2800 ~= 0 and read_0x2C00 ~= 0 then
+    if debug then
+      log.info("One screen B mirroring sensed")
     end
-    --]]
+    return "1SCRNB"
+  elseif read_0x2000 == 0 and read_0x2800 == 0 and read_0x2400 ~= 0 and read_0x2C00 ~= 0 then
+    if debug then
+      log.info("Vertical mirroring sensed")
+    end
+    return "VERT"
+  elseif read_0x2000 == 0 and read_0x2400 == 0 and read_0x2800 ~= 0 and read_0x2C00 ~= 0 then
+    if debug then
+      log.info("Horizontal mirroring sensed")
+    end
+    return "HORZ"
+  end
+  --]]
 
-    --[[
+  --[[
     rv = dict.nes("CIRAM_A10_MIRROR")
     if (rv == op_nes["MIR_VERT"]) then
       if debug then log.info("Vertical mirroring sensed") end
@@ -538,13 +531,13 @@ local function detect_mapper_mirroring(debug)
     end
     --]]
 
-    -- Rtn: VERT/HORZ/1SCRNA/1SCRNB
+  -- Rtn: VERT/HORZ/1SCRNA/1SCRNB
   return nil
 end
 
 
 -- verify the ciccom software mirroring switch is working properly
-local function test_cic_soft_switch (debug)
+local function test_cic_soft_switch(debug)
 end
 
 -- Desc:CHR-ROM flash manf/prod ID sense test
@@ -559,8 +552,7 @@ end
 --  memory wr_dict and wr_opcode set if successful
 --  Software mode exited if entered successfully
 -- Rtn: SUCCESS if flash sensed, GEN_FAIL if not, neg if error
-local function read_flashID_chrrom_8K (debug)
-
+local function read_flashID_chrrom_8K(debug)
   local rv
   --enter software mode
   --NROM has A13 tied to A11, and A14 tied to A12.
@@ -575,24 +567,24 @@ local function read_flashID_chrrom_8K (debug)
   --read manf ID
   rv = dict.nes("NES_PPU_RD", 0x0000)
   if debug then print("attempted read CHR-ROM manf ID:", help.hex(rv)) end
---  if ( rv[RV_DATA0_IDX] != SST_MANF_ID ) {
---    return GEN_FAIL;
---    //no need for software exit since failed to enter
---  }
---
+  --  if ( rv[RV_DATA0_IDX] != SST_MANF_ID ) {
+  --    return GEN_FAIL;
+  --    //no need for software exit since failed to enter
+  --  }
+  --
   --read prod ID
   rv = dict.nes("NES_PPU_RD", 0x0001)
   if debug then print("attempted read CHR-ROM prod ID:", help.hex(rv)) end
---  if ( (rv[RV_DATA0_IDX] == SST_PROD_128)
---  ||   (rv[RV_DATA0_IDX] == SST_PROD_256)
---  ||   (rv[RV_DATA0_IDX] == SST_PROD_512) ) {
---    //found expected manf and prod ID
---    flash->manf = SST_MANF_ID;
---    flash->part = rv[RV_DATA0_IDX];
---    flash->wr_dict = DICT_NES;
---    flash->wr_opcode = NES_PPU_WR;
---  }
---
+  --  if ( (rv[RV_DATA0_IDX] == SST_PROD_128)
+  --  ||   (rv[RV_DATA0_IDX] == SST_PROD_256)
+  --  ||   (rv[RV_DATA0_IDX] == SST_PROD_512) ) {
+  --    //found expected manf and prod ID
+  --    flash->manf = SST_MANF_ID;
+  --    flash->part = rv[RV_DATA0_IDX];
+  --    flash->wr_dict = DICT_NES;
+  --    flash->wr_opcode = NES_PPU_WR;
+  --  }
+  --
   -- exit software
   dict.nes("NES_PPU_WR", 0x0000, 0xF0)
 
@@ -609,7 +601,6 @@ end
 -- */
 --int ppu_ram_sense( USBtransfer *transfer, uint16_t addr ) {
 local function ppu_ram_sense(addr, debug)
-
   local res = true
 
   log.section("Trying to sense CHR-RAM")
@@ -619,7 +610,7 @@ local function ppu_ram_sense(addr, debug)
 
   --try to read it back
   if (dict.nes("NES_PPU_RD", addr) ~= 0xAA) then
-    if debug then log.bullet("could not write 0xAA to PPU ".. help.hex(addr, 4, "$")) end
+    if debug then log.bullet("could not write 0xAA to PPU " .. help.hex(addr, 4, "$")) end
     res = false
   end
 
@@ -628,18 +619,17 @@ local function ppu_ram_sense(addr, debug)
 
   --try to read it back
   if (dict.nes("NES_PPU_RD", addr) ~= 0x55) then
-    if debug then log.bullet("could not write 0x55 to PPU ".. help.hex(addr, 4, "$")) end
+    if debug then log.bullet("could not write 0x55 to PPU " .. help.hex(addr, 4, "$")) end
     res = false
   end
 
   if res then
-    log.success("CHR-RAM detected @ PPU ".. help.hex(addr, 4, "$"))
+    log.success("CHR-RAM detected @ PPU " .. help.hex(addr, 4, "$"))
   else
-    log.info("CHR-RAM not detected @ PPU ".. help.hex(addr, 4, "$"))
+    log.info("CHR-RAM not detected @ PPU " .. help.hex(addr, 4, "$"))
   end
 
   return res
-
 end
 
 -- Desc:PRG-ROM flash manf/prod ID sense test
@@ -655,7 +645,7 @@ end
 --  memory wr_dict and wr_opcode set if successful
 --  Software mode exited if entered successfully
 -- Rtn: SUCCESS if flash sensed, GEN_FAIL if not, neg if error
-local function read_flashID_prgrom_exp0 (debug)
+local function read_flashID_prgrom_exp0(debug)
   local rv
   --enter software mode
   --ROMSEL controls PRG-ROM /OE which needs to be low for flash writes
@@ -670,30 +660,30 @@ local function read_flashID_prgrom_exp0 (debug)
   --read manf ID
   rv = dict.nes("NES_CPU_RD", 0x8000)
   if debug then print("attempted read PRG-ROM manf ID:", help.hex(rv)) end
---  debug("manf id: %x", rv[RV_DATA0_IDX]);
---  if ( rv[RV_DATA0_IDX] != SST_MANF_ID ) {
---    return GEN_FAIL;
---    //no need for software exit since failed to enter
---  }
---
+  --  debug("manf id: %x", rv[RV_DATA0_IDX]);
+  --  if ( rv[RV_DATA0_IDX] != SST_MANF_ID ) {
+  --    return GEN_FAIL;
+  --    //no need for software exit since failed to enter
+  --  }
+  --
   --read prod ID
   rv = dict.nes("NES_CPU_RD", 0x8001)
   if debug then print("attempted read PRG-ROM prod ID:", help.hex(rv)) end
---  if ( (rv[RV_DATA0_IDX] == SST_PROD_128)
---  ||   (rv[RV_DATA0_IDX] == SST_PROD_256)
---  ||   (rv[RV_DATA0_IDX] == SST_PROD_512) ) {
---    //found expected manf and prod ID
---    flash->manf = SST_MANF_ID;
---    flash->part = rv[RV_DATA0_IDX];
---    flash->wr_dict = DICT_NES;
---    flash->wr_opcode = DISCRETE_EXP0_PRGROM_WR;
---  }
---
+  --  if ( (rv[RV_DATA0_IDX] == SST_PROD_128)
+  --  ||   (rv[RV_DATA0_IDX] == SST_PROD_256)
+  --  ||   (rv[RV_DATA0_IDX] == SST_PROD_512) ) {
+  --    //found expected manf and prod ID
+  --    flash->manf = SST_MANF_ID;
+  --    flash->part = rv[RV_DATA0_IDX];
+  --    flash->wr_dict = DICT_NES;
+  --    flash->wr_opcode = DISCRETE_EXP0_PRGROM_WR;
+  --  }
+  --
   -- exit software
   dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x8000, 0xF0)
   --verify exited
---  rv = dict.nes("NES_CPU_RD", 0x8001)
---  if debug then print("attempted read PRG-ROM prod ID:", help.hex(rv)) end
+  --  rv = dict.nes("NES_CPU_RD", 0x8001)
+  --  if debug then print("attempted read PRG-ROM prod ID:", help.hex(rv)) end
 
   return true
 end
@@ -795,32 +785,32 @@ return nes
 --
 --  uint8_t rv[RV_DATA0_IDX];
 --
-  --enter software mode
-  --$8000-BFFF writes to flash
-  --$C000-FFFF writes to mapper
-  --      15 14 13 12
-  -- 0x5 = 0b  0  1  0  1  -> $9555
-  -- 0x2 = 0b  0  0  1  0  -> $2AAA
-  --set A14 in mapper reg for $5555 command
+--enter software mode
+--$8000-BFFF writes to flash
+--$C000-FFFF writes to mapper
+--      15 14 13 12
+-- 0x5 = 0b  0  1  0  1  -> $9555
+-- 0x2 = 0b  0  0  1  0  -> $2AAA
+--set A14 in mapper reg for $5555 command
 --  dictionary_call( transfer, DICT_NES,   NES_CPU_WR,  0xC000,    0x01,
 --                  USB_IN,    NULL,  1);
-  --write $5555 0xAA
+--write $5555 0xAA
 --  dictionary_call( transfer, DICT_NES,   NES_CPU_WR,  0x9555,    0xAA,
 --                  USB_IN,    NULL,  1);
-  --clear A14 in mapper reg for $2AAA command
+--clear A14 in mapper reg for $2AAA command
 --  dictionary_call( transfer, DICT_NES,   NES_CPU_WR,  0xC000,    0x00,
 --                  USB_IN,    NULL,  1);
-  --write $2AAA 0x55
+--write $2AAA 0x55
 --  dictionary_call( transfer, DICT_NES,   NES_CPU_WR,  0xAAAA,    0x55,
 --                  USB_IN,    NULL,  1);
-  --set A14 in mapper reg for $5555 command
+--set A14 in mapper reg for $5555 command
 --  dictionary_call( transfer, DICT_NES,   NES_CPU_WR,  0xC000,    0x01,
 --                  USB_IN,    NULL,  1);
-  --write $5555 0x90 for software mode
+--write $5555 0x90 for software mode
 --  dictionary_call( transfer, DICT_NES,   NES_CPU_WR,  0x9555,    0x90,
 --                  USB_IN,    NULL,  1);
 --
-  --read manf ID
+--read manf ID
 --  dictionary_call( transfer, DICT_NES,   NES_CPU_RD,      0x8000,    NILL,
 --                USB_IN,    rv,  RV_DATA0_IDX+1);
 --  debug("manf id: %x", rv[RV_DATA0_IDX]);
@@ -829,7 +819,7 @@ return nes
 --    //no need for software exit since failed to enter
 --  }
 --
-  --read prod ID
+--read prod ID
 --  dictionary_call( transfer, DICT_NES,   NES_CPU_RD,      0x8001,    NILL,
 --                USB_IN,    rv,  RV_DATA0_IDX+1);
 --  debug("prod id: %x", rv[RV_DATA0_IDX]);
@@ -843,11 +833,11 @@ return nes
 --    flash->wr_opcode = NES_CPU_WR;
 --  }
 --
-  -- exit software
+-- exit software
 --  dictionary_call( transfer, DICT_NES,   NES_CPU_WR,  0x8000,    0xF0,
 --                  USB_IN,    NULL,  1);
 --
-  --verify exited
+--verify exited
 --  dictionary_call( transfer, DICT_NES,   NES_CPU_RD,      0x8000,    NILL,
 --                USB_IN,    rv,  RV_DATA0_IDX+1);
 --  debug("prod id: %x", rv[RV_DATA0_IDX]);

@@ -1,11 +1,11 @@
 -- create the module's table
-local gb = {}
+local gb   = {}
 
 -- import required modules
-local dict  = require "scripts.app.dict"
-local dump  = require "scripts.app.dump"
-local help  = require "scripts.app.help"
-local log   = require "scripts.app.log"
+local dict = require "scripts.app.dict"
+local dump = require "scripts.app.dump"
+local help = require "scripts.app.help"
+local log  = require "scripts.app.log"
 
 -- file constants and global variables
 
@@ -139,18 +139,30 @@ local Header = {
   get_rom_size = function(self)
     local rom_size = 0
 
-        if self.rom_size == 0x00 then rom_size = 32
-    elseif self.rom_size == 0x01 then rom_size = 64
-    elseif self.rom_size == 0x02 then rom_size = 128
-    elseif self.rom_size == 0x03 then rom_size = 256
-    elseif self.rom_size == 0x04 then rom_size = 512
-    elseif self.rom_size == 0x05 then rom_size = 1024
-    elseif self.rom_size == 0x06 then rom_size = 2048
-    elseif self.rom_size == 0x07 then rom_size = 4096
-    elseif self.rom_size == 0x08 then rom_size = 8192
-    elseif self.rom_size == 0x52 then rom_size = 1152
-    elseif self.rom_size == 0x53 then rom_size = 1280
-    elseif self.rom_size == 0x54 then rom_size = 1536
+    if self.rom_size == 0x00 then
+      rom_size = 32
+    elseif self.rom_size == 0x01 then
+      rom_size = 64
+    elseif self.rom_size == 0x02 then
+      rom_size = 128
+    elseif self.rom_size == 0x03 then
+      rom_size = 256
+    elseif self.rom_size == 0x04 then
+      rom_size = 512
+    elseif self.rom_size == 0x05 then
+      rom_size = 1024
+    elseif self.rom_size == 0x06 then
+      rom_size = 2048
+    elseif self.rom_size == 0x07 then
+      rom_size = 4096
+    elseif self.rom_size == 0x08 then
+      rom_size = 8192
+    elseif self.rom_size == 0x52 then
+      rom_size = 1152
+    elseif self.rom_size == 0x53 then
+      rom_size = 1280
+    elseif self.rom_size == 0x54 then
+      rom_size = 1536
     end
 
     return rom_size
@@ -164,12 +176,18 @@ local Header = {
       -- MBC2 has 512x4bits of cart ram
       ram_size = 1 -- 0x200 -- TODO: how to handle this? returning 1 for now
     else
-          if self.ram_size == 0x00 then ram_size = 0
-      elseif self.ram_size == 0x01 then ram_size = 2
-      elseif self.ram_size == 0x02 then ram_size = 8
-      elseif self.ram_size == 0x03 then ram_size = 32
-      elseif self.ram_size == 0x04 then ram_size = 128
-      elseif self.ram_size == 0x05 then ram_size = 64
+      if self.ram_size == 0x00 then
+        ram_size = 0
+      elseif self.ram_size == 0x01 then
+        ram_size = 2
+      elseif self.ram_size == 0x02 then
+        ram_size = 8
+      elseif self.ram_size == 0x03 then
+        ram_size = 32
+      elseif self.ram_size == 0x04 then
+        ram_size = 128
+      elseif self.ram_size == 0x05 then
+        ram_size = 64
       end
     end
 
@@ -184,18 +202,18 @@ local Header = {
   -- return true or false
   has_battery = function(self)
     if
-      self.cartridge_type == 0x03 or
-      self.cartridge_type == 0x06 or
-      self.cartridge_type == 0x09 or
-      self.cartridge_type == 0x0D or
-      self.cartridge_type == 0x0F or
-      self.cartridge_type == 0x10 or
-      self.cartridge_type == 0x13 or
-      self.cartridge_type == 0x1B or
-      self.cartridge_type == 0x1E or
-      self.cartridge_type == 0x22 or
-      self.cartridge_type == 0xFF then
-        return true
+        self.cartridge_type == 0x03 or
+        self.cartridge_type == 0x06 or
+        self.cartridge_type == 0x09 or
+        self.cartridge_type == 0x0D or
+        self.cartridge_type == 0x0F or
+        self.cartridge_type == 0x10 or
+        self.cartridge_type == 0x13 or
+        self.cartridge_type == 0x1B or
+        self.cartridge_type == 0x1E or
+        self.cartridge_type == 0x22 or
+        self.cartridge_type == 0xFF then
+      return true
     end
 
     return false
@@ -259,7 +277,7 @@ local function parse_header(byte_str, header)
   header.destination_code = header.bytes[23]
   header.mask_rom_version_number = header.bytes[25]
   header.header_checksum = header.bytes[26]
-  header.global_checksum = ( header.bytes[27] << 8 ) | header.bytes[28]
+  header.global_checksum = (header.bytes[27] << 8) | header.bytes[28]
 
   if not header:check_global_checksum() then
     log.warning("Header global checksum is not valid")
@@ -278,9 +296,8 @@ end
 -- pass a file pointer for a file which is already open
 -- leave file open when done
 local function parse_header_file(file)
-
   local byte_str
-  byte_str = file:read(0x134)  -- skip entry point and nintendo logo
+  byte_str = file:read(0x134) -- skip entry point and nintendo logo
   byte_str = file:read(27)
 
   -- compute global checksum
@@ -300,14 +317,12 @@ local function parse_header_file(file)
   file_header.file_global_checksum = file_header.file_global_checksum & 0xFFFF
 
   return parse_header(byte_str, file_header)
-
 end
 
 -- parse header from rom
 -- we should be able to read the header whatever the mapper is
 -- global checksum won't be computed though
 local function parse_header_rom()
-
   -- initialize device i/o
   dict.io("IO_RESET")
   dict.io("GAMEBOY_INIT")
@@ -317,15 +332,14 @@ local function parse_header_rom()
   local byte_str = ""
   dump.dumptocallback(
     function(data) byte_str = byte_str .. data end,
-   1, 0x0000, "GAMEBOY_PAGE", false
+    1, 0x0000, "GAMEBOY_PAGE", false
   )
 
   -- reset device i/o
   dict.io("IO_RESET")
 
-  byte_str = string.sub(byte_str, 0x134+1, 0x14F+1)
+  byte_str = string.sub(byte_str, 0x134 + 1, 0x14F + 1)
   return parse_header(byte_str, rom_header)
-
 end
 
 --[[
@@ -372,16 +386,16 @@ end
 --]]
 
 -- vars
-gb.file_header        = file_header
-gb.rom_header         = rom_header
+gb.file_header       = file_header
+gb.rom_header        = rom_header
 
 -- functions
-gb.parse_header       = parse_header
-gb.parse_header_file  = parse_header_file
-gb.parse_header_rom   = parse_header_rom
+gb.parse_header      = parse_header
+gb.parse_header_file = parse_header_file
+gb.parse_header_rom  = parse_header_rom
 
-gb.rd                 = rd
-gb.wr                 = wr
+gb.rd                = rd
+gb.wr                = wr
 
 -- return the module's table
 return gb

@@ -1,4 +1,3 @@
-
 -- create the module's table
 local blank = {}
 

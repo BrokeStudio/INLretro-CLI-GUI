@@ -1,4 +1,3 @@
-
 -- create the module's table
 local dump = {}
 
@@ -10,8 +9,7 @@ local buffers = require "scripts.app.buffers"
 -- file constants and global variables
 
 -- local functions
-local function dumptocallback( callback, sizeKB, map, mem, debug )
-
+local function dumptocallback(callback, sizeKB, map, mem, debug)
   local buff0 = 0
   local buff1 = 1
   local cur_buff_status = 0
@@ -19,7 +17,7 @@ local function dumptocallback( callback, sizeKB, map, mem, debug )
 
   if debug then print("dumping cart") end
 
-  dict.operation("SET_OPERATION", op_buffer["RESET"] )
+  dict.operation("SET_OPERATION", op_buffer["RESET"])
   --reset buffers first
   dict.buffer("RAW_BUFFER_RESET")
 
@@ -28,7 +26,7 @@ local function dumptocallback( callback, sizeKB, map, mem, debug )
   local num_buffers = 2
   local buff_size = 128
   if debug then print("allocating buffers") end
-  assert(buffers.allocate( num_buffers, buff_size ), "fail to allocate buffers")
+  assert(buffers.allocate(num_buffers, buff_size), "fail to allocate buffers")
 
   --set buffer elements as needed
   --set reload which gets added to page_num after each buffer read
@@ -36,8 +34,8 @@ local function dumptocallback( callback, sizeKB, map, mem, debug )
   --set page_num to non-zero if offset arg sent
   --set mem_type and part_num to designate how to get/write data
   if debug then print("setting map n part") end
-  dict.buffer("SET_MEM_N_PART", (op_buffer[mem]<<8 | op_buffer["MASKROM"]), buff0 )
-  dict.buffer("SET_MEM_N_PART", (op_buffer[mem]<<8 | op_buffer["MASKROM"]), buff1 )
+  dict.buffer("SET_MEM_N_PART", (op_buffer[mem] << 8 | op_buffer["MASKROM"]), buff0)
+  dict.buffer("SET_MEM_N_PART", (op_buffer[mem] << 8 | op_buffer["MASKROM"]), buff1)
   --set multiple and add_mult only when flashing
   --set mapper, map_var, and function to designate read/write algo
 
@@ -51,8 +49,8 @@ local function dumptocallback( callback, sizeKB, map, mem, debug )
   end
   --dict.buffer("SET_MAP_N_MAPVAR", (op_buffer[map]<<8 | op_buffer["NOVAR"]), buff0 )
   --dict.buffer("SET_MAP_N_MAPVAR", (op_buffer[map]<<8 | op_buffer["NOVAR"]), buff1 )
-  dict.buffer("SET_MAP_N_MAPVAR", (mapper<<8 | op_buffer["NOVAR"]), buff0 )
-  dict.buffer("SET_MAP_N_MAPVAR", (mapper<<8 | op_buffer["NOVAR"]), buff1 )
+  dict.buffer("SET_MAP_N_MAPVAR", (mapper << 8 | op_buffer["NOVAR"]), buff0)
+  dict.buffer("SET_MAP_N_MAPVAR", (mapper << 8 | op_buffer["NOVAR"]), buff1)
 
   --tell buffers what function to use for dumping
   --TODO when start implementing other mappers
@@ -73,7 +71,7 @@ local function dumptocallback( callback, sizeKB, map, mem, debug )
 
   if debug then print("\n\nsetting operation STARTDUMP") end
   --inform buffer manager to start dumping operation now that buffers are initialized
-  dict.operation("SET_OPERATION", op_buffer["STARTDUMP"] )
+  dict.operation("SET_OPERATION", op_buffer["STARTDUMP"])
 
   --manager updates buffer status' so they'll start dumping
   --once they're full manager prepares them to be read back on USB payloads
@@ -85,7 +83,7 @@ local function dumptocallback( callback, sizeKB, map, mem, debug )
 
   if debug then print("starting first payload") end
   --now just need to call series of payload IN transfers to retrieve data
-  for i=1, (sizeKB*1024/buff_size) do	--dump next buff
+  for i = 1, (sizeKB * 1024 / buff_size) do --dump next buff
     --stm adapter had trouble dumping
     --same buffer was getting sent twice, so I think
     --buffer mangager wasn't getting enough time to update
@@ -93,28 +91,28 @@ local function dumptocallback( callback, sizeKB, map, mem, debug )
     --that doesn't quite make sense, but something like that is going on
     --need to setup buffer manager to nak anytime something like this happens
     --the following setup slows down everything due to status waits..
---    buffers.status_wait({buff0}, {"DUMPED"})
---    callback( dict.buffer_payload_in( buff_size ))
---    buffers.status_wait({buff1}, {"DUMPED"})
+    --    buffers.status_wait({buff0}, {"DUMPED"})
+    --    callback( dict.buffer_payload_in( buff_size ))
+    --    buffers.status_wait({buff1}, {"DUMPED"})
 
     --stm adapter having issues with race situation..
     --can't dump as fast as host is requesting
     --and driver doesn't nak until ready to send data
     cur_buff_status = dict.buffer("GET_CUR_BUFF_STATUS")
     while (cur_buff_status ~= op_buffer["DUMPED"]) do
-    --  nak = nak +1
+      --  nak = nak +1
       --print(nak, "cur_buff->status: ", cur_buff_status)
       cur_buff_status = dict.buffer("GET_CUR_BUFF_STATUS")
     end
-    callback( dict.buffer_payload_in( buff_size ))
-  --  print("dumped page:", i)
+    callback(dict.buffer_payload_in(buff_size))
+    --  print("dumped page:", i)
 
     --if ( (i % (1024*1024/buff_size/16)) == 0) then
-    if ( (i % (4*2024*1024/buff_size/16)) == 0) then
+    if ((i % (4 * 2024 * 1024 / buff_size / 16)) == 0) then
       local tdelta = os.clock() - tlast
-      if debug then print("time delta:", tdelta, "seconds, speed:", (1024/16/tdelta), "KBps") end
+      if debug then print("time delta:", tdelta, "seconds, speed:", (1024 / 16 / tdelta), "KBps") end
       --print("dumped part:", i/1024, "of 16 \n")
-      if debug then print("dumped part:", i/(4*1024), "of 4 \n") end
+      if debug then print("dumped part:", i / (4 * 1024), "of 4 \n") end
       tlast = os.clock()
     end
   end
@@ -122,8 +120,8 @@ local function dumptocallback( callback, sizeKB, map, mem, debug )
   if debug then print("DUMPING DONE") end
 
   tstop = os.clock()
-  timediff = ( tstop-tstart)
-  if debug then print("total time:", timediff, "seconds, average speed:", (sizeKB/timediff), "KBps") end
+  timediff = (tstop - tstart)
+  if debug then print("total time:", timediff, "seconds, average speed:", (sizeKB / timediff), "KBps") end
 
   --buffer manager updates from USB_UNLOADING -> DUMPING -> DUMPED
   --while one buffer is unloading, it sends next buffer off to dump
@@ -139,13 +137,13 @@ local function dumptocallback( callback, sizeKB, map, mem, debug )
   --best way can think of doing this is a operation "RESET" which updates buffer status,
   --without deallocating them.  In reality should be able to do this by setting operation to reset.
   --and having STARTDUMP/FLASH initialize buffer status' as well.
-  dict.operation("SET_OPERATION", op_buffer["RESET"] )
+  dict.operation("SET_OPERATION", op_buffer["RESET"])
   dict.buffer("RAW_BUFFER_RESET")
 end
 
-local function dumptofile( file, sizeKB, map, mem, debug )
+local function dumptofile(file, sizeKB, map, mem, debug)
   dumptocallback(
-    function (data)
+    function(data)
       file:write(data)
     end,
     sizeKB, map, mem, debug
@@ -162,63 +160,63 @@ local function dump_nes( file, debug )
   local buff1 = 1
   --local i = nil
   local cur_buff_status = 0
---	uint8_t data[buff_size];
+-- uint8_t data[buff_size];
   local data = nil --lua stores data in strings
 
   if debug then print("dumping cart") end
 --
---	//TODO provide user arg to force all these checks passed
---	//first check if any provided args differ from what was detected
---	check( (cart->console != UNKNOWN), "cartridge not detected, must provide console if autodetection is off");
+-- //TODO provide user arg to force all these checks passed
+-- //first check if any provided args differ from what was detected
+-- check( (cart->console != UNKNOWN), "cartridge not detected, must provide console if autodetection is off");
 --
---	if ( rom->console != UNKNOWN ) {
---		check( rom->console == cart->console,
---			"request system dump doesn't match detected cartridge");
---	}
---	if ( (cart->mapper != UNKNOWN) && (rom->mapper != UNKNOWN) ) {
---		check( rom->mapper == cart->mapper,
---			"request mapper dump doesn't match detected mapper");
---	}
+-- if ( rom->console != UNKNOWN ) {
+--   check( rom->console == cart->console,
+--     "request system dump doesn't match detected cartridge");
+-- }
+-- if ( (cart->mapper != UNKNOWN) && (rom->mapper != UNKNOWN) ) {
+--   check( rom->mapper == cart->mapper,
+--     "request mapper dump doesn't match detected mapper");
+-- }
 --
---	//start with reset and init
+-- //start with reset and init
   dict.io("IO_RESET")
   dict.io("NES_INIT")
---	//Run some CRC's to determine size of memories
+-- //Run some CRC's to determine size of memories
 --
---	//setup buffers and manager
+-- //setup buffers and manager
   dict.operation("SET_OPERATION", op_buffer["RESET"] )
---	//reset buffers first
+-- //reset buffers first
   dict.buffer("RAW_BUFFER_RESET")
 
---	//need to allocate some buffers for dumping
---	//2x 128Byte buffers
+-- //need to allocate some buffers for dumping
+-- //2x 128Byte buffers
   local num_buffers = 2
   local buff_size = 128
   print("allocating buffers")
   assert(buffers.allocate( num_buffers, buff_size ), "fail to allocate buffers")
 
---	//set buffer elements as needed
---	//set reload which gets added to page_num after each buffer read
---	//set reload to 256 = 1 when translated to page_num (done in allocate buffers funct)
---	//set page_num to non-zero if offset arg sent
---	//set mem_type and part_num to designate how to get/write data
---	check(! set_mem_n_part( transfer, buff0, PRGROM, MASKROM ), "Unable to set mem_type and part");
+-- //set buffer elements as needed
+-- //set reload which gets added to page_num after each buffer read
+-- //set reload to 256 = 1 when translated to page_num (done in allocate buffers funct)
+-- //set page_num to non-zero if offset arg sent
+-- //set mem_type and part_num to designate how to get/write data
+-- check(! set_mem_n_part( transfer, buff0, PRGROM, MASKROM ), "Unable to set mem_type and part");
   print("setting map n part")
   dict.buffer("SET_MEM_N_PART", (op_buffer["PRGROM"]<<8 | op_buffer["MASKROM"]), buff0 )
   dict.buffer("SET_MEM_N_PART", (op_buffer["PRGROM"]<<8 | op_buffer["MASKROM"]), buff1 )
---	//set multiple and add_mult only when flashing
---	//set mapper, map_var, and function to designate read/write algo
+-- //set multiple and add_mult only when flashing
+-- //set mapper, map_var, and function to designate read/write algo
 --
---	//just dump visible NROM memory to start
+-- //just dump visible NROM memory to start
   print("setting map n mapvar")
   dict.buffer("SET_MAP_N_MAPVAR", (op_buffer["NROM"]<<8 | op_buffer["NOVAR"]), buff0 )
   dict.buffer("SET_MAP_N_MAPVAR", (op_buffer["NROM"]<<8 | op_buffer["NOVAR"]), buff1 )
 --
---	//tell buffers what function to use for dumping
---	//TODO when start implementing other mappers
+-- //tell buffers what function to use for dumping
+-- //TODO when start implementing other mappers
 --
---	//debugging print out buffer elements
---	//get_operation( transfer );
+-- //debugging print out buffer elements
+-- //get_operation( transfer );
   --print("\nget operation:")
   --dict.operation("GET_OPERATION" )
   --print("\n\ngetting cur_buff status")
@@ -232,58 +230,58 @@ local function dump_nes( file, debug )
   --dict.buffer("GET_PAGE_NUM", nil, buff1 )
 --
   print("\n\nsetting operation STARTDUMP")
---	//inform buffer manager to start dumping operation now that buffers are initialized
---	check(! set_operation( transfer, STARTDUMP ), "Unable to set buffer operation");
+-- //inform buffer manager to start dumping operation now that buffers are initialized
+-- check(! set_operation( transfer, STARTDUMP ), "Unable to set buffer operation");
   dict.operation("SET_OPERATION", op_buffer["STARTDUMP"] )
 --
   --need these calls to delay things a bit to let first buffer dump complete..
---	dict.operation("GET_OPERATION" )
---	dict.buffer("GET_PRI_ELEMENTS", nil, buff0 )
---	dict.buffer("GET_PRI_ELEMENTS", nil, buff1 )
---	//manager updates buffer status' so they'll start dumping
---	//once they're full manager prepares them to be read back on USB payloads
---	//once the next payload request happens manager knows last buffer can start dumping again
---	//buffer updates it's elements and goes off to dump next page
+-- dict.operation("GET_OPERATION" )
+-- dict.buffer("GET_PRI_ELEMENTS", nil, buff0 )
+-- dict.buffer("GET_PRI_ELEMENTS", nil, buff1 )
+-- //manager updates buffer status' so they'll start dumping
+-- //once they're full manager prepares them to be read back on USB payloads
+-- //once the next payload request happens manager knows last buffer can start dumping again
+-- //buffer updates it's elements and goes off to dump next page
 --
   print("starting first payload")
   --dict.buffer("BUFF_PAYLOAD")
   --file:write("HELLO FILE!")
---	file:write( dict.buffer_payload_in( buff_size ))
---	print("first payload done");
+-- file:write( dict.buffer_payload_in( buff_size ))
+-- print("first payload done");
 --
---	print("second payload");
---	file:write( dict.buffer_payload_in( buff_size ))
+-- print("second payload");
+-- file:write( dict.buffer_payload_in( buff_size ))
 --
---	clock_t tstart, tstop;
---	tstart = clock();
+-- clock_t tstart, tstop;
+-- tstart = clock();
 --
   --wait for first buffer to finish dumping before calling payload
   buffers.status_wait({buff0}, {"DUMPED"})
---	//now just need to call series of payload IN transfers to retrieve data
+-- //now just need to call series of payload IN transfers to retrieve data
   --for i=1, (1024*1024/buff_size) do
   for i=1, (32*1024/buff_size) do
 
---		//ensure cur_buff is DUMPED prior to requsting data
---		Removed this check as the device USB driver & buffer.c should properly handle this case
---		if the device isn't ready it should ignore the host and make it resend it's request.
---		check(! get_cur_buff_status( transfer, &cur_buff_status ), "Error retrieving cur_buff->status");
+--   //ensure cur_buff is DUMPED prior to requsting data
+--   Removed this check as the device USB driver & buffer.c should properly handle this case
+--   if the device isn't ready it should ignore the host and make it resend it's request.
+--   check(! get_cur_buff_status( transfer, &cur_buff_status ), "Error retrieving cur_buff->status");
     --cur_buff_status = dict.buffer("GET_CUR_BUFF_STATUS")
     --while (cur_buff_status ~= op_buffer["DUMPED"]) do
---		--while (cur_buff_status != DUMPED ) {
-    --	print("cur_buff->status: ", cur_buff_status)
-    --	cur_buff_status = dict.buffer("GET_CUR_BUFF_STATUS")
---		--	check(! get_cur_buff_status( transfer, &cur_buff_status ), "Error retrieving cur_buff->status");
---		--}
+--   --while (cur_buff_status != DUMPED ) {
+    -- print("cur_buff->status: ", cur_buff_status)
+    -- cur_buff_status = dict.buffer("GET_CUR_BUFF_STATUS")
+--   -- check(! get_cur_buff_status( transfer, &cur_buff_status ), "Error retrieving cur_buff->status");
+--   --}
     --end
---	//for( i=0; i<(8*KByte/buff_size); i++) {
---		//payload transfer in and append to file
---	//	if ( i % 256 == 0 ) debug("payload in #%d", i);
---		check(! payload_in( transfer, data, buff_size ), "Error with payload IN");
---		if (i==0) printf("first byte: %x\n", data[0]);
---		check(! append_to_file( rom, data, buff_size ), "Error with file append");
+-- //for( i=0; i<(8*KByte/buff_size); i++) {
+--   //payload transfer in and append to file
+-- //  if ( i % 256 == 0 ) debug("payload in #%d", i);
+--   check(! payload_in( transfer, data, buff_size ), "Error with payload IN");
+--   if (i==0) printf("first byte: %x\n", data[0]);
+--   check(! append_to_file( rom, data, buff_size ), "Error with file append");
     file:write( dict.buffer_payload_in( buff_size ))
   end
---	}
+-- }
   print("payload done")
   --buffer manager updates from USB_UNLOADING -> DUMPING -> DUMPED
   --while one buffer is unloading, it sends next buffer off to dump
@@ -302,50 +300,50 @@ local function dump_nes( file, debug )
   dict.operation("SET_OPERATION", op_buffer["RESET"] )
   dict.buffer("RAW_BUFFER_RESET")
 
---	//need to allocate some buffers for dumping
---	//2x 128Byte buffers
+-- //need to allocate some buffers for dumping
+-- //2x 128Byte buffers
   num_buffers = 2
   buff_size = 128
   print("allocating buffers")
   assert(buffers.allocate( num_buffers, buff_size ), "fail to allocate buffers")
 
---	//set buffer elements as needed
---	//set reload which gets added to page_num after each buffer read
---	//set reload to 256 = 1 when translated to page_num (done in allocate buffers funct)
---	//set page_num to non-zero if offset arg sent
---	//set mem_type and part_num to designate how to get/write data
---	check(! set_mem_n_part( transfer, buff0, PRGROM, MASKROM ), "Unable to set mem_type and part");
+-- //set buffer elements as needed
+-- //set reload which gets added to page_num after each buffer read
+-- //set reload to 256 = 1 when translated to page_num (done in allocate buffers funct)
+-- //set page_num to non-zero if offset arg sent
+-- //set mem_type and part_num to designate how to get/write data
+-- check(! set_mem_n_part( transfer, buff0, PRGROM, MASKROM ), "Unable to set mem_type and part");
   print("setting map n part")
   dict.buffer("SET_MEM_N_PART", (op_buffer["CHRROM"]<<8 | op_buffer["MASKROM"]), buff0 )
   dict.buffer("SET_MEM_N_PART", (op_buffer["CHRROM"]<<8 | op_buffer["MASKROM"]), buff1 )
---	//set multiple and add_mult only when flashing
---	//set mapper, map_var, and function to designate read/write algo
+-- //set multiple and add_mult only when flashing
+-- //set mapper, map_var, and function to designate read/write algo
 --
---	//just dump visible NROM memory to start
+-- //just dump visible NROM memory to start
   print("setting map n mapvar")
   dict.buffer("SET_MAP_N_MAPVAR", (op_buffer["NROM"]<<8 | op_buffer["NOVAR"]), buff0 )
   dict.buffer("SET_MAP_N_MAPVAR", (op_buffer["NROM"]<<8 | op_buffer["NOVAR"]), buff1 )
 --
 --
   print("\n\nsetting operation STARTDUMP")
---	//inform buffer manager to start dumping operation now that buffers are initialized
---	check(! set_operation( transfer, STARTDUMP ), "Unable to set buffer operation");
+-- //inform buffer manager to start dumping operation now that buffers are initialized
+-- check(! set_operation( transfer, STARTDUMP ), "Unable to set buffer operation");
   dict.operation("SET_OPERATION", op_buffer["STARTDUMP"] )
 --
---	tstop = os.clock();
---	float timediff = ( (float)(tstop-tstart) / CLOCKS_PER_SEC);
---	printf("total time: %fsec, speed: %fKBps", timediff, (512/timediff));
---	//TODO flush file from time to time..?
+-- tstop = os.clock();
+-- float timediff = ( (float)(tstop-tstart) / CLOCKS_PER_SEC);
+-- printf("total time: %fsec, speed: %fKBps", timediff, (512/timediff));
+-- //TODO flush file from time to time..?
 --
 --
---	//tell buffer manager when to stop
---	// or not..?  just reset buffers and start next memory or quit
---	//reset buffers and setup to dump CHR-ROM
+-- //tell buffer manager when to stop
+-- // or not..?  just reset buffers and start next memory or quit
+-- //reset buffers and setup to dump CHR-ROM
   --Can't get things to work without resetting all the buffers for some reason..
   --Think the issue is need to get the buffer status needs reset
---	dict.buffer("RAW_BUFFER_RESET")
---	print("reallocate buffers")
---	assert(buffers.allocate( num_buffers, buff_size ), "fail to allocate buffers")
+-- dict.buffer("RAW_BUFFER_RESET")
+-- print("reallocate buffers")
+-- assert(buffers.allocate( num_buffers, buff_size ), "fail to allocate buffers")
 
   --wait for first buffer to finish dumping prior to calling payload
   buffers.status_wait({buff0}, {"DUMPED"})
@@ -353,19 +351,19 @@ local function dump_nes( file, debug )
   for i=1, (8*1024/buff_size) do
     --cur_buff_status = dict.buffer("GET_CUR_BUFF_STATUS")
     --while (cur_buff_status ~= op_buffer["DUMPED"]) do
---		--while (cur_buff_status != DUMPED ) {
-    --	print("cur_buff->status: ", cur_buff_status)
-    --	cur_buff_status = dict.buffer("GET_CUR_BUFF_STATUS")
---		--	check(! get_cur_buff_status( transfer, &cur_buff_status ), "Error retrieving cur_buff->status");
---		--}
+--   --while (cur_buff_status != DUMPED ) {
+    -- print("cur_buff->status: ", cur_buff_status)
+    -- cur_buff_status = dict.buffer("GET_CUR_BUFF_STATUS")
+--   -- check(! get_cur_buff_status( transfer, &cur_buff_status ), "Error retrieving cur_buff->status");
+--   --}
     --end
     file:write( dict.buffer_payload_in( buff_size ))
   end
   print("payload done")
 --
---	//close file in main
+-- //close file in main
 --
---	//reset io at end
+-- //reset io at end
   dict.operation("SET_OPERATION", op_buffer["RESET"] )
   dict.buffer("RAW_BUFFER_RESET")
   dict.io("IO_RESET")
@@ -422,8 +420,8 @@ local function dump_snes( file, mapping, debug )
   dict.buffer("SET_MAP_N_MAPVAR", (op_buffer[mapping]<<8 | op_buffer["NOVAR"]), buff0 )
   dict.buffer("SET_MAP_N_MAPVAR", (op_buffer[mapping]<<8 | op_buffer["NOVAR"]), buff1 )
 
---	//tell buffers what function to use for dumping
---	//TODO when start implementing other mappers
+-- //tell buffers what function to use for dumping
+-- //TODO when start implementing other mappers
 
   print("\n\nsetting operation STARTDUMP")
   --inform buffer manager to start dumping operation now that buffers are initialized
@@ -438,9 +436,9 @@ local function dump_snes( file, mapping, debug )
 
   print("starting first payload")
   --now just need to call series of payload IN transfers to retrieve data
-  for i=1, (2048*1024/buff_size) do	--dump next buff
-  --for i=1, (1024*1024/buff_size) do	--dump buff0 then buff1
-  --for i=1, (32*1024/buff_size) do	--dump buff0 then buff1
+  for i=1, (2048*1024/buff_size) do  --dump next buff
+  --for i=1, (1024*1024/buff_size) do  --dump buff0 then buff1
+  --for i=1, (32*1024/buff_size) do  --dump buff0 then buff1
     --stm adapter had trouble dumping
     --same buffer was getting sent twice, so I think
     --buffer mangager wasn't getting enough time to update
@@ -448,21 +446,21 @@ local function dump_snes( file, mapping, debug )
     --that doesn't quite make sense, but something like that is going on
     --need to setup buffer manager to nak anytime something like this happens
     --the following setup slows down everything due to status waits..
---		buffers.status_wait({buff0}, {"DUMPED"})
---		file:write( dict.buffer_payload_in( buff_size ))
---		buffers.status_wait({buff1}, {"DUMPED"})
+--   buffers.status_wait({buff0}, {"DUMPED"})
+--   file:write( dict.buffer_payload_in( buff_size ))
+--   buffers.status_wait({buff1}, {"DUMPED"})
 
     --stm adapter having issues with race situation..
     --can't dump as fast as host is requesting
     --and driver doesn't nak until ready to send data
     cur_buff_status = dict.buffer("GET_CUR_BUFF_STATUS")
     while (cur_buff_status ~= op_buffer["DUMPED"]) do
-    --	nak = nak +1
+    -- nak = nak +1
       --print(nak, "cur_buff->status: ", cur_buff_status)
       cur_buff_status = dict.buffer("GET_CUR_BUFF_STATUS")
     end
     file:write( dict.buffer_payload_in( buff_size ))
-  --	print("dumped page:", i)
+  -- print("dumped page:", i)
 
     --if ( (i % (1024*1024/buff_size/16)) == 0) then
     if ( (i % (4*2024*1024/buff_size/16)) == 0) then
@@ -501,7 +499,7 @@ local function dump_snes( file, mapping, debug )
   --reset io at end
   dict.operation("SET_OPERATION", op_buffer["RESET"] )
   dict.buffer("RAW_BUFFER_RESET")
---	dict.io("IO_RESET")
+-- dict.io("IO_RESET")
 
   return true
 end

@@ -50,12 +50,10 @@ end
 
 -- Wrapper for managing N64 operations.
 local function n64_exec(process_opts, console_opts)
-
   local header
 
-    -- if a rom dump file is provided, parse the cartridge ROM header
+  -- if a rom dump file is provided, parse the cartridge ROM header
   if process_opts.rom_dump_file ~= "" then
-
     -- parse cartridge ROM header
     log.section("Parsing cartridge ROM header")
     if not n64.parse_header_rom() then
@@ -65,7 +63,6 @@ local function n64_exec(process_opts, console_opts)
     end
 
     header = n64.rom_header
-
   end
 
   -- if header ~= nil then
@@ -86,7 +83,7 @@ local function n64_exec(process_opts, console_opts)
   }
 
   local mappers = {
-    basic  = require "scripts.n64.basic",
+    basic = require "scripts.n64.basic",
   }
 
   -- if no mapper provided, use basic
@@ -102,7 +99,6 @@ local function n64_exec(process_opts, console_opts)
     -- TODO: Do plumbing for interacting with RAM.
     m.process(process_opts, n64_console_opts)
   end
-
 end
 
 --[[
@@ -117,12 +113,10 @@ end
 
 -- Wrapper for managing Super Nintendo operations.
 local function snes_exec(process_opts, console_opts)
-
   local header
 
-    -- if a rom dump file is provided, parse the cartridge ROM header
+  -- if a rom dump file is provided, parse the cartridge ROM header
   if process_opts.rom_dump_file ~= "" then
-
     -- parse cartridge ROM header
     log.section("Parsing cartridge ROM header")
     if not snes.parse_header_rom() then
@@ -132,18 +126,17 @@ local function snes_exec(process_opts, console_opts)
     end
 
     header = snes.rom_header
-
   end
 
   if header ~= nil then
-
     -- control passed ROM size vs header data
     if console_opts.rom_size_kb < header:get_rom_size() then
-      log.warning("Passed ROM size (" .. console_opts.rom_size_kb .. ") is LESS than header value (" .. header:get_rom_size() .. ")")
+      log.warning("Passed ROM size (" ..
+        console_opts.rom_size_kb .. ") is LESS than header value (" .. header:get_rom_size() .. ")")
     elseif console_opts.rom_size_kb > header:get_rom_size() then
-      log.warning("Passed ROM size (" .. console_opts.rom_size_kb .. ") is MORE than header value (" .. header:get_rom_size() .. ")")
+      log.warning("Passed ROM size (" ..
+        console_opts.rom_size_kb .. ") is MORE than header value (" .. header:get_rom_size() .. ")")
     end
-
   end
 
   -- Defensively filter out any console options that aren't standard.
@@ -153,7 +146,7 @@ local function snes_exec(process_opts, console_opts)
   }
 
   local mappers = {
-    auto  = require "scripts.snes.auto",
+    auto = require "scripts.snes.auto",
   }
 
   -- if no mapper provided, use default one (LoRom / HiRom auto detection)
@@ -169,7 +162,6 @@ local function snes_exec(process_opts, console_opts)
     -- TODO: Do plumbing for interacting with RAM.
     m.process(process_opts, snes_console_opts)
   end
-
 end
 
 --[[
@@ -184,12 +176,10 @@ end
 
 -- Wrapper for managing original Gameboy operations.
 local function gb_exec(process_opts, console_opts)
-
   local header
 
   -- if a rom write file is provided, parse its header
   if process_opts.rom_write_file ~= "" then
-
     -- parse file header
     log.section("Parsing ROM flash file header")
     log.bullet("Filename", process_opts.rom_write_file.filename)
@@ -202,12 +192,10 @@ local function gb_exec(process_opts, console_opts)
     assert(gbFile:close())
 
     header = gb.file_header
-
   end
 
   -- if a rom dump file is provided, parse the cartridge ROM header
   if process_opts.rom_dump_file ~= "" then
-
     -- parse cartridge ROM header
     log.section("Parsing cartridge ROM header")
     if not gb.parse_header_rom() then
@@ -217,32 +205,31 @@ local function gb_exec(process_opts, console_opts)
     end
 
     header = gb.rom_header
-
   end
 
   if header ~= nil then
-
     -- control passed ROM size vs header data
     if console_opts.rom_size_kb < header:get_rom_size() then
-      log.warning("Passed ROM size (" .. console_opts.rom_size_kb .. ") is LESS than header value (" .. header:get_rom_size() .. ")")
+      log.warning("Passed ROM size (" ..
+        console_opts.rom_size_kb .. ") is LESS than header value (" .. header:get_rom_size() .. ")")
     elseif console_opts.rom_size_kb > header:get_rom_size() then
-      log.warning("Passed ROM size (" .. console_opts.rom_size_kb .. ") is MORE than header value (" .. header:get_rom_size() .. ")")
+      log.warning("Passed ROM size (" ..
+        console_opts.rom_size_kb .. ") is MORE than header value (" .. header:get_rom_size() .. ")")
     end
 
     -- display header mapper info
     local cart_type = header:get_cartridge_type_name()
-    if(cart_type == nil) then
+    if (cart_type == nil) then
       log.warning("Cartridge type unknown", help.hex(header.cartridge_type, 2))
     else
       log.info("Cartridge type:", header:get_cartridge_type_name())
     end
-
   end
 
   -- Defensively filter out any console options that aren't standard.
   local gb_console_opts = {
     rom_size_kb  = console_opts.rom_size_kb,
-    wram_size_kb    = console_opts.wram_size_kb,
+    wram_size_kb = console_opts.wram_size_kb,
   }
 
   local mappers = {
@@ -278,12 +265,10 @@ end
 
 -- Wrapper for managing original Genesis/Megadrive operations.
 local function genesis_exec(process_opts, console_opts)
-
   local header
 
   -- if a rom write file is provided, parse its header
   if process_opts.rom_write_file ~= "" then
-
     -- parse file header
     log.section("Parsing ROM flash file header")
     log.bullet("Filename", process_opts.rom_write_file.filename)
@@ -296,12 +281,10 @@ local function genesis_exec(process_opts, console_opts)
     assert(genFile:close())
 
     header = genesis.file_header
-
   end
 
   -- if a rom dump file is provided, parse the cartridge ROM header
   if process_opts.rom_dump_file ~= "" then
-
     -- parse cartridge ROM header
     log.section("Parsing cartridge ROM header")
     if not genesis.parse_header_rom() then
@@ -311,28 +294,27 @@ local function genesis_exec(process_opts, console_opts)
     end
 
     header = genesis.rom_header
-
   end
 
   if header ~= nil then
-
     -- control passed ROM size vs header data
     if console_opts.rom_size_kb < header:get_rom_size() then
-      log.warning("Passed ROM size (" .. console_opts.rom_size_kb .. ") is LESS than header value (" .. header:get_rom_size() .. ")")
+      log.warning("Passed ROM size (" ..
+        console_opts.rom_size_kb .. ") is LESS than header value (" .. header:get_rom_size() .. ")")
     elseif console_opts.rom_size_kb > header:get_rom_size() then
-      log.warning("Passed ROM size (" .. console_opts.rom_size_kb .. ") is MORE than header value (" .. header:get_rom_size() .. ")")
+      log.warning("Passed ROM size (" ..
+        console_opts.rom_size_kb .. ") is MORE than header value (" .. header:get_rom_size() .. ")")
     end
-
   end
 
   -- Defensively filter out any console options that aren't standard.
   local genesis_console_opts = {
     rom_size_kb  = console_opts.rom_size_kb,
-    wram_size_kb    = console_opts.wram_size_kb,
+    wram_size_kb = console_opts.wram_size_kb,
   }
 
   local mappers = {
-    standard  = require "scripts.genesis.32mb",
+    standard = require "scripts.genesis.32mb",
     -- ssf2      = require "scripts.genesis.ssf2",
     -- rainbow   = require "scripts.genesis.rainbow",
     -- test      = require "scripts.genesis.md-test",
@@ -364,10 +346,8 @@ end
 
 -- Wrapper for managing NES/Famicom operations.
 local function nes_exec(process_opts, console_opts)
-
   -- if nes file to flash ...
   if process_opts.rom_write_file.ext == "nes" then
-
     -- parse header
     process_opts.nes_file = process_opts.rom_write_file
     log.section("Parsing NES flash file header")
@@ -386,7 +366,8 @@ local function nes_exec(process_opts, console_opts)
       local chrNesRomSizeKb = math.floor(nes.header.chrRomSize / 1024)
       -- local mult = 0
       local bytesToCopy = 0
-      local flash_file_bin = process_opts.rom_write_file.path .. process_opts.rom_write_file.base .. "-" .. process_opts.retroprog_id .. ".bin"
+      local flash_file_bin = process_opts.rom_write_file.path ..
+          process_opts.rom_write_file.base .. "-" .. process_opts.retroprog_id .. ".bin"
 
       process_opts.rom_write_file = help.parse_filename(flash_file_bin)
 
@@ -400,7 +381,8 @@ local function nes_exec(process_opts, console_opts)
 
         -- copy PRG data if needed
         if prgNesRomSizeKb > console_opts.prg_rom_size_kb then
-          log.warning("Provided PRG-ROM size (" .. console_opts.prg_rom_size_kb .. "kB) is smaller than header PRG-ROM size (" .. prgNesRomSizeKb .. "kB)")
+          log.warning("Provided PRG-ROM size (" ..
+            console_opts.prg_rom_size_kb .. "kB) is smaller than header PRG-ROM size (" .. prgNesRomSizeKb .. "kB)")
         elseif console_opts.prg_rom_size_kb ~= 0 and prgNesRomSizeKb == 0 then
           log.warning("Header PRG-ROM size is zero")
         end
@@ -409,7 +391,7 @@ local function nes_exec(process_opts, console_opts)
           nesfile:seek("set", 16)
           for j = 1, bytesToCopy, 1 do
             binfile:write(nesfile:read(1))
-            if(j % nes.header.prgRomSize == 0) then nesfile:seek("set", 16) end
+            if (j % nes.header.prgRomSize == 0) then nesfile:seek("set", 16) end
           end
 
           -- mult = console_opts.prg_rom_size_kb / prgNesRomSizeKb
@@ -423,7 +405,8 @@ local function nes_exec(process_opts, console_opts)
 
         -- copy CHR data if needed
         if chrNesRomSizeKb > console_opts.chr_rom_size_kb then
-          log.warning("Provided CHR-ROM size (" .. console_opts.chr_rom_size_kb .. "kB) is smaller than header CHR-ROM size (" .. chrNesRomSizeKb .. "kB)")
+          log.warning("Provided CHR-ROM size (" ..
+            console_opts.chr_rom_size_kb .. "kB) is smaller than header CHR-ROM size (" .. chrNesRomSizeKb .. "kB)")
         elseif console_opts.chr_rom_size_kb ~= 0 and chrNesRomSizeKb == 0 then
           log.warning("Header CHR-ROM size is zero")
         end
@@ -432,7 +415,7 @@ local function nes_exec(process_opts, console_opts)
           nesfile:seek("set", 16 + nes.header.prgRomSize)
           for j = 1, bytesToCopy, 1 do
             binfile:write(nesfile:read(1))
-            if(j % nes.header.chrRomSize == 0) then nesfile:seek("set", 16 + nes.header.prgRomSize) end
+            if (j % nes.header.chrRomSize == 0) then nesfile:seek("set", 16 + nes.header.prgRomSize) end
           end
 
           -- mult = console_opts.chr_rom_size_kb / chrNesRomSizeKb
@@ -455,37 +438,37 @@ local function nes_exec(process_opts, console_opts)
   -- Defensively filter out any console options that are irrelevant to NES support.
   -- This will matter more when software support exists for other consoles.
 
-   local nes_console_opts = {
-    wram_size_kb            = console_opts.wram_size_kb,
-    prg_rom_size_kb         = console_opts.prg_rom_size_kb,
-    chr_rom_size_kb         = console_opts.chr_rom_size_kb,
+  local nes_console_opts = {
+    wram_size_kb    = console_opts.wram_size_kb,
+    prg_rom_size_kb = console_opts.prg_rom_size_kb,
+    chr_rom_size_kb = console_opts.chr_rom_size_kb,
   }
 
   local mappers = {
     -- bs_action53_tsop  = require "scripts.nes.bs_action53_tsop",
     -- action53_tsop     = require "scripts.nes.action53_tsop",
-    action53          = require "scripts.nes.action53",
-    bnrom             = require "scripts.nes.bnrom",
+    action53       = require "scripts.nes.action53",
+    bnrom          = require "scripts.nes.bnrom",
     -- cdream            = require "scripts.nes.cdream",
     -- cninja            = require "scripts.nes.cninja",
     -- cnrom             = require "scripts.nes.cnrom",
     -- dualport          = require "scripts.nes.dualport",
     -- easynsf           = require "scripts.nes.easyNSF",
     -- easynsf512        = require "scripts.nes.easyNSF512",
-    fme7              = require "scripts.nes.fme7",
-    jaleco_ss88006    = require "scripts.nes.jaleco_ss88006",
-    mapper30          = require "scripts.nes.mapper30",
-    mmc1              = require "scripts.nes.mmc1",
-    mmc2              = require "scripts.nes.mmc2",
-    mmc3              = require "scripts.nes.mmc3",
+    fme7           = require "scripts.nes.fme7",
+    jaleco_ss88006 = require "scripts.nes.jaleco_ss88006",
+    mapper30       = require "scripts.nes.mapper30",
+    mmc1           = require "scripts.nes.mmc1",
+    mmc2           = require "scripts.nes.mmc2",
+    mmc3           = require "scripts.nes.mmc3",
     -- mmc4              = require "scripts.nes.mmc4",
     -- mmc5              = require "scripts.nes.mmc5",
-    nrom              = require "scripts.nes.nrom",
-    rainbow           = require "scripts.nes.rainbow",
-    unrom             = require "scripts.nes.unrom",
-    gtrom             = require "scripts.nes.gtrom",
+    nrom           = require "scripts.nes.nrom",
+    rainbow        = require "scripts.nes.rainbow",
+    unrom          = require "scripts.nes.unrom",
+    gtrom          = require "scripts.nes.gtrom",
     -- vrc2a             = require "scripts.nes.vrc2a",
-    vrc6a             = require "scripts.nes.vrc6a",
+    vrc6a          = require "scripts.nes.vrc6a",
     -- rnbw_vrc6a        = require "scripts.nes.rnbw_vrc6a",
     -- vrc6b             = require "scripts.nes.vrc6b",
   }
@@ -573,37 +556,38 @@ local function main()
   local do_ram_write = not isempty(opts.ram_write_file)
 
   -- split filenames to get basename and extension
-  if opts.rom_dump_file  ~= "" then opts.rom_dump_file  = help.parse_filename(opts.rom_dump_file) end
+  if opts.rom_dump_file ~= "" then opts.rom_dump_file = help.parse_filename(opts.rom_dump_file) end
   if opts.rom_write_file ~= "" then opts.rom_write_file = help.parse_filename(opts.rom_write_file) end
-  if opts.ram_dump_file  ~= "" then opts.ram_dump_file  = help.parse_filename(opts.ram_dump_file) end
+  if opts.ram_dump_file ~= "" then opts.ram_dump_file = help.parse_filename(opts.ram_dump_file) end
   if opts.ram_write_file ~= "" then opts.ram_write_file = help.parse_filename(opts.ram_write_file) end
 
   -- prepare verify file if needed
   if do_verify then
     local verify_ext = opts.rom_write_file.ext
     if opts.rom_write_file.ext == "nes" then verify_ext = "bin" end
-    local verify_file = opts.rom_write_file.path .. opts.rom_write_file.base .. "-verify-" .. opts.retroprog_id .. "." .. verify_ext
+    local verify_file = opts.rom_write_file.path ..
+        opts.rom_write_file.base .. "-verify-" .. opts.retroprog_id .. "." .. verify_ext
     opts.verify_file = help.parse_filename(verify_file)
   end
 
   -- Pack main process state into table.
   local process_opts = {
-    retroprog_id    = opts.retroprog_id,
+    retroprog_id   = opts.retroprog_id,
     -- console_name    = opts.console_name,
-    debug           = opts.debug,
-    do_test         = do_test,
-    do_erase        = do_erase,
-    do_rom_dump     = do_rom_dump,
-    do_rom_write    = do_rom_write,
-    do_verify       = do_verify,
-    do_ram_dump     = do_ram_dump,
-    do_ram_write    = do_ram_write,
-    rom_dump_file   = opts.rom_dump_file,
-    rom_write_file  = opts.rom_write_file,
-    ram_dump_file   = opts.ram_dump_file,
-    ram_write_file  = opts.ram_write_file,
-    verify_file     = opts.verify_file,
-    path            = opts.lua_path,
+    debug          = opts.debug,
+    do_test        = do_test,
+    do_erase       = do_erase,
+    do_rom_dump    = do_rom_dump,
+    do_rom_write   = do_rom_write,
+    do_verify      = do_verify,
+    do_ram_dump    = do_ram_dump,
+    do_ram_write   = do_ram_write,
+    rom_dump_file  = opts.rom_dump_file,
+    rom_write_file = opts.rom_write_file,
+    ram_dump_file  = opts.ram_dump_file,
+    ram_write_file = opts.ram_write_file,
+    verify_file    = opts.verify_file,
+    path           = opts.lua_path,
   }
 
   -- parse additional options
@@ -669,12 +653,12 @@ local function main()
     log.error("UNSUPPORTED CONSOLE: ", opts.console_name)
   else
     local console_opts = {
-      wram_size_kb      = opts.nes_wram_size_kb,
-      prg_rom_size_kb   = opts.nes_prg_rom_size_kb,
-      chr_rom_size_kb   = opts.nes_chr_rom_size_kb,
-      rom_size_kb       = opts.rom_size_kb,
+      wram_size_kb    = opts.nes_wram_size_kb,
+      prg_rom_size_kb = opts.nes_prg_rom_size_kb,
+      chr_rom_size_kb = opts.nes_chr_rom_size_kb,
+      rom_size_kb     = opts.rom_size_kb,
       -- console_process_script  = opts.console_process_script,
-      mapper            = opts.mapper_name,
+      mapper          = opts.mapper_name,
     }
     return console_exec(process_opts, console_opts)
   end

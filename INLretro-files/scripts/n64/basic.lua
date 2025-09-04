@@ -1,10 +1,9 @@
-
 -- create the module's table
-local n64 = {}
+local n64     = {}
 
 -- import required modules
 local dict    = require "scripts.app.dict"
-local n64    = require "scripts.app.n64"
+local n64     = require "scripts.app.n64"
 local dump    = require "scripts.app.dump"
 local flash   = require "scripts.app.flash"
 local chips   = require "scripts.app.chips"
@@ -30,13 +29,12 @@ local help    = require "scripts.app.help"
 
 -- dump ROM
 local function rom_dump(file, rom_size_KB, debug)
-
-  local KB_per_bank = 64    -- AD0-15 = 64K address space, A0 ignored so 1Byte per address!
-  local addr_base = 0x0000  -- control signals are manually controlled
-  local bank_base = 0x1000  -- N64 roms start at address 0x1000_0000
+  local KB_per_bank = 64   -- AD0-15 = 64K address space, A0 ignored so 1Byte per address!
+  local addr_base = 0x0000 -- control signals are manually controlled
+  local bank_base = 0x1000 -- N64 roms start at address 0x1000_0000
   local num_banks = math.floor(rom_size_KB / KB_per_bank)
   local cur_bank = 0
---  local cur_bank = 512 --second half of RE2
+  --  local cur_bank = 512 --second half of RE2
 
 
   --[[
@@ -58,11 +56,10 @@ local function rom_dump(file, rom_size_KB, debug)
   log.info("ROM size", rom_size_KB .. "KB")
 
   while cur_bank < num_banks do
-
     if debug then
-      log.point("dumping bank", cur_bank, "of", num_banks-1)
+      log.point("dumping bank", cur_bank, "of", num_banks - 1)
     else
-      spinner.update("Dumping", cur_bank, "/", num_banks-1)
+      spinner.update("Dumping", cur_bank, "/", num_banks - 1)
     end
 
     -- select desired bank
@@ -80,7 +77,6 @@ local function rom_dump(file, rom_size_KB, debug)
   spinner.clear()
 
   dict.n64("N64_RELEASE_BUS")
-
 end
 
 
@@ -97,37 +93,36 @@ end
 -- Cart should be in reset state upon calling this function
 -- this function processes all user requests for this specific board/mapper
 local function process(process_opts, console_opts)
-
   -- some local variables
-  local rv = nil
+  local rv             = nil
   local file
 
   -- process options
-  local DEBUG           = process_opts.debug
-  local retroprog_id    = process_opts.retroprog_id
-  local do_test         = process_opts.do_test
-  local do_erase        = process_opts.do_erase
-  local do_rom_write    = process_opts.do_rom_write
-  local do_verify       = process_opts.do_verify
-  local do_rom_dump     = process_opts.do_rom_dump
-  local do_ram_dump     = process_opts.do_ram_dump
-  local do_ram_write    = process_opts.do_ram_write
-  local rom_write_file  = process_opts.rom_write_file
-  local verify_file     = process_opts.verify_file
-  local rom_dump_file   = process_opts.rom_dump_file
-  local ram_dump_file   = process_opts.ram_dump_file
-  local ram_write_file  = process_opts.ram_write_file
-  local options         = process_opts.additional_opts
+  local DEBUG          = process_opts.debug
+  local retroprog_id   = process_opts.retroprog_id
+  local do_test        = process_opts.do_test
+  local do_erase       = process_opts.do_erase
+  local do_rom_write   = process_opts.do_rom_write
+  local do_verify      = process_opts.do_verify
+  local do_rom_dump    = process_opts.do_rom_dump
+  local do_ram_dump    = process_opts.do_ram_dump
+  local do_ram_write   = process_opts.do_ram_write
+  local rom_write_file = process_opts.rom_write_file
+  local verify_file    = process_opts.verify_file
+  local rom_dump_file  = process_opts.rom_dump_file
+  local ram_dump_file  = process_opts.ram_dump_file
+  local ram_write_file = process_opts.ram_write_file
+  local options        = process_opts.additional_opts
 
   -- console options
-  local rom_size        = console_opts.rom_size_kb
-  local ram_size        = console_opts.wram_size_kb
+  local rom_size       = console_opts.rom_size_kb
+  local ram_size       = console_opts.wram_size_kb
 
--- initialize device i/o
+  -- initialize device i/o
   dict.io("IO_RESET")
   dict.io("N64_INIT")
 
---[[
+  --[[
 888888 888888 .dP"Y8 888888
   88   88__   `Ybo."   88
   88   88""   o.`Y8b   88
@@ -136,7 +131,6 @@ local function process(process_opts, console_opts)
 
   -- test cart
   if do_test then
-
     log.section("Testing")
 
     -- --read rom header
@@ -170,40 +164,38 @@ local function process(process_opts, console_opts)
     -- print("\n")
 
 
---    print("Testing SNES board")
---
---    --SNES detect HiROM or LoROM & RAM
---
---    --SNES detect if able to read flash ID's
---    if not rom_manf_id(true) then
---      print("ERROR unable to read flash ID")
---      return
---    end
+    --    print("Testing SNES board")
+    --
+    --    --SNES detect HiROM or LoROM & RAM
+    --
+    --    --SNES detect if able to read flash ID's
+    --    if not rom_manf_id(true) then
+    --      print("ERROR unable to read flash ID")
+    --      return
+    --    end
   end
 
---dump the ram to file
+  --dump the ram to file
   if dumpram then
-
---    print("\nDumping SAVE RAM...")
---
---    --may have to verify /RESET is high to enable SRAM
---
---    file = assert(io.open(ramdumpfile, "wb"))
---
---    -- dump cart to file
---    dump_ram(file, rambank, ram_size, snes_mapping, true)
---
---    --may disable SRAM by placing /RESET low
---
---    -- close file
---    assert(file:close())
---
---    print("DONE Dumping SAVE RAM")
+    --    print("\nDumping SAVE RAM...")
+    --
+    --    --may have to verify /RESET is high to enable SRAM
+    --
+    --    file = assert(io.open(ramdumpfile, "wb"))
+    --
+    --    -- dump cart to file
+    --    dump_ram(file, rambank, ram_size, snes_mapping, true)
+    --
+    --    --may disable SRAM by placing /RESET low
+    --
+    --    -- close file
+    --    assert(file:close())
+    --
+    --    print("DONE Dumping SAVE RAM")
   end
 
---dump the cart to dumpfile
+  --dump the cart to dumpfile
   if do_rom_dump then
-
     -- open file
     file = assert(io.open(rom_dump_file.filename, "wb"))
 
@@ -223,62 +215,57 @@ local function process(process_opts, console_opts)
 
     -- close file
     assert(file:close())
-
   end
 
--- erase the cart
+  -- erase the cart
   if erase then
-
-  --  erase_flash()
+    --  erase_flash()
   end
 
---write to wram on the cart
+  --write to wram on the cart
   if writeram then
-
---    print("\nwriting to SAVE RAM...")
---
---    file = assert(io.open(ramwritefile, "rb"))
---
---    --flash.write_file( file, ram_size, "NOVAR", "PRGRAM", false )
---    --flash.write_file( file, ram_size, "LOROM_3VOLT", "SNESROM", false )
---    wr_ram(file, rambank, ram_size, snes_mapping, true)
---
---    -- close file
---    assert(file:close())
---
---    print("DONE writing SAVE RAM")
+    --    print("\nwriting to SAVE RAM...")
+    --
+    --    file = assert(io.open(ramwritefile, "rb"))
+    --
+    --    --flash.write_file( file, ram_size, "NOVAR", "PRGRAM", false )
+    --    --flash.write_file( file, ram_size, "LOROM_3VOLT", "SNESROM", false )
+    --    wr_ram(file, rambank, ram_size, snes_mapping, true)
+    --
+    --    -- close file
+    --    assert(file:close())
+    --
+    --    print("DONE writing SAVE RAM")
   end
 
 
---program flashfile to the cart
+  --program flashfile to the cart
   if program then
-
---    --open file
---    file = assert(io.open(flashfile, "rb"))
---    --determine if auto-doubling, deinterleaving, etc,
---    --needs done to make board compatible with rom
---
---    --flash cart
---    flash_rom(file, rom_size, snes_mapping, true)
---
---    -- close file
---    assert(file:close())
-
+    --    --open file
+    --    file = assert(io.open(flashfile, "rb"))
+    --    --determine if auto-doubling, deinterleaving, etc,
+    --    --needs done to make board compatible with rom
+    --
+    --    --flash cart
+    --    flash_rom(file, rom_size, snes_mapping, true)
+    --
+    --    -- close file
+    --    assert(file:close())
   end
 
--- verify flash file is on the cart
+  -- verify flash file is on the cart
   if verify then
---    print("\nPost dumping SNES ROM...")
---    --for now let's just dump the file and verify manually
---
---    file = assert(io.open(verifyfile, "wb"))
---
---    -- dump cart to file
---    rom_dump(file, rom_size, false)
---
---    -- close file
---    assert(file:close())
---    print("DONE Post dumping SNES ROM")
+    --    print("\nPost dumping SNES ROM...")
+    --    --for now let's just dump the file and verify manually
+    --
+    --    file = assert(io.open(verifyfile, "wb"))
+    --
+    --    -- dump cart to file
+    --    rom_dump(file, rom_size, false)
+    --
+    --    -- close file
+    --    assert(file:close())
+    --    print("DONE Post dumping SNES ROM")
   end
 
   dict.io("IO_RESET")

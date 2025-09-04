@@ -1,4 +1,3 @@
-
 -- create the module's table
 local time = {}
 
@@ -21,7 +20,7 @@ local function report(sizeKB)
   log.info("Total time: " .. total_time .. " seconds, average speed: " .. speed .. " KBps")
 end
 
-local function sleep(n)  -- seconds
+local function sleep(n) -- seconds
   local t0 = os.clock()
   while os.clock() - t0 <= n do end
 end

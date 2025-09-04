@@ -1,5 +1,5 @@
 -- create the module's table
-local bnrom = {}
+local bnrom   = {}
 
 -- import required modules
 local dict    = require "scripts.app.dict"
@@ -48,7 +48,6 @@ end
 
 --read PRG-ROM flash ID
 local function prg_rom_manf_id()
-
   local manufacturer_id
   local device_id
   local device_test
@@ -80,12 +79,10 @@ local function prg_rom_manf_id()
   else
     return true
   end
-
 end
 
 -- write a single byte to PRG-ROM flash
 local function prg_rom_flash_byte(addr, value, debug)
-
   if addr < 0x8000 or addr > 0xFFFF then
     log.error("ERROR! flash write to PRG-ROM", help.hex_0x4(addr), "must be $8000-$FFFF")
     return
@@ -109,29 +106,26 @@ local function prg_rom_flash_byte(addr, value, debug)
   if debug then
     log.info("Done writing byte,", i .. " naks")
   end
-
 end
 
 -- dump PRG-ROM
 local function prg_rom_dump(file, rom_size_KB, debug)
-
   local KB_per_read = 32
   local num_banks = math.floor(rom_size_KB / KB_per_read)
   local cur_bank = 0
-  local addr_base = 0x80  -- $8000
+  local addr_base = 0x80 -- $8000
 
   log.info("PRG-ROM size", rom_size_KB .. "KB")
 
   while cur_bank < num_banks do
-
     if debug then
-      log.point("dumping PRG bank", cur_bank, "of", num_banks-1)
+      log.point("dumping PRG bank", cur_bank, "of", num_banks - 1)
     else
-      spinner.update("Dumping", cur_bank, "/", num_banks-1)
+      spinner.update("Dumping", cur_bank, "/", num_banks - 1)
     end
 
     -- set bank
-    dict.nes("NES_CPU_WR", bank_table_base + cur_bank, cur_bank)  -- 32KB @ CPU $8000
+    dict.nes("NES_CPU_WR", bank_table_base + cur_bank, cur_bank) -- 32KB @ CPU $8000
 
     dump.dumptofile(file, KB_per_read, addr_base, "NESCPU_PAGE", false)
 
@@ -139,29 +133,26 @@ local function prg_rom_dump(file, rom_size_KB, debug)
   end
 
   spinner.clear()
-
 end
 
 -- host flash one bank at a time
 local function prg_rom_flash(file, rom_size_KB, debug)
-
   log.section("Programming PRG-ROM")
   log.info("PRG-ROM size", rom_size_KB .. "KB")
 
-  local bank_size = 32  --BNROM 32KByte per PRG bank
+  local bank_size = 32 --BNROM 32KByte per PRG bank
   local cur_bank = 0
   local num_banks = math.floor(rom_size_KB / bank_size)
 
   while cur_bank < num_banks do
-
     if debug then
-      log.point("writing PRG-ROM bank", cur_bank, "of", num_banks-1)
+      log.point("writing PRG-ROM bank", cur_bank, "of", num_banks - 1)
     else
-      spinner.update("Flashing", cur_bank, "/", num_banks-1)
+      spinner.update("Flashing", cur_bank, "/", num_banks - 1)
     end
 
     -- set bank
-    dict.nes("NES_CPU_WR", bank_table_base + cur_bank, cur_bank)  -- 32KB @ CPU $8000
+    dict.nes("NES_CPU_WR", bank_table_base + cur_bank, cur_bank) -- 32KB @ CPU $8000
 
     -- have the device write a bank worth of data
     flash.write_file(file, bank_size, "NROM", "PRGROM", false)
@@ -171,12 +162,10 @@ local function prg_rom_flash(file, rom_size_KB, debug)
 
   spinner.clear()
   log.success("Done programming PRG-ROM")
-
 end
 
 -- base is the actual NES CPU address, not the rom offset (ie $FFF0, not $7FF0)
 local function wr_bank_table(base, entries, debug)
-
   entries = math.floor(entries)
 
   -- BNROM needs to have a bank table present in each and every bank
@@ -200,12 +189,11 @@ local function wr_bank_table(base, entries, debug)
   local cur_bank = entries - 1 --16 minus 1 is 15 = 0x0F
 
   while cur_bank >= 0 do
-
     if debug then
-        log.point("writing PRG-ROM bank", cur_bank, "of", entries-1)
+      log.point("writing PRG-ROM bank", cur_bank, "of", entries - 1)
     else
       -- spinner.update()
-      spinner.update("Flashing", cur_bank, "/", entries-1)
+      spinner.update("Flashing", cur_bank, "/", entries - 1)
     end
 
     --select bank to write to (last bank first)
@@ -224,7 +212,6 @@ local function wr_bank_table(base, entries, debug)
 
   spinner.clear()
   log.success("Done writing bank table")
-
 end
 
 --[[
@@ -239,30 +226,27 @@ end
 
 -- dump CHR
 local function chr_dump(file, rom_size_KB, debug)
-
   -- CHR dump
   local KB_per_read = 8
   local num_banks = math.floor(rom_size_KB / KB_per_read)
   local cur_bank = 0
-  local addr_base = 0x00  -- $0000
+  local addr_base = 0x00 -- $0000
 
   log.info("CHR size", rom_size_KB .. "KB")
 
   if debug then
-    log.point("dump CHR bank", cur_bank, "of", num_banks-1)
+    log.point("dump CHR bank", cur_bank, "of", num_banks - 1)
   else
-    spinner.update("Dumping", cur_bank, "/", num_banks-1)
+    spinner.update("Dumping", cur_bank, "/", num_banks - 1)
   end
 
   dump.dumptofile(file, KB_per_read, addr_base, "NESPPU_PAGE", false)
 
   spinner.clear()
-
 end
 
 local function chr_ram_exercise(chrram_size, retroprog_id, debug)
-
-  dict.stuff("RESET_LFSR")  -- sets it to 1
+  dict.stuff("RESET_LFSR") -- sets it to 1
 
   local cur_bank = 0
   local num_banks = math.floor(chrram_size / 8)
@@ -273,11 +257,10 @@ local function chr_ram_exercise(chrram_size, retroprog_id, debug)
   -- write random data to all banks
   log.point("Writing random data to CHR-RAM")
   while cur_bank < num_banks do
-
     if debug then
-      log.point("init CHR-RAM 8K bank", cur_bank, "of", num_banks-1)
+      log.point("init CHR-RAM 8K bank", cur_bank, "of", num_banks - 1)
     else
-      spinner.update("Writing", cur_bank, "/", num_banks-1)
+      spinner.update("Writing", cur_bank, "/", num_banks - 1)
     end
 
     -- write data
@@ -312,7 +295,6 @@ local function chr_ram_exercise(chrram_size, retroprog_id, debug)
     log.error("CHR-RAM test failed")
     return false
   end
-
 end
 
 --[[
@@ -328,48 +310,53 @@ end
 -- Cart should be in reset state upon calling this function
 -- this function processes all user requests for this specific board/mapper
 local function process(process_opts, console_opts)
-
   -- some local variables
-  local rv = nil
+  local rv               = nil
   local file
   local chr_ram_detected = false
-  local chr_ram_size = 0
+  local chr_ram_size     = 0
 
   -- process options
-  local DEBUG           = process_opts.debug
-  local retroprog_id    = process_opts.retroprog_id
-  local do_test         = process_opts.do_test
-  local do_erase        = process_opts.do_erase
-  local do_rom_write    = process_opts.do_rom_write
-  local do_verify       = process_opts.do_verify
-  local do_rom_dump     = process_opts.do_rom_dump
-  local do_ram_dump     = process_opts.do_ram_dump
-  local do_ram_write    = process_opts.do_ram_write
-  local nes_file        = process_opts.nes_file
-  local rom_write_file  = process_opts.rom_write_file
-  local verify_file     = process_opts.verify_file
-  local rom_dump_file   = process_opts.rom_dump_file
-  local ram_dump_file   = process_opts.ram_dump_file
-  local ram_write_file  = process_opts.ram_write_file
-  local options         = process_opts.additional_opts
+  local DEBUG            = process_opts.debug
+  local retroprog_id     = process_opts.retroprog_id
+  local do_test          = process_opts.do_test
+  local do_erase         = process_opts.do_erase
+  local do_rom_write     = process_opts.do_rom_write
+  local do_verify        = process_opts.do_verify
+  local do_rom_dump      = process_opts.do_rom_dump
+  local do_ram_dump      = process_opts.do_ram_dump
+  local do_ram_write     = process_opts.do_ram_write
+  local nes_file         = process_opts.nes_file
+  local rom_write_file   = process_opts.rom_write_file
+  local verify_file      = process_opts.verify_file
+  local rom_dump_file    = process_opts.rom_dump_file
+  local ram_dump_file    = process_opts.ram_dump_file
+  local ram_write_file   = process_opts.ram_write_file
+  local options          = process_opts.additional_opts
 
   -- console options
-  local prg_size        = console_opts.prg_rom_size_kb
-  local chr_size        = console_opts.chr_rom_size_kb
-  local wram_size       = console_opts.wram_size_kb
-  local mirror          = console_opts.mirror
+  local prg_size         = console_opts.prg_rom_size_kb
+  local chr_size         = console_opts.chr_rom_size_kb
+  local wram_size        = console_opts.wram_size_kb
+  local mirror           = console_opts.mirror
 
   -- parse additional data
-  bank_table_base = options.bank_table
+  bank_table_base        = options.bank_table
 
   -- Initialize device i/o
   dict.io("IO_RESET")
   dict.io("NES_INIT")
 
-  -- test cart by reading manf/prod ID
-  if do_test then
+  --[[
+  888888 888888 .dP"Y8 888888
+    88   88__   `Ybo."   88
+    88   88""   o.`Y8b   88
+    88   888888 8bodP'   88
+  --]]
 
-    log.section("Testing ".. mapname)
+  -- test cart
+  if do_test then
+    log.section("Testing " .. mapname)
 
     if bank_table_base == nil then
       log.error("Bank table is missing from the command line arguments")
@@ -380,13 +367,13 @@ local function process(process_opts, console_opts)
 
     local mirroring = nes.detect_mapper_mirroring(DEBUG)
     if nes.header.isValid then
-      if      (nes.header.mirroringType == nes.MIRRORING_TYPE_HORIZONTAL and mirroring ~= "HORZ")
-          or  (nes.header.mirroringType == nes.MIRRORING_TYPE_VERTICAL and mirroring ~= "VERT")
-          -- or  (nes.header.mirroringType == nes.MIRRORING_TYPE_ONE_SCREEN and ( mirroring ~= "1SCRNA" or mirroring ~= "1SCRNB" ) )
-          -- or  (nes.header.mirroringType == nes.MIRRORING_TYPE_FOUR_SCREENS and mirroring ~= "4SCRN")
+      if (nes.header.mirroringType == nes.MIRRORING_TYPE_HORIZONTAL and mirroring ~= "HORZ")
+          or (nes.header.mirroringType == nes.MIRRORING_TYPE_VERTICAL and mirroring ~= "VERT")
+      -- or  (nes.header.mirroringType == nes.MIRRORING_TYPE_ONE_SCREEN and ( mirroring ~= "1SCRNA" or mirroring ~= "1SCRNB" ) )
+      -- or  (nes.header.mirroringType == nes.MIRRORING_TYPE_FOUR_SCREENS and mirroring ~= "4SCRN")
       then
         log.bullet("PCB mirroring sensed:", mirroring)
-        log.bullet("NES ROM mirroring:", nes.MIRRORING_TYPE_STRING[nes.header.mirroringType+1])
+        log.bullet("NES ROM mirroring:", nes.MIRRORING_TYPE_STRING[nes.header.mirroringType + 1])
         log.error("PCB mirroring setting doesn't match NES ROM header")
         return false
       end
@@ -415,12 +402,17 @@ local function process(process_opts, console_opts)
     rv = chr_ram_exercise(chr_ram_size, retroprog_id, DEBUG)
     -- exit script if test fails
     if not rv then return end
-
   end
+
+  --[[
+  88""Yb  dP"Yb  8b    d8     8888b.  88   88 8b    d8 88""Yb
+  88__dP dP   Yb 88b  d88      8I  Yb 88   88 88b  d88 88__dP
+  88"Yb  Yb   dP 88YbdP88      8I  dY Y8   8P 88YbdP88 88"""
+  88  Yb  YbodP  88 YY 88     8888Y"  `YbodP' 88 YY 88 88
+  --]]
 
   -- dump cart ROM to file
   if do_rom_dump then
-
     -- open file
     file = assert(io.open(rom_dump_file.filename, "wb"))
 
@@ -438,39 +430,53 @@ local function process(process_opts, console_opts)
 
     -- close file
     assert(file:close())
-
   end
+
+  --[[
+  88""Yb  dP"Yb  8b    d8     888888 88""Yb    db    .dP"Y8 888888
+  88__dP dP   Yb 88b  d88     88__   88__dP   dPYb   `Ybo." 88__
+  88"Yb  Yb   dP 88YbdP88     88""   88"Yb   dP__Yb  o.`Y8b 88""
+  88  Yb  YbodP  88 YY 88     888888 88  Yb dP""""Yb 8bodP' 888888
+  --]]
 
   -- erase the cart
   if do_erase then
-
     local i = 0
 
-    log.section("Erasing PRG-ROM")
-    dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x5555, 0xAA)
-    dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x2AAA, 0x55)
-    dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x5555, 0x80)
-    dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x5555, 0xAA)
-    dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x2AAA, 0x55)
-    dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x5555, 0x10)
-    rv = dict.nes("NES_CPU_RD", 0x8000)
+    -- erase PRG-ROM only if needed
+    if prg_size ~= 0 then
+      log.section("Erasing PRG-ROM")
+      time.start()
+      dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x5555, 0xAA)
+      dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x2AAA, 0x55)
+      dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x5555, 0x80)
+      dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x5555, 0xAA)
+      dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x2AAA, 0x55)
+      dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x5555, 0x10)
 
-    -- TODO create some function to pass the read value
-    -- that's smart enough to figure out if the board is actually erasing or not
-    rv = dict.nes("NES_CPU_RD", 0x8000)
-    while rv ~= dict.nes("NES_CPU_RD", 0x8000) do
-      spinner.update("Erasing")
+      -- TODO create some function to pass the read value
+      -- that's smart enough to figure out if the board is actually erasing or not
       rv = dict.nes("NES_CPU_RD", 0x8000)
-      i = i + 1
+      while rv ~= dict.nes("NES_CPU_RD", 0x8000) do
+        spinner.update("Erasing")
+        rv = dict.nes("NES_CPU_RD", 0x8000)
+        i = i + 1
+      end
+      spinner.clear()
+      log.success("Done erasing PRG-ROM", i .. " naks")
+      time.report(prg_size)
     end
-    spinner.clear()
-    log.success("Done erasing PRG-ROM", i .. " naks")
-
   end
+
+  --[[
+  88""Yb  dP"Yb  8b    d8     Yb        dP 88""Yb 88 888888 888888
+  88__dP dP   Yb 88b  d88      Yb  db  dP  88__dP 88   88   88__
+  88"Yb  Yb   dP 88YbdP88       YbdPYbdP   88"Yb  88   88   88""
+  88  Yb  YbodP  88 YY 88        YP  YP    88  Yb 88   88   888888
+  --]]
 
   -- program file to the cart
   if do_rom_write then
-
     -- open file
     file = assert(io.open(rom_write_file.filename, "rb"))
 
@@ -482,12 +488,17 @@ local function process(process_opts, console_opts)
 
     -- close file
     assert(file:close())
-
   end
+
+  --[[
+  Yb    dP 888888 88""Yb 88 888888 Yb  dP
+   Yb  dP  88__   88__dP 88 88__    YbdP
+    YbdP   88""   88"Yb  88 88""     8P
+     YP    888888 88  Yb 88 88      dP
+  --]]
 
   -- verify what we just flashed
   if do_verify then
-
     -- open file
     file = assert(io.open(verify_file.filename, "wb"))
 
@@ -508,11 +519,9 @@ local function process(process_opts, console_opts)
     else
       log.error("Flash verification did not match")
     end
-
   end
 
   dict.io("IO_RESET")
-
 end
 
 -- global variables so other modules can use them

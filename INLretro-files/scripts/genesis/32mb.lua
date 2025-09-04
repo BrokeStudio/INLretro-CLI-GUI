@@ -2,19 +2,19 @@
 local genesis_32mb = {}
 
 -- import required modules
-local dict    = require "scripts.app.dict"
-local genesis = require "scripts.app.genesis"
-local dump    = require "scripts.app.dump"
-local flash   = require "scripts.app.flash"
-local chips   = require "scripts.app.chips"
-local time    = require "scripts.app.time"
-local log     = require "scripts.app.log"
-local spinner = require "scripts.app.spinner"
-local files   = require "scripts.app.files"
-local help    = require "scripts.app.help"
+local dict         = require "scripts.app.dict"
+local genesis      = require "scripts.app.genesis"
+local dump         = require "scripts.app.dump"
+local flash        = require "scripts.app.flash"
+local chips        = require "scripts.app.chips"
+local time         = require "scripts.app.time"
+local log          = require "scripts.app.log"
+local spinner      = require "scripts.app.spinner"
+local files        = require "scripts.app.files"
+local help         = require "scripts.app.help"
 
 -- file constants and global variables
-local mapname = "NOVAR"
+local mapname      = "NOVAR"
 
 --[[
 ███╗   ██╗ ██████╗ ████████╗███████╗███████╗
@@ -73,7 +73,6 @@ end
 
 -- Compute Genesis checksum from a file, which can be compared with header value.
 local function checksum_rom(filename)
-
   local sum = 0
 
   -- open file
@@ -94,7 +93,6 @@ local function checksum_rom(filename)
 
   -- only use the lower bits.
   return sum & 0xFFFF
-
 end
 
 --[[
@@ -109,7 +107,6 @@ end
 
 -- read ROM flash ID
 local function rom_manf_id()
-
   local manufacturer_id
   local device_id
   local device_test
@@ -139,18 +136,16 @@ local function rom_manf_id()
     log.success("Flash chip deteted successfully")
     return true
   end
-
 end
 
 -- write a single byte to ROM flash
 local function rom_flash_byte(addr, value, debug)
-
   if (addr < 0x000000 or addr > 0x3FFFFF) then
     log.error("ERROR! flash write to ROM", help.hex_0x6(addr), "must be $000000-$3FFFFF")
     return
   end
 
-  local addr_hi = ( addr >> 16 ) & 0xff
+  local addr_hi = (addr >> 16) & 0xff
   local addr_lo = addr & 0xffff
 
   if debug then
@@ -183,30 +178,27 @@ local function rom_flash_byte(addr, value, debug)
   --TODO handle timeout for problems
 
   --TODO return pass/fail/info
-
 end
 
 -- dump ROM
 local function rom_dump(file, rom_size_KB, debug)
-
-  local KB_per_bank = 128    -- A1-16 = 64K address space, 2Bytes per address
-  local addr_base = 0x0000  -- control signals are manually controlled
+  local KB_per_bank = 128  -- A1-16 = 64K address space, 2Bytes per address
+  local addr_base = 0x0000 -- control signals are manually controlled
   local num_banks = math.floor(rom_size_KB / KB_per_bank)
   local cur_bank = 0
 
   log.info("ROM size", rom_size_KB .. "KB")
 
   while cur_bank < num_banks do
-
     -- A "large" Genesis ROM is 24 banks, many are 8 and 16 - status every 4 is reasonable.
     -- The largest published Genesis game is Super Street Fighter 2, which is 40 banks!
     -- TODO: Accessing banks in games that are >4MB require using a mapper.
     -- See: https://plutiedev.com/beyond-4mb
 
     if debug then
-      log.point("dumping bank", cur_bank, "of", num_banks-1)
+      log.point("dumping bank", cur_bank, "of", num_banks - 1)
     else
-      spinner.update("Dumping", cur_bank, "/", num_banks-1)
+      spinner.update("Dumping", cur_bank, "/", num_banks - 1)
     end
 
     -- select desired bank
@@ -219,15 +211,13 @@ local function rom_dump(file, rom_size_KB, debug)
   end
 
   spinner.clear()
-
 end
 
 -- host flash one bank at a time
 local function rom_write(file, rom_size_KB, debug)
-
   local base_addr = 0x0000
-  local bank_size = 2 * 64    --2Bytes per address, 64K addresses
-  local buff_size = 1         --number of bytes to read from file at a time
+  local bank_size = 2 * 64 --2Bytes per address, 64K addresses
+  local buff_size = 1      --number of bytes to read from file at a time
   local cur_bank = 0
 
   local num_banks = math.floor(rom_size_KB / bank_size)
@@ -238,11 +228,10 @@ local function rom_write(file, rom_size_KB, debug)
   dict.sega("GEN_SET_RAM", 0x00) -- disable SRAM
 
   while cur_bank < num_banks do
-
     if debug then
-      log.point("writing bank", cur_bank, "of", num_banks-1)
+      log.point("writing bank", cur_bank, "of", num_banks - 1)
     else
-      spinner.update("Flashing", cur_bank, "/", num_banks-1)
+      spinner.update("Flashing", cur_bank, "/", num_banks - 1)
     end
 
     -- select the current bank
@@ -260,7 +249,6 @@ local function rom_write(file, rom_size_KB, debug)
 
   spinner.clear()
   log.success("Done programming ROM")
-
 end
 
 --[[
@@ -275,9 +263,9 @@ end
 
 -- dump the RAM, assumes the RAM was enabled as desired prior to calling
 local function ram_dump(file, start_bank, ram_size_KB, debug)
-  local KB_per_bank = 32  -- TODO: FIXME? => -- 128KByte addressable per bank, but only use lower byte of each 16bit word
+  local KB_per_bank = 32 -- TODO: FIXME? => -- 128KByte addressable per bank, but only use lower byte of each 16bit word
   local num_banks = math.floor(ram_size_KB / KB_per_bank)
-  local addr_base = 0x00  -- A15-8 address of ram start
+  local addr_base = 0x00 -- A15-8 address of ram start
   local cur_bank = 0
 
   log.info("SRAM size", ram_size_KB .. "KB")
@@ -287,11 +275,10 @@ local function ram_dump(file, start_bank, ram_size_KB, debug)
   dict.sega("GEN_SET_ADDR_HI", 0x20 >> 1) -- start_bank) -- + cur_bank)
 
   while cur_bank < num_banks do
-
     if debug then
-      log.point("dumping RAM bank", cur_bank, "of", num_banks-1)
+      log.point("dumping RAM bank", cur_bank, "of", num_banks - 1)
     else
-      spinner.update("Dumping", cur_bank, "/", num_banks-1)
+      spinner.update("Dumping", cur_bank, "/", num_banks - 1)
     end
 
     -- currently don't have means of dumping RAM with A16 high
@@ -301,13 +288,11 @@ local function ram_dump(file, start_bank, ram_size_KB, debug)
   end
 
   spinner.clear()
-
 end
 
 -- host write one bank at a time
 local function ram_write(file, start_bank, ram_size_KB, debug)
-
-  local KB_per_bank = 32  -- 128KByte addressable per bank, but only use lower byte of each 16bit word
+  local KB_per_bank = 32 -- 128KByte addressable per bank, but only use lower byte of each 16bit word
   local num_banks = math.floor(ram_size_KB / KB_per_bank)
   local cur_bank = 0
 
@@ -318,11 +303,10 @@ local function ram_write(file, start_bank, ram_size_KB, debug)
   dict.sega("GEN_SET_RAM", 0x01)
 
   while cur_bank < num_banks do
-
     if debug then
-      log.point("writing bank", cur_bank, "of", num_banks-1)
+      log.point("writing bank", cur_bank, "of", num_banks - 1)
     else
-      spinner.update("Writing", cur_bank, "/", num_banks-1)
+      spinner.update("Writing", cur_bank, "/", num_banks - 1)
     end
 
     dict.sega("GEN_SET_ADDR_HI", start_bank + cur_bank)
@@ -330,7 +314,6 @@ local function ram_write(file, start_bank, ram_size_KB, debug)
     flash.write_file(file, ram_size_KB, mapname, "GENESISRAM", false)
 
     cur_bank = cur_bank + 1
-
   end
 
   -- disable SRAM
@@ -338,12 +321,10 @@ local function ram_write(file, start_bank, ram_size_KB, debug)
 
   spinner.clear()
   log.success("Done programming SRAM")
-
 end
 
 -- try to detect ram
 local function ram_test(debug)
-
   local test = true
   local read_value
   local saved_value
@@ -380,18 +361,16 @@ local function ram_test(debug)
   end
 
   return test
-
 end
 
 local function ram_exercise(ram_size, retroprog_id, debug)
-
---[[
+  --[[
   SRAM covers the $200001-$20FFFF address range, and only every other byte is used (i.e. $200001, $200003, $200005, etc.).
   This gives you a total of 32KB to work with.
   If you need to save numbers larger than fit in a byte, split it into its separate bytes.
 --]]
 
-  dict.stuff("RESET_LFSR")  -- sets it to 1
+  dict.stuff("RESET_LFSR") -- sets it to 1
 
   -- enable SRAM
   dict.sega("GEN_SET_RAM", 0x01)
@@ -427,7 +406,6 @@ local function ram_exercise(ram_size, retroprog_id, debug)
     log.error("SRAM test failed")
     return false
   end
-
 end
 
 --[[
@@ -443,50 +421,48 @@ end
 -- Cart should be in reset state upon calling this function
 -- this function processes all user requests for this specific board/mapper
 local function process(process_opts, console_opts)
-
   -- some local variables
-  local rv = nil
+  local rv             = nil
   local file
 
   -- process options
-  local DEBUG           = process_opts.debug
-  local retroprog_id    = process_opts.retroprog_id
-  local do_test         = process_opts.do_test
-  local do_erase        = process_opts.do_erase
-  local do_rom_write    = process_opts.do_rom_write
-  local do_verify       = process_opts.do_verify
-  local do_rom_dump     = process_opts.do_rom_dump
-  local do_ram_dump     = process_opts.do_ram_dump
-  local do_ram_write    = process_opts.do_ram_write
-  local rom_write_file  = process_opts.rom_write_file
-  local verify_file     = process_opts.verify_file
-  local rom_dump_file   = process_opts.rom_dump_file
-  local ram_dump_file   = process_opts.ram_dump_file
-  local ram_write_file  = process_opts.ram_write_file
-  local options         = process_opts.additional_opts
+  local DEBUG          = process_opts.debug
+  local retroprog_id   = process_opts.retroprog_id
+  local do_test        = process_opts.do_test
+  local do_erase       = process_opts.do_erase
+  local do_rom_write   = process_opts.do_rom_write
+  local do_verify      = process_opts.do_verify
+  local do_rom_dump    = process_opts.do_rom_dump
+  local do_ram_dump    = process_opts.do_ram_dump
+  local do_ram_write   = process_opts.do_ram_write
+  local rom_write_file = process_opts.rom_write_file
+  local verify_file    = process_opts.verify_file
+  local rom_dump_file  = process_opts.rom_dump_file
+  local ram_dump_file  = process_opts.ram_dump_file
+  local ram_write_file = process_opts.ram_write_file
+  local options        = process_opts.additional_opts
 
   -- console options
-  local rom_size        = console_opts.rom_size_kb
-  local ram_size        = console_opts.wram_size_kb
+  local rom_size       = console_opts.rom_size_kb
+  local ram_size       = console_opts.wram_size_kb
 
   -- Initialize device i/o
   dict.io("IO_RESET")
   dict.io("SEGA_INIT")
 
---[[
-888888 888888 .dP"Y8 888888
-  88   88__   `Ybo."   88
-  88   88""   o.`Y8b   88
-  88   888888 8bodP'   88
---]]
+  --[[
+  888888 888888 .dP"Y8 888888
+    88   88__   `Ybo."   88
+    88   88""   o.`Y8b   88
+    88   888888 8bodP'   88
+  --]]
 
   -- test cart
   if do_test then
-
     log.section("Testing 32Mb") --.. mapname)
 
     -- attempt to read ROM flash ID
-    if do_rom_write and rom_size ~= 0 then
+    if options.force_flash_test or (do_rom_write and rom_size ~= 0) then
       rv = rom_manf_id()
       if not rv then
         if do_rom_write then
@@ -525,10 +501,9 @@ local function process(process_opts, console_opts)
         log.warning("Can't exercise RAM because data could be battery backed")
       end
     end
-
   end
 
---[[
+  --[[
 88""Yb    db    8b    d8     8888b.  88   88 8b    d8 88""Yb
 88__dP   dPYb   88b  d88      8I  Yb 88   88 88b  d88 88__dP
 88"Yb   dP__Yb  88YbdP88      8I  dY Y8   8P 88YbdP88 88"""
@@ -537,7 +512,6 @@ local function process(process_opts, console_opts)
 
   -- dump cart RAM to file
   if do_ram_dump then
-
     -- enable RAM
     dict.sega("GEN_SET_RAM", 0x01)
 
@@ -557,10 +531,9 @@ local function process(process_opts, console_opts)
 
     -- disable RAM
     dict.sega("GEN_SET_RAM", 0x00)
-
   end
 
---[[
+  --[[
 88""Yb    db    8b    d8     Yb        dP 88""Yb 88 888888 888888
 88__dP   dPYb   88b  d88      Yb  db  dP  88__dP 88   88   88__
 88"Yb   dP__Yb  88YbdP88       YbdPYbdP   88"Yb  88   88   88""
@@ -569,7 +542,6 @@ local function process(process_opts, console_opts)
 
   -- write file to the cart RAM
   if do_ram_write then
-
     -- open file
     file = assert(io.open(ram_write_file.filename, "rb"))
     -- flash cart SRAM
@@ -580,19 +552,17 @@ local function process(process_opts, console_opts)
 
     -- close file
     assert(file:close())
-
   end
 
---[[
-88""Yb  dP"Yb  8b    d8     8888b.  88   88 8b    d8 88""Yb
-88__dP dP   Yb 88b  d88      8I  Yb 88   88 88b  d88 88__dP
-88"Yb  Yb   dP 88YbdP88      8I  dY Y8   8P 88YbdP88 88"""
-88  Yb  YbodP  88 YY 88     8888Y"  `YbodP' 88 YY 88 88
---]]
+  --[[
+  88""Yb  dP"Yb  8b    d8     8888b.  88   88 8b    d8 88""Yb
+  88__dP dP   Yb 88b  d88      8I  Yb 88   88 88b  d88 88__dP
+  88"Yb  Yb   dP 88YbdP88      8I  dY Y8   8P 88YbdP88 88"""
+  88  Yb  YbodP  88 YY 88     8888Y"  `YbodP' 88 YY 88 88
+  --]]
 
   -- dump cart ROM to file
   if do_rom_dump then
-
     -- open file
     file = assert(io.open(rom_dump_file.filename, "wb"))
 
@@ -615,57 +585,52 @@ local function process(process_opts, console_opts)
       log.success("ROM dump file header parsed successfully")
     end
     assert(file:close())
-
   end
 
---[[
-88""Yb  dP"Yb  8b    d8     888888 88""Yb    db    .dP"Y8 888888
-88__dP dP   Yb 88b  d88     88__   88__dP   dPYb   `Ybo." 88__
-88"Yb  Yb   dP 88YbdP88     88""   88"Yb   dP__Yb  o.`Y8b 88""
-88  Yb  YbodP  88 YY 88     888888 88  Yb dP""""Yb 8bodP' 888888
---]]
+  --[[
+  88""Yb  dP"Yb  8b    d8     888888 88""Yb    db    .dP"Y8 888888
+  88__dP dP   Yb 88b  d88     88__   88__dP   dPYb   `Ybo." 88__
+  88"Yb  Yb   dP 88YbdP88     88""   88"Yb   dP__Yb  o.`Y8b 88""
+  88  Yb  YbodP  88 YY 88     888888 88  Yb dP""""Yb 8bodP' 888888
+  --]]
 
   -- erase the cart
   if do_erase then
-
     local i = 0
-    local temp
 
-    log.section("Erasing ROM")
+    -- erase ROM only if needed
+    if rom_size ~= 0 then
+      log.section("Erasing ROM")
+      time.start()
+      dict.sega("GEN_SET_RAM", 0x00) -- disable SRAM
+      genesis.rom_wr(0x000555, 0x00AA)
+      genesis.rom_wr(0x0002AA, 0x0055)
+      genesis.rom_wr(0x000555, 0x0080)
+      genesis.rom_wr(0x000555, 0x00AA)
+      genesis.rom_wr(0x0002AA, 0x0055)
+      genesis.rom_wr(0x000555, 0x0010)
 
-    time.start()
-    dict.sega("GEN_SET_RAM", 0x00) -- disable SRAM
-    genesis.rom_wr(0x000555, 0x00AA)
-    genesis.rom_wr(0x0002AA, 0x0055)
-    genesis.rom_wr(0x000555, 0x0080)
-    genesis.rom_wr(0x000555, 0x00AA)
-    genesis.rom_wr(0x0002AA, 0x0055)
-    genesis.rom_wr(0x000555, 0x0010)
-
-    temp = dict.sega("GEN_ROM_RD", 0x0000)
-    local nak = 1
-    while (temp ~= dict.sega("GEN_ROM_RD", 0x0000)) do
-      spinner.update("Erasing")
-      temp = dict.sega("GEN_ROM_RD", 0x0000)
-      nak = nak + 1
+      rv = dict.sega("GEN_ROM_RD", 0x0000)
+      while (rv ~= dict.sega("GEN_ROM_RD", 0x0000)) do
+        spinner.update("Erasing")
+        rv = dict.sega("GEN_ROM_RD", 0x0000)
+        i = i + 1
+      end
+      spinner.clear()
+      log.success("Done erasing ROM", i .. " naks")
+      time.report(rom_size)
     end
-    spinner.clear()
-    log.success("Done erasing ROM", nak .. " naks")
-
-    time.report(rom_size)
-
   end
 
---[[
-88""Yb  dP"Yb  8b    d8     Yb        dP 88""Yb 88 888888 888888
-88__dP dP   Yb 88b  d88      Yb  db  dP  88__dP 88   88   88__
-88"Yb  Yb   dP 88YbdP88       YbdPYbdP   88"Yb  88   88   88""
-88  Yb  YbodP  88 YY 88        YP  YP    88  Yb 88   88   888888
---]]
+  --[[
+  88""Yb  dP"Yb  8b    d8     Yb        dP 88""Yb 88 888888 888888
+  88__dP dP   Yb 88b  d88      Yb  db  dP  88__dP 88   88   88__
+  88"Yb  Yb   dP 88YbdP88       YbdPYbdP   88"Yb  88   88   88""
+  88  Yb  YbodP  88 YY 88        YP  YP    88  Yb 88   88   888888
+  --]]
 
   -- program file to the cart
   if do_rom_write then
-
     --open file
     file = assert(io.open(rom_write_file.filename, "rb"))
     --determine if auto-doubling, deinterleaving, etc,
@@ -681,19 +646,17 @@ local function process(process_opts, console_opts)
 
     -- close file
     assert(file:close())
-
   end
 
---[[
-Yb    dP 888888 88""Yb 88 888888 Yb  dP
- Yb  dP  88__   88__dP 88 88__    YbdP
-  YbdP   88""   88"Yb  88 88""     8P
-   YP    888888 88  Yb 88 88      dP
---]]
+  --[[
+  Yb    dP 888888 88""Yb 88 888888 Yb  dP
+   Yb  dP  88__   88__dP 88 88__    YbdP
+    YbdP   88""   88"Yb  88 88""     8P
+     YP    888888 88  Yb 88 88      dP
+  --]]
 
   -- verify flashed file on the cart
   if do_verify then
-
     -- open file
     file = assert(io.open(verify_file.filename, "wb"))
 
@@ -723,11 +686,9 @@ Yb    dP 888888 88""Yb 88 888888 Yb  dP
     else
       log.error("Flash verification did not match")
     end
-
   end
 
   dict.io("IO_RESET")
-
 end
 
 -- global variables so other modules can use them

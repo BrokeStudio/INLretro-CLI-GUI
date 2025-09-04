@@ -35,18 +35,18 @@ local back = ""
 local size = 0
 
 if (opts.gui == nil or opts.gui == false) then
-		prefix = "%{reverse bright}     "
+  prefix = "%{reverse bright}     "
   suffix = " ...     %{reset}"
-	end
+end
 
 local function display()
   if (opts.gui == nil or opts.gui == false) then -- USING CLI
     text = prefix .. text .. frames[step + 1] .. suffix
-	back = ""
-	size = string.len(text)
-	for i = 1, size, 1 do
-		back = back .. "\b"
-	end
+    back = ""
+    size = string.len(text)
+    for i = 1, size, 1 do
+      back = back .. "\b"
+    end
     io.write(colors(text) .. back)
   else -- USING GUI
     gui_spinner_update(text .. frames[step + 1] .. " ...")
@@ -58,18 +58,18 @@ local function update(...)
   for i = 1, string.len(frames[1]), 1 do
     text = text .. " "
   end
-	step = (step + 1) % #frames
-	display()
+  step = (step + 1) % #frames
+  display()
 end
 
 local function clear()
   if (opts.gui == nil or opts.gui == false) then -- USING CLI
-	text = "%{reset}"
-	for i = 1, size - 1, 1 do
-		text = text .. " "
-	end
-	size = 0
-	io.write(colors(text) .. back)
+    text = "%{reset}"
+    for i = 1, size - 1, 1 do
+      text = text .. " "
+    end
+    size = 0
+    io.write(colors(text) .. back)
   else -- USING GUI
     gui_spinner_clear()
   end

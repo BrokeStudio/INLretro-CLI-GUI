@@ -174,7 +174,7 @@ local function bullet(...)
 end
 
 -- local function color(color, ...)
--- 	_print(ansicolors('%{' .. color .. '}' .. help.parse_str_args("\t", ...)))
+--   _print(ansicolors('%{' .. color .. '}' .. help.parse_str_args("\t", ...)))
 -- end
 
 local function custom(color, symbol, ...)
