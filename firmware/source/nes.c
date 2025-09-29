@@ -700,13 +700,16 @@ void nes_ppu_wr(uint16_t addr, uint8_t data)
   DATA_OP();
   DATA_SET(data);
 
-  NOP();
+  // NOP();
 
   // set CHR /RD and /WR
   CSWR_LO();
 
   // might need to wait longer for some carts...
   NOP(); // one can't hurt
+  NOP();
+  NOP();
+  NOP();
 
   // latch data to memory
   CSWR_HI();
@@ -1004,14 +1007,19 @@ uint8_t nes_ppu_page_rd_poll(uint8_t *data, uint8_t addrH, uint8_t first, uint8_
     ADDRH(addrH);
   }
 
+  // set lower address bits
+  ADDRL(first); // doing this prior to entry and right after latching
+
   // set CHR /RD and /WR
   CSRD_LO();
 
   // set lower address bits
-  ADDRL(first); // doing this prior to entry and right after latching
-  NOP();				// adding extra NOP as it was needed on PRG
-                // gives longest delay between address out and latching data
-  NOP();				// EKH: Needed another NOP for the first byte of 4k blocks on several MMC3 carts
+  // moved this above for compatibility with Rainbow, address needs to be stable before toggling /RD
+  // ADDRL(first); // doing this prior to entry and right after latching
+
+  NOP(); // adding extra NOP as it was needed on PRG
+         // gives longest delay between address out and latching data
+  NOP(); // EKH: Needed another NOP for the first byte of 4k blocks on several MMC3 carts
   NOP();
   NOP();
 
