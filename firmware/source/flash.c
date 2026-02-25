@@ -573,20 +573,20 @@ uint8_t write_page_gb_flash(uint8_t addrH, buffer *buff, write_funcptr wr_func)
 
 uint8_t gameboy_write_page_buffer(uint8_t addrH, buffer *buff)
 {
-  uint16_t cur = buff->cur_byte;  // need 16 bits here so it won't overflow
+  uint16_t cur = buff->cur_byte; // need 16 bits here so it won't overflow
   uint16_t addr;
   uint8_t value;
-  uint16_t word_count = ( buff->last_idx + 1 - buff->cur_byte ) >> 1;
+  uint16_t word_count = (buff->last_idx + 1 - buff->cur_byte) >> 1;
 
   // write "write to buffer" command and sector address
   gameboy_pin31_wr(0x0555, 0x00AA);
   gameboy_pin31_wr(0x02AA, 0x0055);
-  gameboy_pin31_wr(0x0000, 0x0025); // the bank set before calling sets the sector
+  gameboy_pin31_wr(0x0000, 0x0025);         // the bank set before calling sets the sector
   gameboy_pin31_wr(0x0000, word_count - 1); // number of words to write minus one
 
   while (cur <= buff->last_idx)
   {
-    value = buff->data[cur+0];
+    value = buff->data[cur + 0];
     addr += cur;
 
     // add word to write buffer
@@ -613,22 +613,22 @@ uint8_t gameboy_write_page_buffer(uint8_t addrH, buffer *buff)
 #ifdef SEGA_CONN
 uint8_t genesis_rnbw_write_page(buffer *buff)
 {
-  uint16_t cur = buff->cur_byte;  // need 16 bits here so it won't overflow
+  uint16_t cur = buff->cur_byte; // need 16 bits here so it won't overflow
   uint16_t base_addr = buff->page_num << 7;
   uint16_t addr;
   uint16_t value;
-  uint16_t word_count = ( buff->last_idx + 1 - buff->cur_byte ) >> 1;
+  uint16_t word_count = (buff->last_idx + 1 - buff->cur_byte) >> 1;
 
   // write "write to buffer" command and sector address
   gen_rom_wr(0x0555, 0x00AA);
   gen_rom_wr(0x02AA, 0x0055);
-  gen_rom_wr(0x0000, 0x0025); // the bank set before calling sets the sector
+  gen_rom_wr(0x0000, 0x0025);         // the bank set before calling sets the sector
   gen_rom_wr(0x0000, word_count - 1); // number of words to write minus one
 
   while (cur <= buff->last_idx)
   {
-    value = buff->data[cur+0] << 8;
-    value |= buff->data[cur+1];
+    value = buff->data[cur + 0] << 8;
+    value |= buff->data[cur + 1];
     addr = base_addr + (cur >> 1);
 
     // add word to write buffer
@@ -652,16 +652,16 @@ uint8_t genesis_rnbw_write_page(buffer *buff)
 
 uint8_t genesis_rom_page_write(buffer *buff)
 {
-  uint16_t cur = buff->cur_byte;  // need 16 bits here so it won't overflow
+  uint16_t cur = buff->cur_byte; // need 16 bits here so it won't overflow
   uint16_t base_addr = buff->page_num << 7;
   uint16_t addr;
   uint16_t value;
-  uint16_t word_count = ( buff->last_idx + 1 - buff->cur_byte ) >> 1;
+  uint16_t word_count = (buff->last_idx + 1 - buff->cur_byte) >> 1;
 
   while (cur <= buff->last_idx)
   {
-    value = buff->data[cur+0] << 8;
-    value |= buff->data[cur+1];
+    value = buff->data[cur + 0] << 8;
+    value |= buff->data[cur + 1];
     addr = base_addr + (cur >> 1);
 
     // add word to write buffer
@@ -873,20 +873,20 @@ uint8_t flash_buff(buffer *buff)
     if (buff->mapper == RNBW)
     {
       // enter unlock mode bypass
-      nes_cpu_wr(0x8AAA, 0xAA);
-      nes_cpu_wr(0x8555, 0x55);
-      nes_cpu_wr(0x8AAA, 0x20);
+      // nes_cpu_wr(0x8AAA, 0xAA);
+      // nes_cpu_wr(0x8555, 0x55);
+      // nes_cpu_wr(0x8AAA, 0x20);
 
       // write data
-      // write_page_verify((0x80 + addrH), buff, rnbw_prgrom_flash_wr);
-      write_page((0x80 + addrH), buff, rnbw_prgrom_flash_wr);
+      write_page_verify((0x80 + addrH), buff, rnbw_prgrom_flash_wr);
+      // write_page((0x80 + addrH), buff, rnbw_prgrom_flash_wr);
 
       // exit unlock mode bypass
-      nes_cpu_wr(0x8000, 0x90);
-      nes_cpu_wr(0x8000, 0x00);
+      // nes_cpu_wr(0x8000, 0x90);
+      // nes_cpu_wr(0x8000, 0x00);
 
       // reset the flash chip, supposed to exit too
-      nes_cpu_wr(0x8000, 0xF0);
+      // nes_cpu_wr(0x8000, 0xF0);
     }
     if (buff->mapper == VRC6a || buff->mapper == VRC6b)
     {
@@ -944,7 +944,8 @@ uint8_t flash_buff(buffer *buff)
       nes_ppu_wr(0x0AAA, 0x20);
 
       // write data
-      write_page((0x80 + addrH), buff, rnbw_chrrom_flash_wr);
+      write_page_verify((0x80 + addrH), buff, rnbw_chrrom_flash_wr);
+      // write_page((0x80 + addrH), buff, rnbw_chrrom_flash_wr);
 
       // exit unlock mode bypass
       nes_ppu_wr(0x0000, 0x90);
@@ -1080,35 +1081,35 @@ uint8_t flash_buff(buffer *buff)
       // write_page_gb_flash( addrH, buff, gameboy_flash_pin31_wr);
 
       // enter unlock bypass mode
-      //gameboy_pin31_wr(0x0AAA, 0xAA);
-      //gameboy_pin31_wr(0x0555, 0x55);
-      //gameboy_pin31_wr(0x0AAA, 0x20);
+      // gameboy_pin31_wr(0x0AAA, 0xAA);
+      // gameboy_pin31_wr(0x0555, 0x55);
+      // gameboy_pin31_wr(0x0AAA, 0x20);
 
-      //write_page_gb_flash(addrH + 0x40, buff, gameboy_unlock_3v_flash_pin31_wr);
-      //write_page_gb_flash(addrH + 0x40, buff, gameboy_3v_flash_pin31_wr);
+      // write_page_gb_flash(addrH + 0x40, buff, gameboy_unlock_3v_flash_pin31_wr);
+      // write_page_gb_flash(addrH + 0x40, buff, gameboy_3v_flash_pin31_wr);
       gameboy_write_page_buffer(addrH + 0x40, buff);
 
       // unlock bypass reset
-      //gameboy_pin31_wr(0x0000, 0x90);
-      //gameboy_pin31_wr(0x0000, 0x00);
+      // gameboy_pin31_wr(0x0000, 0x90);
+      // gameboy_pin31_wr(0x0000, 0x00);
     }
 
     if (buff->mapper == MBC5)
     {
       // flash data using flash chip buffer to speed things up
-      gameboy_write_page_buffer(addrH + 0x40, buff);
+      // gameboy_write_page_buffer(addrH + 0x40, buff);
 
-      // // enter unlock bypass mode
-      // //gameboy_pin31_wr(0x0AAA, 0xAA);
-      // //gameboy_pin31_wr(0x0555, 0x55);
-      // //gameboy_pin31_wr(0x0AAA, 0x20);
+      // enter unlock bypass mode
+      gameboy_pin31_wr(0x0AAA, 0xAA);
+      gameboy_pin31_wr(0x0555, 0x55);
+      gameboy_pin31_wr(0x0AAA, 0x20);
 
-      // //write_page_gb_flash(addrH + 0x40, buff, gameboy_unlock_3v_flash_pin31_wr);
+      write_page_gb_flash(addrH + 0x40, buff, gameboy_unlock_3v_flash_pin31_wr);
       // write_page_gb_flash(addrH + 0x40, buff, gameboy_3v_flash_pin31_wr);
 
-      // // exit unlock bypass mode
-      // //gameboy_pin31_wr(0x0000, 0x90);
-      // //gameboy_pin31_wr(0x0000, 0x00);
+      // exit unlock bypass mode
+      gameboy_pin31_wr(0x0000, 0x90);
+      gameboy_pin31_wr(0x0000, 0x00);
     }
 
     break;

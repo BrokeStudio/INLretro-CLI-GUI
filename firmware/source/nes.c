@@ -13,8 +13,8 @@
 //=================================================================================================
 
 // global variables
-uint8_t cur_bank;			 // used by some flash algos, must be initialized prior to depending on it
-uint16_t bank_table;	 // address offset of bank table for mapper writes with bus conflicts
+uint8_t cur_bank;      // used by some flash algos, must be initialized prior to depending on it
+uint16_t bank_table;   // address offset of bank table for mapper writes with bus conflicts
 uint8_t num_prg_banks; // used to determine banktable for mappers like colordreams
 
 /* Desc:Function takes an opcode which was transmitted via USB
@@ -371,9 +371,9 @@ uint8_t emulate_nes_cpu_rd(uint16_t addr)
   // go ahead and setup just to be sure since we're trying
   // to be as accurate as possible
   EXP0_IP_FL(); // this could have been left pulled up
-  M2_LO();			// start of CPU cycle
-  ROMSEL_HI();	// trails M2
-  PRGRW_HI();		// happens just after M2
+  M2_LO();      // start of CPU cycle
+  ROMSEL_HI();  // trails M2
+  PRGRW_HI();   // happens just after M2
 
   // set address bus
   ADDR_SET(addr);
@@ -430,7 +430,7 @@ uint8_t nes_cpu_rd(uint16_t addr)
 
   // set M2 and /ROMSEL
   if (addr >= 0x8000)
-  {							 // addressing cart rom space
+  {              // addressing cart rom space
     ROMSEL_LO(); // romsel trails M2 during CPU operations
   }
   M2_HI();
@@ -443,6 +443,9 @@ uint8_t nes_cpu_rd(uint16_t addr)
   NOP(); // add third nop for some extra
   NOP(); // one more can't hurt
   // might need to wait longer for some carts...
+  // NOP();
+  // NOP();
+  // NOP();
 
   // latch data
   DATA_RD(read);
@@ -492,27 +495,30 @@ void nes_cpu_wr(uint16_t addr, uint8_t data)
   // this was bad for $6000 WRAM decoding!
   // we're creating our own /ROMSEL delay which can cause problems!!!
   if (addr >= 0x8000)
-  {							 // addressing cart rom space
+  {              // addressing cart rom space
     ROMSEL_LO(); // romsel trails M2 during CPU operations
   }
   M2_HI();
 
-  // // give some time
+  // give some time
   NOP();
   NOP();
   NOP(); // Writing to MMC4 SRAM 2 NOPs wasn't enough..
   NOP();
   NOP();
-  NOP(); // Writing to RNBW PRG-ROM needs 6 NOPs
+  NOP(); // Writing to RNBW PRG-ROM needs 6 NOPs minimum
   // NOP();
   // NOP();
   // NOP();
+  // NOP();
+  // NOP();
+  // NOP(); // All of this for Rainbow ?! maybe somewhere in the middle could work
 
   // latch data to cart memory/mapper
   M2_LO();
   ROMSEL_HI();
 
-  // retore PRG R/W to default
+  // restore PRG R/W to default
   PRGRW_HI();
 
   // Free data bus
@@ -555,7 +561,7 @@ void nes_m2_low_wr(uint16_t addr, uint8_t data)
   // set M2 and /ROMSEL
   //	M2_HI();
   if (addr >= 0x8000)
-  {							 // addressing cart rom space
+  {              // addressing cart rom space
     ROMSEL_LO(); // romsel trails M2 during CPU operations
   }
 
@@ -614,7 +620,7 @@ void nes_m2_high_wr(uint16_t addr, uint8_t data)
   // set M2 and /ROMSEL
   //	M2_HI();
   if (addr >= 0x8000)
-  {							 // addressing cart rom space
+  {              // addressing cart rom space
     ROMSEL_LO(); // romsel trails M2 during CPU operations
   }
 
@@ -732,7 +738,7 @@ uint8_t nes_dualport_rd(uint16_t addr)
   ADDR_SET(addr);
 
   // enable data path
-  M2_HI();		 // M2 is kinda like R/W setting direction
+  M2_HI();     // M2 is kinda like R/W setting direction
   ROMSEL_LO(); // enable data buffers
   // data should now be driven on the bus but invalid
 
@@ -771,7 +777,7 @@ void nes_dualport_wr(uint16_t addr, uint8_t data)
   ADDR_SET(addr);
 
   // enable data path
-  M2_LO();		 // M2 is kinda like R/W setting direction
+  M2_LO();     // M2 is kinda like R/W setting direction
   ROMSEL_LO(); // enable data buffers
   // data should now be driven on the bus but invalid
 
@@ -863,7 +869,7 @@ uint8_t nes_cpu_page_rd_poll(uint8_t *data, uint8_t addrH, uint8_t first, uint8_
 
   // set M2 and /ROMSEL
   if (addrH >= 0x80)
-  {							 // addressing cart rom space
+  {              // addressing cart rom space
     ROMSEL_LO(); // romsel trails M2 during CPU operations
   }
   M2_HI();
@@ -888,20 +894,23 @@ uint8_t nes_cpu_page_rd_poll(uint8_t *data, uint8_t addrH, uint8_t first, uint8_
 
     // add some delay for 4-8MByte 3v flash
     NOP();
-    // NOP();	// one more for rainbow?
-    // NOP();	// one more for rainbow?
-    // NOP();	// one more for rainbow?
-    // NOP();	// one more for rainbow?
-    // NOP();	// one more for rainbow?
-    // NOP();	// one more for rainbow?
-    // NOP();	// one more for rainbow?
-    // NOP();	// one more for rainbow?
-    // NOP();	// one more for rainbow?
-    // NOP();	// one more for rainbow?
-    // NOP();	// one more for rainbow?
-    // NOP();	// one more for rainbow?
-    // NOP();	// one more for rainbow?
-    // NOP();	// one more for rainbow?
+    NOP(); // one more for rainbow?
+    NOP(); // one more for rainbow?
+    NOP(); // one more for rainbow?
+    NOP(); // one more for rainbow?
+    NOP(); // one more for rainbow?
+    NOP(); // one more for rainbow?
+    NOP(); // one more for rainbow?
+    NOP(); // one more for rainbow?
+    NOP(); // one more for rainbow?
+    NOP(); // one more for rainbow?
+    NOP(); // one more for rainbow?
+    NOP(); // one more for rainbow?
+    NOP(); // one more for rainbow?
+    NOP(); // one more for rainbow?
+    NOP(); // one more for rainbow?
+    NOP(); // one more for rainbow?
+    NOP(); // one more for rainbow?
 
     // latch data
     DATA_RD(data[i]);
@@ -929,7 +938,7 @@ uint8_t nes_cpu_page_rd_toggle(uint8_t *data, uint8_t addrH, uint8_t first, uint
 
   // set /ROMSEL
   if (addrH >= 0x80)
-  {							 // addressing cart rom space
+  {              // addressing cart rom space
     ROMSEL_LO(); // romsel trails M2 during CPU operations
   }
 
@@ -1038,6 +1047,10 @@ uint8_t nes_ppu_page_rd_poll(uint8_t *data, uint8_t addrH, uint8_t first, uint8_
     }
     // latch data
     DATA_RD(data[i]);
+
+    // set CHR /RD and /WR
+    CSRD_HI();
+
     // set lower address bits
     first++;
     ADDRL(first);
@@ -1127,39 +1140,50 @@ void ppu_page_wr_lfsr(uint16_t addr, uint8_t data)
 
   uint16_t i;
 
-  // addr with PPU /A13
-  if (addr < 0x2000)
-  { // below $2000 A13 clear, /A13 set
-    addr |= PPU_A13N_WORD;
-  } // above PPU $1FFF, A13 set, /A13 clear
-
   for (i = 0; i < 256; i++)
   {
-
-    ADDR_SET(addr); // returns data bus to input on AHL devices..
-
-    DATA_OP();
-
-    // get data
     data = lfsr_32();
-
-    // put data on bus
-    DATA_SET(data);
-
-    NOP();
-
-    // set CHR /RD and /WR
-    CSWR_LO();
-
-    // do some things that take time
+    nes_ppu_wr(addr, data);
     addr++;
-
-    // latch data to memory
-    CSWR_HI();
   }
 
-  // clear data bus
-  DATA_IP();
+  return;
+
+  // uint16_t i;
+
+  // // addr with PPU /A13
+  // if (addr < 0x2000)
+  // { // below $2000 A13 clear, /A13 set
+  //   addr |= PPU_A13N_WORD;
+  // } // above PPU $1FFF, A13 set, /A13 clear
+
+  // for (i = 0; i < 256; i++)
+  // {
+
+  //   ADDR_SET(addr); // returns data bus to input on AHL devices..
+
+  //   DATA_OP();
+
+  //   // get data
+  //   data = lfsr_32();
+
+  //   // put data on bus
+  //   DATA_SET(data);
+
+  //   NOP();
+
+  //   // set CHR /RD and /WR
+  //   CSWR_LO();
+
+  //   // do some things that take time
+  //   addr++;
+
+  //   // latch data to memory
+  //   CSWR_HI();
+  // }
+
+  // // clear data bus
+  // DATA_IP();
 }
 
 /* Desc:NES WRAM Page Write Random from LFSR
@@ -1188,23 +1212,28 @@ void cpu_page_wr_lfsr(uint16_t addr, uint8_t data)
  * Post:Byte written and ready for another write
  * Rtn:	None
  */
-void rnbw_prgrom_flash_wr(uint16_t addr, uint8_t data)
+uint8_t rnbw_prgrom_flash_wr(uint16_t addr, uint8_t data)
 {
-
   uint8_t rv;
+
+  nes_cpu_wr(0x8AAA, 0xAA);
+  nes_cpu_wr(0x8555, 0x55);
+  nes_cpu_wr(0x8AAA, 0xA0);
+  nes_cpu_wr(addr, data);
 
   // needs to be in unlock bypass mode
   // write data
-  nes_cpu_wr(addr, 0xA0);
-  nes_cpu_wr(addr, data);
+  // nes_cpu_wr(addr, 0xA0);
+  // nes_cpu_wr(addr, data);
 
   do
   {
     rv = nes_cpu_rd(addr);
     usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
   } while (rv != nes_cpu_rd(addr));
+  // TODO handle timeout
 
-  // return rv;
+  return rv;
 }
 
 /* Desc:NES RNBW CHR-ROM FLASH Write
@@ -1212,7 +1241,7 @@ void rnbw_prgrom_flash_wr(uint16_t addr, uint8_t data)
  * Post:Byte written and ready for another write
  * Rtn:	None
  */
-void rnbw_chrrom_flash_wr(uint16_t addr, uint8_t data)
+uint8_t rnbw_chrrom_flash_wr(uint16_t addr, uint8_t data)
 {
 
   uint8_t rv;
@@ -1229,7 +1258,7 @@ void rnbw_chrrom_flash_wr(uint16_t addr, uint8_t data)
   } while (rv != nes_ppu_rd(addr));
   // TODO handle timeout
 
-  return;
+  return rv;
 }
 
 /* Desc:NES VRC6 PRG-ROM FLASH Write
@@ -1285,7 +1314,7 @@ uint8_t nes_dualport_page_rd_poll(uint8_t *data, uint8_t addrH, uint8_t first, u
 
   // set lower address bits
   ADDRL(first); // doing this prior to entry and right after latching
-  NOP();				// adding extra NOP as it was needed on PRG
+  NOP();        // adding extra NOP as it was needed on PRG
                 // gives longest delay between address out and latching data
 
   for (i = 0; i <= len; i++)

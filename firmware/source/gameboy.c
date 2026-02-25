@@ -107,7 +107,7 @@ uint8_t gameboy_rd(uint16_t addr)
   // set SRAM /CS
   // low for $A000-BFFF
   if ((addr >= 0xA000) && (addr < 0xC000))
-  {							 // addressing cart RAM space
+  { // addressing cart RAM space
     GB_RAM_CS_LO();
   }
 
@@ -153,7 +153,7 @@ void gameboy_wr(uint16_t addr, uint8_t data)
   // set SRAM /CS
   // low for $A000-BFFF
   if ((addr >= 0xA000) && (addr < 0xC000))
-  {							 // addressing cart RAM space
+  { // addressing cart RAM space
     GB_RAM_CS_LO();
   }
 
@@ -214,7 +214,7 @@ void gameboy_pin31_wr(uint16_t addr, uint8_t data)
   // set SRAM /CS
   // low for $A000-BFFF
   if ((addr >= 0xA000) && (addr < 0xC000))
-  {							 // addressing cart RAM space
+  { // addressing cart RAM space
     GB_RAM_CS_LO();
   }
 
@@ -251,7 +251,8 @@ void gameboy_flash_pin31_wr(uint16_t addr, uint8_t data)
   uint8_t rv;
 
   // clean up address if we're flashing bank 0
-  if (cur_bank == 0x00) addr = addr & 0x3fff;
+  if (cur_bank == 0x00)
+    addr = addr & 0x3fff;
 
   // program byte sequence
   gameboy_wr(0x2000, 0x00); // TODO: should be 0x01 instead since MBC1 can't map bank 0?
@@ -260,7 +261,8 @@ void gameboy_flash_pin31_wr(uint16_t addr, uint8_t data)
   gameboy_pin31_wr(0x5555, 0xA0);
 
   // set bank if needed
-  if (cur_bank != 0x00) gameboy_wr(0x2000, cur_bank);
+  if (cur_bank != 0x00)
+    gameboy_wr(0x2000, cur_bank);
 
   // write the actual data
   gameboy_pin31_wr(addr, data);
@@ -276,46 +278,25 @@ void gameboy_flash_pin31_wr(uint16_t addr, uint8_t data)
 void gameboy_unlock_3v_flash_pin31_wr(uint16_t addr, uint8_t data)
 {
   uint8_t rv;
-  uint8_t rv2;
-  uint8_t done = 0;
 
   if (cur_bank == 0x00)
     addr = addr & 0x3fff;
 
-  // gameboy_pin31_wr(0x0AAA, 0xAA);
-  // gameboy_pin31_wr(0x0555, 0x55);
-  // gameboy_pin31_wr(0x0AAA, 0xA0);
-  // if(addr >= 0x4000) gameboy_wr(0x2000, cur_bank);
-
-  //gameboy_pin31_wr(0x5000, 0xA0); // could use addr instead of 0x5000
   gameboy_pin31_wr(addr, 0xA0); // unlock bypass command
   gameboy_pin31_wr(addr, data);
 
-  // check Status Register DQ6 (toggle bit)
-  rv = gameboy_rd(addr) & 0x40;
   do
   {
-    rv2 = gameboy_rd(addr) & 0x40;
-    if (rv == rv2)
-      done = 1;
-    rv = rv2;
+    rv = gameboy_rd(addr);
+    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
+  } while (rv != gameboy_rd(addr));
 
-  } while (done == 0);
-
-  /*
-    do {
-      rv = gameboy_rd(addr) & 0x40;
-      usbPoll();	//orignal kazzo needs this frequently to slurp up incoming data
-    } while (rv != gameboy_rd(addr));
-  */
   // TODO handle timeout
 }
 
 void gameboy_3v_flash_pin31_wr(uint16_t addr, uint8_t data)
 {
   uint8_t rv;
-  uint8_t rv2;
-  uint8_t done = 0;
 
   if (cur_bank == 0x00)
     addr = addr & 0x3fff;
@@ -432,7 +413,6 @@ uint8_t gameboy_page_rd_poll(uint8_t *data, uint8_t addrH, uint8_t first, uint8_
       NOP();
       NOP();
     }
-
   }
 
   // return bus to default
