@@ -1078,16 +1078,18 @@ uint8_t flash_buff(buffer *buff)
 
     if (buff->mapper == MBC1)
     {
-      // write_page_gb_flash( addrH, buff, gameboy_flash_pin31_wr);
+      // flash data using flash chip buffer to speed things up
+      // buffer write doesn't work with SST39VF1681/1682
+      // gameboy_write_page_buffer(addrH + 0x40, buff);
 
       // enter unlock bypass mode
+      // unlock bypass mode doesn't work with SST39VF1681/1682
       // gameboy_pin31_wr(0x0AAA, 0xAA);
       // gameboy_pin31_wr(0x0555, 0x55);
       // gameboy_pin31_wr(0x0AAA, 0x20);
 
       // write_page_gb_flash(addrH + 0x40, buff, gameboy_unlock_3v_flash_pin31_wr);
-      // write_page_gb_flash(addrH + 0x40, buff, gameboy_3v_flash_pin31_wr);
-      gameboy_write_page_buffer(addrH + 0x40, buff);
+      write_page_gb_flash(addrH + 0x40, buff, gameboy_3v_flash_pin31_wr);
 
       // unlock bypass reset
       // gameboy_pin31_wr(0x0000, 0x90);
@@ -1097,19 +1099,21 @@ uint8_t flash_buff(buffer *buff)
     if (buff->mapper == MBC5)
     {
       // flash data using flash chip buffer to speed things up
+      // buffer write doesn't work with SST39VF1681/1682
       // gameboy_write_page_buffer(addrH + 0x40, buff);
 
       // enter unlock bypass mode
-      gameboy_pin31_wr(0x0AAA, 0xAA);
-      gameboy_pin31_wr(0x0555, 0x55);
-      gameboy_pin31_wr(0x0AAA, 0x20);
+      // unlock bypass mode doesn't work with SST39VF1681/1682
+      // gameboy_pin31_wr(0x0AAA, 0xAA);
+      // gameboy_pin31_wr(0x0555, 0x55);
+      // gameboy_pin31_wr(0x0AAA, 0x20);
 
-      write_page_gb_flash(addrH + 0x40, buff, gameboy_unlock_3v_flash_pin31_wr);
-      // write_page_gb_flash(addrH + 0x40, buff, gameboy_3v_flash_pin31_wr);
+      // write_page_gb_flash(addrH + 0x40, buff, gameboy_unlock_3v_flash_pin31_wr);
+      write_page_gb_flash(addrH + 0x40, buff, gameboy_3v_flash_pin31_wr);
 
       // exit unlock bypass mode
-      gameboy_pin31_wr(0x0000, 0x90);
-      gameboy_pin31_wr(0x0000, 0x00);
+      // gameboy_pin31_wr(0x0000, 0x90);
+      // gameboy_pin31_wr(0x0000, 0x00);
     }
 
     break;

@@ -1049,7 +1049,7 @@ uint8_t nes_ppu_page_rd_poll(uint8_t *data, uint8_t addrH, uint8_t first, uint8_
     DATA_RD(data[i]);
 
     // set CHR /RD and /WR
-    CSRD_HI();
+    // CSRD_HI();
 
     // set lower address bits
     first++;
