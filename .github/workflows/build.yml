@@ -30,14 +30,14 @@ jobs:
       fail-fast: false
     runs-on: windows-2025
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
 
       - uses: abel0b/setup-premake@v2.4
         with:
           version: "5.0.0-beta2"
 
       - name: Add MSBuild to PATH
-        uses: microsoft/setup-msbuild@v1.1
+        uses: microsoft/setup-msbuild@v2
 
       # - name: Build SDL2 statically
       #   run: |
@@ -55,7 +55,7 @@ jobs:
         run: msbuild INLretro.sln -nologo -t:rebuild -verbosity:normal -clp:ForceConsoleColor -m -property:Configuration=Dist -p:Platform=${{ matrix.platform.arch }}
 
       - name: Upload INLretroGUI
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: INLretroGUI+CLI_Windows_${{ matrix.platform.arch }}
           path: Binaries/windows-${{ matrix.platform.binPath }}/Dist/INLretro
@@ -64,7 +64,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
 
       - uses: abel0b/setup-premake@v2.4
         with:
@@ -80,16 +80,16 @@ jobs:
         run: make config=dist
 
       - name: Upload INLretroGUI
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: INLretroGUI+CLI_Linux
           path: Binaries/linux-x86_64/Dist/INLretro
 
   macos:
-    runs-on: macos-13
+    runs-on: macos-14
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
 
       - uses: abel0b/setup-premake@v2.4
         with:
@@ -106,7 +106,7 @@ jobs:
         run: make config=dist
 
       - name: Upload INLretroGUI (app)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: INLretroGUI_macOS
           path: Binaries/macosx-universal/Dist/app
@@ -117,7 +117,7 @@ jobs:
           rm Binaries/macosx-universal/Dist/INLretro/INLretro.ini
 
       - name: Upload INLretro CLI
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: INLretroCLI_macOS
           path: Binaries/macosx-universal/Dist/INLretro
