@@ -103,6 +103,31 @@ local function rom_manf_id()
   end
 end
 
+-- erase ROM
+local function rom_erase()
+  local i = 0
+  local rv
+
+  log.section("Erasing ROM")
+  dict.gameboy("GAMEBOY_PIN31_WR", 0x0AAA, 0xAA)
+  dict.gameboy("GAMEBOY_PIN31_WR", 0x0555, 0x55)
+  dict.gameboy("GAMEBOY_PIN31_WR", 0x0AAA, 0x80)
+  dict.gameboy("GAMEBOY_PIN31_WR", 0x0AAA, 0xAA)
+  dict.gameboy("GAMEBOY_PIN31_WR", 0x0555, 0x55)
+  dict.gameboy("GAMEBOY_PIN31_WR", 0x0AAA, 0x10)
+
+  -- TODO create some function to pass the read value
+  -- that's smart enough to figure out if the board is actually erasing or not
+  rv = dict.gameboy("GAMEBOY_RD", 0x0000)
+  while rv ~= dict.gameboy("GAMEBOY_RD", 0x0000) do
+    spinner.update("Erasing")
+    rv = dict.gameboy("GAMEBOY_RD", 0x0000)
+    i = i + 1
+  end
+  spinner.clear()
+  log.success("Done erasing ROM", i .. " naks")
+end
+
 -- dump ROM
 local function rom_dump(file, rom_size_KB, debug)
   -- ROM dump 16KB at a time
@@ -199,7 +224,7 @@ local function ram_dump(file, ram_size_KB, debug)
   spinner.clear()
 end
 
--- host write one bank at a time
+-- write to the RAM, assumes the RAM was enabled/disabled as desired prior to calling
 local function ram_write(file, ram_size_KB, debug)
   log.section("Programming RAM")
   log.info("RAM size", ram_size_KB .. "KB")
@@ -207,9 +232,6 @@ local function ram_write(file, ram_size_KB, debug)
   local bank_size = 8
   local cur_bank = 0
   local num_banks = math.floor(ram_size_KB / bank_size)
-
-  -- enable RAM
-  dict.gameboy("GAMEBOY_WR", 0x0000, 0x0A)
 
   while cur_bank < num_banks do
     if debug then
@@ -227,14 +249,11 @@ local function ram_write(file, ram_size_KB, debug)
     cur_bank = cur_bank + 1
   end
 
-  -- disable RAM
-  dict.gameboy("GAMEBOY_WR", 0x0000, 0x00)
-
   spinner.clear()
   log.success("Done programming RAM")
 end
 
-local function ram_test(debug)
+local function ram_detect(debug)
   local test = true
   local read_value
   local saved_value
@@ -263,12 +282,6 @@ local function ram_test(debug)
 
   -- disable RAM
   dict.gameboy("GAMEBOY_WR", 0x0000, 0x00)
-
-  if test then
-    log.success("RAM detected")
-  else
-    log.error("RAM not detected")
-  end
 
   return test
 end
@@ -454,30 +467,50 @@ local function process(process_opts, console_opts)
     end
 
     -- RAM tests
-    rv = ram_test(DEBUG)
-    if rv == true then
-      if options.force_wram_test then
-        log.print()
-        log.warning("Flag 'force_wram_test' enabled")
-      end
-      local isHeaderValid = gb.file_header.isValid or gb.rom_header.isValid
-      local hasBattery = gb.file_header:has_battery() or gb.rom_header:has_battery()
-      if options.force_wram_test or isHeaderValid then
-        if not options.force_wram_test and hasBattery then
-          log.print()
-          log.warning("Can't exercise RAM because ROM has battery backed data")
+    rv = ram_detect(DEBUG)
+
+    if rv == false then -- RAM not found
+      if do_ram_dump or do_ram_write then
+        log.error("RAM not detected")
+        return false
+      elseif do_rom_write then
+        if options.force_wram_test then
+          log.warning("Additional option 'force_wram_test' implies RAM presence")
+          log.error("RAM not detected")
+          return false
+        elseif gb.file_header.isValid and gb.file_header:get_ram_size() ~= 0 then
+          log.warning("ROM header settings implies RAM")
+          log.error("RAM not detected")
+          -- return false
+        elseif wram_size ~= 0 then
+          log.warning("CLI options specify " .. wram_size .. "KB of RAM")
+          log.error("RAM not detected")
+          return false
         else
-          if wram_size == 0 then
-            wram_size = ram_get_size(DEBUG)
-          end
-          if wram_size ~= 0 then
-            rv = ram_exercise(wram_size, retroprog_id, DEBUG)
-            -- exit script if test fails
-            if not rv then return end
-          end
+          log.info("RAM not detected")
         end
-      else
-        log.warning("Can't exercise RAM because data could be battery backed")
+      end
+    else -- RAM found
+      log.success("RAM detected")
+      if wram_size == 0 then
+        wram_size = ram_get_size(DEBUG)
+      end
+      if (do_rom_dump or do_ram_dump) and options.force_wram_test then
+        log.warning("Additional option 'force_wram_test' is ignored when dumping ROM or RAM")
+      elseif do_rom_write then
+        if wram_size < gb.file_header:get_ram_size() then
+          log.error("On board RAM size is less than ROM header RAM size")
+          return false
+        elseif options.force_wram_test then
+          rv = ram_exercise(wram_size, retroprog_id, DEBUG)
+          if not rv then return false end
+        else
+          log.warning("Can't test RAM because data could be battery backed")
+          log.warning("Use additional option 'force_wram_test' to force RAM test")
+        end
+      elseif do_ram_write then
+        rv = ram_exercise(wram_size, retroprog_id, DEBUG)
+        if not rv then return false end
       end
     end
   end
@@ -528,6 +561,9 @@ local function process(process_opts, console_opts)
     -- open file
     file = assert(io.open(ram_write_file.filename, "rb"))
 
+    -- enable RAM
+    dict.gameboy("GAMEBOY_WR", 0x0000, 0x0A)
+
     -- flash cart
     if wram_size ~= 0 then
       time.start()
@@ -537,6 +573,9 @@ local function process(process_opts, console_opts)
       log.error("RAM size not provided")
       return
     end
+
+    -- disable RAM
+    dict.gameboy("GAMEBOY_WR", 0x0000, 0x00)
 
     -- close file
     assert(file:close())
@@ -576,29 +615,10 @@ local function process(process_opts, console_opts)
 
   -- erase the cart
   if do_erase then
-    local i = 0
-
     -- erase ROM only if needed
     if rom_size ~= 0 then
-      log.section("Erasing ROM")
       time.start()
-      dict.gameboy("GAMEBOY_PIN31_WR", 0x0AAA, 0xAA)
-      dict.gameboy("GAMEBOY_PIN31_WR", 0x0555, 0x55)
-      dict.gameboy("GAMEBOY_PIN31_WR", 0x0AAA, 0x80)
-      dict.gameboy("GAMEBOY_PIN31_WR", 0x0AAA, 0xAA)
-      dict.gameboy("GAMEBOY_PIN31_WR", 0x0555, 0x55)
-      dict.gameboy("GAMEBOY_PIN31_WR", 0x0AAA, 0x10)
-
-      -- TODO create some function to pass the read value
-      -- that's smart enough to figure out if the board is actually erasing or not
-      rv = dict.gameboy("GAMEBOY_RD", 0x0000)
-      while rv ~= dict.gameboy("GAMEBOY_RD", 0x0000) do
-        spinner.update("Erasing")
-        rv = dict.gameboy("GAMEBOY_RD", 0x0000)
-        i = i + 1
-      end
-      spinner.clear()
-      log.success("Done erasing ROM", i .. " naks")
+      rom_erase()
       time.report(rom_size)
     end
   end

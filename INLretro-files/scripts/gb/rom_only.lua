@@ -66,6 +66,32 @@ local function rom_manf_id()
   end
 end
 
+-- erase ROM
+local function rom_erase()
+  local i = 0
+  local rv
+
+  log.section("Erasing ROM")
+  dict.gameboy("GAMEBOY_WR", 0x2000, 0x01)
+  dict.gameboy("GAMEBOY_PIN31_WR", 0x5555, 0xAA)
+  dict.gameboy("GAMEBOY_PIN31_WR", 0x2AAA, 0x55)
+  dict.gameboy("GAMEBOY_PIN31_WR", 0x5555, 0x80)
+  dict.gameboy("GAMEBOY_PIN31_WR", 0x5555, 0xAA)
+  dict.gameboy("GAMEBOY_PIN31_WR", 0x2AAA, 0x55)
+  dict.gameboy("GAMEBOY_PIN31_WR", 0x5555, 0x10)
+
+  -- TODO create some function to pass the read value
+  -- that's smart enough to figure out if the board is actually erasing or not
+  rv = dict.gameboy("GAMEBOY_RD", 0x0000)
+  while rv ~= dict.gameboy("GAMEBOY_RD", 0x0000) do
+    spinner.update("Erasing")
+    rv = dict.gameboy("GAMEBOY_RD", 0x0000)
+    i = i + 1
+  end
+  spinner.clear()
+  log.success("Done erasing ROM", i .. " naks")
+end
+
 -- dump the ROM
 local function rom_dump(file, rom_size_KB, debug)
   -- ROM dump 32KB at a time
@@ -178,7 +204,7 @@ local function ram_dump(file, ram_size_KB, debug)
   spinner.clear()
 end
 
--- host write one bank at a time
+-- write to the PRG-RAM, assumes the PRG-RAM was enabled/disabled as desired prior to calling
 local function ram_write(file, ram_size_KB, debug)
   log.section("Programming RAM")
   log.info("RAM size", ram_size_KB .. "KB")
@@ -479,29 +505,10 @@ local function process(process_opts, console_opts)
 
   -- erase the cart
   if do_erase then
-    local i = 0
-
     -- erase ROM only if needed
     if rom_size ~= 0 then
-      log.section("Erasing ROM")
       time.start()
-      dict.gameboy("GAMEBOY_WR", 0x5555, 0xAA)
-      dict.gameboy("GAMEBOY_WR", 0x2AAA, 0x55)
-      dict.gameboy("GAMEBOY_WR", 0x5555, 0x80)
-      dict.gameboy("GAMEBOY_WR", 0x5555, 0xAA)
-      dict.gameboy("GAMEBOY_WR", 0x2AAA, 0x55)
-      dict.gameboy("GAMEBOY_WR", 0x5555, 0x10)
-
-      -- TODO create some function to pass the read value
-      -- that's smart enough to figure out if the board is actually erasing or not
-      rv = dict.gameboy("GAMEBOY_RD", 0x0000)
-      while rv ~= dict.gameboy("GAMEBOY_RD", 0x0000) do
-        spinner.update("Erasing")
-        rv = dict.gameboy("GAMEBOY_RD", 0x0000)
-        i = i + 1
-      end
-      spinner.clear()
-      log.success("Done erasing ROM", i .. " naks")
+      rom_erase()
       time.report(rom_size)
     end
   end

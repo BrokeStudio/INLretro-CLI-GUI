@@ -290,7 +290,7 @@ local function ram_dump(file, start_bank, ram_size_KB, debug)
   spinner.clear()
 end
 
--- host write one bank at a time
+-- write to the PRG-RAM, assumes the PRG-RAM was enabled/disabled as desired prior to calling
 local function ram_write(file, start_bank, ram_size_KB, debug)
   local KB_per_bank = 32 -- 128KByte addressable per bank, but only use lower byte of each 16bit word
   local num_banks = math.floor(ram_size_KB / KB_per_bank)

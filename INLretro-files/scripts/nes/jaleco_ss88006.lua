@@ -465,7 +465,7 @@ local function prg_ram_dump(file, ram_size_KB, debug)
   spinner.clear()
 end
 
--- host write one bank at a time
+-- write to the PRG-RAM, assumes the PRG-RAM was enabled/disabled as desired prior to calling
 local function prg_ram_write(file, ram_size_KB, debug)
   init_mapper()
 
@@ -853,7 +853,7 @@ local function process(process_opts, console_opts)
       wram_size = 8
 
       if options.force_wram_test and (do_rom_dump or do_ram_dump) then
-        log.warning("Additional option 'force_wram_test' ignored when dumping PRG-ROM or PRG-RAM")
+        log.warning("Additional option 'force_wram_test' is ignored when dumping PRG-ROM or PRG-RAM")
       elseif do_rom_write or do_ram_write then
         if options.force_wram_test or do_ram_write then
           rv = prg_ram_test(wram_size, retroprog_id, DEBUG)

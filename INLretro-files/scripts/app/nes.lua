@@ -532,7 +532,7 @@ local function detect_mapper_mirroring(debug)
     --]]
 
   -- Rtn: VERT/HORZ/1SCRNA/1SCRNB
-  return nil
+  return "UNKNOWN"
 end
 
 

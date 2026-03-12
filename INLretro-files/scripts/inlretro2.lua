@@ -233,7 +233,7 @@ local function gb_exec(process_opts, console_opts)
   }
 
   local mappers = {
-    romonly       = require "scripts.gb.romonly",
+    rom_only      = require "scripts.gb.rom_only",
     mbc1          = require "scripts.gb.mbc1",
     mbc5          = require "scripts.gb.mbc5",
 
@@ -454,7 +454,7 @@ local function nes_exec(process_opts, console_opts)
     -- cnrom             = require "scripts.nes.cnrom",
     -- dualport          = require "scripts.nes.dualport",
     -- easynsf           = require "scripts.nes.easyNSF",
-    -- easynsf512        = require "scripts.nes.easyNSF512",
+    nsf_512        = require "scripts.nes.nsf_512",
     fme7           = require "scripts.nes.fme7",
     jaleco_ss88006 = require "scripts.nes.jaleco_ss88006",
     mapper30       = require "scripts.nes.mapper30",
@@ -462,7 +462,7 @@ local function nes_exec(process_opts, console_opts)
     mmc2           = require "scripts.nes.mmc2",
     mmc3           = require "scripts.nes.mmc3",
     -- mmc4              = require "scripts.nes.mmc4",
-    -- mmc5              = require "scripts.nes.mmc5",
+    mmc5           = require "scripts.nes.mmc5",
     nrom           = require "scripts.nes.nrom",
     rainbow        = require "scripts.nes.rainbow",
     unrom          = require "scripts.nes.unrom",

@@ -414,7 +414,7 @@ local function prg_ram_dump(file, ram_size_KB, debug)
   spinner.clear()
 end
 
--- host write one bank at a time
+-- write to the PRG-RAM, assumes the PRG-RAM was enabled/disabled as desired prior to calling
 local function prg_ram_write(file, ram_size_KB, debug)
   init_mapper()
 

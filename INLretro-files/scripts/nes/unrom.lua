@@ -392,12 +392,7 @@ local function process(process_opts, console_opts)
   local mirror           = console_opts.mirror
 
   -- parse additional data
-  if additional_opts["bank_table"] == nil then
-    log.error("Bank table address is missing")
-    return false
-  else
-    bank_table_base = tonumber(additional_opts["bank_table"])
-  end
+  bank_table_base        = options.bank_table
 
   -- Initialize device i/o
   dict.io("IO_RESET")
@@ -418,7 +413,7 @@ local function process(process_opts, console_opts)
     if nes.header.isValid then
       if (nes.header.mirroringType == nes.MIRRORING_TYPE_HORIZONTAL and mirroring ~= "HORZ")
           or (nes.header.mirroringType == nes.MIRRORING_TYPE_VERTICAL and mirroring ~= "VERT")
-          or (nes.header.mirroringType == nes.MIRRORING_TYPE_VERTICAL and (mirroring ~= "1SCRNA" or mirroring ~= "1SCRNB"))
+      -- or (nes.header.mirroringType == nes.MIRRORING_TYPE_VERTICAL and (mirroring ~= "1SCRNA" or mirroring ~= "1SCRNB"))
       -- or  (nes.header.mirroringType == nes.MIRRORING_TYPE_FOUR_SCREENS and mirroring ~= "4SCRN")
       then
         log.bullet("PCB mirroring sensed:", mirroring)

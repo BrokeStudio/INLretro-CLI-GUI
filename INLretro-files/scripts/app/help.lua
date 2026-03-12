@@ -124,17 +124,12 @@ local function file_wr_bin(file, data)
 end
 
 local function copy_table(orig)
-  local orig_type = type(orig)
-  local copy
-  if orig_type == 'table' then
-    copy = {}
-    for orig_key, orig_value in pairs(orig) do
-      copy[orig_key] = orig_value
-    end
-  else -- number, string, boolean, etc
-    copy = orig
+  assert(type(orig) == "table", "copy_table expects a table")
+  local copy = {}
+  for orig_key, orig_value in pairs(orig) do
+    copy[orig_key] = orig_value
   end
-  return copy
+  return setmetatable(copy, getmetatable(orig))
 end
 
 local function dump_table(o, l)

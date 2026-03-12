@@ -26,7 +26,7 @@ local mapname = "MMC3"
 ██║ ╚═╝ ██║██║███████║╚██████╗    ██║     ╚██████╔╝██║ ╚████║╚██████╗███████║
 ╚═╝     ╚═╝╚═╝╚══════╝ ╚═════╝    ╚═╝      ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝╚══════╝
 
-  --]]
+--]]
 
 local function create_header(file, prgKB, chrKB)
   nes.write_header(file, prgKB, chrKB, op_buffer[mapname], 0)
@@ -162,7 +162,7 @@ end
 ██║     ██║  ██║╚██████╔╝      ██║  ██║╚██████╔╝██║ ╚═╝ ██║
 ╚═╝     ╚═╝  ╚═╝ ╚═════╝       ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝
 
-  --]]
+--]]
 
 -- read PRG-ROM flash ID
 local function prg_rom_manf_id()
@@ -268,6 +268,33 @@ local function prg_rom_dump(file, rom_size_KB, debug)
   spinner.clear()
 end
 
+-- erase PRG-ROM
+local function prg_rom_erase()
+  local i = 0
+  local rv
+
+  init_mapper()
+
+  log.section("Erasing PRG-ROM")
+  dict.nes("NES_CPU_WR", 0xD555, 0xAA)
+  dict.nes("NES_CPU_WR", 0xAAAA, 0x55)
+  dict.nes("NES_CPU_WR", 0xD555, 0x80)
+  dict.nes("NES_CPU_WR", 0xD555, 0xAA)
+  dict.nes("NES_CPU_WR", 0xAAAA, 0x55)
+  dict.nes("NES_CPU_WR", 0xD555, 0x10)
+
+  -- TODO create some function to pass the read value
+  -- that's smart enough to figure out if the board is actually erasing or not
+  rv = dict.nes("NES_CPU_RD", 0x8000)
+  while rv ~= dict.nes("NES_CPU_RD", 0x8000) do
+    spinner.update("Erasing")
+    rv = dict.nes("NES_CPU_RD", 0x8000)
+    i = i + 1
+  end
+  spinner.clear()
+  log.success("Done erasing PRG-ROM", i .. " naks")
+end
+
 -- host flash one bank at a time
 local function prg_rom_flash(file, rom_size_KB, debug)
   init_mapper()
@@ -313,7 +340,7 @@ end
 ╚██████╗██║  ██║██║  ██║      ██║  ██║╚██████╔╝██║ ╚═╝ ██║
  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝      ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝
 
-  --]]
+--]]
 
 -- read CHR-ROM flash ID
 local function chr_rom_manf_id()
@@ -415,6 +442,34 @@ local function chr_dump(file, rom_size_KB, debug)
   spinner.clear()
 end
 
+-- erase CHR-ROM
+local function chr_rom_erase()
+  local i = 0
+  local rv
+
+  init_mapper()
+
+  log.section("Erasing CHR-ROM")
+  dict.nes("NES_PPU_WR", 0x1555, 0xAA)
+  dict.nes("NES_PPU_WR", 0x1AAA, 0x55)
+  dict.nes("NES_PPU_WR", 0x1555, 0x80)
+  dict.nes("NES_PPU_WR", 0x1555, 0xAA)
+  dict.nes("NES_PPU_WR", 0x1AAA, 0x55)
+  dict.nes("NES_PPU_WR", 0x1555, 0x10)
+
+  -- TODO create some function to pass the read value
+  -- that's smart enough to figure out if the board is actually erasing or not
+  i = 0
+  rv = dict.nes("NES_PPU_RD", 0x0000)
+  while rv ~= dict.nes("NES_PPU_RD", 0x0000) do
+    spinner.update("Erasing")
+    rv = dict.nes("NES_PPU_RD", 0x0000)
+    i = i + 1
+  end
+  spinner.clear()
+  log.success("Done erasing CHR-ROM", i .. " naks")
+end
+
 -- host flash one bank at a time
 local function chr_rom_flash(file, rom_size_KB, debug)
   init_mapper()
@@ -461,7 +516,7 @@ end
 ██║     ██║  ██║╚██████╔╝      ██║  ██║██║  ██║██║ ╚═╝ ██║
 ╚═╝     ╚═╝  ╚═╝ ╚═════╝       ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝
 
-  --]]
+--]]
 
 -- dump the PRG-RAM, assumes the PRG-RAM was enabled/disabled as desired prior to calling
 local function prg_ram_dump(file, ram_size_KB, debug)
@@ -487,7 +542,7 @@ local function prg_ram_dump(file, ram_size_KB, debug)
   spinner.clear()
 end
 
--- host write one bank at a time
+-- write to the PRG-RAM, assumes the PRG-RAM was enabled/disabled as desired prior to calling
 local function prg_ram_write(file, ram_size_KB, debug)
   init_mapper()
 
@@ -616,7 +671,7 @@ end
 ╚██████╗██║  ██║██║  ██║      ██║  ██║██║  ██║██║ ╚═╝ ██║
  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝      ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝
 
-  --]]
+--]]
 
 local function chr_ram_test(chr_ram_size, retroprog_id, debug)
   dict.stuff("RESET_LFSR") -- sets it to 1
@@ -806,7 +861,7 @@ local function process(process_opts, console_opts)
       wram_size = 8
 
       if options.force_wram_test and (do_rom_dump or do_ram_dump) then
-        log.warning("Additional option 'force_wram_test' ignored when dumping PRG-ROM or PRG-RAM")
+        log.warning("Additional option 'force_wram_test' is ignored when dumping PRG-ROM or PRG-RAM")
       elseif do_rom_write or do_ram_write then
         if options.force_wram_test or do_ram_write then
           rv = prg_ram_test(wram_size, retroprog_id, DEBUG)
@@ -949,57 +1004,17 @@ local function process(process_opts, console_opts)
 
   -- erase the cart
   if do_erase then
-    local i = 0
-
     -- erase PRG-ROM only if needed
     if prg_size ~= 0 then
-      init_mapper()
-      log.section("Erasing PRG-ROM")
       time.start()
-      dict.nes("NES_CPU_WR", 0xD555, 0xAA)
-      dict.nes("NES_CPU_WR", 0xAAAA, 0x55)
-      dict.nes("NES_CPU_WR", 0xD555, 0x80)
-      dict.nes("NES_CPU_WR", 0xD555, 0xAA)
-      dict.nes("NES_CPU_WR", 0xAAAA, 0x55)
-      dict.nes("NES_CPU_WR", 0xD555, 0x10)
-
-      -- TODO create some function to pass the read value
-      -- that's smart enough to figure out if the board is actually erasing or not
-      rv = dict.nes("NES_CPU_RD", 0x8000)
-      while rv ~= dict.nes("NES_CPU_RD", 0x8000) do
-        spinner.update("Erasing")
-        rv = dict.nes("NES_CPU_RD", 0x8000)
-        i = i + 1
-      end
-      spinner.clear()
-      log.success("Done erasing PRG-ROM", i .. " naks")
+      prg_rom_erase()
       time.report(prg_size)
     end
 
     -- erase CHR-ROM only if needed
     if chr_size ~= 0 then
-      init_mapper()
-
-      log.section("Erasing CHR-ROM")
       time.start()
-      dict.nes("NES_PPU_WR", 0x1555, 0xAA)
-      dict.nes("NES_PPU_WR", 0x1AAA, 0x55)
-      dict.nes("NES_PPU_WR", 0x1555, 0x80)
-      dict.nes("NES_PPU_WR", 0x1555, 0xAA)
-      dict.nes("NES_PPU_WR", 0x1AAA, 0x55)
-      dict.nes("NES_PPU_WR", 0x1555, 0x10)
-
-      -- TODO create some function to pass the read value
-      -- that's smart enough to figure out if the board is actually erasing or not
-      i = 0
-      rv = dict.nes("NES_PPU_RD", 0x0000)
-      while rv ~= dict.nes("NES_PPU_RD", 0x0000) do
-        spinner.update("Erasing")
-        rv = dict.nes("NES_PPU_RD", 0x0000)
-        i = i + 1
-      end
-      spinner.clear()
-      log.success("Done erasing CHR-ROM", i .. " naks")
+      chr_rom_erase()
       time.report(chr_size)
     end
   end

@@ -28,9 +28,10 @@ end
 
 --compare the two files return true if identical
 --files should be closed prior to calling, files are closed after compared
-local function compare(filename1, filename2, size_must_equal, debug, offset)
+local function compare(filename1, filename2, size_must_equal, debug, offset1, offset2)
   --set default values if they're not passed
-  offset = offset or 0
+  offset1 = offset1 or 0
+  offset2 = offset2 or 0
   debug = debug or false
 
   local file1 = assert(io.open(filename1, "rb"))
@@ -44,11 +45,14 @@ local function compare(filename1, filename2, size_must_equal, debug, offset)
 
   local rv = true
 
-  --ste offset
-  if offset ~= 0 then
-    byte_num = file1:read(offset)
-    byte_num = file2:read(offset)
-    byte_num = byte_num + offset
+  -- set offsets
+  if offset1 ~= 0 then
+    byte_num = file1:read(offset1)
+    byte_num = byte_num + offset1
+  end
+
+  if offset2 ~= 0 then
+    local dummy = file2:read(offset2)
   end
 
   while true do --exit when end of file 1 reached

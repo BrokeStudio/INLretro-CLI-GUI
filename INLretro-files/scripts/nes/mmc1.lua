@@ -466,7 +466,7 @@ local function prg_ram_dump(file, ram_size_KB, debug)
   spinner.clear()
 end
 
--- host write one bank at a time
+-- write to the PRG-RAM, assumes the PRG-RAM was enabled/disabled as desired prior to calling
 local function prg_ram_write(file, ram_size_KB, debug)
   init_mapper()
 
@@ -862,6 +862,24 @@ local function process(process_opts, console_opts)
 
     chr_ram_detected = nes.ppu_ram_sense(0x1000, DEBUG)
 
+    -- CHR-RAM tests
+    if chr_ram_detected then
+      -- test CHR-RAM banking and try to detect size
+      chr_ram_size = chr_ram_get_size(DEBUG)
+
+      -- test CHR-RAM
+      if chr_ram_size ~= 0 then
+        rv = chr_ram_exercise(chr_ram_size, retroprog_id, DEBUG)
+        -- exit script if test fails
+        if not rv then return end
+      end
+    else
+      if chr_ram_size == 0 then
+        log.error("CHR-RAM not detected")
+        return
+      end
+    end
+
     -- attempt to read PRG-ROM flash ID
     if options.force_flash_test or (do_rom_write and prg_size ~= 0) then
       rv = prg_rom_manf_id()
@@ -911,19 +929,6 @@ local function process(process_opts, console_opts)
         end
       else
         log.warning("Can't exercise PRG-RAM because data could be battery backed")
-      end
-    end
-
-    -- CHR-RAM tests
-    if chr_ram_detected then
-      -- test CHR-RAM banking and try to detect size
-      chr_ram_size = chr_ram_get_size(DEBUG)
-
-      -- test CHR-RAM
-      if chr_ram_size ~= 0 then
-        rv = chr_ram_exercise(chr_ram_size, retroprog_id, DEBUG)
-        -- exit script if test fails
-        if not rv then return end
       end
     end
   end
