@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y gcc-avr avr-libc wget tar
@@ -44,7 +44,7 @@ jobs:
           cp firmware/build_avr/* firmware/release/
 
       - name: Upload INLretro firmware
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: INLretro-firmware-AV04
           path: firmware/release
