@@ -915,6 +915,9 @@ uint8_t nes_cpu_page_rd_poll(uint8_t *data, uint8_t addrH, uint8_t first, uint8_
     // latch data
     DATA_RD(data[i]);
 
+    NOP();
+    NOP();
+
     // set lower address bits
     // ADDRL(++first);	THIS broke things, on stm adapter because macro expands it twice!
     first++;
@@ -936,6 +939,9 @@ uint8_t nes_cpu_page_rd_toggle(uint8_t *data, uint8_t addrH, uint8_t first, uint
   // set address bus
   ADDRH(addrH);
 
+  // set lower address bits
+  ADDRL(first); // doing this prior to entry and right after latching
+
   // set /ROMSEL
   if (addrH >= 0x80)
   {              // addressing cart rom space
@@ -943,7 +949,7 @@ uint8_t nes_cpu_page_rd_toggle(uint8_t *data, uint8_t addrH, uint8_t first, uint
   }
 
   // set lower address bits
-  ADDRL(first); // doing this prior to entry and right after latching
+  // ADDRL(first); // doing this prior to entry and right after latching
   // extra NOP was needed on stm6 as address hadn't settled in time for the very first read
   NOP();
   // gives longest delay between address out and latching data
@@ -975,6 +981,8 @@ uint8_t nes_cpu_page_rd_toggle(uint8_t *data, uint8_t addrH, uint8_t first, uint
     // latch data
     DATA_RD(data[i]);
     M2_LO();
+    NOP();
+    NOP();
     // set lower address bits
     // ADDRL(++first);	THIS broke things, on stm adapter because macro expands it twice!
     first++;
