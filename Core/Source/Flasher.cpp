@@ -135,7 +135,7 @@ USBtransfer *Flasher::usb_inldevice_open(int libusb_log, const char *retroprog_i
  */
 void Flasher::usb_inldevice_close(USBtransfer *transfer)
 {
-  if (transfer)
+  if (transfer && transfer->handle)
   {
     close_usb(transfer->handle);
   }
@@ -155,27 +155,25 @@ void Flasher::usb_inldevice_close(USBtransfer *transfer)
  */
 bool Flasher::detect(const char *retroprog_id)
 {
+  bool result = true;
+
   // USB variables
-  USBtransfer *transfer = NULL;
+  USBtransfer *transfer = nullptr;
 
   // Default to no libusb logging.
   int libusb_log = LIBUSB_LOG_LEVEL_NONE;
 
   transfer = usb_inldevice_open(libusb_log, retroprog_id, &AppLog::log);
-  if (!transfer)
+
+  if (!transfer || transfer->handle == nullptr)
   {
-    return false;
+    result = false;
   }
 
-  if (transfer->handle == NULL)
-  {
-    return false;
-  }
-
-  // USB device is open, we can clean up and return
+  // We can now clean up and return
   usb_inldevice_close(transfer);
 
-  return true;
+  return result;
 }
 
 /**
@@ -258,13 +256,13 @@ int Flasher::t_inlprog_opt(const t_INLoptions_std &opts)
 int Flasher::inlprog_opt(const t_INLoptions_std &opts)
 {
   // USB variables
-  USBtransfer *transfer = NULL;
+  USBtransfer *transfer = nullptr;
 
   // Default to no libusb logging.
   int libusb_log = LIBUSB_LOG_LEVEL_NONE;
 
   // Lua variables.
-  lua_State *L = NULL;
+  lua_State *L = nullptr;
 
   // Default script
   std::string luaScript = "";
@@ -314,16 +312,16 @@ int Flasher::inlprog_opt(const t_INLoptions_std &opts)
   // transfer->handle = usb_open(opts.retroprog_id.c_str()[0]);
 
   check_mem(&log, transfer);
-  /*if (transfer->handle == NULL) {
+  /*if (transfer->handle == nullptr) {
     printf("oops");
   }*/
 
-  if (transfer->handle == NULL)
+  if (transfer->handle == nullptr)
   {
     // std::cout << "Unable to open INL retro-prog usb device handle" << std::endl;
     goto error;
   }
-  // check(transfer->handle != NULL, "Unable to open INL retro-prog usb device handle.");
+  // check(transfer->handle != nullptr, "Unable to open INL retro-prog usb device handle.");
 
   // pass USB handle to Lua object
   lua.usb_handle = transfer->handle;
