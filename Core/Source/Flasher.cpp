@@ -108,7 +108,11 @@ Flasher::Flasher(const std::string &id, bool isActive)
  * @brief Destroy the Flasher:: Flasher object
  *
  */
-Flasher::~Flasher() {}
+Flasher::~Flasher()
+{
+  if (this->flashThread.joinable())
+    this->flashThread.join();
+}
 
 /**
  * @brief Setup INL USB Device
@@ -213,12 +217,14 @@ bool Flasher::exec(t_INLoptions_std opts)
   opts.retroprog_id = id;
   if (opts.gui)
   {
-    std::thread t(&Flasher::t_inlprog_opt, this, opts);
-    t.detach();
+    if (this->flashThread.joinable())
+      this->flashThread.join();
+    this->flashThread = std::thread(&Flasher::t_inlprog_opt, this, opts);
   }
   else
   {
     inlprog_opt(opts);
+    isFlashing = false;
   }
 
   return true;

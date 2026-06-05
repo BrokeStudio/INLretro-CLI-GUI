@@ -2,7 +2,10 @@
 #ifndef FLASHER_H
 #define FLASHER_H
 
+#include <atomic>
+#include <thread>
 #include <vector>
+
 #include "usb_operations.h"
 #include "Lua.h"
 
@@ -18,7 +21,7 @@ public:
   static std::vector<Flasher *> list;
 
   std::string id;
-  bool isFlashing;
+  std::atomic_bool isFlashing;
   bool isActive;
   Lua lua;
   Log log;
@@ -50,6 +53,8 @@ public:
   }
 
 private:
+  std::thread flashThread;
+
   // private methods
   void cleanup(USBtransfer *transfer);
 
