@@ -73,7 +73,18 @@ namespace Settings
         set_theme(2);
     }
     else if (key == "font")
-      settings.font = std::stoi(value) < 2 ? std::stoi(value) : 0;
+    {
+      int font;
+      try
+      {
+        font = std::stoi(value);
+      }
+      catch (const std::exception &e)
+      {
+        font = 0;
+      }
+      settings.font = (font == 0 || font == 1) ? font : 0;
+    }
     else if (key == "save_on_exit")
       settings.save_on_exit = value == "true" ? true : false;
     else if (key == "firmware_update_script")
