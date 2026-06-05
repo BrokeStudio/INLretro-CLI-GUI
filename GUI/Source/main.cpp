@@ -118,6 +118,7 @@ int main(int argc, char **argv)
 #endif
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
   {
+    libusb_exit(NULL);
     printf("Error: %s\n", SDL_GetError());
     return -1;
   }
@@ -140,6 +141,8 @@ int main(int argc, char **argv)
   SDL_Window *window = SDL_CreateWindow("INL retroprog GUI", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, (int)(min_width * main_scale), (int)(min_height * main_scale), window_flags);
   if (window == nullptr)
   {
+    libusb_exit(NULL);
+    SDL_Quit();
     printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
     return -1;
   }
