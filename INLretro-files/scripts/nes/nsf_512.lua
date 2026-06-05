@@ -173,6 +173,80 @@ local function prg_rom_flash(file, rom_size_KB, debug)
   log.success("Done programming PRG-ROM")
 end
 
+
+--[[
+ ██████╗██╗  ██╗██████╗       ██████╗  █████╗ ███╗   ███╗
+██╔════╝██║  ██║██╔══██╗      ██╔══██╗██╔══██╗████╗ ████║
+██║     ███████║██████╔╝█████╗██████╔╝███████║██╔████╔██║
+██║     ██╔══██║██╔══██╗╚════╝██╔══██╗██╔══██║██║╚██╔╝██║
+╚██████╗██║  ██║██║  ██║      ██║  ██║██║  ██║██║ ╚═╝ ██║
+ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝      ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝
+
+--]]
+
+-- dump CHR
+local function chr_dump(file, rom_size_KB, debug)
+  local KB_per_read = 8
+  local num_banks = math.floor(rom_size_KB / KB_per_read)
+  local cur_bank = 0
+  local addr_base = 0x00 -- $0000
+
+  log.info("CHR size", rom_size_KB .. "KB")
+
+  if debug then
+    log.point("dump CHR bank", cur_bank, "of", num_banks - 1)
+  else
+    spinner.update("Dumping", cur_bank, "/", num_banks - 1)
+  end
+
+  dump.dumptofile(file, KB_per_read, addr_base, "NESPPU_1KB_TOGGLE", false)
+
+  spinner.clear()
+end
+
+local function chr_ram_exercise(chrram_size, retroprog_id, debug)
+  dict.stuff("RESET_LFSR") -- sets it to 1
+  -- dict.stuff("SET_LFSR_L", 0) --lock it up to clear ram
+  -- dict.stuff("SET_LFSR_L", 2) --give different seed for testing fails
+
+  local cur_bank = 0
+  local num_banks = math.floor(chrram_size / 8)
+
+  log.section("Exercising CHR-RAM")
+  log.info("CHR-RAM size\t" .. chrram_size .. "KB")
+
+  -- write random data to all banks
+  log.point("Writing random data to CHR-RAM")
+  if debug then log.point("init CHR-RAM 8K bank\t" .. cur_bank .. "\tof\t" .. num_banks - 1) end
+  local addr = 0x0000
+  while addr < 0x2000 do
+    dict.nes("PPU_PAGE_WR_LFSR", addr)
+    addr = addr + 256
+  end
+
+  -- dump CHR-RAM
+  local filename = opts.lua_path .. "ignore/nes_chr_ram_dump-" .. retroprog_id .. ".bin"
+  local file = assert(io.open(filename, "wb"))
+  log.point("Dumping CHR-RAM")
+  chr_dump(file, chrram_size, debug)
+
+  -- close the file
+  assert(file:close())
+
+  -- re-open & compare dump with known lsfr bitstream
+  local goodfile = opts.lua_path .. "ignore/lfsr_32KB.bin"
+
+  -- compare the flash file vs post dump file
+  if files.compare(filename, goodfile, false) then
+    log.success("CHR-RAM test passed")
+    return true
+  else
+    log.error("CHR-RAM test failed")
+    return false
+  end
+end
+
+
 --[[
 ██████╗ ██████╗  ██████╗  ██████╗███████╗███████╗███████╗
 ██╔══██╗██╔══██╗██╔═══██╗██╔════╝██╔════╝██╔════╝██╔════╝
@@ -242,6 +316,19 @@ local function process(process_opts, console_opts)
         end
       end
     end
+
+    -- force CHR-RAM size to 8KB
+    chr_ram_detected = nes.ppu_ram_sense(0x1000)
+    if not chr_ram_detected then
+      log.error("CHR-RAM not detected")
+      return
+    end
+    chr_ram_size = 8
+
+    -- test CHR-RAM
+    rv = chr_ram_exercise(chr_ram_size, retroprog_id, DEBUG)
+    -- exit script if test fails
+    if not rv then return end
   end
 
 

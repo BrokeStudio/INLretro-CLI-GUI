@@ -461,7 +461,7 @@ local function nes_exec(process_opts, console_opts)
     mmc1           = require "scripts.nes.mmc1",
     mmc2           = require "scripts.nes.mmc2",
     mmc3           = require "scripts.nes.mmc3",
-    -- mmc4              = require "scripts.nes.mmc4",
+    mmc4           = require "scripts.nes.mmc4",
     mmc5           = require "scripts.nes.mmc5",
     nrom           = require "scripts.nes.nrom",
     rainbow        = require "scripts.nes.rainbow",

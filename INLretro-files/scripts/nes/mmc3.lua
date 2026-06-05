@@ -250,11 +250,11 @@ local function prg_rom_dump(file, rom_size_KB, debug)
     -- select desired bank(s) to dump
     dict.nes("NES_CPU_WR", 0x8000, 0x06)
     --t he bank is half the size of KB per read so must multiply by 2
-    dict.nes("NES_CPU_WR", 0x8001, cur_bank * 2) --8KB @ CPU $8000
+    dict.nes("NES_CPU_WR", 0x8001, cur_bank * 2) -- 8KB @ CPU $8000
 
     dict.nes("NES_CPU_WR", 0x8000, 0x07)
     -- the bank is half the size of KB per read so must multiply by 2 and add 1 for second 8KB
-    dict.nes("NES_CPU_WR", 0x8001, cur_bank * 2 + 1) --8KB @ CPU $A000
+    dict.nes("NES_CPU_WR", 0x8001, cur_bank * 2 + 1) -- 8KB @ CPU $A000
 
     -- 16 = number of KB to dump per loop
     -- 0x08 = starting read address A12-15 -> $8000
@@ -276,6 +276,7 @@ local function prg_rom_erase()
   init_mapper()
 
   log.section("Erasing PRG-ROM")
+
   dict.nes("NES_CPU_WR", 0xD555, 0xAA)
   dict.nes("NES_CPU_WR", 0xAAAA, 0x55)
   dict.nes("NES_CPU_WR", 0xD555, 0x80)

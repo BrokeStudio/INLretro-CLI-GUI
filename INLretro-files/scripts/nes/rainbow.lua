@@ -94,7 +94,7 @@ local function nt_dump(file, nt, debug)
   local KB_per_read = 1
   local addr_base = 0x20 + nt * 4
 
-  dump.dumptofile(file, KB_per_read, addr_base, "NESPPU_1KB", debug)
+  dump.dumptofile(file, KB_per_read, addr_base, "NESPPU_1KB_TOGGLE", debug)
 end
 
 local function _mirror_test(retroprog_id, debug)
@@ -465,10 +465,10 @@ local function prg_rom_dump(file, rom_size_KB, debug)
     end
 
     -- select desired bank to dump
-    dict.nes("NES_CPU_WR", PRG_8_HI, (cur_bank & 0xff00) >> 8) --32KB @ CPU $8000
-    dict.nes("NES_CPU_WR", PRG_8_LO, (cur_bank & 0x00ff))      --32KB @ CPU $8000
+    dict.nes("NES_CPU_WR", PRG_8_HI, (cur_bank & 0xff00) >> 8) -- 32KB @ CPU $8000
+    dict.nes("NES_CPU_WR", PRG_8_LO, (cur_bank & 0x00ff) >> 0) -- 32KB @ CPU $8000
 
-    dump.dumptofile(file, KB_per_read, addr_base, "NESCPU_PAGE", false)
+    dump.dumptofile(file, KB_per_read, addr_base, "NESCPU_PAGE_TOGGLE", false)
 
     cur_bank = cur_bank + 1
   end
@@ -500,39 +500,8 @@ local function prg_rom_flash(file, rom_size_KB, debug)
     end
 
     -- write the bank to flash to the mapper register
-    dict.nes("NES_CPU_WR", PRG_8_HI, (cur_bank & 0xff00) >> 8) --32KB @ CPU $8000
-    dict.nes("NES_CPU_WR", PRG_8_LO, (cur_bank & 0x00ff))      --32KB @ CPU $8000
-
-    log.warning("This is slow as molasses, but gets the job done")
-    local byte_num = 0 -- current byte within the bank
-    local byte_str, data, rv
-    local byte_total = bank_size * 1024
-    while byte_num < byte_total do
-      spinner.update("Flashing", cur_bank, "/", num_banks - 1, "(", byte_num, "/", byte_total, ")")
-
-      --read next byte from the file and convert to binary
-      byte_str = file:read(1) -- buff_size
-      data = string.unpack("B", byte_str, 1)
-
-      --write the data
-
-      --SLOWEST OPTION: no firmware
-      -- prg_rom_flash_byte(0x8000 + byte_num, data, debug) --0.7KBps
-
-      --EASIEST FIRMWARE SPEEDUP: faster
-      -- dict.nes("NES_CPU_WR", 0x8AAA, 0xAA)
-      -- dict.nes("NES_CPU_WR", 0x8555, 0x55)
-      dict.nes("RNBW_PRG_FLASH_WR", 0x8000 + byte_num, data)
-
-      rv = dict.nes("NES_CPU_RD", 0x8000 + byte_num)
-      if rv ~= data then
-        log.error("ERROR flashing byte number", byte_num, " in bank", cur_bank, " to flash ", help.hex_0x2(data),
-          help.hex_0x2(rv))
-        do return end
-      end
-
-      byte_num = byte_num + 1
-    end
+    dict.nes("NES_CPU_WR", PRG_8_HI, (cur_bank & 0xff00) >> 8) -- 32KB @ CPU $8000
+    dict.nes("NES_CPU_WR", PRG_8_LO, (cur_bank & 0x00ff) >> 0) -- 32KB @ CPU $8000
 
     -- have the device write a bank worth of data
     flash.write_file(file, bank_size, mapname, "PRGROM", false)
@@ -719,7 +688,7 @@ local function prg_ram_dump(file, ram_size_KB, debug)
     -- set bank
     dict.nes("NES_CPU_WR", PRG_6_LO, cur_bank)
 
-    dump.dumptofile(file, KB_per_read, addr_base, "NESCPU_PAGE", false)
+    dump.dumptofile(file, KB_per_read, addr_base, "NESCPU_PAGE_TOGGLE", false)
 
     cur_bank = cur_bank + 1
   end
@@ -943,7 +912,7 @@ local function fpga_ram_dump(file, rom_size_KB, debug)
       spinner.update("Dumping", cur_bank, "/", num_banks - 1)
     end
 
-    dump.dumptofile(file, KB_per_read, addr_base, "NESCPU_PAGE", false)
+    dump.dumptofile(file, KB_per_read, addr_base, "NESCPU_PAGE_TOGGLE", false)
 
     cur_bank = cur_bank + 1
   end
@@ -1272,7 +1241,7 @@ local function process(process_opts, console_opts)
         log.warning("Flag 'force_wram_test' enabled")
       end
       if options.force_wram_test or nes.header.isValid then
-        if not options.force_wram_test and nes.header.hasBattery ~= 0 then
+        if not options.force_wram_test and nes.header.hasBattery then
           log.print()
           log.warning("Can't exercise PRG-RAM because NES ROM has battery backed data")
         else
@@ -1305,11 +1274,11 @@ local function process(process_opts, console_opts)
   end
 
   --[[
-88""Yb    db    8b    d8     8888b.  88   88 8b    d8 88""Yb
-88__dP   dPYb   88b  d88      8I  Yb 88   88 88b  d88 88__dP
-88"Yb   dP__Yb  88YbdP88      8I  dY Y8   8P 88YbdP88 88"""
-88  Yb dP""""Yb 88 YY 88     8888Y"  `YbodP' 88 YY 88 88
---]]
+  88""Yb    db    8b    d8     8888b.  88   88 8b    d8 88""Yb
+  88__dP   dPYb   88b  d88      8I  Yb 88   88 88b  d88 88__dP
+  88"Yb   dP__Yb  88YbdP88      8I  dY Y8   8P 88YbdP88 88"""
+  88  Yb dP""""Yb 88 YY 88     8888Y"  `YbodP' 88 YY 88 88
+  --]]
 
   -- dump cart RAM to file
   if do_ram_dump then
@@ -1342,11 +1311,11 @@ local function process(process_opts, console_opts)
   end
 
   --[[
-88""Yb    db    8b    d8     Yb        dP 88""Yb 88 888888 888888
-88__dP   dPYb   88b  d88      Yb  db  dP  88__dP 88   88   88__
-88"Yb   dP__Yb  88YbdP88       YbdPYbdP   88"Yb  88   88   88""
-88  Yb dP""""Yb 88 YY 88        YP  YP    88  Yb 88   88   888888
---]]
+  88""Yb    db    8b    d8     Yb        dP 88""Yb 88 888888 888888
+  88__dP   dPYb   88b  d88      Yb  db  dP  88__dP 88   88   88__
+  88"Yb   dP__Yb  88YbdP88       YbdPYbdP   88"Yb  88   88   88""
+  88  Yb dP""""Yb 88 YY 88        YP  YP    88  Yb 88   88   888888
+  --]]
 
   -- write file to the cart RAM
   if do_ram_write then

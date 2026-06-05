@@ -1213,7 +1213,7 @@ local function process(process_opts, console_opts)
         log.warning("Flag 'force_wram_test' enabled")
       end
       if options.force_wram_test or nes.header.isValid then
-        if not options.force_wram_test and nes.header.hasBattery ~= 0 then
+        if not options.force_wram_test and nes.header.hasBattery then
           log.print()
           log.warning("Can't exercise PRG-RAM because NES ROM has battery backed data")
         else

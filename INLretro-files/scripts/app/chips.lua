@@ -52,8 +52,13 @@ local devices       = {
   { manufacturer_id = 0xBF, id = 0x235A,   part_number = "SST39VF320 (top boot block)",                size = 4096 },
   { manufacturer_id = 0xBF, id = 0x235B,   part_number = "SST39VF320 (bottom boot block)",             size = 4096 },
 
+  -- WORD mode
   { manufacturer_id = 0xC2, id = 0x22A7,   part_number = "MF29LV320 (top boot block)",                 size = 4096 },
   { manufacturer_id = 0xC2, id = 0x22A8,   part_number = "MF29LV320 (bottom boot block)",              size = 4096 },
+
+  -- BYTE mode
+  { manufacturer_id = 0xC2, id = 0xA7,     part_number = "MF29LV320 (top boot block)",                 size = 4096 },
+  { manufacturer_id = 0xC2, id = 0xA8,     part_number = "MF29LV320 (bottom boot block)",              size = 4096 },
 
 }
 

@@ -398,7 +398,14 @@ local function process(process_opts, console_opts)
   dict.io("IO_RESET")
   dict.io("NES_INIT")
 
-  -- test cart by reading manf/prod ID
+  --[[
+  888888 888888 .dP"Y8 888888
+    88   88__   `Ybo."   88
+    88   88""   o.`Y8b   88
+    88   888888 8bodP'   88
+  --]]
+
+  -- test cart
   if do_test then
     log.section("Testing " .. mapname)
 
@@ -448,6 +455,13 @@ local function process(process_opts, console_opts)
     if not rv then return end
   end
 
+  --[[
+  88""Yb  dP"Yb  8b    d8     8888b.  88   88 8b    d8 88""Yb
+  88__dP dP   Yb 88b  d88      8I  Yb 88   88 88b  d88 88__dP
+  88"Yb  Yb   dP 88YbdP88      8I  dY Y8   8P 88YbdP88 88"""
+  88  Yb  YbodP  88 YY 88     8888Y"  `YbodP' 88 YY 88 88
+  --]]
+
   -- dump cart ROM to file
   if do_rom_dump then
     -- open file
@@ -468,6 +482,13 @@ local function process(process_opts, console_opts)
     -- close file
     assert(file:close())
   end
+
+  --[[
+  88""Yb  dP"Yb  8b    d8     888888 88""Yb    db    .dP"Y8 888888
+  88__dP dP   Yb 88b  d88     88__   88__dP   dPYb   `Ybo." 88__
+  88"Yb  Yb   dP 88YbdP88     88""   88"Yb   dP__Yb  o.`Y8b 88""
+  88  Yb  YbodP  88 YY 88     888888 88  Yb dP""""Yb 8bodP' 888888
+  --]]
 
   -- erase the cart
   if do_erase then
@@ -500,6 +521,13 @@ local function process(process_opts, console_opts)
     end
   end
 
+  --[[
+  88""Yb  dP"Yb  8b    d8     Yb        dP 88""Yb 88 888888 888888
+  88__dP dP   Yb 88b  d88      Yb  db  dP  88__dP 88   88   88__
+  88"Yb  Yb   dP 88YbdP88       YbdPYbdP   88"Yb  88   88   88""
+  88  Yb  YbodP  88 YY 88        YP  YP    88  Yb 88   88   888888
+  --]]
+
   -- program file to the cart
   if do_rom_write then
     -- open file
@@ -515,6 +543,13 @@ local function process(process_opts, console_opts)
     -- close file
     assert(file:close())
   end
+
+  --[[
+  Yb    dP 888888 88""Yb 88 888888 Yb  dP
+   Yb  dP  88__   88__dP 88 88__    YbdP
+    YbdP   88""   88"Yb  88 88""     8P
+     YP    888888 88  Yb 88 88      dP
+  --]]
 
   -- verify what we just flashed
   if do_verify then

@@ -83,13 +83,19 @@ local function rom_manf_id()
   manufacturer_id = dict.gameboy("GAMEBOY_RD", 0x0000)
   chips.display_manufacturer(manufacturer_id)
 
-  device_id = dict.gameboy("GAMEBOY_RD", 0x0001)
+  if not device_test and manufacturer_id == 0xC2 then
+    -- MX chips
+    device_id = dict.gameboy("GAMEBOY_RD", 0x0002)
   device_test = chips.display_device(manufacturer_id, device_id)
-
-  if not device_test then
+    -- Cypress / Spansion
+  elseif not device_test and manufacturer_id == 0x01 then
     device_id = dict.gameboy("GAMEBOY_RD", 0x0002) << 16
     device_id = device_id | (dict.gameboy("GAMEBOY_RD", 0x001C) << 8)
     device_id = device_id | dict.gameboy("GAMEBOY_RD", 0x001E)
+    device_test = chips.display_device(manufacturer_id, device_id)
+  else
+    -- fallback (SST)
+    device_id = dict.gameboy("GAMEBOY_RD", 0x0001)
     device_test = chips.display_device(manufacturer_id, device_id)
   end
 
