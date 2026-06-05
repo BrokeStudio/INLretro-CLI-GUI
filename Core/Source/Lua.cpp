@@ -150,12 +150,12 @@ void load(lua_State *L, const char *fname, int *w, int *h)
 // void Lua::error(lua_State *L, const char *fmt, ...)
 void Lua::error(const char *fmt, ...)
 {
+  char errmsg[1024];
   va_list argp;
   va_start(argp, fmt);
-  vfprintf(stderr, fmt, argp);
+  vsnprintf(errmsg, sizeof(errmsg), fmt, argp);
   va_end(argp);
-  char errmsg[1024];
-  snprintf(errmsg, sizeof(errmsg), fmt, argp);
+  fputs(errmsg, stderr);
   this->log->add(LogTypes_Error, errmsg);
   lua_close(this->L);
   exit(EXIT_FAILURE);
