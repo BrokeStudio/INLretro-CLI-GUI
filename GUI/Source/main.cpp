@@ -308,10 +308,16 @@ int main(int argc, char **argv)
     {
       ImGui_ImplSDL2_ProcessEvent(&event);
       if (event.type == SDL_QUIT)
-        done = true;
+      {
+        if (!Flasher::is_flashing())
+          done = true;
+      }
 
       if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
-        done = true;
+      {
+        if (!Flasher::is_flashing())
+          done = true;
+      }
 
       if (event.type == SDL_DROPFILE)
         droppedFilename = std::string(event.drop.file);
