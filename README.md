@@ -31,6 +31,7 @@ It provides both a command-line interface (CLI) and a graphical user interface (
 |                  | 2 - UxROM      | ✓        | ✓         | −        | −         |
 |                  | 3 - CxROM      | ✓        | ✓         | −        | −         |
 |                  | 4 - MMC3       | ✓        | ✓         | ✓        | ✓         |
+|                  | 10 - MMC4      | ✓        | ✓         | ✓        | ✓         |
 |                  | 18 - SS88006   | ✓        | ✓         | ✓        | ✓         |
 |                  | 24 - VRC6a     | ✓        | ✓         | ✓        | ✓         |
 |                  | 28 - Action 53 | ✓        | ✓         | −        | −         |
@@ -70,8 +71,8 @@ I'll try to add support to more mapper in the future but feel free to let me kno
 If you own an INLretro programmer-dumper and want to use this CLI/GUI solution, please follow these steps:
 
 - If you're on Windows you need to install the new driver:
-  - Go to the `Windows/WinUSB_driver/` folder
-  - Right click on the `.inf` file and then click on `Install`
+  - Go to the `Windows/DriverPackages/` folder
+  - Execute `InstallDriver.exe`
 - You need to update the flasher's firmware so it's compatible with the CLI/GUI
   - Using the CLI: run the command `INLretro -s scripts/inlretro_fwupdate.lua`
   - Using the GUI:
@@ -107,7 +108,7 @@ See [COMPILING.md](COMPILING.md)
 
 INLretro CLI/GUI is available under the GPL V3 license. Full text here: http://www.gnu.org/licenses/gpl-3.0.en.html
 
-Copyright (C) 2024-2025 Broke Studio
+Copyright (C) 2024-2026 Broke Studio
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
