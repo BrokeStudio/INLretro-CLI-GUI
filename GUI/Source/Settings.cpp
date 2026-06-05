@@ -9,7 +9,7 @@
 #include "build.h"
 
 #include "SDL_version.h"
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(__APPLE__)
 #include "libusb.h"
 #else
 #include <libusb-1.0/libusb.h>

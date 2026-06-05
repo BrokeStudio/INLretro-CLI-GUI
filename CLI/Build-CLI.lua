@@ -135,8 +135,9 @@ filter "system:linux"
 -- macOS
 
 filter "system:macosx"
+  buildoptions { "`pkg-config --cflags libusb-1.0`" }
+  linkoptions { "`pkg-config --libs libusb-1.0`" }
   links {
-    "usb-1.0",
     "pthread"
   }
   prebuildcommands {

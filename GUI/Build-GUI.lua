@@ -199,14 +199,15 @@ filter { "system:linux", "configurations:Dist" }
 -- macOS
 
 filter "system:macosx"
-  buildoptions { "`sdl2-config --cflags`" }
+  buildoptions {
+    "`sdl2-config --cflags`",
+    "`pkg-config --cflags libusb-1.0`"
+  }
   linkoptions {
     "`sdl2-config --libs`",
+    "`pkg-config --libs libusb-1.0`",
     "-framework OpenGL",
     "-framework CoreFoundation"
-  }
-  links {
-    "usb-1.0",
   }
   includedirs
   {

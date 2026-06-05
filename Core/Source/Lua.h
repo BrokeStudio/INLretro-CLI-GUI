@@ -2,7 +2,7 @@
 #ifndef LUA_H
 #define LUA_H
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__APPLE__)
 #include "libusb.h"
 #else
 #include <libusb-1.0/libusb.h>

@@ -103,7 +103,7 @@ jobs:
         run: premake5 --file=Build.lua gmake2
 
       - name: Build
-        run: make config=dist
+        run: make config=dist verbose=1
 
       - name: Upload INLretroGUI (app)
         uses: actions/upload-artifact@v5
