@@ -93,6 +93,11 @@ namespace Ini
 
       file.getline(line, LINE_SIZE);
 
+      if (strlen(line) == 0)
+      {
+        continue;
+      }
+
       if (line[strlen(line) - 1] == '\r')
       {
         line[strlen(line) - 1] = 0;
@@ -101,11 +106,18 @@ namespace Ini
       sLine = std::string(line);
       trim(sLine, ' ', false);
       if (sLine == "")
-        continue; // ignore empty lines
-      else if (sLine.front() == '#')
-        continue;                                           // ignore comments
-      else if (sLine.front() == '[' && sLine.back() == ']') // section
       {
+        // ignore empty lines
+        continue;
+      }
+      else if (sLine.front() == '#')
+      {
+        // ignore comments
+        continue;
+      }
+      else if (sLine.front() == '[' && sLine.back() == ']')
+      {
+        // section
         if (inSection)
         {
           sections.push_back(section);
@@ -114,8 +126,9 @@ namespace Ini
         section.name = sLine;
         inSection = true;
       }
-      else if (sLine.find("=") != std::string::npos) // property key=value
+      else if (sLine.find("=") != std::string::npos)
       {
+        // property key=value
         std::string key = sLine.substr(0, sLine.find("="));
         std::string value = sLine.substr(sLine.find("=") + 1);
         section.properties.push_back(std::pair<std::string, std::string>(key, value));
@@ -317,5 +330,4 @@ namespace Ini
       }
     }
   }
-
 }
