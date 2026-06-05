@@ -283,8 +283,9 @@ int Lua::usb_vend_xfr(lua_State *L)
     unsigned char	*data;
   } USBtransfer;
   */
+
   uint8_t data_buff[MAX_VUSB] = {0};
-  int i;
+  size_t i;
   const char *lua_out_string;
   int xfr_count = 0; // return count
   int rv = 0;        // number of return values
@@ -300,7 +301,12 @@ int Lua::usb_vend_xfr(lua_State *L)
   if (usb_xfr.endpoint == LIBUSB_ENDPOINT_OUT)
   {
     // OUT transfer sending data to device
-    lua_out_string = luaL_checkstring(L, 6); /* get data argument */
+    size_t len = 0;
+    lua_out_string = luaL_checklstring(L, 6, &len); /* get data argument */
+
+    if (len < usb_xfr.wLength)
+      goto error;
+
     // 2 rules for lua strings in C: don't pop it, and don't modify it!!!
     // copy lua string over to data buffer
     for (i = 0; i < usb_xfr.wLength; i++)
@@ -316,9 +322,12 @@ int Lua::usb_vend_xfr(lua_State *L)
   // printf("predata: %d, %d, %d, %d, %d, %d, %d, %d \n",  usb_xfr.data[0], usb_xfr.data[1],usb_xfr.data[2],usb_xfr.data[3],usb_xfr.data[4],usb_xfr.data[5], usb_xfr.data[6], usb_xfr.data[7]);
 
   // check( lua_usb_handle != NULL, "usb device handle pointer not initialized.\n")
-  check(this->log, this->usb_handle != NULL, "usb device handle pointer not initialized.")
+  check(this->log, this->usb_handle != NULL, "usb device handle pointer not initialized.");
 
-      xfr_count = usb_vendor_transfer(&usb_xfr, this->log);
+  xfr_count = usb_vendor_transfer(&usb_xfr, this->log);
+
+  if (xfr_count < 0)
+    goto error;
 
   // printf("postdata: %d, %d, %d, %d, %d, %d, %d, %d \n",  usb_xfr.data[0], usb_xfr.data[1],usb_xfr.data[2],usb_xfr.data[3],usb_xfr.data[4],usb_xfr.data[5], usb_xfr.data[6], usb_xfr.data[7]);
   // printf("bytes xfrd: %d\n", xfr_count);
