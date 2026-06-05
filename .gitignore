@@ -14,6 +14,8 @@ Makefile
 # Exclude
 !Vendor/Binaries/
 Roms/
+Dist/
 
 # Windows
 Windows/Resources/resources.aps
+Windows/USB
