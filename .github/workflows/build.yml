@@ -28,9 +28,9 @@ jobs:
             { arch: "x64", SDL2libPath: "x64", binPath: "x86_64" },
           ]
       fail-fast: false
-    runs-on: windows-2025
+    runs-on: windows-2025-vs2026
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: abel0b/setup-premake@v2.4
         with:
@@ -55,7 +55,7 @@ jobs:
         run: msbuild INLretro.sln -nologo -t:rebuild -verbosity:normal -clp:ForceConsoleColor -m -property:Configuration=Dist -p:Platform=${{ matrix.platform.arch }}
 
       - name: Upload INLretroGUI
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: INLretroGUI+CLI_Windows_${{ matrix.platform.arch }}
           path: Binaries/windows-${{ matrix.platform.binPath }}/Dist/INLretro
@@ -64,7 +64,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: abel0b/setup-premake@v2.4
         with:
@@ -80,7 +80,7 @@ jobs:
         run: make config=dist
 
       - name: Upload INLretroGUI
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: INLretroGUI+CLI_Linux
           path: Binaries/linux-x86_64/Dist/INLretro
@@ -89,7 +89,7 @@ jobs:
     runs-on: macos-14
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: abel0b/setup-premake@v2.4
         with:
@@ -106,7 +106,7 @@ jobs:
         run: make config=dist verbose=1
 
       - name: Upload INLretroGUI (app)
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: INLretroGUI_macOS
           path: Binaries/macosx-universal/Dist/app
@@ -117,7 +117,7 @@ jobs:
           rm Binaries/macosx-universal/Dist/INLretro/INLretro.ini
 
       - name: Upload INLretro CLI
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: INLretroCLI_macOS
           path: Binaries/macosx-universal/Dist/INLretro
