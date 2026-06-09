@@ -48,16 +48,16 @@
 #define MMC3_CHR_FLASH_WR 0x08
 #define NROM_PRG_FLASH_WR 0x09
 #define NROM_CHR_FLASH_WR 0x0A
-#define CNROM_CHR_FLASH_WR 0x0B		 // needs cur_bank & bank_table prior to calling
-#define CDREAM_CHR_FLASH_WR 0x0C	 // needs cur_bank & bank_table prior to calling
-#define UNROM_PRG_FLASH_WR 0x0D		 // needs cur_bank & bank_table prior to calling
-#define MMC1_PRG_FLASH_WR 0x0E		 // mapper mod to XOR A14 with A13
-#define MMC1_CHR_FLASH_WR 0x0F		 // needs cur_bank set prior to calling
+#define CNROM_CHR_FLASH_WR 0x0B    // needs cur_bank & bank_table prior to calling
+#define CDREAM_CHR_FLASH_WR 0x0C   // needs cur_bank & bank_table prior to calling
+#define UNROM_PRG_FLASH_WR 0x0D    // needs cur_bank & bank_table prior to calling
+#define MMC1_PRG_FLASH_WR 0x0E     // mapper mod to XOR A14 with A13
+#define MMC1_CHR_FLASH_WR 0x0F     // needs cur_bank set prior to calling
 #define MMC4_PRG_SOP_FLASH_WR 0x10 // current bank must be selected, & needs cur_bank set prior to calling
-#define MMC4_CHR_FLASH_WR 0x11		 // needs cur_bank set prior to calling
-#define MAP30_PRG_FLASH_WR 0x12		 // needs cur_bank set prior to calling
-#define GTROM_PRG_FLASH_WR 0x13		 // desired bank must be selected
-#define MMC4_PRG_FLASH_WR 0x14		 // mapper mod to XOR A14 with A13
+#define MMC4_CHR_FLASH_WR 0x11     // needs cur_bank set prior to calling
+#define MAP30_PRG_FLASH_WR 0x12    // needs cur_bank set prior to calling
+#define GTROM_PRG_FLASH_WR 0x13    // desired bank must be selected
+#define MMC4_PRG_FLASH_WR 0x14     // mapper mod to XOR A14 with A13
 #define VRC6_PRG_FLASH_WR 0x15
 #define VRC6_CHR_FLASH_WR 0x16
 #define RNBW_PRG_FLASH_WR 0x17
@@ -81,8 +81,8 @@
 #define PPU_PAGE_WR_LFSR 0x23
 
 #define SET_NUM_PRG_BANKS 0x24 // used for determining banktable structure for mapper 11 and such
-#define M2_HIGH_WR 0x25				 // like CPU WR, but M2 stays high
-#define FLASH_3V_WR 0x25			 // same as above but easier to remember when
+#define M2_HIGH_WR 0x25        // like CPU WR, but M2 stays high
+#define FLASH_3V_WR 0x25       // same as above but easier to remember when
 // being used to write to 3v tssop flash
 #define MMC3S_PRG_FLASH_WR 0x26 // TODO set return lengths for all these functions
 
@@ -112,11 +112,16 @@
 
 #define NES_DUALPORT_RD 0x84 // RL=3
 
-#define GET_CUR_BANK 0x85			 // RL=3
-#define GET_BANK_TABLE 0x86		 // RL=4 16bit value so 2 bytes need returned
+#define GET_CUR_BANK 0x85      // RL=3
+#define GET_BANK_TABLE 0x86    // RL=4 16bit value so 2 bytes need returned
 #define GET_NUM_PRG_BANKS 0x87 // RL=3
 
 #define MMC5_PRG_RAM_WR 0x88 // RL=3 Enable writing to PRG-RAM and then write a single byte
 // after written read back for verification as a timeout would cause fail
+
+#define CIC_GET_SIGNATURE 0x89 // RL=5
+#define CIC_ERASE_PROGRAM 0x8A // RL=3
+#define CIC_GET_FUSES 0x8B     // RL=4
+#define CIC_SET_FUSES 0x8C     // RL=3
 
 #endif

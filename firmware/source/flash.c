@@ -1,4 +1,5 @@
 #include "flash.h"
+#include "cic.h"
 
 // TODO replace all use of this function with write_page_verify below
 uint8_t write_page(uint8_t addrH, buffer *buff, write_funcptr wr_func)
@@ -719,6 +720,15 @@ uint8_t flash_buff(buffer *buff)
 
   switch (buff->mem_type)
   {
+#ifdef STM_INL6
+  case CIC:
+    if (buff->mapper == CIC_WRITE_BUFFER)
+    {
+      cic_write_buffer(buff);
+    }
+    break;
+#endif
+
 #ifdef NES_CONN
   case PRGROM: //$8000
 

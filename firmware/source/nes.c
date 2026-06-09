@@ -1,4 +1,5 @@
 #include "nes.h"
+#include "cic.h"
 
 // only need this file if connector is present on the device
 #ifdef NES_CONN
@@ -31,6 +32,7 @@ uint8_t nes_call(uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_t *rd
 #define RD_LEN 0
 #define RD0 1
 #define RD1 2
+#define RD2 3
 
 #define BYTE_LEN 1
 #define HWORD_LEN 2
@@ -185,6 +187,22 @@ uint8_t nes_call(uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_t *rd
   case MMC5_PRG_RAM_WR:
     rdata[RD_LEN] = BYTE_LEN;
     rdata[RD0] = mmc5_prgram_wr(operand, miscdata);
+    break;
+  case CIC_GET_SIGNATURE:
+    rdata[RD_LEN] = 3;
+    cic_read_signature(&rdata[RD0]);
+    break;
+  case CIC_ERASE_PROGRAM:
+    rdata[RD_LEN] = BYTE_LEN;
+    rdata[RD0] = cic_chip_erase();
+    break;
+  case CIC_GET_FUSES:
+    rdata[RD_LEN] = HWORD_LEN;
+    cic_read_fuses(&rdata[RD0]);
+    break;
+  case CIC_SET_FUSES:
+    rdata[RD_LEN] = BYTE_LEN;
+    rdata[RD0] = cic_write_fuses(operand, operand >> 8);
     break;
   default:
     // macro doesn't exist
@@ -942,11 +960,11 @@ uint8_t nes_cpu_page_rd_toggle(uint8_t *data, uint8_t addrH, uint8_t first, uint
   // set lower address bits
   ADDRL(first); // doing this prior to entry and right after latching
 
-  // set /ROMSEL
-  if (addrH >= 0x80)
-  {              // addressing cart rom space
-    ROMSEL_LO(); // romsel trails M2 during CPU operations
-  }
+  // // set /ROMSEL
+  // if (addrH >= 0x80)
+  // {              // addressing cart rom space
+  //   ROMSEL_LO(); // romsel trails M2 during CPU operations
+  // }
 
   // set lower address bits
   // ADDRL(first); // doing this prior to entry and right after latching
@@ -956,6 +974,12 @@ uint8_t nes_cpu_page_rd_toggle(uint8_t *data, uint8_t addrH, uint8_t first, uint
   for (i = 0; i <= len; i++)
   {
     M2_HI();
+    // set /ROMSEL
+    if (addrH >= 0x80)
+    {              // addressing cart rom space
+      ROMSEL_LO(); // romsel trails M2 during CPU operations
+    }
+
     // testing shows that having this if statement doesn't affect overall dumping speed
     if (poll == FALSE)
     {
@@ -981,8 +1005,14 @@ uint8_t nes_cpu_page_rd_toggle(uint8_t *data, uint8_t addrH, uint8_t first, uint
     // latch data
     DATA_RD(data[i]);
     M2_LO();
+    ROMSEL_HI();
     NOP();
     NOP();
+    NOP();
+    NOP();
+    NOP();
+    NOP();
+    NOP(); // need these NOPs for Rainbow 256K PRG-RAM for some reason
     // set lower address bits
     // ADDRL(++first);	THIS broke things, on stm adapter because macro expands it twice!
     first++;

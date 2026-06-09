@@ -4,6 +4,7 @@
 #include "pinport.h"
 #include "types.h"
 #include "buffer.h"
+#include "cic.h"
 #include "nes.h"
 #include "snes.h"
 #include "shared_dictionaries.h"
