@@ -115,17 +115,38 @@ end
 local function snes_exec(process_opts, console_opts)
   local header
 
+  -- if a rom write file is provided, parse its header
+  if process_opts.rom_write_file ~= "" then
+    -- parse file header
+    log.section("Parsing ROM flash file header")
+    log.bullet("Filename", process_opts.rom_write_file.filename)
+    local snes_file = assert(io.open(process_opts.rom_write_file.filename, "rb"))
+    if not snes.parse_header_file(snes_file) then
+      log.warning("Failed to parse ROM flash file header")
+    else
+      log.success("ROM flash file header parsed successfully")
+    end
+    assert(snes_file:close())
+
+    header = snes.file_header
+
+    if (header.file_size / 1024) ~= header:get_rom_size() then
+      log.warning("ROM file size (" ..
+        math.floor(header.file_size / 1024) .. ") is LESS than header value (" .. header:get_rom_size() .. ")")
+    end
+  end
+
   -- if a rom dump file is provided, parse the cartridge ROM header
   if process_opts.rom_dump_file ~= "" then
     -- parse cartridge ROM header
     log.section("Parsing cartridge ROM header")
-    if not snes.parse_header_rom() then
+    if not snes.parse_header_cart() then
       log.warning("Failed to parse cartridge ROM header")
     else
       log.success("Cartridge ROM header parsed successfully")
     end
 
-    header = snes.rom_header
+    header = snes.cart_header
   end
 
   if header ~= nil then

@@ -14,6 +14,7 @@
 #include "MegaDrive.h"
 #include "Nes.h"
 #include "Settings.h"
+#include "Snes.h"
 
 #ifdef __APPLE__
 #include "macos.h"
@@ -299,6 +300,11 @@ namespace Ini
         if (console.name == "nes" || console.name == "famicom" || console.name == "fc")
         {
           Console::add(new Nes(console));
+          APP_LOG(LogTypes_Point, L_INI "Console '" + console.name + "' added");
+        }
+        else if (console.name == "snes" || console.name == "sfc")
+        {
+          Console::add(new Snes(console));
           APP_LOG(LogTypes_Point, L_INI "Console '" + console.name + "' added");
         }
         else if (console.name == "dmg" || console.name == "gb" || console.name == "gbc")

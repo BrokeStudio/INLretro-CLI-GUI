@@ -29,30 +29,18 @@ local mapname = "LOROM"
 --]]
 
 -- local functions
-local function prgm_mode(debug)
-  if debug then print("going to program mode, swim:", snes_swimcart) end
-  if snes_swimcart then
-    print("ERROR cart got set to swim mode somehow!!!")
-    --    swim.snes_v3_prgm(debug)
-  else
-    dict.pinport("CTL_SET_LO", "SNES_RST")
-  end
-end
 
-local function play_mode(debug)
-  if debug then print("going to play mode, swim:", snes_swimcart) end
-  if snes_swimcart then
-    --    swim.snes_v3_play(debug)
-    print("ERROR cart got set to swim mode somehow!!!")
-  else
-    dict.pinport("CTL_SET_HI", "SNES_RST")
-  end
-end
+--[[
+██████╗  ██████╗ ███╗   ███╗
+██╔══██╗██╔═══██╗████╗ ████║
+██████╔╝██║   ██║██╔████╔██║
+██╔══██╗██║   ██║██║╚██╔╝██║
+██║  ██║╚██████╔╝██║ ╚═╝ ██║
+╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝
 
--- Desc: attempt to read flash rom ID
--- Pre: snes_init() been called to setup i/o
--- Post:Address left on bus memories disabled
--- Rtn: true if flash ID found
+--]]
+
+-- read ROM flash ID
 local function rom_manf_id(debug)
   local manufacturer_id
   local device_id
@@ -71,8 +59,21 @@ local function rom_manf_id(debug)
   manufacturer_id = dict.snes("SNES_ROM_RD", 0x8000)
   chips.display_manufacturer(manufacturer_id)
 
-  device_id = dict.snes("SNES_ROM_RD", 0x8002)
+  if manufacturer_id == 0xC2 then
+    -- MX chips
+    device_id = dict.snes("SNES_ROM_RD", 0x0002)
+    device_test = chips.display_device(manufacturer_id, device_id)
+  elseif manufacturer_id == 0x01 then
+    -- Cypress / Spansion
+    device_id = dict.snes("SNES_ROM_RD", 0x0002) << 16
+    device_id = device_id | (dict.snes("SNES_ROM_RD", 0x001C) << 8)
+    device_id = device_id | dict.snes("SNES_ROM_RD", 0x001E)
   device_test = chips.display_device(manufacturer_id, device_id)
+  else
+    -- fallback (SST)
+    device_id = dict.snes("SNES_ROM_RD", 0x0001)
+    device_test = chips.display_device(manufacturer_id, device_id)
+  end
 
   -- exit software
   dict.snes("SNES_ROM_WR", 0x8000, 0xF0)
@@ -84,15 +85,61 @@ local function rom_manf_id(debug)
   end
 end
 
---[[
-██████╗  ██████╗ ███╗   ███╗
-██╔══██╗██╔═══██╗████╗ ████║
-██████╔╝██║   ██║██╔████╔██║
-██╔══██╗██║   ██║██║╚██╔╝██║
-██║  ██║╚██████╔╝██║ ╚═╝ ██║
-╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝
+-- erase ROM
+local function rom_erase()
+  local i = 0
+  local rv
 
---]]
+  log.section("Erasing ROM")
+  dict.snes("SNES_SET_BANK", 0x00)
+  dict.snes("SNES_ROM_WR", 0x8AAA, 0xAA)
+  dict.snes("SNES_ROM_WR", 0x8555, 0x55)
+  dict.snes("SNES_ROM_WR", 0x8AAA, 0x80)
+  dict.snes("SNES_ROM_WR", 0x8AAA, 0xAA)
+  dict.snes("SNES_ROM_WR", 0x8555, 0x55)
+  dict.snes("SNES_ROM_WR", 0x8AAA, 0x10)
+
+  -- TODO create some function to pass the read value
+  -- that's smart enough to figure out if the board is actually erasing or not
+  rv = dict.snes("SNES_ROM_RD", 0x0000)
+  while rv ~= dict.snes("SNES_ROM_RD", 0x0000) do
+    spinner.update("Erasing")
+    rv = dict.snes("SNES_ROM_RD", 0x0000)
+    i = i + 1
+  end
+  spinner.clear()
+  log.success("Done erasing ROM", i .. " naks")
+end
+
+--write a single byte to SNES ROM flash
+--writes to currently selected bank address
+local function rom_flash_byte(addr, value, debug)
+  if (addr < 0x0000 or addr > 0xFFFF) then
+    print("\n  ERROR! flash write to SNES", string.format("$%X", addr), "must be $0000-FFFF \n\n")
+    return
+  end
+
+  --send unlock command and write byte
+  dict.snes("SNES_ROM_WR", 0x8AAA, 0xAA)
+  dict.snes("SNES_ROM_WR", 0x8555, 0x55)
+  dict.snes("SNES_ROM_WR", 0x8AAA, 0xA0)
+  dict.snes("SNES_ROM_WR", addr, value)
+
+  local rv = dict.snes("SNES_ROM_RD", addr)
+
+  local i = 0
+
+  while (rv ~= value) do
+    rv = dict.snes("SNES_ROM_RD", addr)
+    i = i + 1
+  end
+  if debug then print(i, "naks, done writing byte.") end
+  if debug then print("written value:", string.format("%X", value), "verified value:", string.format("%X", rv)) end
+
+  --TODO handle timeout for problems
+
+  --TODO return pass/fail/info
+end
 
 -- dump ROM
 local function rom_dump(file, rom_size_KB, debug)
@@ -214,15 +261,31 @@ local function process(process_opts, console_opts)
   local rom_size       = console_opts.rom_size_kb
   local ram_size       = console_opts.wram_size_kb
 
+  if snes.cart_header.is_valid then
+    if snes.cart_header.rom_type.mode == 0 then
+      mapname = "LOROM"
+    elseif snes.cart_header.rom_type.mode == 1 then
+      mapname = "HIROM"
+    else
+      log.error("Cart ROM header rom type is invalid")
+      return false
+    end
+  end
+
+  if snes.file_header.is_valid then
+    if snes.file_header.rom_type.mode == 0 then
+    mapname = "LOROM"
+    elseif snes.file_header.rom_type.mode == 1 then
+    mapname = "HIROM"
+    else
+      log.error("File ROM header rom type is invalid")
+      return false
+    end
+  end
+
   -- initialize device i/o
   dict.io("IO_RESET")
   dict.io("SNES_INIT")
-
-  if snes.rom_header.rom_type.mode == 0 then
-    mapname = "LOROM"
-  elseif snes.rom_header.rom_type.mode == 1 then
-    mapname = "HIROM"
-  end
 
   --[[
   888888 888888 .dP"Y8 888888
@@ -258,13 +321,14 @@ local function process(process_opts, console_opts)
 
   -- dump cart ROM to file
   if do_rom_dump then
+    if rom_size ~= 0 then
     -- open file
     file = assert(io.open(rom_dump_file.filename, "wb"))
 
     -- dump cart to file
     local cartridge_title = ""
-    if snes.rom_header.isValid then
-      cartridge_title = snes.rom_header.cartridge_title
+      if snes.cart_header.is_valid then
+        cartridge_title = snes.cart_header.cartridge_title
     end
     log.section("Dumping ROM", cartridge_title)
 
@@ -275,6 +339,7 @@ local function process(process_opts, console_opts)
 
     -- close file
     assert(file:close())
+    end
 
     -- -- parse ROM dump file header
     -- log.point("Parsing dumped file header")
@@ -296,31 +361,10 @@ local function process(process_opts, console_opts)
 
   -- erase the cart
   if do_erase then
-    local i = 0
-
     -- erase ROM only if needed
     if rom_size ~= 0 then
-      log.section("Erasing ROM")
       time.start()
-      --WR $AAA:AA $555:55 $AAA:AA
-      dict.snes("SNES_SET_BANK", 0x00)
-      dict.snes("SNES_ROM_WR", 0x8AAA, 0xAA)
-      dict.snes("SNES_ROM_WR", 0x8555, 0x55)
-      dict.snes("SNES_ROM_WR", 0x8AAA, 0x80)
-      dict.snes("SNES_ROM_WR", 0x8AAA, 0xAA)
-      dict.snes("SNES_ROM_WR", 0x8555, 0x55)
-      dict.snes("SNES_ROM_WR", 0x8AAA, 0x10)
-
-      -- TODO create some function to pass the read value
-      -- that's smart enough to figure out if the board is actually erasing or not
-      rv = dict.snes("SNES_ROM_RD", 0x8000)
-      while rv ~= dict.snes("SNES_ROM_RD", 0x8000) do
-        spinner.update("Erasing")
-        rv = dict.snes("SNES_ROM_RD", 0x8000)
-        i = i + 1
-      end
-      spinner.clear()
-      log.success("Done erasing ROM", i .. " naks")
+      rom_erase()
       time.report(rom_size)
     end
   end
@@ -357,17 +401,16 @@ local function process(process_opts, console_opts)
 
   -- verify what we just flashed
   if do_verify then
+    if rom_size ~= 0 then
     -- open file
     file = assert(io.open(verify_file.filename, "wb"))
 
     -- dump cart to file
-    if rom_size ~= 0 then
       log.section("Dumping ROM")
       time.start()
       rom_dump(file, rom_size, DEBUG)
       time.report(rom_size)
       log.success("ROM dumping done")
-    end
 
     -- close file
     assert(file:close())
@@ -378,6 +421,7 @@ local function process(process_opts, console_opts)
       log.success("Flash successfully verified")
     else
       log.error("Flash verification did not match")
+      end
     end
   end
 

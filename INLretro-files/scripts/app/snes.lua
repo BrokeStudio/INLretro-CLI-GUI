@@ -31,7 +31,12 @@ snes_swimcart       = nil
 
 local Header = {
   bytes = nil,
-  isValid = false,
+  is_valid = false,
+
+  has_smc_header = false,
+  is_lorom = false,
+  is_exrom = false,
+  header_offset = 0,
 
   cartridge_title = "",
   rom_type = {
@@ -127,7 +132,7 @@ local Header = {
 }
 
 local file_header = help.copy_table(Header)
-local rom_header = help.copy_table(Header)
+local cart_header = help.copy_table(Header)
 
 -- parse header from data
 local function parse_header(byte_str, header)
@@ -164,42 +169,92 @@ local function parse_header(byte_str, header)
   -- cheap test
   if not header:check_header_checksum() or not header:check_vectors() then
     log.warning("Header is not valid")
-    header.isValid = false
+    header.is_valid = false
   else
-    header.isValid = true
+    header.is_valid = true
   end
 
-  return header.isValid
+  return header.is_valid
 end
 
 
 -- pass a file pointer for a file which is already open
 -- leave file open when done
 local function parse_header_file(file)
-  -- local byte_str
-  -- byte_str = file:read(0x100)  -- skip vectors
-  -- byte_str = file:read(256)
+  local SMC_HEADER_SIZE = 512
 
-  -- -- compute global checksum
-  -- file:seek("set", 0x200)
-  -- file_header.file_rom_checksum = 0
-  -- local off = 0
-  -- while 1 do
-  --   local byte = file:read(2)
-  --   if byte == nil then break end
-  --   byte = string.unpack(">i2", byte)
-  --   file_header.file_rom_checksum = file_header.file_rom_checksum + byte
-  --   off = off + 1
-  -- end
-  -- file_header.file_rom_checksum = file_header.file_rom_checksum & 0xFFFF
+  local byte_str
 
-  -- return parse_header(byte_str, file_header)
+  file_header.file_size = file:seek("end")
+
+  -- try to find ROM header
+  -- lorom/hirom + headerless/headered combinations
+  -- taken from Mesen source code
+  local base_addresses = { 0, 0x200, 0x8000, 0x8200, 0x400000, 0x400200, 0x408000, 0x408200 }
+  local found_rom_header = false;
+  for i = 1, #base_addresses do
+    local base_address = base_addresses[i]
+    local checksum_complement = 0;
+    local checksum = 0;
+    local bytes
+
+    file:seek("set", base_address + 0x7FC0 + 0x1C)
+    byte_str = file:read(4)
+    bytes = table.pack(string.unpack(string.rep('B', #byte_str), byte_str))
+    checksum_complement = bytes[1]
+    checksum_complement = checksum_complement | (bytes[2] << 8);
+    checksum = bytes[3];
+    checksum = checksum | (bytes[4] << 8);
+
+    if checksum + checksum_complement == 0xFFFF and checksum ~= 0 and checksum_complement ~= 0 then
+      found_rom_header = true;
+      file_header.is_lorom = (base_address & 0x8000) == 0;
+      file_header.is_exrom = (base_address & 0x400000) ~= 0;
+      file_header.has_smc_header = (base_address & 0x200) ~= 0;
+      file_header.header_offset = base_address + 0x7FC0
+      if file_header.has_smc_header then
+        file_header.header_offset = file_header.header_offset + SMC_HEADER_SIZE
+      end
+      break
+    end
+  end
+
+  -- not found?
+  if not found_rom_header then
+    log.error("Couldn't find ROM header")
+    return false
+  end
+
+  -- log detected mapper
+  if file_header.is_lorom then
+    if file_header.is_exrom then
+      log.info("ExLoRom mapper detected")
+    else
+      log.info("LoRom mapper detected")
+    end
+  else
+    if file_header.is_exrom then
+      log.info("ExHiRom mapper detected")
+    else
+      log.info("HiRom mapper detected")
+    end
+  end
+
+  -- log detected SMC header
+  if file_header.has_smc_header then
+    log.info("SMC header detected")
+  end
+
+  -- parse header
+  file:seek("set", file_header.header_offset)
+  byte_str = file:read(64)
+  return parse_header(byte_str, file_header)
 end
 
 -- parse header from rom
 -- we should be able to read the header whatever the mapper is
 -- global checksum won't be computed though
-local function parse_header_rom()
+local function parse_header_cart()
   local byte_str
   local rv
 
@@ -222,7 +277,7 @@ local function parse_header_rom()
   )
 
   byte_str = string.sub(byte_str, 0xFFC0 + 1, 0xFFFF + 1)
-  if parse_header(byte_str, rom_header) then
+  if parse_header(byte_str, cart_header) then
     log.info("HiRom mapper detected")
     return true
   end
@@ -246,7 +301,7 @@ local function parse_header_rom()
   dict.io("IO_RESET")
 
   byte_str = string.sub(byte_str, 0x7FC0 + 1, 0x7FFF + 1)
-  if parse_header(byte_str, rom_header) then
+  if parse_header(byte_str, cart_header) then
     log.info("LoRom mapper detected")
     return true
   end
@@ -441,12 +496,12 @@ snes.rom_wr = rom_wr
 
 -- vars
 snes.file_header       = file_header
-snes.rom_header        = rom_header
+snes.cart_header       = cart_header
 
 -- functions
 snes.parse_header      = parse_header
 snes.parse_header_file = parse_header_file
-snes.parse_header_rom  = parse_header_rom
+snes.parse_header_cart = parse_header_cart
 
 -- snes.set_rom_address = set_rom_address
 
