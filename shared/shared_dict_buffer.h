@@ -170,6 +170,8 @@
 // operLSB: mapper variant
 #define SET_MAP_N_MAPVAR 0x32
 // operand MSB mapper
+
+// NES mapper definitions
 #define NROM 0
 #define MMC1 1
 #define UxROM 2
@@ -206,6 +208,12 @@
 // operand LSB mapper variant
 #define NOVAR 0
 
+// GENESIS mapper definitions
+#define BASIC 0
+#define SSF2 1
+// #define RNBW 2 /// we can't duplicate it, so let's keep the NES one
+
+// SNES mapper definitions
 #define LOROM 0
 #define HIROM 1   // file starts at bank 40 and is mirrored to C0
 #define EXHIROM 2 // file starts at bank C0
@@ -226,8 +234,8 @@
 // GAMEBOY mapper definitions
 #define ROMONLY 0
 #define MBC1_DISCRETE 1
-#define MBC1 2
-#define MBC5 2
+#define MBC1 2 // MBC1 and MBC5 use the same script
+#define MBC5 2 // MBC1 and MBC5 use the same script
 
 // CIC "mapper" definitions
 #define CIC_READ_BUFFER 0  // dump

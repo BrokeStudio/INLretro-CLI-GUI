@@ -1443,13 +1443,16 @@ void software_AXL_CLK();
 //	#define DATA16_IP_PU()	DATA16_IP(); DATA16_PU()
 
 //	#define DATA_SET(data)		Dbank->ODR = (Dbank->ODR & 0x00FF) | (data<<8)
-	#define DATA16L_RD(data)	data = (D0_13bank->IDR>>8)// & 0x00FF
+	#define DATA16L_RD(data) data = ((D0_13bank->IDR >> 8) & 0x00FF)
 	// MSByte: 7654_3210 LSByte: 13-12-11-10_9-8-X-X
 	#define DATA16H_RD(data)	data = ((D0_13bank->IDR>>2)&0x003F) | ((D14_15bank->IDR>>3)&0x00C0)
 
-	#define DATA16L_SET(data)	D0_13bank->ODR = (D0_13bank->ODR & 0x00FF) | (data<<8)
-	//TODO rethink these macros!
-	#define DATA16H_SET(data)	D0_13bank->ODR = (D0_13bank->ODR & 0xFF03) | (data<<2); D14_15bank->ODR= (D14_15bank->ODR& 0xF9FF) | (data<<3)
+	#define DATA16L_SET(data) \
+		D0_13bank->ODR = (D0_13bank->ODR & 0x00FF) | ((data & 0x00FF) << 8)
+
+	#define DATA16H_SET(data) \
+		D0_13bank->ODR = (D0_13bank->ODR & 0xFF03) | ((data & 0x003F) << 2); \
+		D14_15bank->ODR = (D14_15bank->ODR & 0xF9FF) | ((data & 0x00C0) << 3)
 
 	#define DATA16_EN_CLK()	RCC->AHBENR |= RCC_AHBENR_DATA16
 	#define DATA16_ENABLE()	DATA16_EN_CLK(); DATA16_IP(); DATA16_PU()

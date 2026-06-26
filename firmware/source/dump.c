@@ -238,23 +238,23 @@ uint8_t dump_buff(buffer *buff)
   case GENESIS_ROM_PAGE0: // A16=0 first half of A1-A16 BANK
     // mapper byte specifies Genesis CPU A15-8
     addrH |= (buff->mapper); // no shift needed
-    buff->cur_byte = genesis_page_rd(buff->data, addrH, buff->id,
+    buff->cur_byte = gen_rom_page_rd(buff->data, addrH, buff->id,
                                      // id contains MSb of page when <256B buffer
                                      buff->last_idx);
     break;
   case GENESIS_ROM_PAGE1: // A16=1 second half of A1-A16 BANK
     // mapper byte specifies Genesis CPU A15-8
     addrH |= (buff->mapper); // no shift needed
-    buff->cur_byte = genesis_page_rd(buff->data, addrH + 0x0100, buff->id,
+    buff->cur_byte = gen_rom_page_rd(buff->data, addrH + 0x0100, buff->id,
                                      // id contains MSb of page when <256B buffer
                                      buff->last_idx);
     break;
   case GENESIS_RAM_PAGE: // Only read data from lower Byte D0-7
     // mapper byte specifies Genesis CPU A15-8
     addrH |= (buff->mapper); // no shift needed
-    buff->cur_byte = genesis_ram_page_rd(buff->data, addrH, buff->id,
-                                         // id contains MSb of page when <256B buffer
-                                         buff->last_idx);
+    buff->cur_byte = gen_ram_page_rd(buff->data, addrH, buff->id,
+                                     // id contains MSb of page when <256B buffer
+                                     buff->last_idx);
     break;
 #endif
 

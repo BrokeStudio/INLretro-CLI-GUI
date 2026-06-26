@@ -467,8 +467,8 @@ void sega_init()
 	// 0b1000_0100	#TIME and #LO_MEM high
 // TODO put those defines in pinport?
 #define LOMEM_TIME_MASK 0x84
-#define TIME_MASK 0x80
-#define LOMEM_MASK 0x04
+#define LOMEM_MASK 0x04 // B26 /ASEL
+#define TIME_MASK 0x80  // B31 /TIME
 	FFADDR_SET(LOMEM_TIME_MASK); // corrupts A1-16
 
 	// A1-16

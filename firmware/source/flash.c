@@ -612,67 +612,112 @@ uint8_t gameboy_write_page_buffer(uint8_t addrH, buffer *buff)
 #endif
 
 #ifdef SEGA_CONN
-uint8_t genesis_rnbw_write_page(buffer *buff)
+uint8_t genesis_ssf2_write_page_verify(buffer *buff)
 {
   uint16_t cur = buff->cur_byte; // need 16 bits here so it won't overflow
-  uint16_t base_addr = buff->page_num << 7;
+
+  uint8_t saved_addr_hi = gen_get_addr_hi();
+  uint8_t page_addr_hi = saved_addr_hi + (buff->page_num >> 8);
+  uint16_t base_addr = (buff->page_num & 0x00FF) << 8; // byte address for 256 bytes
+
+  gen_set_addr_hi(page_addr_hi);
+
   uint16_t addr;
   uint16_t value;
   uint16_t word_count = (buff->last_idx + 1 - buff->cur_byte) >> 1;
 
   // write "write to buffer" command and sector address
-  gen_rom_wr(0x0555, 0x00AA);
-  gen_rom_wr(0x02AA, 0x0055);
-  gen_rom_wr(0x0000, 0x0025);         // the bank set before calling sets the sector
-  gen_rom_wr(0x0000, word_count - 1); // number of words to write minus one
+  gen_rom_wr(0x0555 << 1, 0x00AA);
+  gen_rom_wr(0x02AA << 1, 0x0055);
+  gen_rom_wr(base_addr, 0x0025);         // the bank set before calling sets the sector
+  gen_rom_wr(base_addr, word_count - 1); // number of words to write minus one
 
   while (cur <= buff->last_idx)
   {
     value = buff->data[cur + 0] << 8;
     value |= buff->data[cur + 1];
-    addr = base_addr + (cur >> 1);
+    addr = base_addr + cur;
 
     // add word to write buffer
     gen_rom_wr(addr, value);
 
     cur = cur + 2;
   }
-  buff->cur_byte = cur;
 
-  // write program buffer to flash (confirm)
-  gen_rom_wr(0x0000, 0x29);
+  // write program buffer to flash
+  gen_rom_wr(base_addr, 0x29);
+
+  uint16_t timeout = 0xFFFF;
 
   do
   {
-    value = gen_rom_rd(addr);
-  } while (value != gen_rom_rd(addr));
+    if (gen_rom_rd(addr) == value)
+    {
+      break;
+    }
+  } while (--timeout);
 
-  // TODO error check/report
+  gen_set_addr_hi(saved_addr_hi);
+
+  if (!timeout)
+  {
+    return STOPPED;
+  }
+
   return SUCCESS;
 }
 
-uint8_t genesis_rom_page_write(buffer *buff)
+uint8_t genesis_rom_page_write_verify(buffer *buff)
 {
   uint16_t cur = buff->cur_byte; // need 16 bits here so it won't overflow
-  uint16_t base_addr = buff->page_num << 7;
+
+  uint8_t saved_addr_hi = gen_get_addr_hi();
+  uint8_t page_addr_hi = saved_addr_hi + (buff->page_num >> 8);
+  uint16_t base_addr = (buff->page_num & 0x00FF) << 8; // byte address for 256 bytes
+
+  gen_set_addr_hi(page_addr_hi);
+
   uint16_t addr;
   uint16_t value;
-  uint16_t word_count = (buff->last_idx + 1 - buff->cur_byte) >> 1;
+  uint16_t read;
+  uint8_t retries;
 
   while (cur <= buff->last_idx)
   {
+    buff->cur_byte = cur;
+
     value = buff->data[cur + 0] << 8;
     value |= buff->data[cur + 1];
-    addr = base_addr + (cur >> 1);
+    addr = base_addr + cur;
 
-    // add word to write buffer
-    gen_sst_flash_wr(addr, value);
+    retries = 3;
 
-    cur = cur + 2;
+    do
+    {
+      // write word
+      read = gen_sst_flash_wr(addr, value);
+      if (read == value)
+      {
+        LED_IP_PU();
+        cur += 2;
+        break;
+      }
+      else
+      {
+        LED_OP();
+        LED_HI();
+      }
+    } while (--retries);
+
+    if (read != value)
+    {
+      gen_set_addr_hi(saved_addr_hi);
+      buff->cur_byte = cur;
+      return STOPPED;
+    }
   }
+  gen_set_addr_hi(saved_addr_hi);
   buff->cur_byte = cur;
-
-  // TODO error check/report
   return SUCCESS;
 }
 
@@ -708,6 +753,7 @@ uint8_t genesis_ram_page_write(buffer *buff)
 uint8_t flash_buff(buffer *buff)
 {
 
+  uint8_t result = SUCCESS;
   uint8_t addrH = buff->page_num; // A15:8  while accessing page
   uint8_t bank;
 
@@ -1054,15 +1100,19 @@ uint8_t flash_buff(buffer *buff)
     // There is no A0, upper/lower byte 'replaces' A0 since 16bit word written at once
     // we need to map page_num to A16-A8 here before writing a page
 
-    if (buff->mapper == NOVAR)
+    if (buff->mapper == BASIC)
     {
-      genesis_rom_page_write(buff);
+      result = genesis_rom_page_write_verify(buff);
+    }
+
+    if (buff->mapper == SSF2)
+    {
+      result = genesis_ssf2_write_page_verify(buff);
     }
 
     if (buff->mapper == RNBW)
     {
-      // write data
-      genesis_rnbw_write_page(buff);
+      result = genesis_ssf2_write_page_verify(buff);
     }
 
     break;
@@ -1137,5 +1187,6 @@ uint8_t flash_buff(buffer *buff)
     return ERR_BUFF_UNSUP_MEM_TYPE;
   }
 
-  return SUCCESS;
+  LED_IP_PU();
+  return result;
 }

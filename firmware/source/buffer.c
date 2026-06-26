@@ -682,6 +682,7 @@ void update_buffers()
 			result = flash_buff( last_buff );
 			if (result != SUCCESS) {
 				last_buff->status = result;
+				set_operation(STOPPED); // or PROBLEM?
 			} else {
 				last_buff->status = FLASHED;
 				last_buff->page_num += last_buff->reload;
