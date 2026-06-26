@@ -54,7 +54,7 @@ local REGION_TYPES = {
 
 local Header = {
   bytes = nil,
-  isValid = false,
+  is_valid = false,
 
   system_type = "",
   copyright_release_date = "",
@@ -125,9 +125,12 @@ local Header = {
 }
 
 local file_header = help.copy_table(Header)
-local rom_header = help.copy_table(Header)
+local cart_header = help.copy_table(Header)
 
--- parse header from data
+--- Parse a 256-byte Genesis ROM header into a header table.
+---@param byte_str string Raw 256-byte header data, starting at ROM offset 0x100
+---@param header table Header table to populate, usually genesis.file_header or genesis.cart_header
+---@return boolean is_valid True when the parsed system type starts with "SEGA"
 local function parse_header(byte_str, header)
   header.bytes = table.pack(string.unpack(string.rep('B', #byte_str), byte_str))
   header.system_type = string.sub(byte_str, 1, 16)
@@ -166,16 +169,18 @@ local function parse_header(byte_str, header)
   -- cheap test
   if string.sub(header.system_type, 1, 4) ~= "SEGA" then
     log.warning("System type doesn't start with 'SEGA'")
-    header.isValid = false
+    header.is_valid = false
   else
-    header.isValid = true
+    header.is_valid = true
   end
 
-  return header.isValid
+  return header.is_valid
 end
 
--- pass a file pointer for a file which is already open
--- leave file open when done
+--- Parse a Genesis ROM header from an already-open file.
+--- Leaves the file open after parsing and computes the file checksum.
+---@param file file* Open binary ROM file
+---@return boolean is_valid True when the parsed system type starts with "SEGA"
 local function parse_header_file(file)
   local byte_str
   byte_str = file:read(0x100) -- skip vectors
@@ -197,10 +202,10 @@ local function parse_header_file(file)
   return parse_header(byte_str, file_header)
 end
 
--- parse header from rom
--- we should be able to read the header whatever the mapper is
--- global checksum won't be computed though
-local function parse_header_rom()
+--- Parse a Genesis ROM header directly from the cartridge.
+--- Reads the first ROM page through the basic Genesis dump path; checksum is not computed.
+---@return boolean is_valid True when the parsed system type starts with "SEGA"
+local function parse_header_cart()
   -- initialize device i/o
   dict.io("IO_RESET")
   dict.io("SEGA_INIT")
@@ -216,20 +221,67 @@ local function parse_header_rom()
   dict.io("IO_RESET")
 
   byte_str = string.sub(byte_str, 0x100 + 1, 0x1FF + 1)
-  return parse_header(byte_str, rom_header)
+  return parse_header(byte_str, cart_header)
 end
 
 --[[
-██████╗  ██████╗ ███╗   ███╗
-██╔══██╗██╔═══██╗████╗ ████║
-██████╔╝██║   ██║██╔████╔██║
-██╔══██╗██║   ██║██║╚██╔╝██║
-██║  ██║╚██████╔╝██║ ╚═╝ ██║
-╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝
+██╗  ██╗███████╗██╗     ██████╗ ███████╗██████╗ ███████╗
+██║  ██║██╔════╝██║     ██╔══██╗██╔════╝██╔══██╗██╔════╝
+███████║█████╗  ██║     ██████╔╝█████╗  ██████╔╝███████╗
+██╔══██║██╔══╝  ██║     ██╔═══╝ ██╔══╝  ██╔══██╗╚════██║
+██║  ██║███████╗███████╗██║     ███████╗██║  ██║███████║
+╚═╝  ╚═╝╚══════╝╚══════╝╚═╝     ╚══════╝╚═╝  ╚═╝╚══════╝
 
 --]]
 
-local function set_rom_address(addr)
+--- Read an 8-bit value from a Genesis /TIME register.
+--- Register offset maps to CPU address 0xA13000 | addr.
+---@param addr integer /TIME register offset, 0x00-0xFF
+---@return integer|nil value 8-bit value read, or nil if addr is invalid
+local function time_rd(addr)
+  if (addr > 0xff) then
+    log.error("/TIME addresse value too high ($00-$FF)")
+    return
+  end
+  return dict.sega("GEN_TIME_RD", addr)
+end
+
+--- Read and log an 8-bit value from a Genesis /TIME register.
+---@param addr integer /TIME register offset, 0x00-0xFF
+---@param label? string Optional text appended to the log line
+---@return integer|nil value 8-bit value read, or nil if addr is invalid
+local function dbg_time_rd(addr, label)
+  if not (type(label) == "string") then label = "" end
+  local rv = time_rd(addr)
+  log.bullet("TIME", "R ", help.hex_0x6(0xA13000 | (addr & 0xff)), help.hex_0x4(rv), "(" .. rv .. ")", label)
+  return rv
+end
+
+--- Write an 8-bit value to a Genesis /TIME register.
+--- Register offset maps to CPU address 0xA13000 | addr.
+---@param addr integer /TIME register offset, 0x00-0xFF
+---@param value integer 8-bit value to write
+local function time_wr(addr, value)
+  if (addr > 0xff) then
+    log.error("/TIME addresse value too high ($00-$FF)")
+    return
+  end
+  dict.sega("GEN_TIME_WR", addr, value)
+end
+
+--- Write and log an 8-bit value to a Genesis /TIME register.
+---@param addr integer /TIME register offset, 0x00-0xFF
+---@param value integer 8-bit value to write
+---@param comment? string Optional text appended to the log line
+local function dbg_time_wr(addr, value, comment)
+  if not (type(comment) == "string") then comment = "" end
+  time_wr(addr, value)
+  log.bullet("TIME", " W", help.hex_0x6(0xA13000 | (addr & 0xff)), help.hex_0x4(value), "(" .. value .. ")", comment)
+end
+
+--- Set the current Genesis bus address from a full 24-bit address.
+---@param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
+local function set_addr(addr)
   local addr_hi = (addr >> 16) & 0xFF
   local addr_lo = addr & 0xFFFF
   dict.sega("GEN_SET_ADDR", addr_lo, addr_hi)
@@ -239,79 +291,107 @@ local function set_rom_address(addr)
   -- dict.sega("GEN_SET_ADDR_LO", addr_lo)
 end
 
-local function dbg_rom_wr(addr, val, debug, comment)
-  if not (type(debug) == "boolean") then debug = true end
-  if not (type(comment) == "string") then comment = "" end
-  set_rom_address(addr)
-  dict.sega("GEN_ROM_WR", val)
-  if (debug) then log.bullet("ROM", " W", help.hex_0x6(addr), help.hex_0x4(val), "(" .. val .. ")", comment) end
+--- Set the high address latch used by subsequent Genesis bus accesses.
+---@param addr_hi integer High address byte, 0x00-0xFF
+local function set_addr_hi(addr_hi)
+  dict.sega("GEN_SET_ADDR_HI", addr_hi)
 end
 
-local function rom_wr(addr, val)
-  dbg_rom_wr(addr, val, false)
+--- Set the low address latch used by subsequent Genesis bus accesses.
+---@param addr_lo integer Low address word, 0x0000-0xFFFF
+local function set_addr_lo(addr_lo)
+  dict.sega("GEN_SET_ADDR_LO", addr_lo)
 end
 
-local function dbg_rom_rd(addr, debug, label)
-  if not (type(debug) == "boolean") then debug = true end
-  if not (type(label) == "string") then label = "" end
-  local rv
-  local addr_lo = addr & 0xFFFF
-  set_rom_address(addr)
-  rv = dict.sega("GEN_ROM_RD", addr_lo)
-  if (debug) then log.bullet("ROM", "R ", help.hex_0x6(addr), help.hex_0x4(rv), "(" .. rv .. ")", label) end
-  return rv
-end
-
+--- Read a 16-bit word from the Genesis ROM bus.
+--- Sets the full 24-bit address before reading.
+---@param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
+---@return integer value 16-bit value read from ROM
 local function rom_rd(addr)
-  return dbg_rom_rd(addr, false)
-end
-
---[[
-██████╗  █████╗ ███╗   ███╗
-██╔══██╗██╔══██╗████╗ ████║
-██████╔╝███████║██╔████╔██║
-██╔══██╗██╔══██║██║╚██╔╝██║
-██║  ██║██║  ██║██║ ╚═╝ ██║
-╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝
-
---]]
-
-local function set_ram_address(addr)
-  local addr_hi = (addr >> 16) & 0xFF
   local addr_lo = addr & 0xFFFF
-  dict.sega("GEN_SET_ADDR", addr_lo, addr_hi)
-
-  -- or could do:
-  -- dict.sega("GEN_SET_ADDR_HI", addr_hi)
-  -- dict.sega("GEN_SET_ADDR_LO", addr_lo)
+  set_addr(addr)
+  return dict.sega("GEN_ROM_RD", addr_lo)
 end
 
-local function dbg_ram_wr(addr, val, debug, comment)
-  if not (type(debug) == "boolean") then debug = true end
-  if not (type(comment) == "string") then comment = "" end
-  set_ram_address(addr)
-  local addr_lo = addr & 0xFFFF
-  dict.sega("GEN_RAM_WR", addr_lo, val)
-  if (debug) then log.bullet("RAM", " W", help.hex_0x6(addr), help.hex_0x2(val), "(" .. val .. ")", comment) end
-end
-
-local function ram_wr(addr, val)
-  dbg_ram_wr(addr, val, false)
-end
-
-local function dbg_ram_rd(addr, debug, label)
-  if not (type(debug) == "boolean") then debug = true end
+--- Read and log a 16-bit word from the Genesis ROM bus.
+---@param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
+---@param label? string Optional text appended to the log line
+---@return integer value 16-bit value read from ROM
+local function dbg_rom_rd(addr, label)
   if not (type(label) == "string") then label = "" end
-  local rv
-  local addr_lo = addr & 0xFFFF
-  set_ram_address(addr)
-  rv = dict.sega("GEN_RAM_RD", addr_lo)
-  if (debug) then log.bullet("RAM", "R ", help.hex_0x6(addr), help.hex_0x2(rv), "(" .. rv .. ")", label) end
+  local rv = rom_rd(addr)
+  log.bullet("ROM", "R ", help.hex_0x6(addr), help.hex_0x4(rv), "(" .. rv .. ")", label)
   return rv
 end
 
+--- Write a 16-bit word to the Genesis ROM bus.
+--- Sets the full 24-bit address before writing.
+---@param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
+---@param value integer 16-bit value to write
+local function rom_wr(addr, value)
+  set_addr(addr)
+  dict.sega("GEN_ROM_WR", value)
+end
+
+--- Write and log a 16-bit word to the Genesis ROM bus.
+---@param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
+---@param value integer 16-bit value to write
+---@param comment? string Optional text appended to the log line
+local function dbg_rom_wr(addr, value, comment)
+  if not (type(comment) == "string") then comment = "" end
+  rom_wr(addr, value)
+  log.bullet("ROM", " W", help.hex_0x6(addr), help.hex_0x4(value), "(" .. value .. ")", comment)
+end
+
+--- Read an 8-bit value from the Genesis RAM bus.
+--- Sets the full 24-bit address before reading.
+---@param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
+---@return integer value 8-bit value read from RAM
 local function ram_rd(addr)
-  return dbg_ram_rd(addr, false)
+  local addr_lo = addr & 0xFFFF
+  set_addr(addr)
+  return dict.sega("GEN_RAM_RD", addr_lo)
+end
+
+--- Read and log an 8-bit value from the Genesis RAM bus.
+---@param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
+---@param label? string Optional text appended to the log line
+---@return integer value 8-bit value read from RAM
+local function dbg_ram_rd(addr, label)
+  if not (type(label) == "string") then label = "" end
+  local rv = ram_rd(addr)
+  log.bullet("RAM", "R ", help.hex_0x6(addr), help.hex_0x2(rv), "(" .. rv .. ")", label)
+  return rv
+end
+
+--- Write an 8-bit value to the Genesis RAM bus.
+--- Sets the full 24-bit address before writing.
+---@param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
+---@param value integer 8-bit value to write
+local function ram_wr(addr, value)
+  set_addr(addr)
+  local addr_lo = addr & 0xFFFF
+  dict.sega("GEN_RAM_WR", addr_lo, value)
+end
+
+--- Write and log an 8-bit value to the Genesis RAM bus.
+---@param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
+---@param value integer 8-bit value to write
+---@param comment? string Optional text appended to the log line
+local function dbg_ram_wr(addr, value, comment)
+  if not (type(comment) == "string") then comment = "" end
+  ram_wr(addr, value)
+  log.bullet("RAM", " W", help.hex_0x6(addr), help.hex_0x2(value), "(" .. value .. ")", comment)
+end
+
+--- Enable Genesis cartridge SRAM through /TIME register 0xF1.
+local function ram_enable()
+  time_wr(0xF1, 0x01)
+end
+
+--- Disable Genesis cartridge SRAM through /TIME register 0xF1.
+local function ram_disable()
+  time_wr(0xF1, 0x00)
 end
 
 --[[
@@ -326,24 +406,34 @@ end
 
 -- vars
 genesis.file_header       = file_header
-genesis.rom_header        = rom_header
+genesis.cart_header       = cart_header
 
 -- functions
 genesis.parse_header      = parse_header
 genesis.parse_header_file = parse_header_file
-genesis.parse_header_rom  = parse_header_rom
+genesis.parse_header_cart = parse_header_cart
 
-genesis.set_rom_address   = set_rom_address
+-- helpers
+genesis.time_rd           = time_rd
+genesis.dbg_time_rd       = dbg_time_rd
+genesis.time_wr           = time_wr
+genesis.dbg_time_wr       = dbg_time_wr
 
-genesis.dbg_rom_rd        = dbg_rom_rd
-genesis.dbg_rom_wr        = dbg_rom_wr
+genesis.set_addr          = set_addr
+genesis.set_addr_hi       = set_addr_hi
+genesis.set_addr_lo       = set_addr_lo
+
 genesis.rom_rd            = rom_rd
+genesis.dbg_rom_rd        = dbg_rom_rd
 genesis.rom_wr            = rom_wr
+genesis.dbg_rom_wr        = dbg_rom_wr
 
-genesis.dbg_ram_rd        = dbg_ram_rd
-genesis.dbg_ram_wr        = dbg_ram_wr
 genesis.ram_rd            = ram_rd
+genesis.dbg_ram_rd        = dbg_ram_rd
 genesis.ram_wr            = ram_wr
+genesis.dbg_ram_wr        = dbg_ram_wr
+genesis.ram_enable        = ram_enable
+genesis.ram_disable       = ram_disable
 
 -- return the module's table
 return genesis

@@ -100,6 +100,18 @@ local function status_wait(buff_nums, end_status, debug)
         rv = (dict.buffer("GET_PRI_ELEMENTS", nil, buff, nil, true))
         --status is the second byte of return data
         rv = string.unpack("B", rv, 2)
+
+        if rv == op_buffer["STOPPED"] then
+          local page = dict.buffer("GET_PAGE_NUM", nil, buff)
+          local pri = dict.buffer("GET_PRI_ELEMENTS", nil, buff, nil, true)
+          local cur_byte = string.unpack("B", pri, 3)
+
+          error(string.format(
+            "Flash stopped: buffer=%d page=0x%04X cur_byte=0x%02X",
+            buff, page, cur_byte
+          ))
+        end
+
         if rv == op_buffer[stat] then
           if debug then print("buffer", buff, rv, "matched", stat) end
           rv = "EXIT"

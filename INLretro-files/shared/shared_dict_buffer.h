@@ -208,6 +208,11 @@
 // operand LSB mapper variant
 #define NOVAR 0
 
+// GENESIS mapper definitions
+#define BASIC 0
+#define SSF2 1
+// #define RNBW 2 /// we can't duplicate it, so let's keep the NES one
+
 // SNES mapper definitions
 #define LOROM 0
 #define HIROM 1   // file starts at bank 40 and is mirrored to C0

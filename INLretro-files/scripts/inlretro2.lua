@@ -293,13 +293,13 @@ local function genesis_exec(process_opts, console_opts)
     -- parse file header
     log.section("Parsing ROM flash file header")
     log.bullet("Filename", process_opts.rom_write_file.filename)
-    local genFile = assert(io.open(process_opts.rom_write_file.filename, "rb"))
-    if not genesis.parse_header_file(genFile) then
+    local gen_file = assert(io.open(process_opts.rom_write_file.filename, "rb"))
+    if not genesis.parse_header_file(gen_file) then
       log.warning("Failed to parse ROM flash file header")
     else
       log.success("ROM flash file header parsed successfully")
     end
-    assert(genFile:close())
+    assert(gen_file:close())
 
     header = genesis.file_header
   end
@@ -308,16 +308,16 @@ local function genesis_exec(process_opts, console_opts)
   if process_opts.rom_dump_file ~= "" then
     -- parse cartridge ROM header
     log.section("Parsing cartridge ROM header")
-    if not genesis.parse_header_rom() then
+    if not genesis.parse_header_cart() then
       log.warning("Failed to parse cartridge ROM header")
     else
       log.success("Cartridge ROM header parsed successfully")
     end
 
-    header = genesis.rom_header
+    header = genesis.cart_header
   end
 
-  if header ~= nil then
+  if header ~= nil and header.is_valid then
     -- control passed ROM size vs header data
     if console_opts.rom_size_kb < header:get_rom_size() then
       log.warning("Passed ROM size (" ..
@@ -335,15 +335,14 @@ local function genesis_exec(process_opts, console_opts)
   }
 
   local mappers = {
-    standard = require "scripts.genesis.32mb",
-    -- ssf2      = require "scripts.genesis.ssf2",
+    basic   = require "scripts.genesis.basic",
+    ssf2     = require "scripts.genesis.ssf2",
     -- rainbow   = require "scripts.genesis.rainbow",
-    -- test      = require "scripts.genesis.md-test",
   }
 
   -- if no mapper provided, use default one (32mb)
   if console_opts.mapper == "" then
-    console_opts.mapper = "standard"
+    console_opts.mapper = "basic"
   end
 
   local m = mappers[console_opts.mapper]

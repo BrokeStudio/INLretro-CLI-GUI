@@ -2,6 +2,8 @@
 #ifndef MD_H
 #define MD_H
 
+#include <algorithm>
+#include <cctype>
 #include <map>
 #include <string>
 
@@ -24,25 +26,31 @@ protected:
     APP_LOG(LogTypes_Point, "[%s] Opening: %s", this->short_name.c_str(), filename.c_str());
 
     // parse rom file header
-    parse_header(rom_write_INLOptions.rom_write_file);
-
-    // set default values
-    if (!header.check_rom_size())
-      rom_write_INLOptions.rom_size_kb = static_cast<int>(header.file_size >> 10);
-    else
-      rom_write_INLOptions.rom_size_kb = header.get_rom_size();
-
-    if (mappers.size() != 0)
+    if (parse_header(rom_write_INLOptions.rom_write_file))
     {
-      int mapperIndex = get_mapper_index_by_mapper_name(header.get_mapper_name());
-      if (mapperIndex == -1)
-      {
-        APP_LOG(LogTypes_Warning, "[%s] Mapper unknown: %s", this->short_name.c_str(), header.get_mapper_name().c_str());
-      }
+
+      // set default values
+      if (!header.check_rom_size())
+        rom_write_INLOptions.rom_size_kb = static_cast<int>(header.fileSize >> 10);
       else
+        rom_write_INLOptions.rom_size_kb = header.get_rom_size();
+
+      if (mappers.size() != 0)
       {
-        rom_write_INLOptions.mapper_name = mappers[mapperIndex].script_name;
+        int mapperIndex = get_mapper_index_by_mapper_name(header.get_mapper_name());
+        if (mapperIndex == -1)
+        {
+          APP_LOG(LogTypes_Warning, "[%s] Mapper unknown: %s", this->short_name.c_str(), header.get_mapper_name().c_str());
+        }
+        else
+        {
+          rom_write_INLOptions.mapper_name = mappers[mapperIndex].script_name;
+        }
       }
+    }
+    else
+    {
+      rom_write_INLOptions.rom_size_kb = static_cast<int>(header.fileSize >> 10);
     }
   }
 
@@ -121,12 +129,30 @@ private:
     std::string modemSupport;
     std::string regionSupport;
 
-    uint16_t file_checksum;
-    std::streamoff file_size;
+    uint16_t fileChecksum;
+    std::streamoff fileSize;
 
     std::string get_mapper_name()
     {
-      return "32mb";
+      const std::streamoff ROM_MAX_SIZE = 4096 * 1024;
+
+      if (systemType == "SEGA SSF2       ")
+        return "SSF2";
+
+      if (systemType == "SEGA RAINBOW    " || systemType == "SEGA RAINBOW MD " || systemType == "SEGA RAINBOW GEN")
+        return "Rainbow";
+
+      if (this->fileSize > ROM_MAX_SIZE)
+        return "SSF2";
+
+      std::string gameTitle = this->gameTitleDomestic + this->gameTitleOverseas;
+      std::transform(gameTitle.begin(), gameTitle.end(), gameTitle.begin(), [](unsigned char c)
+                     { return static_cast<char>(std::toupper(c)); });
+
+      if (gameTitle.find("SUPER STREET FIGHTER2") != std::string::npos)
+        return "SSF2";
+
+      return "Basic";
     }
 
     std::string get_software_type()
@@ -206,7 +232,7 @@ private:
     // return true or false
     bool check_romChecksum()
     {
-      if (this->romChecksum == this->file_checksum)
+      if (this->romChecksum == this->fileChecksum)
         return true;
       else
         return false;
@@ -215,7 +241,7 @@ private:
     // return true or false
     bool check_rom_size()
     {
-      if (this->get_rom_size() == (this->file_size >> 10))
+      if (this->get_rom_size() == (this->fileSize >> 10))
         return true;
       else
         return false;
@@ -241,7 +267,7 @@ private:
 
     // get length of file
     rom.seekg(0, rom.end);
-    header.file_size = rom.tellg();
+    header.fileSize = rom.tellg();
     rom.seekg(0, rom.beg);
 
     // skip vectors and copy header bytes
@@ -262,7 +288,7 @@ private:
         break;
       checksum += val;
     }
-    header.file_checksum = checksum;
+    header.fileChecksum = checksum;
 
     rom.close();
 
@@ -273,6 +299,14 @@ private:
       this->buf[i] = header.bytes[i];
     }
     header.systemType.assign(this->buf, 16);
+
+    // check if header is valid
+    if (header.systemType.substr(0, 4) != "SEGA")
+    {
+      APP_LOG(LogTypes_Warning, "ROM Header is not valid (system type doesn't start with SEGA");
+      header.isValid = false;
+      return false;
+    }
 
     // copyright and release_date
     memset(this->buf, 0, sizeof(this->buf));
@@ -377,25 +411,16 @@ private:
     if (!header.check_romChecksum())
     {
       APP_LOG(LogTypes_Warning, "Header ROM checksum is not valid");
-      header.isValid = false;
-    }
-    else
-    {
-      header.isValid = true;
     }
 
     // check if ROM size is valid
     if (!header.check_rom_size())
     {
-      // APP_LOG(LogTypes_Warning, "Header ROM size is not valid (header says %06X, file is %06X)", header.get_rom_size(), header.file_size >> 10);
-      APP_LOG(LogTypes_Warning, "Header ROM size is not valid (header says %i KiB, file is %i KiB)", header.get_rom_size(), header.file_size >> 10);
-      header.isValid = false;
-    }
-    else
-    {
-      header.isValid = true;
+      // APP_LOG(LogTypes_Warning, "Header ROM size is not valid (header says %06X, file is %06X)", header.get_rom_size(), header.fileSize >> 10);
+      APP_LOG(LogTypes_Warning, "Header ROM size is not valid (header says %i KiB, file is %i KiB)", header.get_rom_size(), header.fileSize >> 10);
     }
 
+    header.isValid = true;
     return true;
   }
 

@@ -45,8 +45,9 @@ It provides both a command-line interface (CLI) and a graphical user interface (
 |                  | MBC5           | ✓        | ✓         | ✓        | ✓         |
 |                  |                |          |           |          |           |
 | Genesis / MD     | 32Mb (+SRAM)   | ✓        | ✓         | ✓        | ✓         |
+|                  | SSF2           | ✓        | ✓         | ✓        | ✓         |
 |                  |                |          |           |          |           |
-| SNES / SFC       | LoRom / HiRom  | ✓        | ✗         | ✗        | ✗         |
+| SNES / SFC       | LoRom / HiRom  | ✓        | ✓         | ✗        | ✗         |
 |                  |                |          |           |          |           |
 | N64              |                | ✓        | ✗         | ✗        | ✗         |
 

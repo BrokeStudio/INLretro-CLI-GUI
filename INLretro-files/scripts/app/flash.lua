@@ -2,13 +2,42 @@
 local flash = {}
 
 -- import required modules
-local dict = require "scripts.app.dict"
 local buffers = require "scripts.app.buffers"
+local dict = require "scripts.app.dict"
+local log     = require "scripts.app.log"
 local snes = require "scripts.app.snes"
 
 -- file constants and global variables
 
 -- local functions
+local function check_stopped(buff_nums)
+  for _, buff in ipairs(buff_nums) do
+    local pri = dict.buffer("GET_PRI_ELEMENTS", nil, buff, nil, true)
+    local status = string.unpack("B", pri, 2)
+    local cur_byte = string.unpack("B", pri, 3)
+    -- debug
+    -- log.print(string.format(
+    --   "buff=%d last=%02X status=%02X cur=%02X reload=%02X id=%02X func=%02X",
+    --   buff,
+    --   string.unpack("B", pri, 1),
+    --   string.unpack("B", pri, 2),
+    --   string.unpack("B", pri, 3),
+    --   string.unpack("B", pri, 4),
+    --   string.unpack("B", pri, 5),
+    --   string.unpack("B", pri, 6)
+    -- ))
+    if status == op_buffer["STOPPED"] then
+      local page = dict.buffer("GET_PAGE_NUM", nil, buff)
+      local errmsg = string.format(
+        "Flash stopped: buffer=%d page=0x%04X cur_byte=0x%02X",
+        buff, page, cur_byte
+      )
+      log.error(errmsg)
+      error(errmsg)
+    end
+  end
+end
+
 local function write_file(file, sizeKB, map, mem, debug)
   local buff0 = 0
   local buff1 = 1
@@ -59,10 +88,13 @@ local function write_file(file, sizeKB, map, mem, debug)
 
     cur_buff_status = dict.buffer("GET_CUR_BUFF_STATUS")
     while (cur_buff_status ~= op_buffer["EMPTY"]) do
+      check_stopped({ buff0, buff1 })
       nak = nak + 1
       --print(nak, "cur_buff->status: ", cur_buff_status)
       cur_buff_status = dict.buffer("GET_CUR_BUFF_STATUS")
     end
+    check_stopped({ buff0, buff1 })
+
     --if ( i == 2048*1024/buff_size) then break end
     --if ( i == 32*1024/buff_size) then break end
     if (i == sizeKB * 1024 / buff_size) then break end
@@ -585,7 +617,7 @@ end
 
 
 -- functions other modules are able to call
-flash.flash_nes = flash_nes
+-- flash.flash_nes = flash_nes
 flash.flash_snes = flash_snes
 flash.write_file = write_file
 
