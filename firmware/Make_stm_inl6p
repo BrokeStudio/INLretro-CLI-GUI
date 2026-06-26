@@ -32,7 +32,7 @@ SIZE=arm-none-eabi-size
 ARCH_FLAGS=-mthumb -mcpu=cortex-m$(CORTEX_M)
 
 # Startup code
-STARTUP=$(BASE)/include_stm/startup_ARM$(CORE).S 
+STARTUP=$(BASE)/include_stm/startup_ARM$(CORE).S
 
 # -Os -flto -ffunction-sections -fdata-sections to compile for code size
 CFLAGS=$(ARCH_FLAGS) $(STARTUP_DEFS) -Os -flto -ffunction-sections -fdata-sections -g
@@ -60,15 +60,15 @@ DEFINE+=\
 #	-DSTM32F072x8 \ #64KB version of all packages (LQFP-48,64,100)
 #	-DSTM32F070xB \ #128KB version of both packages (LQFP-48,64)
 INCLUDE=-I ./include_stm
-CFLAGS+= $(DEFINE) $(INCLUDE) 
+CFLAGS+= $(DEFINE) $(INCLUDE)
 
 SOURCES=$(wildcard source/*.c source_stm_only/*.c)
 OBJECTS=$(patsubst %.c,%.o,$(SOURCES))
 
 ASM_SRC=$(wildcard source/asm_stm/*.s)
 
-#all: dir shared $(BUILD)/$(PROJ).axf $(BUILD)/$(PROJ).elf $(BUILD)/$(PROJ).hex $(BUILD)/$(PROJ).bin size 
-all: dir shared $(BUILD)/$(PROJ).elf $(BUILD)/$(PROJ).hex $(BUILD)/$(PROJ).bin size 
+#all: dir shared $(BUILD)/$(PROJ).axf $(BUILD)/$(PROJ).elf $(BUILD)/$(PROJ).hex $(BUILD)/$(PROJ).bin size
+all: dir shared $(BUILD)/$(PROJ).elf $(BUILD)/$(PROJ).hex $(BUILD)/$(PROJ).bin size
 
 #build axf file output (basically elf with DWARF debug info)
 # $@ is shortcut for the target, $^ is shortcut for prereqs
@@ -102,6 +102,6 @@ program: all
 disassm: all
 	arm-none-eabi-objdump $(BUILD)\$(PROJ).elf -d -g
 
-clean: 
+clean:
 	rm -rf $(BUILD)
 	rm -f $(OBJECTS)
