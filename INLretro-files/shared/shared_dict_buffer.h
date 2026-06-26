@@ -105,6 +105,7 @@
 #define GBROM 0x17
 #define GBRAM 0x18
 #define GBROM_FLASH 0x19
+#define CIC 0x1A
 
 // Read specific sections of memory map
 //  4KB/1KB naming designates the granularity of the starting address

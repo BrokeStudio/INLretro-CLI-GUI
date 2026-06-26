@@ -5,6 +5,10 @@ local nes                         = {}
 local dict                        = require "scripts.app.dict"
 local help                        = require "scripts.app.help"
 local log                         = require "scripts.app.log"
+local dump                        = require "scripts.app.dump"
+local flash                       = require "scripts.app.flash"
+local time                        = require "scripts.app.time"
+local files                       = require "scripts.app.files"
 
 -- file constants and global variables
 local PPU_A13N_HI                 = 0x8000 --PPU /A13 is connected to mcu A15
@@ -689,10 +693,139 @@ local function read_flashID_prgrom_exp0(debug)
 end
 
 --[[
-  .dP'     8888b.  888888 88""Yb 88   88  dP""b8     888888 88   88 88b 88  dP""b8 .dP"Y8
-.dP'        8I  Yb 88__   88__dP 88   88 dP   `"     88__   88   88 88Yb88 dP   `" `Ybo."
-`Yb.        8I  dY 88""   88""Yb Y8   8P Yb  "88     88""   Y8   8P 88 Y88 Yb      o.`Y8b
-  `Yb.     8888Y"  888888 88oodP `YbodP'  YboodP     88     `YbodP' 88  Y8  YboodP 8bodP'
+ dP""b8 88  dP""b8
+dP   `" 88 dP   `"
+Yb      88 Yb
+ YboodP 88  YboodP
+--]]
+
+nes.cic = {
+
+  flash = function(self, flash_filename, dump_filename, fuse_high, fuse_low)
+    -- default values
+    if not flash_filename then flash_filename = opts.lua_path .. "./ignore/AVRCICZZ.BIN" end
+    if not dump_filename then dump_filename = opts.lua_path .. "./ignore/cic_dump.bin" end
+    if not fuse_high then fuse_high = 0xfb end
+    if not fuse_low then fuse_low = 0x70 end
+
+    log.section("CIC")
+    if not self:read_signature() then return false end
+    self:read_fuses()
+    if not self:erase_chip() then return false end
+    self:flash_chip(flash_filename)
+    if not self:flash_fuses(fuse_high, fuse_low) then return false end
+    self:dump_chip(dump_filename)
+    if not self:verify_flash(flash_filename, dump_filename) then return false end
+    return true
+  end,
+
+  read_signature = function()
+    local rv = dict.nes("CIC_GET_SIGNATURE")
+    local s0 = (rv >> 0) & 0xff
+    local s1 = (rv >> 8) & 0xff
+    local s2 = (rv >> 16) & 0xff
+    log.info("Read signature bytes: ", help.hex_0x2(s0), help.hex_0x2(s1), help.hex_0x2(s2))
+    if s0 ~= 0x1e or s1 ~= 0x90 or s2 ~= 0x07 then
+      log.error("CIC signature invalid")
+      return false
+    else
+      log.success("CIC signature valid")
+      return true
+    end
+  end,
+
+  read_fuses = function()
+    local fuses = dict.nes("CIC_GET_FUSES")
+    local high = (fuses >> 8) & 0xff
+    local low = (fuses >> 0) & 0xff
+    log.info("Read fuse bytes: ", help.hex_0x2(high), help.hex_0x2(low))
+  end,
+
+  flash_fuses = function(self, high, low)
+    -- default safe values
+    if not high then high = 0xff end
+    if not low then low = 0x6a end
+
+    -- flash
+    dict.nes("CIC_SET_FUSES", (high << 8) | low)
+    log.info("Wrote fuse bytes: ", help.hex_0x2(high), help.hex_0x2(low))
+
+    -- control
+    local fuses = dict.nes("CIC_GET_FUSES")
+    local rHigh = (fuses >> 8) & 0xff
+    local rLow = (fuses >> 0) & 0xff
+    if high ~= rHigh or low ~= rLow then
+      log.error("Error while flashing fuse bytes")
+      return false
+    else
+      log.success("Fuse bytes flashed successfully")
+      return true
+    end
+  end,
+
+  dump_chip = function(self, filename)
+    -- open file
+    local file = assert(io.open(filename, "wb"))
+
+    -- dump cart to file
+    log.point("Dumping program")
+    time.start()
+
+    dump.dumptofile(file, 1, 0x80, "CIC_READ_BUFFER", false)
+
+    time.report(1)
+    log.success("CIC dumping done")
+
+    -- close file
+    assert(file:close())
+  end,
+
+  erase_chip = function()
+    local rv = dict.nes("CIC_ERASE_PROGRAM")
+    if rv == 0 then
+      log.success("CIC successfully erased")
+      return true
+    else
+      log.error("Error while erasing CIC")
+      return false
+    end
+  end,
+
+  flash_chip = function(self, filename)
+    -- open file
+    local file = assert(io.open(filename, "rb"))
+
+    -- dump cart to file
+    log.point("Flashing program")
+    time.start()
+
+    flash.write_file(file, 1, "CIC_WRITE_BUFFER", "CIC", false)
+
+    time.report(1)
+    log.success("CIC program flashed successfully")
+
+    -- close file
+    assert(file:close())
+  end,
+
+  verify_flash = function(self, verify_file, dump_file)
+    log.point("Verifying data")
+    if files.compare(verify_file, dump_file, true, true) then
+      log.success("Flash successfully verified")
+      return true
+    else
+      log.error("Flash verification did not match")
+      return false
+    end
+  end
+
+}
+
+--[[
+8888b.  888888 88""Yb 88   88  dP""b8     888888 88   88 88b 88  dP""b8 .dP"Y8
+ 8I  Yb 88__   88__dP 88   88 dP   `"     88__   88   88 88Yb88 dP   `" `Ybo."
+ 8I  dY 88""   88""Yb Y8   8P Yb  "88     88""   Y8   8P 88 Y88 Yb      o.`Y8b
+8888Y"  888888 88oodP `YbodP'  YboodP     88     `YbodP' 88  Y8  YboodP 8bodP'
 ]]
 
 local function cpu_wr(addr, val, debug, comment)

@@ -189,6 +189,7 @@ local function parse_additional_opts(str)
   for k, v in pairs(t) do
     if k == "force_wram_test" and type(v) ~= "boolean" then t[k] = false end
     if k == "force_flash_test" and type(v) ~= "boolean" then t[k] = false end
+    if k == "flash_cic" and type(v) ~= "boolean" then t[k] = false end
     if k == "bank_table" then
       v = tonumber(v)
       if v == nil then return false, t, "Passed bank table address is missing/invalid" end

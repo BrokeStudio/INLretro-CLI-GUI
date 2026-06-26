@@ -456,6 +456,13 @@ local function nes_exec(process_opts, console_opts)
     end
   end
 
+  -- flash CIC here to avoid having this piece of code in every mapper scripts
+  if process_opts.additional_opts.flash_cic then
+    if nes.cic:flash() ~= true then
+      return false
+    end
+  end
+
   -- Defensively filter out any console options that are irrelevant to NES support.
   -- This will matter more when software support exists for other consoles.
 

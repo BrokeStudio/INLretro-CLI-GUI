@@ -119,4 +119,9 @@
 #define MMC5_PRG_RAM_WR 0x88 // RL=3 Enable writing to PRG-RAM and then write a single byte
 // after written read back for verification as a timeout would cause fail
 
+#define CIC_GET_SIGNATURE 0x89 // RL=5
+#define CIC_ERASE_PROGRAM 0x8A // RL=3
+#define CIC_GET_FUSES 0x8B     // RL=4
+#define CIC_SET_FUSES 0x8C     // RL=3
+
 #endif
