@@ -28,11 +28,11 @@ local mapname = "NROM"
 
 --]]
 
-local function create_header(file, prgKB, chrKB)
+local function create_header(file, prg_kb, chr_kb)
   local mirroring = nes.detect_mapper_mirroring()
 
-  -- write_header(file, prgKB, chrKB, mapper, mirroring)
-  nes.write_header(file, prgKB, chrKB, op_buffer[mapname], mirroring)
+  -- write_header(file, prg_kb, chr_kb, mapper, mirroring)
+  nes.write_header(file, prg_kb, chr_kb, op_buffer[mapname], mirroring)
 end
 
 --[[
@@ -324,7 +324,6 @@ local function process(process_opts, console_opts)
   local prg_size         = console_opts.prg_rom_size_kb
   local chr_size         = console_opts.chr_rom_size_kb
   local wram_size        = console_opts.wram_size_kb
-  local mirror           = console_opts.mirror
 
   -- Initialize device i/o
   dict.io("IO_RESET")
@@ -343,14 +342,14 @@ local function process(process_opts, console_opts)
     log.info("EXP0 pull-up test", dict.io("EXP0_PULLUP_TEST"))
 
     local mirroring = nes.detect_mapper_mirroring(DEBUG)
-    if nes.header.isValid then
-      if nes.header.mirroringType == nes.MIRRORING_TYPE_HORIZONTAL and mirroring ~= "HORZ"
-          or nes.header.mirroringType == nes.MIRRORING_TYPE_VERTICAL and mirroring ~= "VERT"
-      -- or  nes.header.mirroringType == nes.MIRRORING_TYPE_ONE_SCREEN and ( mirroring ~= "1SCRNA" or mirroring ~= "1SCRNB" )
-      -- or  nes.header.mirroringType == nes.MIRRORING_TYPE_FOUR_SCREENS and mirroring ~= "4SCRN"
+    log.bullet("PCB mirroring sensed:", mirroring)
+    if nes.header.is_valid then
+      log.bullet("NES ROM mirroring:", nes.MIRRORING_TYPE_STRING[nes.header.mirroring_type + 1])
+      if nes.header.mirroring_type == nes.MIRRORING_TYPE_HORIZONTAL and mirroring ~= "HORZ"
+          or nes.header.mirroring_type == nes.MIRRORING_TYPE_VERTICAL and mirroring ~= "VERT"
+      -- or  nes.header.mirroring_type == nes.MIRRORING_TYPE_ONE_SCREEN and ( mirroring ~= "1SCRNA" or mirroring ~= "1SCRNB" )
+      -- or  nes.header.mirroring_type == nes.MIRRORING_TYPE_FOUR_SCREENS and mirroring ~= "4SCRN"
       then
-        log.bullet("PCB mirroring sensed:", mirroring)
-        log.bullet("NES ROM mirroring:", nes.MIRRORING_TYPE_STRING[nes.header.mirroringType + 1])
         log.error("PCB mirroring setting doesn't match NES ROM header")
         return false
       end

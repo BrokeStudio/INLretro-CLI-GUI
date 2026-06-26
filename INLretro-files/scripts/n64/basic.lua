@@ -201,7 +201,7 @@ local function process(process_opts, console_opts)
 
     -- dump cart to file
     local image_name = ""
-    if n64.rom_header.isValid then
+    if n64.rom_header.is_valid then
       image_name = n64.rom_header.image_name
     end
     log.section("Dumping ROM", image_name)

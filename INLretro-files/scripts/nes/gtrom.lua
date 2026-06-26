@@ -28,9 +28,9 @@ local mapname = "GTROM"
 
 --]]
 
-local function create_header(file, prgKB, chrKB)
-  -- write_header(file, prgKB, chrKB, mapper, mirroring)
-  nes.write_header(file, prgKB, chrKB, op_buffer[mapname], "4SCRN")
+local function create_header(file, prg_kb, chr_kb)
+  -- write_header(file, prg_kb, chr_kb, mapper, mirroring)
+  nes.write_header(file, prg_kb, chr_kb, op_buffer[mapname], "4SCRN")
 end
 
 -- dump NT
@@ -50,10 +50,10 @@ local function mirror_test(retroprog_id, debug)
   -- 4 screen
   local test = true
 
-  local filenameA = opts.lua_path .. "ignore/nes_ppu_ntA_dump-" .. retroprog_id .. ".bin"
-  local filenameB = opts.lua_path .. "ignore/nes_ppu_ntB_dump-" .. retroprog_id .. ".bin"
-  local filenameC = opts.lua_path .. "ignore/nes_ppu_ntC_dump-" .. retroprog_id .. ".bin"
-  local filenameD = opts.lua_path .. "ignore/nes_ppu_ntD_dump-" .. retroprog_id .. ".bin"
+  local filenameA = opts.lua_path .. "./ignore/nes_ppu_ntA_dump-" .. retroprog_id .. ".bin"
+  local filenameB = opts.lua_path .. "./ignore/nes_ppu_ntB_dump-" .. retroprog_id .. ".bin"
+  local filenameC = opts.lua_path .. "./ignore/nes_ppu_ntC_dump-" .. retroprog_id .. ".bin"
+  local filenameD = opts.lua_path .. "./ignore/nes_ppu_ntD_dump-" .. retroprog_id .. ".bin"
 
   local fileA = assert(io.open(filenameA, "wb"))
   local fileB = assert(io.open(filenameB, "wb"))
@@ -336,7 +336,7 @@ local function chr_ram_exercise(chr_ram_size, retroprog_id, debug)
   end
 
   -- dump CHR-RAM
-  local filename = opts.lua_path .. "ignore/nes_chr_ram_dump-" .. retroprog_id .. ".bin"
+  local filename = opts.lua_path .. "./ignore/nes_chr_ram_dump-" .. retroprog_id .. ".bin"
   local file = assert(io.open(filename, "wb"))
   log.point("Dumping CHR-RAM")
   chr_dump(file, chr_ram_size, debug)
@@ -345,7 +345,7 @@ local function chr_ram_exercise(chr_ram_size, retroprog_id, debug)
   assert(file:close())
 
   -- re-open & compare dump with known lsfr bitstream
-  local goodfile = opts.lua_path .. "ignore/lfsr_32KB.bin"
+  local goodfile = opts.lua_path .. "./ignore/lfsr_32KB.bin"
 
   -- compare the flash file vs post dump file
   if files.compare(filename, goodfile, false) then
@@ -408,6 +408,16 @@ end
 --     return false
 --   end
 -- end
+
+--[[
+██████╗ ██████╗  ██████╗  ██████╗███████╗███████╗███████╗
+██╔══██╗██╔══██╗██╔═══██╗██╔════╝██╔════╝██╔════╝██╔════╝
+██████╔╝██████╔╝██║   ██║██║     █████╗  ███████╗███████╗
+██╔═══╝ ██╔══██╗██║   ██║██║     ██╔══╝  ╚════██║╚════██║
+██║     ██║  ██║╚██████╔╝╚██████╗███████╗███████║███████║
+╚═╝     ╚═╝  ╚═╝ ╚═════╝  ╚═════╝╚══════╝╚══════╝╚══════╝
+
+--]]
 
 -- Cart should be in reset state upon calling this function
 -- this function processes all user requests for this specific board/mapper

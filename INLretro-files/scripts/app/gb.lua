@@ -118,7 +118,7 @@ local NEW_LICENSEE_CODES = {
 
 local Header = {
   bytes = nil,
-  isValid = false,
+  is_valid = false,
 
   title = "",
   manufacturer_code = 0,
@@ -257,7 +257,7 @@ local Header = {
 }
 
 local file_header = help.copy_table(Header)
-local rom_header = help.copy_table(Header)
+local cart_header = help.copy_table(Header)
 
 -- parse header from data
 local function parse_header(byte_str, header)
@@ -285,12 +285,12 @@ local function parse_header(byte_str, header)
 
   if not header:check_header_checksum() then
     log.warning("Header checksum is not valid")
-    header.isValid = false
+    header.is_valid = false
   else
-    header.isValid = true
+    header.is_valid = true
   end
 
-  return header.isValid
+  return header.is_valid
 end
 
 -- pass a file pointer for a file which is already open
@@ -322,7 +322,7 @@ end
 -- parse header from rom
 -- we should be able to read the header whatever the mapper is
 -- global checksum won't be computed though
-local function parse_header_rom()
+local function parse_header_cart()
   -- initialize device i/o
   dict.io("IO_RESET")
   dict.io("GAMEBOY_INIT")
@@ -339,7 +339,7 @@ local function parse_header_rom()
   dict.io("IO_RESET")
 
   byte_str = string.sub(byte_str, 0x134 + 1, 0x14F + 1)
-  return parse_header(byte_str, rom_header)
+  return parse_header(byte_str, cart_header)
 end
 
 --[[
@@ -387,12 +387,12 @@ end
 
 -- vars
 gb.file_header       = file_header
-gb.rom_header        = rom_header
+gb.cart_header       = cart_header
 
 -- functions
 gb.parse_header      = parse_header
 gb.parse_header_file = parse_header_file
-gb.parse_header_rom  = parse_header_rom
+gb.parse_header_cart = parse_header_cart
 
 gb.rd                = rd
 gb.wr                = wr

@@ -29,11 +29,11 @@ local bank_table_base
 
 --]]
 
-local function create_header(file, prgKB, chrKB)
+local function create_header(file, prg_kb, chr_kb)
   local mirroring = nes.detect_mapper_mirroring()
 
-  -- write_header(file, prgKB, chrKB, mapper, mirroring)
-  nes.write_header(file, prgKB, 0, op_buffer[mapname], mirroring)
+  -- write_header(file, prg_kb, chr_kb, mapper, mirroring)
+  nes.write_header(file, prg_kb, 0, op_buffer[mapname], mirroring)
 end
 
 --[[
@@ -276,7 +276,7 @@ local function chr_ram_exercise(chrram_size, retroprog_id, debug)
   spinner.clear()
 
   -- dump CHR-RAM
-  local filename = opts.lua_path .. "ignore/nes_chr_ram_dump-" .. retroprog_id .. ".bin"
+  local filename = opts.lua_path .. "./ignore/nes_chr_ram_dump-" .. retroprog_id .. ".bin"
   local file = assert(io.open(filename, "wb"))
   log.point("Dumping CHR-RAM")
   chr_dump(file, chrram_size, debug)
@@ -285,7 +285,7 @@ local function chr_ram_exercise(chrram_size, retroprog_id, debug)
   assert(file:close())
 
   -- re-open & compare dump with known lsfr bitstream
-  local goodfile = opts.lua_path .. "ignore/lfsr_32KB.bin"
+  local goodfile = opts.lua_path .. "./ignore/lfsr_32KB.bin"
 
   -- compare the flash file vs post dump file
   if files.compare(filename, goodfile, false, debug) then
@@ -338,7 +338,6 @@ local function process(process_opts, console_opts)
   local prg_size         = console_opts.prg_rom_size_kb
   local chr_size         = console_opts.chr_rom_size_kb
   local wram_size        = console_opts.wram_size_kb
-  local mirror           = console_opts.mirror
 
   -- parse additional data
   bank_table_base        = options.bank_table
@@ -366,14 +365,14 @@ local function process(process_opts, console_opts)
     log.info("EXP0 pull-up test", dict.io("EXP0_PULLUP_TEST"))
 
     local mirroring = nes.detect_mapper_mirroring(DEBUG)
-    if nes.header.isValid then
-      if (nes.header.mirroringType == nes.MIRRORING_TYPE_HORIZONTAL and mirroring ~= "HORZ")
-          or (nes.header.mirroringType == nes.MIRRORING_TYPE_VERTICAL and mirroring ~= "VERT")
-      -- or  (nes.header.mirroringType == nes.MIRRORING_TYPE_ONE_SCREEN and ( mirroring ~= "1SCRNA" or mirroring ~= "1SCRNB" ) )
-      -- or  (nes.header.mirroringType == nes.MIRRORING_TYPE_FOUR_SCREENS and mirroring ~= "4SCRN")
+    log.bullet("PCB mirroring sensed:", mirroring)
+    if nes.header.is_valid then
+      log.bullet("NES ROM mirroring:", nes.MIRRORING_TYPE_STRING[nes.header.mirroring_type + 1])
+      if (nes.header.mirroring_type == nes.MIRRORING_TYPE_HORIZONTAL and mirroring ~= "HORZ")
+          or (nes.header.mirroring_type == nes.MIRRORING_TYPE_VERTICAL and mirroring ~= "VERT")
+      -- or  (nes.header.mirroring_type == nes.MIRRORING_TYPE_ONE_SCREEN and ( mirroring ~= "1SCRNA" or mirroring ~= "1SCRNB" ) )
+      -- or  (nes.header.mirroring_type == nes.MIRRORING_TYPE_FOUR_SCREENS and mirroring ~= "4SCRN")
       then
-        log.bullet("PCB mirroring sensed:", mirroring)
-        log.bullet("NES ROM mirroring:", nes.MIRRORING_TYPE_STRING[nes.header.mirroringType + 1])
         log.error("PCB mirroring setting doesn't match NES ROM header")
         return false
       end

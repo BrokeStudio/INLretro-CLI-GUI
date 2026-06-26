@@ -30,8 +30,8 @@ local mapname = "MMC4"
 
 --]]
 
-local function create_header(file, prgKB, chrKB)
-  nes.write_header(file, prgKB, chrKB, op_buffer[mapname], 0)
+local function create_header(file, prg_kb, chr_kb)
+  nes.write_header(file, prg_kb, chr_kb, op_buffer[mapname], 0)
 end
 
 
@@ -618,7 +618,7 @@ local function prg_ram_test(wram_size, retroprog_id, debug)
   end
 
   -- open file
-  local filename = opts.lua_path .. "ignore/nes_prg_ram_dump-" .. retroprog_id .. ".bin"
+  local filename = opts.lua_path .. "./ignore/nes_prg_ram_dump-" .. retroprog_id .. ".bin"
   local file = assert(io.open(filename, "wb"))
 
   -- dump PRG-RAM
@@ -632,7 +632,7 @@ local function prg_ram_test(wram_size, retroprog_id, debug)
   dict.nes("NES_CPU_WR", 0xA001, 0x40)
 
   -- re-open & compare dump with known lsfr bitstream
-  local goodfile = opts.lua_path .. "ignore/lfsr_32KB.bin"
+  local goodfile = opts.lua_path .. "./ignore/lfsr_32KB.bin"
 
   -- compare the flash file vs post dump file
   if files.compare(filename, goodfile, false) then
@@ -748,7 +748,7 @@ local function process(process_opts, console_opts)
           log.warning("Additional option 'force_wram_test' implies PRG-RAM presence")
           log.error("PRG-RAM not detected")
           return false
-        elseif nes.header.isValid and nes.header.hasPrgRam then
+        elseif nes.header.is_valid and nes.header.has_prg_ram then
           log.warning("ROM header settings implies PRG-RAM")
           log.error("PRG-RAM not detected")
           return false
@@ -772,8 +772,8 @@ local function process(process_opts, console_opts)
         if options.force_wram_test or do_ram_write then
           rv = prg_ram_test(wram_size, retroprog_id, DEBUG)
           if not rv then return false end
-        elseif nes.header.isValid and nes.header.hasPrgRam then
-          if nes.header.hasBattery then
+        elseif nes.header.is_valid and nes.header.has_prg_ram then
+          if nes.header.has_battery then
             log.warning("Can't test PRG-RAM because ROM header specifies battery backed data")
             log.warning("Use additional option 'force_wram_test' to force PRG-RAM test")
           else

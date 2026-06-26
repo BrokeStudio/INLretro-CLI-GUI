@@ -55,7 +55,7 @@ local COUNTRY_CODE = {
 
 local Header = {
   bytes = nil,
-  isValid = false,
+  is_valid = false,
 
   endianness = 0,
   PI_BSB_DOM1_LAT_REG = 0,
@@ -155,7 +155,7 @@ local Header = {
 }
 
 local file_header = help.copy_table(Header)
-local rom_header = help.copy_table(Header)
+local cart_header = help.copy_table(Header)
 
 -- parse header from data
 local function parse_header(byte_str, header)
@@ -190,9 +190,9 @@ local function parse_header(byte_str, header)
   -- cheap test
   if header.program_counter < 0x80000000 then
     log.warning("Header is not valid")
-    header.isValid = false
+    header.is_valid = false
   else
-    header.isValid = true
+    header.is_valid = true
   end
 
   -- print(help.dump_table(header))
@@ -202,7 +202,7 @@ local function parse_header(byte_str, header)
   -- print(header:get_rom_type())
 
 
-  return header.isValid
+  return header.is_valid
 end
 
 
@@ -232,7 +232,7 @@ end
 -- parse header from rom
 -- we should be able to read the header whatever the mapper is
 -- global checksum won't be computed though
-local function parse_header_rom()
+local function parse_header_cart()
   local addr_base = 0x0000 -- control signals are manually controlled
   local bank_base = 0x1000 -- N64 roms start at address 0x1000_0000
   local byte_str = ""
@@ -259,7 +259,7 @@ local function parse_header_rom()
   dict.io("IO_RESET")
 
   byte_str = string.sub(byte_str, 0x00 + 1, 0x3F + 1)
-  return parse_header(byte_str, rom_header)
+  return parse_header(byte_str, cart_header)
 end
 
 --[[
@@ -417,12 +417,12 @@ end
 
 -- vars
 n64.file_header       = file_header
-n64.rom_header        = rom_header
+n64.cart_header       = cart_header
 
 -- functions
 n64.parse_header      = parse_header
 n64.parse_header_file = parse_header_file
-n64.parse_header_rom  = parse_header_rom
+n64.parse_header_cart = parse_header_cart
 
 -- n64.set_rom_address = set_rom_address
 

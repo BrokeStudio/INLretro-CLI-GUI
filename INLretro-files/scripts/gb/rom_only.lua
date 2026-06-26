@@ -295,7 +295,7 @@ local function ram_exercise(ram_size, retroprog_id, debug)
   spinner.clear()
 
   -- open file
-  local filename = opts.lua_path .. "ignore/gb_ram_dump-" .. retroprog_id .. ".bin"
+  local filename = opts.lua_path .. "./ignore/gb_ram_dump-" .. retroprog_id .. ".bin"
   local file = assert(io.open(filename, "wb"))
 
   -- dump RAM
@@ -306,7 +306,7 @@ local function ram_exercise(ram_size, retroprog_id, debug)
   assert(file:close())
 
   -- re-open & compare dump with known lsfr bitstream
-  local goodfile = opts.lua_path .. "ignore/lfsr_32KB.bin"
+  local goodfile = opts.lua_path .. "./ignore/lfsr_32KB.bin"
 
   -- compare the flash file vs post dump file
   if files.compare(filename, goodfile, false, debug) then
@@ -394,10 +394,10 @@ local function process(process_opts, console_opts)
         log.print()
         log.warning("Flag 'force_wram_test' enabled")
       end
-      local isHeaderValid = gb.file_header.isValid or gb.rom_header.isValid
-      local hasBattery = gb.file_header:has_battery() or gb.rom_header:has_battery()
-      if options.force_wram_test or isHeaderValid then
-        if not options.force_wram_test and hasBattery then
+      local is_header_valid = gb.file_header.is_valid or gb.cart_header.is_valid
+      local has_battery = gb.file_header:has_battery() or gb.cart_header:has_battery()
+      if options.force_wram_test or is_header_valid then
+        if not options.force_wram_test and has_battery then
           log.print()
           log.warning("Can't exercise RAM because ROM has battery backed data")
         else
@@ -480,20 +480,20 @@ local function process(process_opts, console_opts)
 
   -- dump cart ROM to file
   if do_rom_dump then
+    if rom_size ~= 0 then
     -- open file
     file = assert(io.open(rom_dump_file.filename, "wb"))
 
     -- dump cart to file
-    if rom_size ~= 0 then
       log.section("Dumping ROM")
       time.start()
       rom_dump(file, rom_size, DEBUG)
       time.report(rom_size)
       log.success("ROM dumping done")
-    end
 
     -- close file
     assert(file:close())
+  end
   end
 
   --[[
@@ -546,17 +546,16 @@ local function process(process_opts, console_opts)
 
   -- verify what we just flashed
   if do_verify then
+    if rom_size ~= 0 then
     -- open file
     file = assert(io.open(verify_file.filename, "wb"))
 
     -- dump cart to file
-    if rom_size ~= 0 then
       log.section("Dumping ROM")
       time.start()
       rom_dump(file, rom_size, DEBUG)
       time.report(rom_size)
       log.success("ROM dumping done")
-    end
 
     -- close file
     assert(file:close())
@@ -567,6 +566,7 @@ local function process(process_opts, console_opts)
       log.success("Flash successfully verified")
     else
       log.error("Flash verification did not match")
+      end
     end
   end
 

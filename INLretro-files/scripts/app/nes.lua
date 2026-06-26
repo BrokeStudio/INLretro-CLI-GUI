@@ -42,19 +42,20 @@ local MIRRORING_TYPE_STRING       = {
 
 local header                      = {
   bytes = nil,
-  isValid = false,
+  is_valid = false,
   version = nil,
-  hasBattery = nil,
-  hasTrainer = nil,
-  mirroringType = 0,
-  prgRomSize = 0,
-  chrRomSize = 0,
-  prgWorkRamSize = 0,
-  prgSaveRamSize = 0,
-  chrWorkRamSize = 0,
-  chrSaveRamSize = 0,
-  hasPrgRam = false,
-  hasChrRam = false,
+  mapper_id = nil,
+  has_battery = nil,
+  has_trainer = nil,
+  mirroring_type = 0,
+  prg_rom_size = 0,
+  chr_rom_size = 0,
+  prg_work_ram_size = 0,
+  prg_save_ram_size = 0,
+  chr_work_ram_size = 0,
+  chr_save_ram_size = 0,
+  has_prg_ram = false,
+  has_chr_ram = false,
 }
 
 -- local functions
@@ -70,7 +71,7 @@ local function parse_header(file)
   if (tostring(header.bytes[1]) ~= 'N' and header.bytes[2] ~= 'E' and header.bytes[3] ~= 'S' and header.bytes[4] ~= 0x1A) then
     return false
   end
-  header.isValid = true
+  header.is_valid = true
 
   -- header version
   if (header.bytes[8] & 0x0C == 0x08) then
@@ -90,26 +91,26 @@ local function parse_header(file)
   end
 
   -- mapper ID
-  header.mapperId = (header.bytes[7] >> 4) | (header.bytes[8] & 0xF0)
+  header.mapper_id = (header.bytes[7] >> 4) | (header.bytes[8] & 0xF0)
   if (header.version == HEADER_VERSION_NES2_0) then
-    header.mapperId = header.mapperId | ((header.bytes[9] & 0x0F) << 8)
+    header.mapper_id = header.mapper_id | ((header.bytes[9] & 0x0F) << 8)
   end
 
   -- battery
-  header.hasBattery = (header.bytes[7] & 0x02) == 0x02
+  header.has_battery = (header.bytes[7] & 0x02) == 0x02
 
   -- trainer
-  header.hasTrainer = (header.bytes[7] & 0x04) == 0x04
+  header.has_trainer = (header.bytes[7] & 0x04) == 0x04
 
   -- mirroring
   if (header.bytes[7] & 0x09 == 0) then
-    header.mirroringType = MIRRORING_TYPE_HORIZONTAL
+    header.mirroring_type = MIRRORING_TYPE_HORIZONTAL
   elseif (header.bytes[7] & 0x09 == 1) then
-    header.mirroringType = MIRRORING_TYPE_VERTICAL
+    header.mirroring_type = MIRRORING_TYPE_VERTICAL
   elseif (header.bytes[7] & 0x09 == 8) then
-    header.mirroringType = MIRRORING_TYPE_ONE_SCREEN
+    header.mirroring_type = MIRRORING_TYPE_ONE_SCREEN
   elseif (header.bytes[7] & 0x09 == 9) then
-    header.mirroringType = MIRRORING_TYPE_FOUR_SCREENS
+    header.mirroring_type = MIRRORING_TYPE_FOUR_SCREENS
   end
 
   -- PRG ROM size | byte 9 and 4
@@ -117,10 +118,10 @@ local function parse_header(file)
     if ((header.bytes[10] & 0x0F) == 0x0F) then
       -- TODO...
     else
-      header.prgRomSize = (((header.bytes[10] & 0x0F) << 8) | header.bytes[5]) * 0x4000
+      header.prg_rom_size = (((header.bytes[10] & 0x0F) << 8) | header.bytes[5]) * 0x4000
     end
   else
-    header.prgRomSize = header.bytes[5] * 0x4000
+    header.prg_rom_size = header.bytes[5] * 0x4000
   end
 
   -- CHR ROM size | byte 9 and 5
@@ -128,46 +129,46 @@ local function parse_header(file)
     if ((header.bytes[10] & 0xF0) == 0xF0) then
       -- TODO...
     else
-      header.chrRomSize = (((header.bytes[10] & 0xF0) << 4) | header.bytes[6]) * 0x2000
+      header.chr_rom_size = (((header.bytes[10] & 0xF0) << 4) | header.bytes[6]) * 0x2000
     end
   else
-    header.chrRomSize = header.bytes[6] * 0x2000
+    header.chr_rom_size = header.bytes[6] * 0x2000
   end
 
   -- PRG WORK RAM size | byte 10 (NES2) | byte 8 (iNES)
   if (header.version == HEADER_VERSION_NES2_0) then
-    header.prgWorkRamSize = header.bytes[11] & 0x0F
-    if header.prgWorkRamSize == 0 then
-      header.prgWorkRamSize = 0
+    header.prg_work_ram_size = header.bytes[11] & 0x0F
+    if header.prg_work_ram_size == 0 then
+      header.prg_work_ram_size = 0
     else
-      header.prgWorkRamSize = 64 << header.prgWorkRamSize
+      header.prg_work_ram_size = 64 << header.prg_work_ram_size
     end
   else
-    header.prgWorkRamSize = header.bytes[9] * 8
+    header.prg_work_ram_size = header.bytes[9] * 8
   end
 
   -- PRG SAVE RAM size | byte 10 (NES2)
   if (header.version == HEADER_VERSION_NES2_0) then
-    header.prgSaveRamSize = header.bytes[11] & 0xF0
-    if header.prgSaveRamSize == 0 then
-      header.prgSaveRamSize = 0
+    header.prg_save_ram_size = header.bytes[11] & 0xF0
+    if header.prg_save_ram_size == 0 then
+      header.prg_save_ram_size = 0
     else
-      header.prgSaveRamSize = 64 << (header.prgSaveRamSize >> 4)
+      header.prg_save_ram_size = 64 << (header.prg_save_ram_size >> 4)
     end
   end
 
-  -- set hasPrgRam flag
-  if header.prgWorkRamSize ~= 0 or header.prgSaveRamSize ~= 0 then
-    header.hasPrgRam = true
+  -- set has_prg_ram flag
+  if header.prg_work_ram_size ~= 0 or header.prg_save_ram_size ~= 0 then
+    header.has_prg_ram = true
   end
 
   -- CHR WORK RAM size | byte 11 (NES2)
   if (header.version == HEADER_VERSION_NES2_0) then
-    header.chrWorkRamSize = header.bytes[12] & 0x0F
-    if header.chrWorkRamSize == 0 then
-      header.chrWorkRamSize = 0
+    header.chr_work_ram_size = header.bytes[12] & 0x0F
+    if header.chr_work_ram_size == 0 then
+      header.chr_work_ram_size = 0
     else
-      header.chrWorkRamSize = 64 << header.chrWorkRamSize
+      header.chr_work_ram_size = 64 << header.chr_work_ram_size
     end
   else
     -- TODO...
@@ -175,19 +176,19 @@ local function parse_header(file)
 
   -- CHR SAVE RAM size | byte 11 (NES2)
   if (header.version == HEADER_VERSION_NES2_0) then
-    header.chrSaveRamSize = header.bytes[12] & 0xF0
-    if header.chrSaveRamSize == 0 then
-      header.chrSaveRamSize = 0
+    header.chr_save_ram_size = header.bytes[12] & 0xF0
+    if header.chr_save_ram_size == 0 then
+      header.chr_save_ram_size = 0
     else
-      header.chrSaveRamSize = 64 << (header.chrSaveRamSize >> 4)
+      header.chr_save_ram_size = 64 << (header.chr_save_ram_size >> 4)
     end
   else
     -- TODO...
   end
 
-  -- set hasChrRam flag
-  if header.chrWorkRamSize ~= 0 or header.chrSaveRamSize ~= 0 then
-    header.hasChrRam = true
+  -- set has_chr_ram flag
+  if header.chr_work_ram_size ~= 0 or header.chr_save_ram_size ~= 0 then
+    header.has_chr_ram = true
   end
 
   return true
@@ -195,7 +196,7 @@ end
 
 -- pass a file pointer for a file which is already open
 -- leave file open when done
-local function write_header(file, prgKB, chrKB, mapper, mirroring)
+local function write_header(file, prg_kb, chr_kb, mapper, mirroring)
   local temp
 
   --bytes 0-3 always "NES <eof>"
@@ -203,10 +204,10 @@ local function write_header(file, prgKB, chrKB, mapper, mirroring)
   file:write(string.char(0x1A))
 
   --byte 4 PRG-ROM 16KByte banks
-  file:write(string.char(prgKB / 16))
+  file:write(string.char(prg_kb / 16))
 
   --byte 5 CHR-ROM 8KByte banks
-  file:write(string.char(chrKB / 8))
+  file:write(string.char(chr_kb / 8))
 
   --byte 6      Flags 6
   --  D~7654 3210

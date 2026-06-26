@@ -110,8 +110,8 @@ local function run_jtag(debug)
   --dict.io("JTAG_INIT", "JTAG_ON_SNES_CTL") --SNES
 
   --open jedec file
-  local filename = opts.lua_path .. "ignore/TKROM_prod_p512_w8_crom256_v4_0_0_currelease.jed"
-  --local filename = opts.lua_path .. "ignore/8mb_v2_0p.jed"
+  local filename = opts.lua_path .. "./ignore/TKROM_prod_p512_w8_crom256_v4_0_0_currelease.jed"
+  --local filename = opts.lua_path .. "./ignore/8mb_v2_0p.jed"
 
   --first put/verify jtag statemachine is in RESET
   pbje.goto_state("RESET")
@@ -139,8 +139,8 @@ local function run_jtag(debug)
 
   --verify programming
   --open jedec file
-  --local jed_file = assert(io.open(path .. "ignore/8mb_v2_0p.jed", "rb"))
-  --local jed_file = assert(io.open(path .. "ignore/TKROM_prod_p512_w8_crom256_v4_0_0_currelease.jed", "rb"))
+  --local jed_file = assert(io.open(path .. "./ignore/8mb_v2_0p.jed", "rb"))
+  --local jed_file = assert(io.open(path .. "./ignore/TKROM_prod_p512_w8_crom256_v4_0_0_currelease.jed", "rb"))
   local jed_file = assert(io.open(filename, "rb"))
 
   --check_IDCODE()
@@ -160,7 +160,7 @@ local function run_jtag(debug)
   --can usercode be verified when secured..? NOPE!
   --verify programming
   --open jedec file
-  local jed_file = assert(io.open(path .. "ignore/8mb_v2_0p.jed", "rb"))
+  local jed_file = assert(io.open(path .. "./ignore/8mb_v2_0p.jed", "rb"))
 
   check_IDCODE()
   --find and consume the "L00000" start of usemap token in jedec file

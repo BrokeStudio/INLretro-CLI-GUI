@@ -154,8 +154,8 @@ end
 
 local function sleep(seconds)
   -- log.point("Waiting for", seconds, "seconds...")
-  local endTime = os.time() + seconds
-  while os.time() < endTime do
+  local end_time = os.time() + seconds
+  while os.time() < end_time do
   end
 end
 
@@ -165,8 +165,8 @@ local function parse_additional_opts(str)
 
   -- split string by comma (,)
   local kvs = {}
-  for subStr in string.gmatch(str, '([^,]+)') do
-    table.insert(kvs, subStr)
+  for sub_str in string.gmatch(str, '([^,]+)') do
+    table.insert(kvs, sub_str)
   end
 
   -- split each key/value pairs by equal (=)

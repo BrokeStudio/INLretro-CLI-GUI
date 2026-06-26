@@ -28,9 +28,9 @@ local mapname        = "JALECO_SS88006"
 
 --]]
 
-local function create_header(file, prgKB, chrKB)
-  -- write_header(file, prgKB, chrKB, mapper, mirroring)
-  nes.write_header(file, prgKB, chrKB, op_buffer[mapname], 0)
+local function create_header(file, prg_kb, chr_kb)
+  -- write_header(file, prg_kb, chr_kb, mapper, mirroring)
+  nes.write_header(file, prg_kb, chr_kb, op_buffer[mapname], 0)
 end
 
 local function init_mapper(debug)
@@ -571,7 +571,7 @@ local function prg_ram_test(wram_size, retroprog_id, debug)
   end
 
   -- open file
-  local filename = opts.lua_path .. "ignore/nes_prg_ram_dump-" .. retroprog_id .. ".bin"
+  local filename = opts.lua_path .. "./ignore/nes_prg_ram_dump-" .. retroprog_id .. ".bin"
   local file = assert(io.open(filename, "wb"))
 
   -- dump PRG-RAM
@@ -585,7 +585,7 @@ local function prg_ram_test(wram_size, retroprog_id, debug)
   dict.nes("NES_CPU_WR", 0x9002, 0x00)
 
   -- re-open & compare dump with known lsfr bitstream
-  local goodfile = opts.lua_path .. "ignore/lfsr_32KB.bin"
+  local goodfile = opts.lua_path .. "./ignore/lfsr_32KB.bin"
 
   -- compare the flash file vs post dump file
   if files.compare(filename, goodfile, false) then
@@ -705,7 +705,7 @@ local function chr_ram_exercise(chr_ram_size, retroprog_id, debug)
   spinner.clear()
 
   -- dump CHR-RAM
-  local filename = opts.lua_path .. "ignore/nes_chr_ram_dump-" .. retroprog_id .. ".bin"
+  local filename = opts.lua_path .. "./ignore/nes_chr_ram_dump-" .. retroprog_id .. ".bin"
   local file = assert(io.open(filename, "wb"))
   log.point("Dumping CHR-RAM")
   chr_dump(file, chr_ram_size, debug)
@@ -714,7 +714,7 @@ local function chr_ram_exercise(chr_ram_size, retroprog_id, debug)
   assert(file:close())
 
   -- re-open & compare dump with known lsfr bitstream
-  local goodfile = opts.lua_path .. "ignore/lfsr_32KB.bin"
+  local goodfile = opts.lua_path .. "./ignore/lfsr_32KB.bin"
 
   -- compare the flash file vs post dump file
   if files.compare(filename, goodfile, false, debug) then
@@ -779,7 +779,6 @@ local function process(process_opts, console_opts)
     88   888888 8bodP'   88
   --]]
 
-
   -- test cart
   if do_test then
     log.section("Testing ", mapname)
@@ -834,7 +833,7 @@ local function process(process_opts, console_opts)
           log.warning("Additional option 'force_wram_test' implies PRG-RAM presence")
           log.error("PRG-RAM not detected")
           return false
-        elseif nes.header.isValid and nes.header.hasPrgRam then
+        elseif nes.header.is_valid and nes.header.has_prg_ram then
           log.warning("ROM header settings implies PRG-RAM")
           log.error("PRG-RAM not detected")
           return false
@@ -858,8 +857,8 @@ local function process(process_opts, console_opts)
         if options.force_wram_test or do_ram_write then
           rv = prg_ram_test(wram_size, retroprog_id, DEBUG)
           if not rv then return false end
-        elseif nes.header.isValid and nes.header.hasPrgRam then
-          if nes.header.hasBattery then
+        elseif nes.header.is_valid and nes.header.has_prg_ram then
+          if nes.header.has_battery then
             log.warning("Can't test PRG-RAM because ROM header specifies battery backed data")
             log.warning("Use additional option 'force_wram_test' to force PRG-RAM test")
           else

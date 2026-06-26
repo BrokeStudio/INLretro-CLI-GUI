@@ -56,13 +56,13 @@ local function n64_exec(process_opts, console_opts)
   if process_opts.rom_dump_file ~= "" then
     -- parse cartridge ROM header
     log.section("Parsing cartridge ROM header")
-    if not n64.parse_header_rom() then
+    if not n64.parse_header_cart() then
       log.warning("Failed to parse cartridge ROM header")
     else
       log.success("Cartridge ROM header parsed successfully")
     end
 
-    header = n64.rom_header
+    header = n64.cart_header
   end
 
   -- if header ~= nil then
@@ -204,13 +204,13 @@ local function gb_exec(process_opts, console_opts)
     -- parse file header
     log.section("Parsing ROM flash file header")
     log.bullet("Filename", process_opts.rom_write_file.filename)
-    local gbFile = assert(io.open(process_opts.rom_write_file.filename, "rb"))
-    if not gb.parse_header_file(gbFile) then
+    local gb_file = assert(io.open(process_opts.rom_write_file.filename, "rb"))
+    if not gb.parse_header_file(gb_file) then
       log.warning("Failed to parse ROM flash file header")
     else
       log.success("ROM flash file header parsed successfully")
     end
-    assert(gbFile:close())
+    assert(gb_file:close())
 
     header = gb.file_header
   end
@@ -219,13 +219,13 @@ local function gb_exec(process_opts, console_opts)
   if process_opts.rom_dump_file ~= "" then
     -- parse cartridge ROM header
     log.section("Parsing cartridge ROM header")
-    if not gb.parse_header_rom() then
+    if not gb.parse_header_cart() then
       log.warning("Failed to parse cartridge ROM header")
     else
       log.success("Cartridge ROM header parsed successfully")
     end
 
-    header = gb.rom_header
+    header = gb.cart_header
   end
 
   if header ~= nil then
@@ -383,10 +383,10 @@ local function nes_exec(process_opts, console_opts)
       log.section("Creating binary file to be flashed")
 
       local binfile
-      local prgNesRomSizeKb = math.floor(nes.header.prgRomSize / 1024)
-      local chrNesRomSizeKb = math.floor(nes.header.chrRomSize / 1024)
+      local prg_nes_rom_size_kb = math.floor(nes.header.prg_rom_size / 1024)
+      local chr_nes_rom_size_kb = math.floor(nes.header.chr_rom_size / 1024)
       -- local mult = 0
-      local bytesToCopy = 0
+      local bytes_to_copy = 0
       local flash_file_bin = process_opts.rom_write_file.path ..
           process_opts.rom_write_file.base .. "-" .. process_opts.retroprog_id .. ".bin"
 
@@ -401,48 +401,48 @@ local function nes_exec(process_opts, console_opts)
         binfile = assert(io.open(flash_file_bin, "w+b"))
 
         -- copy PRG data if needed
-        if prgNesRomSizeKb > console_opts.prg_rom_size_kb then
+        if prg_nes_rom_size_kb > console_opts.prg_rom_size_kb then
           log.warning("Provided PRG-ROM size (" ..
-            console_opts.prg_rom_size_kb .. "kB) is smaller than header PRG-ROM size (" .. prgNesRomSizeKb .. "kB)")
-        elseif console_opts.prg_rom_size_kb ~= 0 and prgNesRomSizeKb == 0 then
+            console_opts.prg_rom_size_kb .. "kB) is smaller than header PRG-ROM size (" .. prg_nes_rom_size_kb .. "kB)")
+        elseif console_opts.prg_rom_size_kb ~= 0 and prg_nes_rom_size_kb == 0 then
           log.warning("Header PRG-ROM size is zero")
         end
-        if console_opts.prg_rom_size_kb ~= 0 and prgNesRomSizeKb ~= 0 then
-          bytesToCopy = console_opts.prg_rom_size_kb * 1024
+        if console_opts.prg_rom_size_kb ~= 0 and prg_nes_rom_size_kb ~= 0 then
+          bytes_to_copy = console_opts.prg_rom_size_kb * 1024
           nesfile:seek("set", 16)
-          for j = 1, bytesToCopy, 1 do
+          for j = 1, bytes_to_copy, 1 do
             binfile:write(nesfile:read(1))
-            if (j % nes.header.prgRomSize == 0) then nesfile:seek("set", 16) end
+            if (j % nes.header.prg_rom_size == 0) then nesfile:seek("set", 16) end
           end
 
-          -- mult = console_opts.prg_rom_size_kb / prgNesRomSizeKb
+          -- mult = console_opts.prg_rom_size_kb / prg_nes_rom_size_kb
           -- for i = 1, mult, 1 do
           --   nesfile:seek("set", 16)
-          --   for j = 1, prgNesRomSizeKb * 1024, 1 do
+          --   for j = 1, prg_nes_rom_size_kb * 1024, 1 do
           --     binfile:write(nesfile:read(1))
           --   end
           -- end
         end
 
         -- copy CHR data if needed
-        if chrNesRomSizeKb > console_opts.chr_rom_size_kb then
+        if chr_nes_rom_size_kb > console_opts.chr_rom_size_kb then
           log.warning("Provided CHR-ROM size (" ..
-            console_opts.chr_rom_size_kb .. "kB) is smaller than header CHR-ROM size (" .. chrNesRomSizeKb .. "kB)")
-        elseif console_opts.chr_rom_size_kb ~= 0 and chrNesRomSizeKb == 0 then
+            console_opts.chr_rom_size_kb .. "kB) is smaller than header CHR-ROM size (" .. chr_nes_rom_size_kb .. "kB)")
+        elseif console_opts.chr_rom_size_kb ~= 0 and chr_nes_rom_size_kb == 0 then
           log.warning("Header CHR-ROM size is zero")
         end
-        if console_opts.chr_rom_size_kb ~= 0 and chrNesRomSizeKb ~= 0 then
-          bytesToCopy = console_opts.chr_rom_size_kb * 1024
-          nesfile:seek("set", 16 + nes.header.prgRomSize)
-          for j = 1, bytesToCopy, 1 do
+        if console_opts.chr_rom_size_kb ~= 0 and chr_nes_rom_size_kb ~= 0 then
+          bytes_to_copy = console_opts.chr_rom_size_kb * 1024
+          nesfile:seek("set", 16 + nes.header.prg_rom_size)
+          for j = 1, bytes_to_copy, 1 do
             binfile:write(nesfile:read(1))
-            if (j % nes.header.chrRomSize == 0) then nesfile:seek("set", 16 + nes.header.prgRomSize) end
+            if (j % nes.header.chr_rom_size == 0) then nesfile:seek("set", 16 + nes.header.prg_rom_size) end
           end
 
-          -- mult = console_opts.chr_rom_size_kb / chrNesRomSizeKb
+          -- mult = console_opts.chr_rom_size_kb / chr_nes_rom_size_kb
           -- for i = 1, mult, 1 do
           --   nesfile:seek("set", 16 + prgNesRomSizeKb * 1024)
-          --   for j = 1, chrNesRomSizeKb * 1024, 1 do
+          --   for j = 1, chr_nes_rom_size_kb * 1024, 1 do
           --     binfile:write(nesfile:read(1))
           --   end
           -- end

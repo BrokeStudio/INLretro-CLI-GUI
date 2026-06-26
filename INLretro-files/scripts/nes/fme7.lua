@@ -28,9 +28,9 @@ local mapname = "FME7"
 
   --]]
 
-local function create_header(file, prgKB, chrKB)
-  -- write_header(file, prgKB, chrKB, mapper, mirroring)
-  nes.write_header(file, prgKB, chrKB, op_buffer[mapname], 0)
+local function create_header(file, prg_kb, chr_kb)
+  -- write_header(file, prg_kb, chr_kb, mapper, mirroring)
+  nes.write_header(file, prg_kb, chr_kb, op_buffer[mapname], 0)
 end
 
 -- disables PRG-RAM, selects Vertical mirroring
@@ -670,7 +670,7 @@ local function prg_ram_exercise(wram_size, retroprog_id, debug)
   end
 
   -- open file
-  local filename = opts.lua_path .. "ignore/nes_prg_ram_dump-" .. retroprog_id .. ".bin"
+  local filename = opts.lua_path .. "./ignore/nes_prg_ram_dump-" .. retroprog_id .. ".bin"
   local file = assert(io.open(filename, "wb"))
 
   -- dump PRG-RAM
@@ -684,7 +684,7 @@ local function prg_ram_exercise(wram_size, retroprog_id, debug)
   dict.nes("NES_CPU_WR", 0xA000, 0x00)
 
   -- re-open & compare dump with known lsfr bitstream
-  local goodfile = opts.lua_path .. "ignore/lfsr_32KB.bin"
+  local goodfile = opts.lua_path .. "./ignore/lfsr_32KB.bin"
 
   -- compare the flash file vs post dump file
   if files.compare(filename, goodfile, false, debug) then
@@ -795,8 +795,8 @@ local function process(process_opts, console_opts)
         log.print()
         log.warning("Flag 'force_wram_test' enabled")
       end
-      if options.force_wram_test or nes.header.isValid then
-        if not options.force_wram_test and nes.header.hasBattery then
+      if options.force_wram_test or nes.header.is_valid then
+        if not options.force_wram_test and nes.header.has_battery then
           log.print()
           log.warning("Can't exercise PRG-RAM because NES ROM has battery backed data")
         else

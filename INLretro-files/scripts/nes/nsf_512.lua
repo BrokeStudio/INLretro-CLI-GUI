@@ -28,9 +28,9 @@ local mapname = "EZNSF"
 
 --]]
 
-local function create_header(file, prgKB, chrKB)
+local function create_header(file, prg_kb, chr_kb)
   local mirroring = nes.detect_mapper_mirroring()
-  nes.write_header(file, prgKB, 0, op_buffer[mapname], mirroring)
+  nes.write_header(file, prg_kb, 0, op_buffer[mapname], mirroring)
 end
 
 
@@ -225,7 +225,7 @@ local function chr_ram_exercise(chrram_size, retroprog_id, debug)
   end
 
   -- dump CHR-RAM
-  local filename = opts.lua_path .. "ignore/nes_chr_ram_dump-" .. retroprog_id .. ".bin"
+  local filename = opts.lua_path .. "./ignore/nes_chr_ram_dump-" .. retroprog_id .. ".bin"
   local file = assert(io.open(filename, "wb"))
   log.point("Dumping CHR-RAM")
   chr_dump(file, chrram_size, debug)
@@ -234,7 +234,7 @@ local function chr_ram_exercise(chrram_size, retroprog_id, debug)
   assert(file:close())
 
   -- re-open & compare dump with known lsfr bitstream
-  local goodfile = opts.lua_path .. "ignore/lfsr_32KB.bin"
+  local goodfile = opts.lua_path .. "./ignore/lfsr_32KB.bin"
 
   -- compare the flash file vs post dump file
   if files.compare(filename, goodfile, false) then

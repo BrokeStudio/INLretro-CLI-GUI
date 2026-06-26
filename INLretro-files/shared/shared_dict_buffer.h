@@ -117,20 +117,21 @@
 
 // since the types above only specify the granularity of the read, there is no reason
 // to limit it to 1-4KByte.  May as well give page granularity and use the whole mapper byte!
-#define NESCPU_PAGE 0x22			 // mapper byte specifies A15-8
-#define NESPPU_PAGE 0x23			 // mapper byte specifies A13-8	 bits 6 & 7 can't be set
-#define SNESROM_PAGE 0x24			 // mapper byte specifies A15-8 ROMSEL low
-#define SNESSYS_PAGE 0x25			 // mapper byte specifies A15-8 ROMSEL high
-#define GAMEBOY_PAGE 0x26			 // mapper byte specifies A15-8
-#define GBA_ROM_PAGE 0x27			 // address must have already been latched with gba dictionary
+#define NESCPU_PAGE 0x22       // mapper byte specifies A15-8
+#define NESPPU_PAGE 0x23       // mapper byte specifies A13-8	 bits 6 & 7 can't be set
+#define SNESROM_PAGE 0x24      // mapper byte specifies A15-8 ROMSEL low
+#define SNESSYS_PAGE 0x25      // mapper byte specifies A15-8 ROMSEL high
+#define GAMEBOY_PAGE 0x26      // mapper byte specifies A15-8
+#define GBA_ROM_PAGE 0x27      // address must have already been latched with gba dictionary
 #define GENESIS_ROM_PAGE0 0x28 // bank address A17-23 must have been latched already
 // TODO come up with better way to handle genesis address complications
 #define GENESIS_ROM_PAGE1 0x29 // bank address A17-23 must have been latched already
 #define N64_ROM_PAGE 0x30
 
-#define NESPPU_1KB_TOGGLE 0x31 // similar to PPU page read but /RD signal toggles with each read
-#define NESCPU_4KB_TOGGLE 0x32 // similar to CPU page read but M2 toggles with each read
-#define GENESIS_RAM_PAGE 0x33	 // bank address A17-23 must have been latched already
+#define NESPPU_1KB_TOGGLE 0x31  // similar to PPU page read but /RD signal toggles with each read
+#define NESCPU_4KB_TOGGLE 0x32  // similar to CPU page read but M2 toggles with each read
+#define GENESIS_RAM_PAGE 0x33   // bank address A17-23 must have been latched already
+#define NESCPU_PAGE_TOGGLE 0x34 // mapper byte specifies A15-8 read but M2 toggles with each read
 
 // operand LSB
 // manufacturer IDs
@@ -169,6 +170,8 @@
 // operLSB: mapper variant
 #define SET_MAP_N_MAPVAR 0x32
 // operand MSB mapper
+
+// NES mapper definitions
 #define NROM 0
 #define MMC1 1
 #define UxROM 2
@@ -196,7 +199,7 @@
 #define HDIVER 78
 #define GTROM 111
 #define DxROM 205
-#define RNBW 146	// temporary mapper number
+#define RNBW 146 // temporary mapper number
 
 #define MM2 253
 #define DPROM 254 // just a random mapper number for whatever I need it for
@@ -205,10 +208,11 @@
 // operand LSB mapper variant
 #define NOVAR 0
 
+// SNES mapper definitions
 #define LOROM 0
-#define HIROM 1		// file starts at bank 40 and is mirrored to C0
+#define HIROM 1   // file starts at bank 40 and is mirrored to C0
 #define EXHIROM 2 // file starts at bank C0
-#define SOROM 3		// 12MB star ocean mapping
+#define SOROM 3   // 12MB star ocean mapping
 
 #define LOROM_5VOLT 4 // Catskull 5v SNES board with SST PLCC flash
 #define HIROM_5VOLT 5
@@ -225,8 +229,12 @@
 // GAMEBOY mapper definitions
 #define ROMONLY 0
 #define MBC1_DISCRETE 1
-#define MBC1 2
-#define MBC5 2
+#define MBC1 2 // MBC1 and MBC5 use the same script
+#define MBC5 2 // MBC1 and MBC5 use the same script
+
+// CIC "mapper" definitions
+#define CIC_READ_BUFFER 0  // dump
+#define CIC_WRITE_BUFFER 1 // flash
 
 // set function
 // miscdata: buffer number

@@ -72,7 +72,7 @@ else
   symbols.warning = '⚠'
 end
 
-local LogTypes = {
+local LOG_TYPES = {
   None = 0,
   Section = 1,
   Info = 2,
@@ -103,7 +103,7 @@ local function section(...)
   else
     -- GUI
     gui_log_add(" ");
-    gui_log_add(LogTypes.Section, text)
+    gui_log_add(LOG_TYPES.Section, text)
   end
 end
 
@@ -114,7 +114,7 @@ local function info(...)
     _print(ansicolors('%{cyan}' .. symbols.info .. ' ' .. text))
   else
     -- GUI
-    gui_log_add(LogTypes.Info, text)
+    gui_log_add(LOG_TYPES.Info, text)
   end
 end
 
@@ -125,7 +125,7 @@ local function success(...)
     _print(ansicolors('%{green}' .. symbols.check .. ' ' .. text))
   else
     -- GUI
-    gui_log_add(LogTypes.Success, text)
+    gui_log_add(LOG_TYPES.Success, text)
   end
 end
 
@@ -136,7 +136,7 @@ local function warning(...)
     _print(ansicolors('%{yellow}' .. symbols.warning .. ' ' .. text))
   else
     -- GUI
-    gui_log_add(LogTypes.Warning, text)
+    gui_log_add(LOG_TYPES.Warning, text)
   end
 end
 
@@ -147,7 +147,7 @@ local function error(...)
     _print(ansicolors('%{red}' .. symbols.cross .. ' ' .. text))
   else
     -- GUI
-    gui_log_add(LogTypes.Error, text)
+    gui_log_add(LOG_TYPES.Error, text)
   end
 end
 
@@ -158,7 +158,7 @@ local function point(...)
     _print(ansicolors('%{cyan}' .. symbols.pointer .. ' ' .. text))
   else
     -- GUI
-    gui_log_add(LogTypes.Point, text)
+    gui_log_add(LOG_TYPES.Point, text)
   end
 end
 
@@ -169,7 +169,7 @@ local function bullet(...)
     _print(ansicolors('%{cyan}' .. symbols.bullet .. ' ' .. text))
   else
     -- GUI
-    gui_log_add(LogTypes.Bullet, text)
+    gui_log_add(LOG_TYPES.Bullet, text)
   end
 end
 

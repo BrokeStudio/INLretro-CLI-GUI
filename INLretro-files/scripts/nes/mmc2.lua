@@ -28,9 +28,9 @@ local mapname = "MMC2"
 
 --]]
 
-local function create_header(file, prgKB, chrKB)
-  -- write_header(file, prgKB, chrKB, mapper, mirroring)
-  nes.write_header(file, prgKB, chrKB, op_buffer[mapname], 0)
+local function create_header(file, prg_kb, chr_kb)
+  -- write_header(file, prg_kb, chr_kb, mapper, mirroring)
+  nes.write_header(file, prg_kb, chr_kb, op_buffer[mapname], 0)
 end
 
 -- put mapper in a known state
@@ -217,7 +217,6 @@ local function prg_rom_flash(file, rom_size_KB, debug)
 
     -- have the device write a bank worth of data
     flash.write_file(file, bank_size, "MMC4", "PRGROM", false)
-    -- TODO: check why MMC4 here...
 
     cur_bank = cur_bank + 1
   end
@@ -501,7 +500,7 @@ local function prg_ram_exercise(wram_size, retroprog_id, debug)
   end
 
   -- open file
-  local filename = opts.lua_path .. "ignore/nes_prg_ram_dump-" .. retroprog_id .. ".bin"
+  local filename = opts.lua_path .. "./ignore/nes_prg_ram_dump-" .. retroprog_id .. ".bin"
   local file = assert(io.open(filename, "wb"))
 
   -- dump PRG-RAM
@@ -512,7 +511,7 @@ local function prg_ram_exercise(wram_size, retroprog_id, debug)
   assert(file:close())
 
   -- re-open & compare dump with known lsfr bitstream
-  local goodfile = opts.lua_path .. "ignore/lfsr_32KB.bin"
+  local goodfile = opts.lua_path .. "./ignore/lfsr_32KB.bin"
 
   -- compare the flash file vs post dump file
   if files.compare(filename, goodfile, false) then
@@ -629,8 +628,8 @@ local function process(process_opts, console_opts)
       if wram_size == 0 then
         wram_size = 8
       end
-      if options.force_wram_test or nes.header.isValid then
-        if not options.force_wram_test and nes.header.hasBattery then
+      if options.force_wram_test or nes.header.is_valid then
+        if not options.force_wram_test and nes.header.has_battery then
           log.print()
           log.warning("Can't exercise PRG-RAM because NES ROM has battery backed data")
         else
