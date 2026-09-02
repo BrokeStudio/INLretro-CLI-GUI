@@ -9,17 +9,20 @@ permissions:
   contents: write
 
 jobs:
+  build:
+    name: Build release artifacts
+    uses: ./.github/workflows/build.yml
+
   release:
     name: Create GitHub Release
+    needs: build
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Download build artifacts from previous workflow
+      - name: Download build artifacts from this workflow
         uses: dawidd6/action-download-artifact@v3
         with:
-          workflow: build.yml
-          workflow_conclusion: success
-          branch: master
+          run_id: ${{ github.run_id }}
           skip_unpack: true
           path: release
 
