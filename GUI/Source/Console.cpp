@@ -80,6 +80,28 @@ std::string get_filename_from_path(std::string &path)
 }
 
 /**
+ * @brief
+ *
+ * @param luaPath
+ * @param writePath
+ */
+void Console::set_paths(const std::string &luaPath, const std::string &writePath)
+{
+  t_INLoptions_std *options[] = {
+      &rom_dump_INLOptions,
+      &rom_write_INLOptions,
+      &ram_dump_INLOptions,
+      &ram_write_INLOptions,
+  };
+
+  for (t_INLoptions_std *option : options)
+  {
+    option->lua_path = luaPath;
+    option->write_path = writePath;
+  }
+}
+
+/**
  * @brief Render the additional options popup
  *
  * @param INLoptions depends on the current view (rom dump, rom write, ram dump, ram write)

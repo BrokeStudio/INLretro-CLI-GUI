@@ -104,10 +104,10 @@ local function _mirror_test(retroprog_id, debug)
   local nt_max = 255
   local test = true
 
-  local filenameA = opts.lua_path .. "./ignore/nes_ppu_ntA_dump-" .. retroprog_id .. ".bin"
-  local filenameB = opts.lua_path .. "./ignore/nes_ppu_ntB_dump-" .. retroprog_id .. ".bin"
-  local filenameC = opts.lua_path .. "./ignore/nes_ppu_ntC_dump-" .. retroprog_id .. ".bin"
-  local filenameD = opts.lua_path .. "./ignore/nes_ppu_ntD_dump-" .. retroprog_id .. ".bin"
+  local filenameA = opts.write_path .. "./ignore/nes_ppu_ntA_dump-" .. retroprog_id .. ".bin"
+  local filenameB = opts.write_path .. "./ignore/nes_ppu_ntB_dump-" .. retroprog_id .. ".bin"
+  local filenameC = opts.write_path .. "./ignore/nes_ppu_ntC_dump-" .. retroprog_id .. ".bin"
+  local filenameD = opts.write_path .. "./ignore/nes_ppu_ntD_dump-" .. retroprog_id .. ".bin"
 
   local fileA = assert(io.open(filenameA, "wb"))
   local fileB = assert(io.open(filenameB, "wb"))
@@ -949,7 +949,7 @@ local function prg_ram_exercise(wram_size, retroprog_id, debug)
   end
 
   -- open file
-  local filename = opts.lua_path .. "./ignore/nes_prg_ram_dump-" .. retroprog_id .. ".bin"
+  local filename = opts.write_path .. "./ignore/nes_prg_ram_dump-" .. retroprog_id .. ".bin"
   local file = assert(io.open(filename, "wb"))
 
   -- dump PRG-RAM
@@ -1038,7 +1038,7 @@ local function fpga_ram_exercise(retroprog_id, debug)
   end
 
   -- open file
-  local filename = opts.lua_path .. "./ignore/nes_fpga_ram_dump-" .. retroprog_id .. ".bin"
+  local filename = opts.write_path .. "./ignore/nes_fpga_ram_dump-" .. retroprog_id .. ".bin"
   local file = assert(io.open(filename, "wb"))
 
   -- dump FPGA-RAM
@@ -1154,7 +1154,7 @@ local function chr_ram_exercise(chr_ram_size, retroprog_id, debug)
   end
 
   -- open file
-  local filename = opts.lua_path .. "./ignore/nes_chr_ram_dump-" .. retroprog_id .. ".bin"
+  local filename = opts.write_path .. "./ignore/nes_chr_ram_dump-" .. retroprog_id .. ".bin"
   local file = assert(io.open(filename, "wb"))
 
   -- dump CHR-RAM

@@ -705,7 +705,7 @@ nes.cic = {
   flash = function(self, flash_filename, dump_filename, fuse_high, fuse_low)
     -- default values
     if not flash_filename then flash_filename = opts.lua_path .. "./ignore/AVRCICZZ.BIN" end
-    if not dump_filename then dump_filename = opts.lua_path .. "./ignore/cic_dump.bin" end
+    if not dump_filename then dump_filename = opts.write_path .. "./ignore/cic_dump.bin" end
     if not fuse_high then fuse_high = 0xfb end
     if not fuse_low then fuse_low = 0x70 end
 

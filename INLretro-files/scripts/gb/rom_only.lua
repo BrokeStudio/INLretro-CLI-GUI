@@ -295,7 +295,7 @@ local function ram_exercise(ram_size, retroprog_id, debug)
   spinner.clear()
 
   -- open file
-  local filename = opts.lua_path .. "./ignore/gb_ram_dump-" .. retroprog_id .. ".bin"
+  local filename = opts.write_path .. "./ignore/gb_ram_dump-" .. retroprog_id .. ".bin"
   local file = assert(io.open(filename, "wb"))
 
   -- dump RAM

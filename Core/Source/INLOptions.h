@@ -30,6 +30,7 @@ struct t_INLoptions_std
 
   std::string lua_file;
   std::string lua_path;
+  std::string write_path;
 
   t_INLoptions_std()
   {
@@ -49,6 +50,7 @@ struct t_INLoptions_std
     this->additional_opts = "";
     this->lua_file = "";
     this->lua_path = "";
+    this->write_path = "";
   }
 };
 

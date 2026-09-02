@@ -274,7 +274,7 @@ local function chr_ram_exercise(chr_ram_size, retroprog_id, debug)
   end
 
   -- dump CHR-RAM
-  local filename = opts.lua_path .. "./ignore/nes_chr_ram_dump-" .. retroprog_id .. ".bin"
+  local filename = opts.write_path .. "./ignore/nes_chr_ram_dump-" .. retroprog_id .. ".bin"
   local file = assert(io.open(filename, "wb"))
   log.point("Dumping CHR-RAM")
   chr_dump(file, chr_ram_size, debug)

@@ -124,8 +124,13 @@ filter { "system:windows", "configurations:Release or Dist", "platforms:x86_64" 
 -- Linux
 
 filter "system:linux"
+  buildoptions { "`pkg-config --cflags libusb-1.0`" }
+  linkoptions {
+    "-Wl,--whole-archive,`pkg-config --variable=libdir libusb-1.0`/libusb-1.0.a,--no-whole-archive",
+    "`pkg-config --static --libs-only-L --libs-only-other libusb-1.0`",
+  }
   links {
-    "usb-1.0",
+    "udev",
     "pthread"
   }
   prebuildcommands {
@@ -136,9 +141,9 @@ filter "system:linux"
 
 filter "system:macosx"
   buildoptions { "`pkg-config --cflags libusb-1.0`" }
-  linkoptions { "`pkg-config --libs libusb-1.0`" }
-  links {
-    "pthread"
+  linkoptions {
+    "-Wl,-force_load,`pkg-config --variable=libdir libusb-1.0`/libusb-1.0.a",
+    "`pkg-config --static --libs-only-L --libs-only-other libusb-1.0`",
   }
   prebuildcommands {
     "sh ./increment-build.sh"

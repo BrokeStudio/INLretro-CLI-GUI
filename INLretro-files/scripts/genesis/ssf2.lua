@@ -385,7 +385,7 @@ local function ram_exercise(ram_size, retroprog_id, debug)
   dict.sega("GEN_PAGE_RAM_WR_LFSR", 0x00, ram_size)
 
   --dump sram into file
-  local filename = opts.lua_path .. "./ignore/gen_sram_dump-" .. retroprog_id .. ".bin"
+  local filename = opts.write_path .. "./ignore/gen_sram_dump-" .. retroprog_id .. ".bin"
   local file = assert(io.open(filename, "wb"))
   log.point("Dumping RAM")
   ram_dump(file, addr_hi, ram_size, debug)

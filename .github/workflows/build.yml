@@ -8,7 +8,7 @@ on:
 
 env:
   # Path to the solution file relative to the root of the project.
-  SOLUTION_FILE_PATH: INLretro.sln
+  SOLUTION_FILE_PATH: INLretro.slnx
 
   # Configuration type to build.
   # You can convert this to a build matrix if you need coverage of multiple configuration types.
@@ -30,14 +30,14 @@ jobs:
       fail-fast: false
     runs-on: windows-2025-vs2026
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: abel0b/setup-premake@v2.4
         with:
-          version: "5.0.0-beta2"
+          version: "5.0.0-beta8"
 
       - name: Add MSBuild to PATH
-        uses: microsoft/setup-msbuild@v2
+        uses: microsoft/setup-msbuild@v3
 
       # - name: Build SDL2 statically
       #   run: |
@@ -49,10 +49,10 @@ jobs:
       #     Copy-Item "build\Release\SDL2-static.lib" -destination "..\External\SDL2\lib\${{ matrix.platform.SDL2libPath }}-static-release" -force
 
       - name: Prepare MSVC project files
-        run: premake5 --file=Build.lua vs2022
+        run: premake5 --file=Build.lua vs2026
 
       - name: Build
-        run: msbuild INLretro.sln -nologo -t:rebuild -verbosity:normal -clp:ForceConsoleColor -m -property:Configuration=Dist -p:Platform=${{ matrix.platform.arch }}
+        run: msbuild INLretro.slnx -nologo -t:rebuild -verbosity:normal -clp:ForceConsoleColor -m -property:Configuration=Dist -p:Platform=${{ matrix.platform.arch }}
 
       - name: Upload INLretroGUI
         uses: actions/upload-artifact@v7
@@ -64,7 +64,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: abel0b/setup-premake@v2.4
         with:
@@ -73,11 +73,22 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get install libsdl2-dev libusb-1.0-0-dev
 
+      - name: Verify static libusb archive
+        run: test -f "$(pkg-config --variable=libdir libusb-1.0)/libusb-1.0.a"
+
       - name: Generate make file
-        run: premake5 --cc=clang --file=Build.lua gmake2
+        run: premake5 --cc=clang --file=Build.lua gmake
 
       - name: Build
         run: make config=dist
+
+      - name: Verify libusb is statically linked
+        run: |
+          if find Binaries/linux-x86_64/Dist/INLretro -maxdepth 1 -type f -executable \
+            -exec ldd {} \; | grep -E 'libusb-1\.0\.so'; then
+            echo "A generated executable still depends on shared libusb"
+            exit 1
+          fi
 
       - name: Upload INLretroGUI
         uses: actions/upload-artifact@v7
@@ -86,38 +97,116 @@ jobs:
           path: Binaries/linux-x86_64/Dist/INLretro
 
   macos:
-    runs-on: macos-14
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            runner: macos-15
+            premake_version: 5.0.0-beta8
+            artifact_suffix: AppleSilicon
+          - arch: x86_64
+            runner: macos-15-intel
+            premake_version: 5.0.0-beta2
+            artifact_suffix: Intel
+
+    runs-on: ${{ matrix.runner }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: abel0b/setup-premake@v2.4
         with:
-          version: "5.0.0-beta2"
+          version: ${{ matrix.premake_version }}
 
-      - name: Install Dependencies
-        run: brew install sdl2
-        # libusb
+      - name: Make Premake executable
+        run: chmod +x "$GITHUB_WORKSPACE/.premake/premake5"
+
+      - name: Install libusb
+        run: brew install libusb
+
+      - name: Verify static libusb archive
+        run: test -f "$(pkg-config --variable=libdir libusb-1.0)/libusb-1.0.a"
+
+      - name: Download SDL2 framework
+        run: |
+          SDL_DMG="$RUNNER_TEMP/SDL2-2.32.10.dmg"
+          SDL_MOUNT_POINT="$RUNNER_TEMP/SDL2-mount"
+
+          curl -L \
+            -o "$SDL_DMG" \
+            "https://github.com/libsdl-org/SDL/releases/download/release-2.32.10/SDL2-2.32.10.dmg"
+
+          mkdir -p "$SDL_MOUNT_POINT"
+
+          hdiutil attach "$SDL_DMG" \
+            -readonly \
+            -nobrowse \
+            -mountpoint "$SDL_MOUNT_POINT"
+
+          mkdir -p External/SDL2-macOS
+
+          ditto \
+            "$SDL_MOUNT_POINT/SDL2.framework" \
+            "External/SDL2-macOS/SDL2.framework"
+
+          hdiutil detach "$SDL_MOUNT_POINT"
 
       - name: Prepare make file
-        run: premake5 --file=Build.lua gmake2
+        run: premake5 --arch=${{ matrix.arch }} --file=Build.lua gmake
 
       - name: Build
         run: make config=dist verbose=1
 
-      - name: Upload INLretroGUI (app)
-        uses: actions/upload-artifact@v7
-        with:
-          name: INLretroGUI_macOS
-          path: Binaries/macosx-universal/Dist/app
-
-      - name: Delete GUI executable and .ini file
+      - name: Locate macOS app
         run: |
-          rm Binaries/macosx-universal/Dist/INLretro/INLretroGUI
-          rm Binaries/macosx-universal/Dist/INLretro/INLretro.ini
+          APP_PATH="$(find Binaries -type d -name INLretroGUI.app -print -quit)"
 
-      - name: Upload INLretro CLI
+          if [ -z "$APP_PATH" ]; then
+            echo "INLretroGUI.app was not found"
+            exit 1
+          fi
+
+          echo "APP_PATH=$APP_PATH" >> "$GITHUB_ENV"
+
+      - name: Sign macOS app
+        run: |
+          codesign --force --sign - \
+            "$APP_PATH/Contents/Frameworks/SDL2.framework"
+
+          codesign --force --sign - \
+            "$APP_PATH"
+
+      - name: Verify macOS app
+        run: |
+          EXECUTABLE_PATH="$APP_PATH/Contents/MacOS/INLretroGUI"
+
+          plutil -lint "$APP_PATH/Contents/Info.plist"
+          test -x "$EXECUTABLE_PATH"
+          file "$EXECUTABLE_PATH"
+          lipo "$EXECUTABLE_PATH" -verify_arch ${{ matrix.arch }}
+          lipo \
+            "$APP_PATH/Contents/Frameworks/SDL2.framework/Versions/A/SDL2" \
+            -verify_arch ${{ matrix.arch }}
+          vtool -show-build "$EXECUTABLE_PATH"
+          vtool -show-build \
+            "$APP_PATH/Contents/Frameworks/SDL2.framework/Versions/A/SDL2"
+          if otool -L "$EXECUTABLE_PATH" | grep -E 'libusb[^/]*/|libusb-[0-9].*\.dylib'; then
+            echo "The application still depends on shared libusb"
+            exit 1
+          fi
+          codesign --verify --deep --strict --verbose=4 "$APP_PATH"
+
+      - name: Package macOS app
+        run: |
+          tar -czf \
+            "$RUNNER_TEMP/INLretroGUI-${{ matrix.artifact_suffix }}.tar.gz" \
+            -C "$(dirname "$APP_PATH")" \
+            "$(basename "$APP_PATH")"
+
+      - name: Upload INLretroGUI app
         uses: actions/upload-artifact@v7
         with:
-          name: INLretroCLI_macOS
-          path: Binaries/macosx-universal/Dist/INLretro
+          name: INLretroGUI_macOS_${{ matrix.artifact_suffix }}
+          path: ${{ runner.temp }}/INLretroGUI-${{ matrix.artifact_suffix }}.tar.gz
+          archive: false

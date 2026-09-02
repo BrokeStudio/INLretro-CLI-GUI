@@ -618,7 +618,7 @@ local function prg_ram_test(wram_size, retroprog_id, debug)
   end
 
   -- open file
-  local filename = opts.lua_path .. "./ignore/nes_prg_ram_dump-" .. retroprog_id .. ".bin"
+  local filename = opts.write_path .. "./ignore/nes_prg_ram_dump-" .. retroprog_id .. ".bin"
   local file = assert(io.open(filename, "wb"))
 
   -- dump PRG-RAM

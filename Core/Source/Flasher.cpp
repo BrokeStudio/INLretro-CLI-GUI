@@ -10,6 +10,7 @@
 
 #ifdef __APPLE__
 #include "macos.h"
+// #include <SDL.h>
 #endif
 
 std::vector<Flasher *> Flasher::list;
@@ -190,27 +191,15 @@ bool Flasher::exec(t_INLoptions_std opts)
   // clear log
   log.clear();
 
-  // update path if on macOS
-#ifdef __APPLE__
-  std::string applePath;
+  if (opts.lua_path.empty())
+  {
+    opts.lua_path = "./";
+  }
 
-#ifdef _DIST
-  if (getResourcesPath(applePath) == -1)
+  if (opts.write_path.empty())
   {
-    APP_LOG(LogTypes_Error, L_SYS "Couldn't get resources path");
-    return false;
+    opts.write_path = opts.lua_path;
   }
-#else
-  if (getExecutablePath(applePath) == -1)
-  {
-    APP_LOG(LogTypes_Error, L_SYS "Couldn't get executable path");
-    return false;
-  }
-#endif
-  opts.lua_path = applePath;
-#else
-  opts.lua_path = "./";
-#endif
 
   // start script in a separate thread
   isFlashing = true;

@@ -118,6 +118,9 @@ lua_State *Lua::init(const t_INLoptions_std &opts)
   lua_pushstring(this->L, opts.lua_path.c_str());
   lua_setfield(this->L, -2, "lua_path");
 
+  lua_pushstring(this->L, opts.write_path.c_str());
+  lua_setfield(this->L, -2, "write_path");
+
   lua_setglobal(this->L, "opts"); // set options table as global variable
 
   return this->L;

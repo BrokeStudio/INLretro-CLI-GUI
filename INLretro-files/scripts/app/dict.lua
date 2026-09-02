@@ -979,13 +979,9 @@ err_codes = {}
 -- to keep compatibility with original INL-retro-progdump folder structure,
 -- let's detect where is the /shared/ folder
 local shared_path = help.get_script_path() .. "../../shared/"
-local ok, err = help.exists(shared_path)
-if (not ok) then
+
+if not help.file_exists(shared_path .. "shared_dictionaries.h") then
   shared_path = help.get_script_path() .. "../../../shared/"
-  ok, err = help.exists(shared_path)
-  if (not ok) then
-    print(err)
-  end
 end
 
 create_dict_tables(dict, shared_path .. "shared_dictionaries.h")

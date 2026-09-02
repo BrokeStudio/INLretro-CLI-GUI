@@ -90,12 +90,5 @@ filter { "system:windows", "configurations:Release or Dist", "platforms:x86_64" 
 -- Linux or macOS
 
 filter "system:linux or macosx"
-  includedirs
-  {
-    "../macOS"
-  }
-  links { "usb-1.0", "pthread" }
-
-filter "system:macosx"
   buildoptions { "`pkg-config --cflags libusb-1.0`" }
-  linkoptions { "`pkg-config --libs libusb-1.0`" }
+  includedirs { "../macOS" }

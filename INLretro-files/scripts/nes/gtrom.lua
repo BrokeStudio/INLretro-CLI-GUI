@@ -50,10 +50,10 @@ local function mirror_test(retroprog_id, debug)
   -- 4 screen
   local test = true
 
-  local filenameA = opts.lua_path .. "./ignore/nes_ppu_ntA_dump-" .. retroprog_id .. ".bin"
-  local filenameB = opts.lua_path .. "./ignore/nes_ppu_ntB_dump-" .. retroprog_id .. ".bin"
-  local filenameC = opts.lua_path .. "./ignore/nes_ppu_ntC_dump-" .. retroprog_id .. ".bin"
-  local filenameD = opts.lua_path .. "./ignore/nes_ppu_ntD_dump-" .. retroprog_id .. ".bin"
+  local filenameA = opts.write_path .. "./ignore/nes_ppu_ntA_dump-" .. retroprog_id .. ".bin"
+  local filenameB = opts.write_path .. "./ignore/nes_ppu_ntB_dump-" .. retroprog_id .. ".bin"
+  local filenameC = opts.write_path .. "./ignore/nes_ppu_ntC_dump-" .. retroprog_id .. ".bin"
+  local filenameD = opts.write_path .. "./ignore/nes_ppu_ntD_dump-" .. retroprog_id .. ".bin"
 
   local fileA = assert(io.open(filenameA, "wb"))
   local fileB = assert(io.open(filenameB, "wb"))
@@ -336,7 +336,7 @@ local function chr_ram_exercise(chr_ram_size, retroprog_id, debug)
   end
 
   -- dump CHR-RAM
-  local filename = opts.lua_path .. "./ignore/nes_chr_ram_dump-" .. retroprog_id .. ".bin"
+  local filename = opts.write_path .. "./ignore/nes_chr_ram_dump-" .. retroprog_id .. ".bin"
   local file = assert(io.open(filename, "wb"))
   log.point("Dumping CHR-RAM")
   chr_dump(file, chr_ram_size, debug)

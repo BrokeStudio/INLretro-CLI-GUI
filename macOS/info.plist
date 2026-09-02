@@ -4,15 +4,36 @@
   <dict>
     <key>CFBundleExecutable</key>
     <string>INLretroGUI</string>
+
     <key>CFBundleGetInfoString</key>
     <string>INLretroGUI-macOS-app</string>
+
     <key>CFBundleIconFile</key>
-    <string>INL.png</string>
+    <string>AppIcon.icns</string>
+
     <key>CFBundleIdentifier</key>
     <string>inl.retro.gui</string>
+
     <key>CFBundleName</key>
     <string>INLretroGUI-macOS-app</string>
+
     <key>CFBundlePackageType</key>
     <string>APPL</string>
+
+    <key>CFBundleDisplayName</key>
+    <string>INLretroGUI</string>
+
+    <key>CFBundleShortVersionString</key>
+    <string>0.0.1</string>
+
+    <key>CFBundleVersion</key>
+    <string>1</string>
+
+    <key>NSHighResolutionCapable</key>
+    <true/>
+
+    <key>LSMinimumSystemVersion</key>
+    <string>12.0</string>
+
   </dict>
 </plist>

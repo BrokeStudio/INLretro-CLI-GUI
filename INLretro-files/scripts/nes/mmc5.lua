@@ -788,7 +788,7 @@ local function prg_ram_exercise(wram_size, retroprog_id, debug)
   end
 
   -- open file
-  local filename = opts.lua_path .. "./ignore/nes_prg_ram_dump-" .. retroprog_id .. ".bin"
+  local filename = opts.write_path .. "./ignore/nes_prg_ram_dump-" .. retroprog_id .. ".bin"
   local file = assert(io.open(filename, "wb"))
 
   -- dump PRG-RAM
@@ -879,7 +879,7 @@ local function exram_exercise_mode0_1_cpu_ppu(retroprog_id, mode, debug)
   log.section("Exercising EXRAM (mode " .. mode .. ") - CPU writes / PPU reads")
 
   -- open file
-  filename = opts.lua_path .. "./ignore/nes_exram_dump_ppu-" .. retroprog_id .. ".bin"
+  filename = opts.write_path .. "./ignore/nes_exram_dump_ppu-" .. retroprog_id .. ".bin"
   file = assert(io.open(filename, "wb"))
 
   dict.stuff("RESET_LFSR") -- sets it to 1
@@ -933,7 +933,7 @@ local function exram_exercise_mode0_1_ppu_ppu(retroprog_id, mode, debug)
   log.section("Exercising EXRAM (mode " .. mode .. ") - PPU writes / PPU reads")
 
   -- open file
-  filename = opts.lua_path .. "./ignore/nes_exram_dump_ppu-" .. retroprog_id .. ".bin"
+  filename = opts.write_path .. "./ignore/nes_exram_dump_ppu-" .. retroprog_id .. ".bin"
   file = assert(io.open(filename, "wb"))
 
   -- re-open & compare dump with known lsfr bitstream
@@ -994,7 +994,7 @@ local function exram_exercise_mode2(retroprog_id, debug)
   end
 
   -- open file
-  filename = opts.lua_path .. "./ignore/nes_exram_dump_cpu-" .. retroprog_id .. ".bin"
+  filename = opts.write_path .. "./ignore/nes_exram_dump_cpu-" .. retroprog_id .. ".bin"
   file = assert(io.open(filename, "wb"))
 
   -- dump EXRAM
@@ -1026,7 +1026,7 @@ local function exram_exercise_mode2(retroprog_id, debug)
   end
 
   -- open file
-  filename = opts.lua_path .. "./ignore/nes_exram_dump_cpu-" .. retroprog_id .. ".bin"
+  filename = opts.write_path .. "./ignore/nes_exram_dump_cpu-" .. retroprog_id .. ".bin"
   file = assert(io.open(filename, "wb"))
 
   -- dump EXRAM

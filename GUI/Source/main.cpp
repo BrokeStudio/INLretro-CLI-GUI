@@ -1,6 +1,7 @@
-#include <stdio.h>
+#include <filesystem>
 #include <functional>
 #include <sstream>
+#include <stdio.h>
 #include <string>
 #include <thread>
 
@@ -177,6 +178,29 @@ int main(int argc, char **argv)
   //   io.IniFilename = iniPath.c_str();
   // #endif
 
+  std::string luaPath = "./";
+  std::string writePath = "./";
+
+#ifdef __APPLE__
+  char *basePath = SDL_GetBasePath();
+  char *prefPath = SDL_GetPrefPath("Broke Studio", "INLretro");
+
+  if (basePath != nullptr)
+  {
+    luaPath = basePath;
+    SDL_free(basePath);
+  }
+
+  if (prefPath != nullptr)
+  {
+    writePath = prefPath;
+    SDL_free(prefPath);
+  }
+
+  std::filesystem::create_directories(
+      std::filesystem::path(writePath) / "ignore");
+#endif
+
   // Setup Dear ImGui style
   ImGui::StyleColorsDark();
 
@@ -243,6 +267,12 @@ int main(int argc, char **argv)
   // init consoles
   Ini::load();
   Ini::parse();
+
+  for (Console *console : Console::list)
+  {
+    console->set_paths(luaPath, writePath);
+  }
+
   Menu::init();
 
   // detect flashers

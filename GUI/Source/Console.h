@@ -58,6 +58,8 @@ public:
   static void add(Console *console);
   static void clear_list();
 
+  void set_paths(const std::string &luaPath, const std::string &writePath);
+
   void render_rom_dump(std::string droppedFilename = "");
   void render_rom_write(std::string droppedFilename = "");
   void render_ram_dump(std::string droppedFilename = "");

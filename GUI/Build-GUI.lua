@@ -1,6 +1,6 @@
 project "GUI"
 language "C++"
-cppdialect "C++17"
+cppdialect "C++20"
 targetdir "Binaries/%{cfg.buildcfg}"
 debugdir "Binaries/%{cfg.targetdir}"
 staticruntime "off"
@@ -175,14 +175,19 @@ filter { "system:windows", "configurations:Release or Dist", "platforms:x86_64" 
 -- Linux
 
 filter "system:linux"
-  buildoptions { "`sdl2-config --cflags`" }
-  linkoptions { "`sdl2-config --libs`" }
+  buildoptions {
+    "`sdl2-config --cflags`",
+    "`pkg-config --cflags libusb-1.0`",
+  }
+  linkoptions {
+    "`sdl2-config --static-libs`",
+    "-Wl,--whole-archive,`pkg-config --variable=libdir libusb-1.0`/libusb-1.0.a,--no-whole-archive",
+    "`pkg-config --static --libs-only-L --libs-only-other libusb-1.0`",
+  }
   links {
-    "usb-1.0",
     "GL",
-    -- "dl",
+    "udev",
     "pthread",
-    "SDL2"
   }
   prebuildcommands {
     "sh ./increment-build.sh"
@@ -199,20 +204,28 @@ filter { "system:linux", "configurations:Dist" }
 -- macOS
 
 filter "system:macosx"
+  includedirs {
+    "../macOS",
+    "../External/SDL2-macOS/SDL2.framework/Headers",
+  }
+
   buildoptions {
-    "`sdl2-config --cflags`",
-    "`pkg-config --cflags libusb-1.0`"
+    "-mmacosx-version-min=12.0",
+    "-F../External/SDL2-macOS",
+    "`pkg-config --cflags libusb-1.0`",
   }
+
   linkoptions {
-    "`sdl2-config --libs`",
-    "`pkg-config --libs libusb-1.0`",
+    "-mmacosx-version-min=12.0",
+    "-F../External/SDL2-macOS",
+    "-framework SDL2",
+    "-Wl,-rpath,@executable_path/../Frameworks",
     "-framework OpenGL",
-    "-framework CoreFoundation"
+    "-framework CoreFoundation",
+    "-Wl,-force_load,`pkg-config --variable=libdir libusb-1.0`/libusb-1.0.a",
+    "`pkg-config --static --libs-only-L --libs-only-other libusb-1.0`",
   }
-  includedirs
-  {
-    "../macOS"
-  }
+
   prebuildcommands {
     "sh ./increment-build.sh"
   }
@@ -227,12 +240,13 @@ filter { "system:macosx", "configurations:Dist" }
   postbuildcommands
   {
     "{RMDIR} \"%{cfg.targetdir}/../app/INLretroGUI.app\"",
-    "{MKDIR} \"%{cfg.targetdir}/../app/INLretroGUI.app\"",
-    "{MKDIR} \"%{cfg.targetdir}/../app/INLretroGUI.app/Contents\"",
     "{MKDIR} \"%{cfg.targetdir}/../app/INLretroGUI.app/Contents/MacOS\"",
     "{MKDIR} \"%{cfg.targetdir}/../app/INLretroGUI.app/Contents/Resources\"",
-    "{COPY} \"../macOS/Info.plist\" \"%{cfg.targetdir}/../app/INLretroGUI.app/Contents\"",
-    "{COPY} \"%{cfg.targetdir}/INLretroGUI\" \"%{cfg.targetdir}/../app/INLretroGUI.app/Contents/MacOS\"",
-    "{COPY} \"../macOS/INL.png\" \"%{cfg.targetdir}/../app/INLretroGUI.app/Contents/Resources\"",
+    "{MKDIR} \"%{cfg.targetdir}/../app/INLretroGUI.app/Contents/Frameworks\"",
+
+    "ditto \"../External/SDL2-macOS/SDL2.framework\" \"%{cfg.targetdir}/../app/INLretroGUI.app/Contents/Frameworks/SDL2.framework\"",
+    "{COPY} \"../macOS/info.plist\" \"%{cfg.targetdir}/../app/INLretroGUI.app/Contents/Info.plist\"",
+    "{COPY} \"../macOS/AppIcon.icns\" \"%{cfg.targetdir}/../app/INLretroGUI.app/Contents/Resources/AppIcon.icns\"",
+    "{COPY} \"%{cfg.targetdir}/INLretroGUI\" \"%{cfg.targetdir}/../app/INLretroGUI.app/Contents/MacOS/INLretroGUI\"",
     "{COPYDIR} \"../INLretro-files/\" \"%{cfg.targetdir}/../app/INLretroGUI.app/Contents/Resources\"",
   }
