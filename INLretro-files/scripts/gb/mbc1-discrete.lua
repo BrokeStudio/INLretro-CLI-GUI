@@ -528,6 +528,8 @@ local function process(process_opts, console_opts)
         else
           log.info("RAM not detected")
         end
+      else
+        log.error("RAM not detected")
       end
     else -- RAM found
       log.success("RAM detected")
@@ -538,7 +540,8 @@ local function process(process_opts, console_opts)
         log.warning("Additional option 'force_wram_test' is ignored when dumping ROM or RAM")
       elseif do_rom_write then
         if wram_size < gb.file_header:get_ram_size() then
-          log.error("On board RAM size is less than ROM header RAM size")
+          log.error("On board RAM size (" ..
+            wram_size .. ") is less than ROM header RAM size (" .. gb.file_header:get_ram_size() .. ")")
           return false
         elseif options.force_wram_test then
           rv = ram_exercise(wram_size, retroprog_id, DEBUG)

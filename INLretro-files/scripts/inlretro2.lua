@@ -337,7 +337,7 @@ local function genesis_exec(process_opts, console_opts)
   local mappers = {
     basic   = require "scripts.genesis.basic",
     ssf2     = require "scripts.genesis.ssf2",
-    -- rainbow   = require "scripts.genesis.rainbow",
+    rainbow = require "scripts.genesis.rainbow",
   }
 
   -- if no mapper provided, use default one (32mb)
@@ -540,6 +540,17 @@ local function main()
   -- check if options has been passed
   if (opts == nil) then
     log.error("options table not found...")
+    do return end
+  end
+
+  -- Sanitize + control
+  if opts.rom_size_kb < 0 then opts.rom_size_kb = 0 end
+  if opts.nes_wram_size_kb < 0 then opts.nes_wram_size_kb = 0 end
+  if opts.nes_prg_rom_size_kb < 0 then opts.nes_prg_rom_size_kb = 0 end
+  if opts.nes_chr_rom_size_kb < 0 then opts.nes_chr_rom_size_kb = 0 end
+
+  if not isempty(opts.rom_dump_file) and not isempty(opts.rom_write_file) then
+    log.error("Both dump and write files provided, only one is possible at a time")
     do return end
   end
 
