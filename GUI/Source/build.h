@@ -1,2 +1,2 @@
 #pragma once
-#define INLRETRO_GUI_BUILD 322
+#define INLRETRO_GUI_BUILD 2
