@@ -117,7 +117,7 @@ private:
     rom.close();
 
     // check if header is valid
-    if (header.bytes[0] != 'N' && header.bytes[1] != 'E' && header.bytes[2] != 'S' && header.bytes[3] != 0x1A)
+    if (header.bytes[0] != 'N' || header.bytes[1] != 'E' || header.bytes[2] != 'S' || header.bytes[3] != 0x1A)
       return false;
     header.isValid = true;
 
