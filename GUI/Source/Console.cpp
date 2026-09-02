@@ -124,6 +124,10 @@ void Console::render_additional_options_popup(t_INLoptions_std *INLoptions, Cons
       if (ImGui::Selectable("bank_table"))
         INLoptions->additional_opts += ",bank_table=0x0000";
 
+    if (INLoptions->console_name == "nes")
+      if (ImGui::Selectable("flash_cic"))
+        INLoptions->additional_opts += ",flash_cic";
+
     trim(INLoptions->additional_opts);
     if (INLoptions->additional_opts != "" && INLoptions->additional_opts.at(0) == ',')
       INLoptions->additional_opts.erase(0, 1);
