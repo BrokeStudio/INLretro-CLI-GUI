@@ -9,7 +9,7 @@ if [ ! -f "$BUILD_FILE" ]; then
 fi
 
 # Lire et valider le contenu
-RAW=$(cat "$BUILD_FILE")
+RAW=$(tr -d '\r\n' < "$BUILD_FILE")
 if echo "$RAW" | grep -qE '^[0-9]+$'; then
     NUM=$RAW
 else

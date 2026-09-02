@@ -7,7 +7,7 @@ if (-not (Test-Path $buildFile)) {
 }
 
 # read and control file content
-$raw = Get-Content $buildFile -Raw
+$raw = (Get-Content $buildFile -Raw).Trim()
 if ($raw -match '^\d+$') {
     $num = [int]$raw
 } else {
