@@ -54,6 +54,14 @@ jobs:
       - name: Build
         run: msbuild INLretro.slnx -nologo -t:rebuild -verbosity:normal -clp:ForceConsoleColor -m -property:Configuration=Dist -p:Platform=${{ matrix.platform.arch }}
 
+      - name: Copy Windows drivers
+        shell: pwsh
+        run: |
+          Copy-Item `
+            -Path "Windows\DriverPackages" `
+            -Destination "Binaries\windows-${{ matrix.platform.binPath }}\Dist\INLretro\DriverPackages" `
+            -Recurse
+
       - name: Upload INLretroGUI
         uses: actions/upload-artifact@v7
         with:
