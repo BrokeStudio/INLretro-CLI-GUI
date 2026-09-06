@@ -1,15 +1,14 @@
 #ifndef _usb_h
 #define _usb_h
 
-
 //Define the target core, only define one of these
 //these defines are made in Makefile
 #ifdef AVR_CORE
-	#include "usbdrv.h"
+  #include "usbdrv.h"
 #endif
 
 #ifdef STM_CORE
-	#include "../source_stm_only/usbstm.h"
+  #include "../source_stm_only/usbstm.h"
 #endif
 
 #include "pinport.h"
@@ -29,10 +28,9 @@
 #include "shared_errors.h"
 #include "shared_dictionaries.h"
 
-
 #define ENDPOINT_BIT   0x80    //Bit 7 of bmRequest type determines endpoint
 #define ENDPOINT_IN    0x80    //In: device-to-host.
-#define ENDPOINT_OUT   0x00    //Out: host-to-device. 
+#define ENDPOINT_OUT   0x00    //Out: host-to-device.
 
 //usbFunctionWrite return values
 //return 0xFF (-1) "STALL" if error

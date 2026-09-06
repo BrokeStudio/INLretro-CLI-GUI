@@ -1,15 +1,13 @@
 #ifndef _ramfuncs_h
 #define _ramfuncs_h
 
-
 #include "pinport.h"
 
 //#define RAMFUNC __attribute__ ((long_call, section (".ramfunctions")))
 //#define RAMFUNC __attribute__ ((long_call, section (".data")))
 
 //void ledRAM(void )  __attribute__ ((section(".data")))
-//__attribute__ ((section(".ram"))) void ledRAM(void ) 
-
+//__attribute__ ((section(".ram"))) void ledRAM(void )
 
 //__attribute__ ((section(".fastrun"), noinline, noclone)) void ledRAM() //david
 //__attribute__ ((section(".ramfunctions"), noinline, noclone )) void ledRAM() //paul works! if in nokeep.ld

@@ -7,7 +7,7 @@
 #include "shared_errors.h"
 #include "stuff.h"
 
-uint8_t nes_call(uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_t *rdata);
+uint8_t nes_call(uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_t* rdata);
 
 void discrete_exp0_prgrom_wr(uint16_t addr, uint8_t data);
 void disc_push_exp0_prgrom_wr(uint16_t addr, uint8_t data);
@@ -23,11 +23,16 @@ void nes_ppu_wr(uint16_t addr, uint8_t data);
 uint8_t nes_dualport_rd(uint16_t addr);
 void nes_dualport_wr(uint16_t addr, uint8_t data);
 // uint8_t	ciram_a10_mirroring( void );
-uint8_t nes_cpu_page_rd_poll(uint8_t *data, uint8_t addrH, uint8_t first, uint8_t last, uint8_t poll);
-uint8_t nes_cpu_page_rd_toggle(uint8_t *data, uint8_t addrH, uint8_t first, uint8_t last, uint8_t poll);
-uint8_t nes_ppu_page_rd_poll(uint8_t *data, uint8_t addrH, uint8_t first, uint8_t last, uint8_t poll);
-uint8_t nes_ppu_page_rd_toggle(uint8_t *data, uint8_t addrH, uint8_t first, uint8_t len, uint8_t poll);
-uint8_t nes_dualport_page_rd_poll(uint8_t *data, uint8_t addrH, uint8_t first, uint8_t len, uint8_t poll);
+uint8_t
+nes_cpu_page_rd_poll(uint8_t* data, uint8_t addrH, uint8_t first, uint8_t last, uint8_t poll);
+uint8_t
+nes_cpu_page_rd_toggle(uint8_t* data, uint8_t addrH, uint8_t first, uint8_t last, uint8_t poll);
+uint8_t
+nes_ppu_page_rd_poll(uint8_t* data, uint8_t addrH, uint8_t first, uint8_t last, uint8_t poll);
+uint8_t
+nes_ppu_page_rd_toggle(uint8_t* data, uint8_t addrH, uint8_t first, uint8_t len, uint8_t poll);
+uint8_t
+nes_dualport_page_rd_poll(uint8_t* data, uint8_t addrH, uint8_t first, uint8_t len, uint8_t poll);
 
 void mmc1_wr(uint16_t addr, uint8_t data, uint8_t reset);
 

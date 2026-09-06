@@ -10,6 +10,6 @@
 #include "shared_dictionaries.h"
 #include "shared_errors.h"
 
-uint8_t dump_buff( buffer *buff ) ;
+uint8_t dump_buff(buffer* buff);
 
 #endif

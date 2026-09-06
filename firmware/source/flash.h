@@ -9,6 +9,6 @@
 #include "shared_dictionaries.h"
 #include "shared_errors.h"
 
-uint8_t flash_buff( buffer *buff ) ;
+uint8_t flash_buff(buffer* buff);
 
 #endif

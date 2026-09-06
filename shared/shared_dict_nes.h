@@ -15,7 +15,7 @@
 //=============================================================================================
 //=============================================================================================
 
-//	OPCODES with no operand and no return value besides SUCCESS/ERROR_CODE
+// OPCODES with no operand and no return value besides SUCCESS/ERROR_CODE
 
 // Discrete board PRG-ROM only write, does not write to mapper
 // This is a /WE controlled write with data latched on rising edge EXP0
@@ -35,7 +35,7 @@
 //  A15 decoded to enable /ROMSEL as it should
 #define NES_CPU_WR 0x02
 
-// #define DISCRETE_EXP0_MAPPER_WR		0x03
+// #define DISCRETE_EXP0_MAPPER_WR  0x03
 
 // write to an MMC1 register, provide bank/address & data
 #define NES_MMC1_WR 0x04
@@ -87,7 +87,7 @@
 #define MMC3S_PRG_FLASH_WR 0x26 // TODO set return lengths for all these functions
 
 //=============================================================================================
-//	OPCODES WITH OPERAND AND RETURN VALUE plus SUCCESS/ERROR_CODE
+// OPCODES WITH OPERAND AND RETURN VALUE plus SUCCESS/ERROR_CODE
 //=============================================================================================
 
 // read from NES CPU ADDRESS
@@ -105,10 +105,10 @@
 // now used to detect old firmware versions so NESmaker folks don't have to update firmware
 #define CIRAM_A10_MIRROR 0x83 // RL=3
 ////returns VERT/HORIZ/1SCNA/1SCNB values:
-//	#define	MIR_1SCNA	0x10
-//	#define	MIR_1SCNB	0x11
-//	#define	MIR_VERT	0x12
-//	#define	MIR_HORZ	0x13
+// #define MIR_1SCNA 0x10
+// #define MIR_1SCNB 0x11
+// #define MIR_VERT 0x12
+// #define MIR_HORZ 0x13
 
 #define NES_DUALPORT_RD 0x84 // RL=3
 

@@ -3,14 +3,14 @@
 // only need this file if connector is present on the device
 #ifdef SEGA_CONN
 
-// #define LOMEM_TIME_MASK 0x84
-#define LOMEM_MASK 0x04 // B26 /ASEL
-#define TIME_MASK 0x80  // B31 /TIME
-#define SEGA_A19_MASK 0x04
+  // #define LOMEM_TIME_MASK 0x84
+  #define LOMEM_MASK 0x04 // B26 /ASEL
+  #define TIME_MASK 0x80  // B31 /TIME
+  #define SEGA_A19_MASK 0x04
 
 // uint16_t sega_bank = 0;
 uint8_t sega_addr_hi = 0;  // A23-A16
-uint16_t sega_addr_lo = 0; //  A15-A0
+uint16_t sega_addr_lo = 0; // A15-A0
 
 //=================================================================================================
 //
@@ -21,83 +21,80 @@ uint16_t sega_addr_lo = 0; //  A15-A0
 //
 //=================================================================================================
 
-/* Desc:Function takes an opcode which was transmitted via USB
- *  then decodes it to call designated function.
- *  shared_dict_sega.h is used in both host and fw to ensure opcodes/names align
- * Pre: Macros must be defined in firmware pinport.h
- *  opcode must be defined in shared_dict_sega.h
- * Post:function call complete.
- * Rtn: SUCCESS if opcode found and completed, error if opcode not present or other problem.
+/* Desc: Function takes an opcode which was transmitted via USB
+ *       then decodes it to call designated function.
+ *       shared_dict_sega.h is used in both host and fw to ensure opcodes/names align
+ * Pre:  Macros must be defined in firmware pinport.h
+ *       opcode must be defined in shared_dict_sega.h
+ * Post: function call complete.
+ * Rtn:  SUCCESS if opcode found and completed, error if opcode not present or other problem.
  */
-uint8_t sega_call(uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_t *rdata)
+uint8_t sega_call(uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_t* rdata)
 {
+  #define RD_LEN 0
+  #define RD0 1
+  #define RD1 2
 
-#define RD_LEN 0
-#define RD0 1
-#define RD1 2
-
-#define BYTE_LEN 1
-#define HWORD_LEN 2
+  #define BYTE_LEN 1
+  #define HWORD_LEN 2
 
   uint16_t temp;
 
-  switch (opcode)
-  {
+  switch(opcode) {
+    case GEN_SET_ADDR_LO:
+      gen_set_addr_lo(operand);
+      break;
 
-  case GEN_SET_ADDR_LO:
-    gen_set_addr_lo(operand);
-    break;
+    case GEN_SET_ADDR_HI:
+      gen_set_addr_hi(operand & 0xff);
+      break;
 
-  case GEN_SET_ADDR_HI:
-    gen_set_addr_hi(operand & 0xff);
-    break;
+    case GEN_SET_ADDR:
+      sega_addr_hi = miscdata;
+      sega_addr_lo = operand;
+      gen_refresh_addr(0);
+      break;
 
-  case GEN_SET_ADDR:
-    sega_addr_hi = miscdata;
-    sega_addr_lo = operand;
-    gen_refresh_addr(0);
-    break;
+    case GEN_ROM_RD:
+      // address high bits must be set before calling GEN_ROM_RD,
+      // using GEN_SET_ADDR_HI
+      rdata[RD_LEN] = HWORD_LEN;
+      temp = gen_rom_rd(operand);
+      rdata[RD0] = temp;
+      rdata[RD1] = temp >> 8;
+      break;
 
-  case GEN_ROM_RD:
-    // address high bits must be set before calling GEN_ROM_RD,
-    // using GEN_SET_ADDR_HI
-    rdata[RD_LEN] = HWORD_LEN;
-    temp = gen_rom_rd(operand);
-    rdata[RD0] = temp;
-    rdata[RD1] = temp >> 8;
-    break;
+    case GEN_ROM_WR:
+      // address must be set before calling GEN_ROM_WR,
+      // using GEN_SET_ADDR_HI and GEN_SET_ADDR_LO, or GEN_SET_ADDR
+      gen_rom_wr(sega_addr_lo, operand);
+      break;
 
-  case GEN_ROM_WR:
-    // address must be set before calling GEN_ROM_WR,
-    // using GEN_SET_ADDR_HI and GEN_SET_ADDR_LO, or GEN_SET_ADDR
-    gen_rom_wr(sega_addr_lo, operand);
-    break;
+    case GEN_RAM_RD:
+      rdata[RD_LEN] = BYTE_LEN;
+      rdata[RD0] = gen_ram_rd(operand);
+      break;
 
-  case GEN_RAM_RD:
-    rdata[RD_LEN] = BYTE_LEN;
-    rdata[RD0] = gen_ram_rd(operand);
-    break;
+    case GEN_RAM_WR:
+      gen_ram_wr(operand, miscdata);
+      break;
 
-  case GEN_RAM_WR:
-    gen_ram_wr(operand, miscdata);
-    break;
+    case GEN_PAGE_RAM_WR_LFSR:
+      gen_ram_page_wr_lfsr(operand, miscdata);
+      break;
 
-  case GEN_PAGE_RAM_WR_LFSR:
-    gen_ram_page_wr_lfsr(operand, miscdata);
-    break;
+    case GEN_TIME_RD:
+      rdata[RD_LEN] = BYTE_LEN;
+      rdata[RD0] = gen_time_rd(operand);
+      break;
 
-  case GEN_TIME_RD:
-    rdata[RD_LEN] = BYTE_LEN;
-    rdata[RD0] = gen_time_rd(operand);
-    break;
+    case GEN_TIME_WR:
+      gen_time_wr(operand, miscdata);
+      break;
 
-  case GEN_TIME_WR:
-    gen_time_wr(operand, miscdata);
-    break;
-
-  default:
-    // opcode doesn't exist
-    return ERR_UNKN_SEGA_OPCODE;
+    default:
+      // opcode doesn't exist
+      return ERR_UNKN_SEGA_OPCODE;
   }
 
   return SUCCESS;
@@ -111,21 +108,19 @@ void gen_refresh_addr(uint8_t force_set_time)
   uint16_t addr_lo = (addr >> 1) & 0xffff;                       // A16-A1
 
   uint8_t time;
-  if (force_set_time)
+  if(force_set_time) {
     time = TIME_MASK;
-  else
+  } else {
     time = (addr >= 0xA13000 && addr <= 0xA130FF) ? 0 : TIME_MASK;
+  }
 
   // TIME (B31), A23-A20, LOMEM (B26/set), A18-A17
   FFADDR_SET(time | (addr_hi & 0x78) | LOMEM_MASK | (addr_hi & 0x03));
 
   // A19
-  if (addr_hi & SEGA_A19_MASK)
-  {
+  if(addr_hi & SEGA_A19_MASK) {
     GEN_A19_HI();
-  }
-  else
-  {
+  } else {
     GEN_A19_LO();
   }
   // use of flip-flop corrupts A16-A1, restore it
@@ -208,8 +203,7 @@ void gen_rom_wr(uint16_t addr_lo, uint16_t data)
   // clear #AS B18 CPU access entire memory map, indicating address bus valid
   GBP_LO();
 
-  if (!time)
-  {
+  if(!time) {
     // clear #C_CE
     GEN_C_CE_LO();
   }
@@ -239,8 +233,7 @@ void gen_rom_wr(uint16_t addr_lo, uint16_t data)
   // set #AS B18 CPU access entire memory map, indicating address bus valid
   GBP_HI();
 
-  if (time)
-  {
+  if(time) {
     gen_refresh_addr(1);
   }
 
@@ -248,18 +241,18 @@ void gen_rom_wr(uint16_t addr_lo, uint16_t data)
   DATA16_IP();
 }
 
-/* Desc:SEGA GENESIS ROM Page Read with optional USB polling
- * /ROMSEL based on romsel arg, EXP0/RESET unaffected
- * if poll is true calls usbdrv.h usbPoll fuction
- * this is needed to keep from timing out when double buffering usb data
- * Pre: snes_init() setup of io pins
- * num_bytes can't exceed 256B page boundary
- * Post:address left on bus
- * data bus left clear
- * data buffer filled starting at first to last
- * Rtn: Index of last byte read
+/* Desc: SEGA GENESIS ROM Page Read with optional USB polling
+ *       /ROMSEL based on romsel arg, EXP0/RESET unaffected
+ *       if poll is true calls usbdrv.h usbPoll fuction
+ *       this is needed to keep from timing out when double buffering usb data
+ * Pre:  snes_init() setup of io pins
+ *       num_bytes can't exceed 256B page boundary
+ * Post: address left on bus
+ *       data bus left clear
+ *       data buffer filled starting at first to last
+ * Rtn:  Index of last byte read
  */
-uint8_t gen_rom_page_rd(uint8_t *data, uint16_t addrH, uint8_t first, uint8_t len)
+uint8_t gen_rom_page_rd(uint8_t* data, uint16_t addrH, uint8_t first, uint8_t len)
 {
   uint8_t i;
   uint16_t cur_addr;
@@ -286,9 +279,7 @@ uint8_t gen_rom_page_rd(uint8_t *data, uint16_t addrH, uint8_t first, uint8_t le
   // clear #C_CE
   GEN_C_CE_LO();
 
-  for (i = 0; i <= len; i++)
-  {
-
+  for(i = 0; i <= len; i++) {
     // /OE needs to toggle in the for loop for the ssf2/rainbow mapper
 
     // clear #C_OE
@@ -331,14 +322,12 @@ uint16_t gen_sst_flash_wr(uint16_t addr_lo, uint16_t data)
   gen_rom_wr(0x0555 << 1, 0x00A0);
   gen_rom_wr(addr_lo, data);
 
-  do
-  {
+  do {
     read = gen_rom_rd(addr_lo);
-    if (read == data)
-    {
+    if(read == data) {
       break;
     }
-  } while (--timeout);
+  } while(--timeout);
 
   return read;
 }
@@ -523,18 +512,18 @@ void gen_ram_wr(uint16_t addr_lo, uint8_t data)
   DATA_IP();
 }
 
-/* Desc:SEGA GENESIS RAM Page Read with optional USB polling
- *  /ROMSEL based on romsel arg, EXP0/RESET unaffected
- * if poll is true calls usbdrv.h usbPoll fuction
- * this is needed to keep from timing out when double buffering usb data
- * Pre: sega_init() setup of io pins
- * num_bytes can't exceed 256B page boundary
- * Post:address left on bus
- *  data bus left clear
- * data buffer filled starting at first to last
- * Rtn: Index of last byte read
+/* Desc: SEGA GENESIS RAM Page Read with optional USB polling
+ *       /ROMSEL based on romsel arg, EXP0/RESET unaffected
+ *       if poll is true calls usbdrv.h usbPoll fuction
+ *       this is needed to keep from timing out when double buffering usb data
+ * Pre:  sega_init() setup of io pins
+ *       num_bytes can't exceed 256B page boundary
+ * Post: address left on bus
+ *       data bus left clear
+ *       data buffer filled starting at first to last
+ * Rtn:  Index of last byte read
  */
-uint8_t gen_ram_page_rd(uint8_t *data, uint16_t addrH, uint8_t first, uint8_t len)
+uint8_t gen_ram_page_rd(uint8_t* data, uint16_t addrH, uint8_t first, uint8_t len)
 {
   uint8_t i;
   uint16_t cur_addr = first;
@@ -563,9 +552,7 @@ uint8_t gen_ram_page_rd(uint8_t *data, uint16_t addrH, uint8_t first, uint8_t le
   // clear #C_OE
   GEN_C_OE_LO();
 
-  for (i = 0; i <= len; i++)
-  {
-
+  for(i = 0; i <= len; i++) {
     // clear #C_CE
     GEN_C_CE_LO();
 
@@ -612,8 +599,7 @@ void gen_ram_page_wr_lfsr(uint16_t addr, uint8_t size_kb)
   // set #C_OE
   GEN_C_OE_HI();
 
-  for (i = 0; i < size; i++)
-  {
+  for(i = 0; i < size; i++) {
     ADDR_SET(addr);
 
     // clear #AS B18 CPU access entire memory map, indicating address bus valid

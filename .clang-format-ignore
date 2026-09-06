@@ -1,0 +1,4 @@
+avr_bootloader/**
+firmware/build_*/**
+firmware/usbdrv_Vusb/**
+firmware/include_stm/**

@@ -11,40 +11,40 @@
 //define the connectors present on each device
 //these are used to exclude unecessary code from devices which don't have the connectors present
 #if defined(AVR_KAZZO) || defined(STM_ADAPTER)
-	#define NES_CONN	//includes famicom as definitions are effectively the same
-	#define SNES_CONN
+  #define NES_CONN //includes famicom as definitions are effectively the same
+  #define SNES_CONN
 #endif
 
 #ifdef STM_NES
-	#define NES_CONN	//famicom isn't actually present but a pin adapter should work
+  #define NES_CONN //famicom isn't actually present but a pin adapter should work
 #endif
 
 //#if defined(STM_INL6) || defined(STM_INL6_PROTO)
 #if defined(STM_INL6)
-	#define NES_CONN	//includes famicom as definitions are effectively the same
-	#define SNES_CONN
-	#define SEGA_CONN
-	#define GB_CONN
-	#define N64_CONN
+  #define NES_CONN //includes famicom as definitions are effectively the same
+  #define SNES_CONN
+  #define SEGA_CONN
+  #define GB_CONN
+  #define N64_CONN
 #endif
 
 #if defined(STM_INL6_PROTO)
-	#define NES_CONN	//includes famicom as definitions are effectively the same
-	#define SNES_CONN
-//	#define SEGA_CONN	//don't feel like fixing these definitions right now..
-	#define GB_CONN
-	#define N64_CONN
+  #define NES_CONN //includes famicom as definitions are effectively the same
+  #define SNES_CONN
+  //	#define SEGA_CONN	//don't feel like fixing these definitions right now..
+  #define GB_CONN
+  #define N64_CONN
 #endif
 
 #ifdef AVR_CORE
-	#include "avr_gpio.h"
-	#include <avr/wdt.h>
+  #include "avr_gpio.h"
+  #include <avr/wdt.h>
 #elif STM_CORE
-	#include <stm32f0xx.h>
-	//STM32 GPIO ports are effectively 16bits wide
-	//Use this type when need an int to hold pin mask
-	#define	GPIO_PinMask	uint16_t
-	#define wdt_reset() 	IWDG->KR = 0x0000AAAA
+  #include <stm32f0xx.h>
+  //STM32 GPIO ports are effectively 16bits wide
+  //Use this type when need an int to hold pin mask
+  #define GPIO_PinMask	uint16_t
+  #define wdt_reset() 	IWDG->KR = 0x0000AAAA
 #endif
 
 //This file contains pinout translations from AVR names to "kazzo" names
@@ -349,8 +349,6 @@ void software_AXL_CLK();
 // EXP9 is shared with LED
 //
 
-
-
 //=============================================================================================
 //
 // PINPORT ABSTRACTION LAYER
@@ -400,7 +398,7 @@ void software_AXL_CLK();
 //  we can generally just ignore this register and use pushpull as AVR does
 //  but using open drain mode makes things like SWIM much simpler to control
 //#define	OTYPER_PP	0x00
-#define	OTYPER_OD	0x01
+#define OTYPER_OD	0x01
 //
 //  GPIOx->OSPEEDR[1:0] 32bit registers control pin driver speed/slew
 //  x0- Low speed (default reset state, except SWD-PA13 default High Spd)
@@ -450,7 +448,6 @@ void software_AXL_CLK();
 //  GPIOx->AFRL/H 2 sets of 32bit registers to determine alternate function
 //  	of GPIO if enabled with MODER registers. Default is AF0 at reset
 
-
 // AVR GPIO are rather simple in comparison to STM32 GPIO:
 //
 // DDRx 8bit direction register
@@ -469,9 +466,6 @@ void software_AXL_CLK();
 // 	read when DDR is clear/IP to get current pin level
 // 	reading when O/P is of little use, as should be value of PORTx
 // 	read only register
-
-
-
 
 //	---------------------------------------------------------------------------------------
 //	CONTROL PORT
@@ -505,387 +499,381 @@ void software_AXL_CLK();
 
 #ifdef STM_INL6_PROTO
 
-	//     PC0  "M2"	mcupinA8
-	#define C0bank 		GPIOA
-	#define C0		(8U)
+  // PC0  "M2"	mcupinA8
+  #define C0bank 		GPIOA
+  #define C0		(8U)
 
-	//     PC6  "CICE" 	mcupinA10
-	#define C6bank 		GPIOA
-	#define C6		(10U)
+  // PC6  "CICE" 	mcupinA10
+  #define C6bank 		GPIOA
+  #define C6		(10U)
 
 #endif
 
 #ifdef STM_INL6
 
-	//     PC0  "M2"	mcupinA10
-	#define C0bank 		GPIOA
-	#define C0		(10U)
+  // PC0  "M2"	mcupinA10
+  #define C0bank 		GPIOA
+  #define C0		(10U)
 
-	//     PC6  "CICE" 	mcupinA13
-	#define C6bank 		GPIOA
-	#define C6		(13U)
+  // PC6  "CICE" 	mcupinA13
+  #define C6bank 		GPIOA
+  #define C6		(13U)
 
 #endif
 
-#if defined (STM_INL6_PROTO) || defined(STM_INL6)
+#if defined(STM_INL6_PROTO) || defined(STM_INL6)
 
-	//     PC1  "ROMSEL"	mcupinA0
-	#define C1bank 		GPIOA
-	#define C1		(0U)
+  // PC1  "ROMSEL"	mcupinA0
+  #define C1bank 		GPIOA
+  #define C1		(0U)
 
-	//     PC2  "PRGRW"	mcupinA1
-	#define C2bank 		GPIOA
-	#define C2		(1U)
+  // PC2  "PRGRW"	mcupinA1
+  #define C2bank 		GPIOA
+  #define C2		(1U)
 
-	//     PC3  "FREE"
-	//     Not defined
-	#define C3nodef
+  // PC3  "FREE"
+  // Not defined
+  #define C3nodef
 
-	//     PC4  "CSRD"	mcupinA2
-	#define C4bank 		GPIOA
-	#define C4		(2U)
+  // PC4  "CSRD"	mcupinA2
+  #define C4bank 		GPIOA
+  #define C4		(2U)
 
-	//     PC5  "CSWR"	mcupinA3
-	#define C5bank 		GPIOA
-	#define C5		(3U)
+  // PC5  "CSWR"	mcupinA3
+  #define C5bank 		GPIOA
+  #define C5		(3U)
 
-	//     PC7  "AHL"
-	//     Not defined
-	#define C7nodef
+  // PC7  "AHL"
+  // Not defined
+  #define C7nodef
 
-	//     PC8  "EXP0" 	mcupinA6
-	#define C8bank 		GPIOA
-	#define C8		(6U)
+  // PC8  "EXP0" 	mcupinA6
+  #define C8bank 		GPIOA
+  #define C8		(6U)
 
-	//     PC9  "LED" 	mcupinB1
-	#define C9bank 		GPIOB
-	#define C9		(1U)
+  // PC9  "LED" 	mcupinB1
+  #define C9bank 		GPIOB
+  #define C9		(1U)
 
-	//     PC10 "IRQ"	mcupinA15
-	#define C10bank 	GPIOA
-	#define C10		(15U)
+  // PC10 "IRQ"	mcupinA15
+  #define C10bank 	GPIOA
+  #define C10		(15U)
 
-	//     PC11 "CIA10" 	mcupinA9
-	#define C11bank 	GPIOA
-	#define C11		(9U)
+  // PC11 "CIA10" 	mcupinA9
+  #define C11bank 	GPIOA
+  #define C11		(9U)
 
-	//     PC12 "BL"
-	//     Not defined
-	#define C12nodef
+  // PC12 "BL"
+  // Not defined
+  #define C12nodef
 
-	//     PC13 "AXL"
-	//     Not defined
-	#define C13nodef
+  // PC13 "AXL"
+  // Not defined
+  #define C13nodef
 
-	//     PC14 "AUDL"	mcupinA4
-	#define C14bank 	GPIOA
-	#define C14		(4U)
+  // PC14 "AUDL"	mcupinA4
+  #define C14bank 	GPIOA
+  #define C14		(4U)
 
-	//     PC15 "AUDR"	mcupinA5
-	#define C15bank 	GPIOA
-	#define C15		(5U)
+  // PC15 "AUDR"	mcupinA5
+  #define C15bank 	GPIOA
+  #define C15		(5U)
 
-	//     PC16 "GBP" 	mcupinA7
-	#define C16bank 	GPIOA
-	#define C16		(7U)
+  // PC16 "GBP" 	mcupinA7
+  #define C16bank 	GPIOA
+  #define C16		(7U)
 
-	//     PC17 "SWD" 	mcupinA13
-	#define C17bank 	GPIOA
-	#define C17		(13U)
+  // PC17 "SWD" 	mcupinA13
+  #define C17bank 	GPIOA
+  #define C17		(13U)
 
-	//     PC18 "SWC" 	mcupinA14
-	#define C18bank 	GPIOA
-	#define C18		(14U)
+  // PC18 "SWC" 	mcupinA14
+  #define C18bank 	GPIOA
+  #define C18		(14U)
 
-	//     PC19 "AFL" 	mcupinB0
-	#define C19bank 	GPIOB
-	#define C19		(0U)
+  // PC19 "AFL" 	mcupinB0
+  #define C19bank 	GPIOB
+  #define C19		(0U)
 
-	//     PC20 "COUT" 	mcupinD2
-	#define C20bank 	GPIOD
-	#define C20		(2U)
+  // PC20 "COUT" 	mcupinD2
+  #define C20bank 	GPIOD
+  #define C20		(2U)
 
-	//     PC21 "FCAPU" 	double mapping of AUDR
-	#define C21bank 	C15bank
-	#define C21		C15
+  // PC21 "FCAPU" 	double mapping of AUDR
+  #define C21bank 	C15bank
+  #define C21		C15
 
-// BROKE STUDIO
-	//     PC22 "EXP5" mcupinB6
-	#define C22bank 	GPIOB
-	#define C22		(6U)
-// BROKE STUDIO
+  // BROKE STUDIO
+  //     PC22 "EXP5" mcupinB6
+  #define C22bank 	GPIOB
+  #define C22		(6U)
+  // BROKE STUDIO
 
-/* NEED MORE UNIQUE names for these pins to not conflict with Data port definitions...
+  /* NEED MORE UNIQUE names for these pins to not conflict with Data port definitions...
  * these changed around from proto to final
-	//     PCxx "D8" 	mcupinB10
-	#define Cxxbank 	GPIOB
-	#define Cxx		(10U)
+  //     PCxx "D8" 	mcupinB10
+  #define Cxxbank 	GPIOB
+  #define Cxx		(10U)
 
-	//     PC22 "D9" 	mcupinB11
-	#define C22bank 	GPIOB
-	#define C22		(11U)
+  //     PC22 "D9" 	mcupinB11
+  #define C22bank 	GPIOB
+  #define C22		(11U)
 
-	//     PC23 "D10" 	mcupinB12
-	#define C23bank 	GPIOB
-	#define C23		(12U)
+  //     PC23 "D10" 	mcupinB12
+  #define C23bank 	GPIOB
+  #define C23		(12U)
 
-	//     PC24 "D11" 	mcupinB13
-	#define C24bank 	GPIOB
-	#define C24		(13U)
+  //     PC24 "D11" 	mcupinB13
+  #define C24bank 	GPIOB
+  #define C24		(13U)
 
-	//     PC25 "D12" 	mcupinB14
-	#define C25bank 	GPIOB
-	#define C25		(14U)
+  //     PC25 "D12" 	mcupinB14
+  #define C25bank 	GPIOB
+  #define C25		(14U)
 
-	//     PC26 "D13" 	mcupinB15
-	#define C26bank 	GPIOB
-	#define C26		(15U)
+  //     PC26 "D13" 	mcupinB15
+  #define C26bank 	GPIOB
+  #define C26		(15U)
 */
 
-
-#define RCC_AHBENR_CTL		(RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIODEN)
-#define RCC_AHBENR_ADDR	 	 RCC_AHBENR_GPIOCEN
-#define RCC_AHBENR_HADDR 	(RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN)
-#define RCC_AHBENR_DATA	 	 RCC_AHBENR_GPIOBEN
-#define RCC_AHBENR_DATA16 	(RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN)
-#define RCC_AHBENR_EXP		(RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN)
-
+  #define RCC_AHBENR_CTL		(RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIODEN)
+  #define RCC_AHBENR_ADDR	 	 RCC_AHBENR_GPIOCEN
+  #define RCC_AHBENR_HADDR 	(RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN)
+  #define RCC_AHBENR_DATA	 	 RCC_AHBENR_GPIOBEN
+  #define RCC_AHBENR_DATA16 	(RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN)
+  #define RCC_AHBENR_EXP		(RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN)
 
 #endif //STM_INL6 & PROTO
-
 
 //STM_NES & STM_ADAPTER, they're predominantly the same
 //AHL-AHLOE, AXL, EXP port, and CIC port are only differences
 //The recommended wiring for STM_ADAPTER to CIC pins brings them even closer together..
 
 #ifdef STM_ADAPTER
-	//     PC13 "AXL"	mcupinA2
-	#define C13bank 	GPIOA
-	#define C13		(2U)
+  // PC13 "AXL"	mcupinA2
+  #define C13bank 	GPIOA
+  #define C13		(2U)
 #endif
 
 #ifdef STM_NES
-	//     PC13 "AXL"
-	//     Not present on STM_NES, it uses this pin for EXP6 instead
-	#define C13nodef
+  // PC13 "AXL"
+  // Not present on STM_NES, it uses this pin for EXP6 instead
+  #define C13nodef
 #endif
 
-#if defined (STM_ADAPTER) || defined(STM_NES)
+#if defined(STM_ADAPTER) || defined(STM_NES)
 
-	//     PC0  "M2"	mcupinA3
-	#define C0bank 		GPIOA
-	#define C0		(3U)
+  // PC0  "M2"	mcupinA3
+  #define C0bank 		GPIOA
+  #define C0		(3U)
 
-	//     PC1  "ROMSEL"	mcupinA4
-	#define C1bank 		GPIOA
-	#define C1		(4U)
+  // PC1  "ROMSEL"	mcupinA4
+  #define C1bank 		GPIOA
+  #define C1		(4U)
 
-	//     PC2  "PRGRW"	mcupinA5
-	#define C2bank 		GPIOA
-	#define C2		(5U)
+  // PC2  "PRGRW"	mcupinA5
+  #define C2bank 		GPIOA
+  #define C2		(5U)
 
-	//     PC3  "FREE"	mcupinA6
-	//     No connection on kazzo/stm adapter (recommend wire connection to CIC KEY DIN (pin34)
-	//     STM NES connects to CIC KEY DIN (pin34) & NTSC 24Mhz Clock
-	#define C3bank 		GPIOA
-	#define C3		(6U)
-#ifdef PURPLE_KAZZO
-	#define C3nodef		//assigned to PAXL instead which is tied to AXL /OE in software
-#endif
+  // PC3  "FREE"	mcupinA6
+  // No connection on kazzo/stm adapter (recommend wire connection to CIC KEY DIN (pin34)
+  // STM NES connects to CIC KEY DIN (pin34) & NTSC 24Mhz Clock
+  #define C3bank 		GPIOA
+  #define C3		(6U)
+  #ifdef PURPLE_KAZZO
+    #define C3nodef //assigned to PAXL instead which is tied to AXL /OE in software
+  #endif
 
-	//     PC4  "CSRD"	mcupinA7
-	#define C4bank 		GPIOA
-	#define C4		(7U)
+  // PC4  "CSRD"	mcupinA7
+  #define C4bank 		GPIOA
+  #define C4		(7U)
 
-	//     PC5  "CSWR"	mcupinB0
-	#define C5bank 		GPIOB
-	#define C5		(0U)
+  // PC5  "CSWR"	mcupinB0
+  #define C5bank 		GPIOB
+  #define C5		(0U)
 
-	//     PC6  "CICE" 	mcupinA10
-	#define C6bank 		GPIOA
-	#define C6		(10U)
+  // PC6  "CICE" 	mcupinA10
+  #define C6bank 		GPIOA
+  #define C6		(10U)
 
-	//     PC7  "AHL"	mcupinB1
-	//     AH Flipflop /OE is grounded on kazzo/stmadapter
-	//     AH Flipflop /OE is tied to CLK with this "AHL_OEN" signal
-	#define C7bank 		GPIOB
-	#define C7		(1U)
+  // PC7  "AHL"	mcupinB1
+  // AH Flipflop /OE is grounded on kazzo/stmadapter
+  // AH Flipflop /OE is tied to CLK with this "AHL_OEN" signal
+  #define C7bank 		GPIOB
+  #define C7		(1U)
 
-	//     PC8  "EXP0" 	mcupinA0
-	#define C8bank 		GPIOA
-	#define C8		(0U)
+  // PC8  "EXP0" 	mcupinA0
+  #define C8bank 		GPIOA
+  #define C8		(0U)
 
-	//     PC9  "LED" 	mcupinC13
-	//     This is also EXP9 on kazzo, stm adapter, and stm NES
-	#define C9bank 		GPIOC
-	#define C9		(13U)
+  // PC9  "LED" 	mcupinC13
+  // This is also EXP9 on kazzo, stm adapter, and stm NES
+  #define C9bank 		GPIOC
+  #define C9		(13U)
 
-	//     PC10 "IRQ"	mcupinA15
-	#define C10bank 	GPIOA
-	#define C10		(15U)
+  // PC10 "IRQ"	mcupinA15
+  #define C10bank 	GPIOA
+  #define C10		(15U)
 
-	//     PC11 "CIA10" 	mcupinA13
-	//     This is also SWDIO pin
-	#define C11bank 	GPIOA
-	#define C11		(13U)
+  // PC11 "CIA10" 	mcupinA13
+  // This is also SWDIO pin
+  #define C11bank 	GPIOA
+  #define C11		(13U)
 
-	//     PC12 "BL"
-	//     Not defined because it's an MCU dedicated pin44 "BOOT0"
-	#define C12nodef
+  // PC12 "BL"
+  // Not defined because it's an MCU dedicated pin44 "BOOT0"
+  #define C12nodef
 
-	//     PC13 "AXL"
-	//     Differs between STM_ADAPTER and STM_NES so defined above
+  // PC13 "AXL"
+  // Differs between STM_ADAPTER and STM_NES so defined above
 
-	//     PC14 "AUDL"
-	//     Not defined
-	#define C14nodef
+  // PC14 "AUDL"
+  // Not defined
+  #define C14nodef
 
-	//     PC15 "AUDR"
-	//     Not defined
-	#define C15nodef
+  // PC15 "AUDR"
+  // Not defined
+  #define C15nodef
 
-	//     PC16 "GBP"
-	//     Not defined
-	#define C16nodef
+  // PC16 "GBP"
+  // Not defined
+  #define C16nodef
 
-	//     PC17 "SWD" 	mcupinA13
-	//     Not defined due to shared with CIRAM A10
-	#define C17nodef
+  // PC17 "SWD" 	mcupinA13
+  // Not defined due to shared with CIRAM A10
+  #define C17nodef
 
-	//     PC18 "SWC" 	mcupinA14
-	//     This has no connection on STM_ADAPTER, recommended wire connection to CIC KEY DOUT (pin35)
-	//     STM_NES connects this to CIC KEY DOUT
-	//     PROBLEM...  INL STM8 CIC cuts mcu pins by wire ORing RESET & DOUT...
-	#define C18bank 	GPIOA
-	#define C18		(14U)
+  // PC18 "SWC" 	mcupinA14
+  // This has no connection on STM_ADAPTER, recommended wire connection to CIC KEY DOUT (pin35)
+  // STM_NES connects this to CIC KEY DOUT
+  // PROBLEM...  INL STM8 CIC cuts mcu pins by wire ORing RESET & DOUT...
+  #define C18bank 	GPIOA
+  #define C18		(14U)
 
-	//     PC19 "AFL"
-	//     Not defined
-	#define C19nodef
+  // PC19 "AFL"
+  // Not defined
+  #define C19nodef
 
-	//     PC20 "COUT"
-	//     Not defined but maybe it should be in place of SWC..
-	#define C20nodef
+  // PC20 "COUT"
+  // Not defined but maybe it should be in place of SWC..
+  #define C20nodef
 
-	//     PC21 "FCAPU" 	double mapping of EXP0
-	#define C21bank 	C8bank
-	#define C21		C8
+  // PC21 "FCAPU" 	double mapping of EXP0
+  #define C21bank 	C8bank
+  #define C21		C8
 
   // BROKE STUDIO
-	//     PC22 "EXP5" mcupinB6
-	#define C22bank 	GPIOB
-	#define C22		(6U)
-// BROKE STUDIO
+  //     PC22 "EXP5" mcupinB6
+  #define C22bank 	GPIOB
+  #define C22		(6U)
+  // BROKE STUDIO
 
-#define RCC_AHBENR_CTL	(RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIOCEN)
-#define RCC_AHBENR_ADDR	(RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN)
-#define RCC_AHBENR_DATA	 RCC_AHBENR_GPIOBEN
+  #define RCC_AHBENR_CTL	(RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIOCEN)
+  #define RCC_AHBENR_ADDR	(RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN)
+  #define RCC_AHBENR_DATA	 RCC_AHBENR_GPIOBEN
 
-#endif	//STM_ADAPTER & STM_NES
-
+#endif //STM_ADAPTER & STM_NES
 
 #ifdef AVR_KAZZO
 
-	//     PC0  "M2"	mcupinC0
-	#define C0bank 		GPIOC
-	#define C0		(0U)
+  // PC0  "M2"	mcupinC0
+  #define C0bank 		GPIOC
+  #define C0		(0U)
 
-	//     PC1  "ROMSEL"	mcupinC1
-	#define C1bank 		GPIOC
-	#define C1		(1U)
+  // PC1  "ROMSEL"	mcupinC1
+  #define C1bank 		GPIOC
+  #define C1		(1U)
 
-	//     PC2  "PRGRW"	mcupinC2
-	#define C2bank 		GPIOC
-	#define C2		(2U)
+  // PC2  "PRGRW"	mcupinC2
+  #define C2bank 		GPIOC
+  #define C2		(2U)
 
-	//     PC3  "FREE"	mcupinC3
-	#define C3bank 		GPIOC
-	#define C3		(3U)
-#ifdef PURPLE_KAZZO
-	#define C3nodef		//assigned to PAXL instead which is tied to AXL /OE in software
-#endif
+  // PC3  "FREE"	mcupinC3
+  #define C3bank 		GPIOC
+  #define C3		(3U)
+  #ifdef PURPLE_KAZZO
+    #define C3nodef //assigned to PAXL instead which is tied to AXL /OE in software
+  #endif
 
-	//     PC4  "CSRD"	mcupinC4
-	#define C4bank 		GPIOC
-	#define C4		(4U)
+  // PC4  "CSRD"	mcupinC4
+  #define C4bank 		GPIOC
+  #define C4		(4U)
 
-	//     PC5  "CSWR"	mcupinC5
-	#define C5bank 		GPIOC
-	#define C5		(5U)
+  // PC5  "CSWR"	mcupinC5
+  #define C5bank 		GPIOC
+  #define C5		(5U)
 
-	//     PC6  "CICE" 	mcupinC6
-	#define C6bank 		GPIOC
-	#define C6		(6U)
+  // PC6  "CICE" 	mcupinC6
+  #define C6bank 		GPIOC
+  #define C6		(6U)
 
-	//     PC7  "AHL"	mcupinC7
-	#define C7bank 		GPIOC
-	#define C7		(7U)
+  // PC7  "AHL"	mcupinC7
+  #define C7bank 		GPIOC
+  #define C7		(7U)
 
-	//     PC8  "EXP0" 	mcupinD0
-	#define C8bank 		GPIOD
-	#define C8		(0U)
+  // PC8  "EXP0" 	mcupinD0
+  #define C8bank 		GPIOD
+  #define C8		(0U)
 
-	//     PC9  "LED" 	mcupinD1
-	#define C9bank 		GPIOD
-	#define C9		(1U)
+  // PC9  "LED" 	mcupinD1
+  #define C9bank 		GPIOD
+  #define C9		(1U)
 
-	//     PC10 "IRQ"	mcupinD3
-	#define C10bank 	GPIOD
-	#define C10		(3U)
+  // PC10 "IRQ"	mcupinD3
+  #define C10bank 	GPIOD
+  #define C10		(3U)
 
-	//     PC11 "CIA10" 	mcupinD5
-	#define C11bank 	GPIOD
-	#define C11		(5U)
+  // PC11 "CIA10" 	mcupinD5
+  #define C11bank 	GPIOD
+  #define C11		(5U)
 
-	//     PC12 "BL"	mcupinD6
-	#define C12bank 	GPIOD
-	#define C12		(6U)
+  // PC12 "BL"	mcupinD6
+  #define C12bank 	GPIOD
+  #define C12		(6U)
 
-	//     PC13 "AXL"	mcupinD7	//PURPLE KAZZO uses this for /OE only
-	#define C13bank 	GPIOD
-	#define C13		(7U)
+  // PC13 "AXL"	mcupinD7	//PURPLE KAZZO uses this for /OE only
+  #define C13bank 	GPIOD
+  #define C13		(7U)
 
-	//     PC14 "AUDL"
-	//     not defined
-	#define C14nodef
+  // PC14 "AUDL"
+  // not defined
+  #define C14nodef
 
-	//     PC15 "AUDR"
-	//     not defined
-	#define C15nodef
+  // PC15 "AUDR"
+  // not defined
+  #define C15nodef
 
-	//     PC16 "GBP"
-	//     not defined
-	#define C16nodef
+  // PC16 "GBP"
+  // not defined
+  #define C16nodef
 
-	//     PC17 "SWD"
-	//     not defined
-	#define C17nodef
+  // PC17 "SWD"
+  // not defined
+  #define C17nodef
 
-	//     PC18 "SWC"
-	//     not defined
-	#define C18nodef
+  // PC18 "SWC"
+  // not defined
+  #define C18nodef
 
-	//     PC19 "AFL"
-	//     not defined
-	#define C19nodef
+  // PC19 "AFL"
+  // not defined
+  #define C19nodef
 
-	//     PC20 "COUT"
-	//     not defined
-	#define C20nodef
+  // PC20 "COUT"
+  // not defined
+  #define C20nodef
 
-	//     PC21 "FCAPU" 	double mapping of EXP0
-	#define C21bank 	C8bank
-	#define C21		C8
+  // PC21 "FCAPU" 	double mapping of EXP0
+  #define C21bank 	C8bank
+  #define C21		C8
 
-// BROKE STUDIO
-	//     PC21 "???"
-	//     not defined
-	#define C22nodef
-// BROKE STUDIO
-
+  // BROKE STUDIO
+  //     PC21 "???"
+  //     not defined
+  #define C22nodef
+  // BROKE STUDIO
 
 #endif //AVR_KAZZO
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //	PORT C pin mappings
@@ -1022,51 +1010,49 @@ void software_AXL_CLK();
 
 #ifdef STM_CORE
 
-#define CTL_IP_PU(bank, pin)		bank->MODER &= ~(MODER_OP<<(pin*2)); bank->PUPDR |=  (PUPDR_PU<<(pin*2))
-#define CTL_IP_FL(bank, pin)		bank->MODER &= ~(MODER_OP<<(pin*2)); bank->PUPDR &= ~(PUPDR_PU<<(pin*2))
-#define CTL_OP(bank, pin)		bank->MODER |=  (MODER_OP<<(pin*2))
-#define CTL_OD(bank, pin)		bank->OTYPER |=  (OTYPER_OD<<(pin))	//open drain has no effect when pin is input
-#define CTL_PP(bank, pin)		bank->OTYPER &= ~(OTYPER_OD<<(pin))
-#define CTL_SET_LO(bank, pin)		bank->BRR = 1<<pin
-#define CTL_SET_HI(bank, pin)		bank->BSRR = 1<<pin
-#define CTL_RD(bank, pin, val)		val = (bank->IDR & (1<<pin))
-	//NOTE: STM registers are 16bit "halfwords" so must provide a 16bit val
+  #define CTL_IP_PU(bank, pin)		bank->MODER &= ~(MODER_OP<<(pin*2)); bank->PUPDR |=  (PUPDR_PU<<(pin*2))
+  #define CTL_IP_FL(bank, pin)		bank->MODER &= ~(MODER_OP<<(pin*2)); bank->PUPDR &= ~(PUPDR_PU<<(pin*2))
+  #define CTL_OP(bank, pin)		bank->MODER |=  (MODER_OP<<(pin*2))
+  #define CTL_OD(bank, pin)		bank->OTYPER |=  (OTYPER_OD<<(pin))	//open drain has no effect when pin is input
+  #define CTL_PP(bank, pin)		bank->OTYPER &= ~(OTYPER_OD<<(pin))
+  #define CTL_SET_LO(bank, pin)		bank->BRR = 1<<pin
+  #define CTL_SET_HI(bank, pin)		bank->BSRR = 1<<pin
+  #define CTL_RD(bank, pin, val)		val = (bank->IDR & (1<<pin))
+  //NOTE: STM registers are 16bit "halfwords" so must provide a 16bit val
 
-#define CTL_ENABLE()	RCC->AHBENR |= RCC_AHBENR_CTL
+  #define CTL_ENABLE()	RCC->AHBENR |= RCC_AHBENR_CTL
 
 #endif //STM_CORE
 
 #ifdef AVR_CORE
 
-#define CTL_IP_PU(bank, pin)		bank->DDR &= ~(1<<pin); bank->PORT |=  (1<<pin)
-#define CTL_IP_FL(bank, pin)		bank->DDR &= ~(1<<pin); bank->PORT &= ~(1<<pin)
-#define CTL_OP(bank, pin)		bank->DDR |=  (1<<pin)
-#define CTL_SET_LO(bank, pin)		bank->PORT &= ~(1<<pin)
-#define CTL_SET_HI(bank, pin)		bank->PORT |=  (1<<pin)
-#define CTL_RD(bank, pin, val)		val = (uint16_t) (bank->PIN & (1<<pin))
+  #define CTL_IP_PU(bank, pin)		bank->DDR &= ~(1<<pin); bank->PORT |=  (1<<pin)
+  #define CTL_IP_FL(bank, pin)		bank->DDR &= ~(1<<pin); bank->PORT &= ~(1<<pin)
+  #define CTL_OP(bank, pin)		bank->DDR |=  (1<<pin)
+  #define CTL_SET_LO(bank, pin)		bank->PORT &= ~(1<<pin)
+  #define CTL_SET_HI(bank, pin)		bank->PORT |=  (1<<pin)
+  #define CTL_RD(bank, pin, val)		val = (uint16_t) (bank->PIN & (1<<pin))
 
-#define CTL_ENABLE()			//nothing to be done for AVR
+  #define CTL_ENABLE() //nothing to be done for AVR
 
-
-#endif	//AVR_CORE
-
+#endif //AVR_CORE
 
 // CONTROL PORT MACROS to simplify flipflop operations
 //
 
 //#ifndef STM_INL6
-#if !defined (STM_INL6_PROTO) && !defined(STM_INL6)
+#if !defined(STM_INL6_PROTO) && !defined(STM_INL6)
 
-	#ifdef GREEN_KAZZO
-		#define AHL_CLK()      software_AHL_CLK()
-		#define AXL_CLK()      software_AXL_CLK()
-	#elif defined PURPLE_KAZZO
-		#define AHL_CLK()      CTL_SET_HI(AHLbank, AHL); CTL_SET_LO(AHLbank, AHL)
-		#define AXL_CLK()      CTL_SET_HI(FREEbank, FREE); CTL_SET_LO(FREEbank, FREE)
-	#else	//STM_NES ties AHL to the flipflop's /OE pin as well, so default should be low when address bus is enabled
-		#define AHL_CLK()      CTL_SET_HI(AHLbank, AHL); CTL_SET_LO(AHLbank, AHL)
-		#define AXL_CLK()      CTL_SET_HI(AXLbank, AXL); CTL_SET_LO(AXLbank, AXL)
-	#endif
+  #ifdef GREEN_KAZZO
+    #define AHL_CLK()      software_AHL_CLK()
+    #define AXL_CLK()      software_AXL_CLK()
+  #elif defined PURPLE_KAZZO
+    #define AHL_CLK()      CTL_SET_HI(AHLbank, AHL); CTL_SET_LO(AHLbank, AHL)
+    #define AXL_CLK()      CTL_SET_HI(FREEbank, FREE); CTL_SET_LO(FREEbank, FREE)
+  #else //STM_NES ties AHL to the flipflop's /OE pin as well, so default should be low when address bus is enabled
+    #define AHL_CLK()      CTL_SET_HI(AHLbank, AHL); CTL_SET_LO(AHLbank, AHL)
+    #define AXL_CLK()      CTL_SET_HI(AXLbank, AXL); CTL_SET_LO(AXLbank, AXL)
+  #endif
 #endif
 
 //	---------------------------------------------------------------------------------------
@@ -1086,87 +1072,83 @@ void software_AXL_CLK();
 //
 #ifdef STM_INL6
 
-	//All 8bits are on upper byte of GPIOB inorder
-	//PB8-15 map to D0-7
-	//PB2-7 map to D8-13
-	//PA9-10 map to D14-15 (unchanged from prototype)
-	#define Dbank 		GPIOB
+  //All 8bits are on upper byte of GPIOB inorder
+  //PB8-15 map to D0-7
+  //PB2-7 map to D8-13
+  //PA9-10 map to D14-15 (unchanged from prototype)
+  #define Dbank 		GPIOB
 
-	//IP and OP assume MODER[1] is clear (ie not set to Alt Func)
-	//also assume PUPDR is reset default floating
-	#define DATA_IP_PU()	Dbank->MODER &= ~(MODER_OP_ALL & 0xFFFF0000); Dbank->PUPDR |= (PUPDR_PU_ALL & 0xFFFF0000)
-	#define DATA_IP()	Dbank->MODER &= ~(MODER_OP_ALL & 0xFFFF0000)
-	#define DATA_OP()	Dbank->MODER |=  (MODER_OP_ALL & 0xFFFF0000)
-	#define DATA_SET(data)	Dbank->ODR = (Dbank->ODR & 0x00FF) | (data<<8)
-	#define DATA_RD(data)	data = (Dbank->IDR>>8) & 0x00FF
+  //IP and OP assume MODER[1] is clear (ie not set to Alt Func)
+  //also assume PUPDR is reset default floating
+  #define DATA_IP_PU()	Dbank->MODER &= ~(MODER_OP_ALL & 0xFFFF0000); Dbank->PUPDR |= (PUPDR_PU_ALL & 0xFFFF0000)
+  #define DATA_IP()	Dbank->MODER &= ~(MODER_OP_ALL & 0xFFFF0000)
+  #define DATA_OP()	Dbank->MODER |=  (MODER_OP_ALL & 0xFFFF0000)
+  #define DATA_SET(data)	Dbank->ODR = (Dbank->ODR & 0x00FF) | (data<<8)
+  #define DATA_RD(data)	data = (Dbank->IDR>>8) & 0x00FF
 
-	#define DATA_EN_CLK()	RCC->AHBENR |= RCC_AHBENR_DATA
-	#define DATA_ENABLE()	DATA_EN_CLK(); DATA_IP_PU();
+  #define DATA_EN_CLK()	RCC->AHBENR |= RCC_AHBENR_DATA
+  #define DATA_ENABLE()	DATA_EN_CLK(); DATA_IP_PU();
 
-
-#endif	//STM_INL6
+#endif //STM_INL6
 
 #ifdef STM_INL6_PROTO
 
-	//All 8bits are on GPIOB inorder, but mapped to bits9-2 for 5v tolerance
-	//I get why I designed it that way so D8-13 could follow in order..
-	//But with D8-15 required to be broken up anyways, perhaps it would have
-	//made more sense to map D0-7 to bits 9-15 so byte access could be performed
-	//without shifting on Data7-0...
-	//This is what I did for final production version v2.0 above
-	#define Dbank 		GPIOB
+  //All 8bits are on GPIOB inorder, but mapped to bits9-2 for 5v tolerance
+  //I get why I designed it that way so D8-13 could follow in order..
+  //But with D8-15 required to be broken up anyways, perhaps it would have
+  //made more sense to map D0-7 to bits 9-15 so byte access could be performed
+  //without shifting on Data7-0...
+  //This is what I did for final production version v2.0 above
+  #define Dbank 		GPIOB
 
-	//IP and OP assume MODER[1] is clear (ie not set to Alt Func)
-	//also assume PUPDR is reset default floating
-	#define DATA_IP_PU()	Dbank->MODER &= ~(MODER_OP_ALL & 0x000FFFF0); Dbank->PUPDR |= (PUPDR_PU_ALL & 0x000FFFF0)
-	#define DATA_IP()	Dbank->MODER &= ~(MODER_OP_ALL & 0x000FFFF0)
-	#define DATA_OP()	Dbank->MODER |=  (MODER_OP_ALL & 0x000FFFF0)
-	#define DATA_SET(data)	Dbank->ODR = (Dbank->ODR & 0xFC03) | (data<<2)
-	#define DATA_RD(data)	data = (Dbank->IDR>>2) & 0x00FF
+  //IP and OP assume MODER[1] is clear (ie not set to Alt Func)
+  //also assume PUPDR is reset default floating
+  #define DATA_IP_PU()	Dbank->MODER &= ~(MODER_OP_ALL & 0x000FFFF0); Dbank->PUPDR |= (PUPDR_PU_ALL & 0x000FFFF0)
+  #define DATA_IP()	Dbank->MODER &= ~(MODER_OP_ALL & 0x000FFFF0)
+  #define DATA_OP()	Dbank->MODER |=  (MODER_OP_ALL & 0x000FFFF0)
+  #define DATA_SET(data)	Dbank->ODR = (Dbank->ODR & 0xFC03) | (data<<2)
+  #define DATA_RD(data)	data = (Dbank->IDR>>2) & 0x00FF
 
-	#define DATA_EN_CLK()	RCC->AHBENR |= RCC_AHBENR_DATA
-	#define DATA_ENABLE()	DATA_EN_CLK(); DATA_IP_PU();
+  #define DATA_EN_CLK()	RCC->AHBENR |= RCC_AHBENR_DATA
+  #define DATA_ENABLE()	DATA_EN_CLK(); DATA_IP_PU();
 
-
-#endif	//STM_INL6_PROTO
+#endif //STM_INL6_PROTO
 
 #if defined(STM_ADAPTER) || defined(STM_NES)
 
-	//All 8bits are on GPIOB in order, but mapped to bits15-8
-	#define Dbank 		GPIOB
+  //All 8bits are on GPIOB in order, but mapped to bits15-8
+  #define Dbank 		GPIOB
 
-	//IP and OP assume MODER[1] is clear (ie not set to Alt Func)
-	//also assume PUPDR is reset default floating
-//TODO for input MODER=00 why not just clear both bits???
-	#define DATA_IP_PU()	Dbank->MODER &= ~(MODER_OP_ALL & 0xFFFF0000); Dbank->PUPDR |= (PUPDR_PU_ALL & 0xFFFF0000)
-	#define DATA_IP()	Dbank->MODER &= ~(MODER_OP_ALL & 0xFFFF0000)
-	#define DATA_OP()	Dbank->MODER |=  (MODER_OP_ALL & 0xFFFF0000)
-	//TODO create byte wide port structs to grant byte accesses so doesn't need shifted
-	#define DATA_SET(data)	Dbank->ODR = (Dbank->ODR & 0x00FF) | (data<<8)
-//TODO the 0x00FF mask shouldn't be necessary as they're reserved and expected to be clear
-	#define DATA_RD(data)	data = (Dbank->IDR>>8) & 0x00FF
+  //IP and OP assume MODER[1] is clear (ie not set to Alt Func)
+  //also assume PUPDR is reset default floating
+  //TODO for input MODER=00 why not just clear both bits???
+  #define DATA_IP_PU()	Dbank->MODER &= ~(MODER_OP_ALL & 0xFFFF0000); Dbank->PUPDR |= (PUPDR_PU_ALL & 0xFFFF0000)
+  #define DATA_IP()	Dbank->MODER &= ~(MODER_OP_ALL & 0xFFFF0000)
+  #define DATA_OP()	Dbank->MODER |=  (MODER_OP_ALL & 0xFFFF0000)
+  //TODO create byte wide port structs to grant byte accesses so doesn't need shifted
+  #define DATA_SET(data)	Dbank->ODR = (Dbank->ODR & 0x00FF) | (data<<8)
+  //TODO the 0x00FF mask shouldn't be necessary as they're reserved and expected to be clear
+  #define DATA_RD(data)	data = (Dbank->IDR>>8) & 0x00FF
 
-	#define DATA_EN_CLK()	RCC->AHBENR |= RCC_AHBENR_DATA
-	#define DATA_ENABLE()	DATA_EN_CLK(); DATA_IP_PU()
+  #define DATA_EN_CLK()	RCC->AHBENR |= RCC_AHBENR_DATA
+  #define DATA_ENABLE()	DATA_EN_CLK(); DATA_IP_PU()
 
-#endif	//STM_ADAPTER or STM_NES
+#endif //STM_ADAPTER or STM_NES
 
 #ifdef AVR_KAZZO
 
-	//All 8bits are on GPIOB aligned perfectly
-	#define Dbank 		GPIOB
+  //All 8bits are on GPIOB aligned perfectly
+  #define Dbank 		GPIOB
 
-	#define DATA_SET(data) Dbank->PORT = data
-	#define DATA_IP_PU()   Dbank->DDR = 0x00; DATA_SET(0xFF)
-	#define DATA_IP()      Dbank->DDR = 0x00
-	#define DATA_OP()      Dbank->DDR = 0xFF
-	#define DATA_RD(data)  data = Dbank->PIN
+  #define DATA_SET(data) Dbank->PORT = data
+  #define DATA_IP_PU()   Dbank->DDR = 0x00; DATA_SET(0xFF)
+  #define DATA_IP()      Dbank->DDR = 0x00
+  #define DATA_OP()      Dbank->DDR = 0xFF
+  #define DATA_RD(data)  data = Dbank->PIN
 
-	#define DATA_ENABLE()	DATA_IP_PU()
+  #define DATA_ENABLE()	DATA_IP_PU()
 
-#endif	//AVR_KAZZO
-
-
+#endif //AVR_KAZZO
 
 //	---------------------------------------------------------------------------------------
 //	ADDRESS PORT 16bit
@@ -1186,71 +1168,70 @@ void software_AXL_CLK();
 
 #if defined(STM_INL6_PROTO) || defined(STM_INL6)
 
-	//All 16bits are on GPIOC in perfect alignment
-	#define Abank 		GPIOC
+  //All 16bits are on GPIOC in perfect alignment
+  #define Abank 		GPIOC
 
-	#define ADDR_PU()	Abank->PUPDR |=  PUPDR_PU_ALL
-	#define ADDR_IP()	Abank->MODER &= ~MODER_OP_ALL
-	#define ADDR_OP()	Abank->MODER |=  MODER_OP_ALL
-	#define ADDRL(low)	Abank->ODR = (Abank->ODR & 0xFF00) | low
-	#define ADDRH(high)	Abank->ODR = (Abank->ODR & 0x00FF) | (high<<8)
-	//Not sure why but this wasn't working on inl6 detection of vertical mirroring was failing..
-	//seems to not be reading the ODR, maybe getting optimized out..?
-	//works fine on stmad and AVR which have ADDRH behind flipflop
-	//Appears to be working for setting A10, but not A11 reguardless of order of execution..
-	//TODO really these macros should be making byte writes to the registers, not 16bit RMW
-	#define ADDR_SET(hword)	Abank->ODR = hword
-	#define ADDR_CUR	(Abank->ODR)		//can use this to determine current address
-	#define ADDR_RD(hword)	hword = Abank->IDR	//can use this as a function ADDR_RD(data)
-	#define ADDR_VAL	(Abank->IDR)		//can use this to assign:  data = ADDR_VAL
+  #define ADDR_PU()	Abank->PUPDR |=  PUPDR_PU_ALL
+  #define ADDR_IP()	Abank->MODER &= ~MODER_OP_ALL
+  #define ADDR_OP()	Abank->MODER |=  MODER_OP_ALL
+  #define ADDRL(low)	Abank->ODR = (Abank->ODR & 0xFF00) | low
+  #define ADDRH(high)	Abank->ODR = (Abank->ODR & 0x00FF) | (high<<8)
+  //Not sure why but this wasn't working on inl6 detection of vertical mirroring was failing..
+  //seems to not be reading the ODR, maybe getting optimized out..?
+  //works fine on stmad and AVR which have ADDRH behind flipflop
+  //Appears to be working for setting A10, but not A11 reguardless of order of execution..
+  //TODO really these macros should be making byte writes to the registers, not 16bit RMW
+  #define ADDR_SET(hword)	Abank->ODR = hword
+  #define ADDR_CUR	(Abank->ODR)		//can use this to determine current address
+  #define ADDR_RD(hword)	hword = Abank->IDR	//can use this as a function ADDR_RD(data)
+  #define ADDR_VAL	(Abank->IDR)		//can use this to assign:  data = ADDR_VAL
 
-	#define ADDR_EN_CLK()	RCC->AHBENR |= RCC_AHBENR_ADDR
-	#define ADDR_ENABLE()	ADDR_EN_CLK(); ADDR_OP()
+  #define ADDR_EN_CLK()	RCC->AHBENR |= RCC_AHBENR_ADDR
+  #define ADDR_ENABLE()	ADDR_EN_CLK(); ADDR_OP()
 
-#endif	//STM_INL6 & PROTO
+#endif //STM_INL6 & PROTO
 
 #if defined(STM_ADAPTER) || defined(STM_NES)
 
-	// A15-8 are behind AHL flipflop
-	// A7-6 are on GPIO A9-8
-	// A5-0 are on GPIO A7-2
-	#define A76bank 	GPIOA
-	#define A50bank 	GPIOB
+  // A15-8 are behind AHL flipflop
+  // A7-6 are on GPIO A9-8
+  // A5-0 are on GPIO A7-2
+  #define A76bank 	GPIOA
+  #define A50bank 	GPIOB
 
-	#define ADDR_PU()	A76bank->PUPDR |=  (PUPDR_PU_ALL & 0x000F0000); A50bank->PUPDR |=  (PUPDR_PU_ALL & 0x0000FFF0)
-	#define ADDR_IP()	A76bank->MODER &= ~(MODER_OP_ALL & 0x000F0000); A50bank->MODER &= ~(MODER_OP_ALL & 0x0000FFF0)
-	#define ADDR_OP()	A76bank->MODER |=  (MODER_OP_ALL & 0x000F0000); A50bank->MODER |=  (MODER_OP_ALL & 0x0000FFF0)
-	//WARNING!!!  Don't use pre/post increment on passed in argument as macro expands to double inc/decrement variable!!!
-	#define ADDRL(low)	A76bank->ODR = (A76bank->ODR & 0xFCFF) | ((low & 0xC0)<<2);A50bank->ODR = (A50bank->ODR & 0xFF03) | ((low & 0x3F)<<2)
-//clocks must be initialized, Data bus clear
-	#define ADDRH(high)	DATA_OP(); DATA_SET(high); AHL_CLK(); DATA_IP()
-	#define ADDR_SET(hword)	ADDRL(hword); ADDRH(hword>>8)
+  #define ADDR_PU()	A76bank->PUPDR |=  (PUPDR_PU_ALL & 0x000F0000); A50bank->PUPDR |=  (PUPDR_PU_ALL & 0x0000FFF0)
+  #define ADDR_IP()	A76bank->MODER &= ~(MODER_OP_ALL & 0x000F0000); A50bank->MODER &= ~(MODER_OP_ALL & 0x0000FFF0)
+  #define ADDR_OP()	A76bank->MODER |=  (MODER_OP_ALL & 0x000F0000); A50bank->MODER |=  (MODER_OP_ALL & 0x0000FFF0)
+  //WARNING!!!  Don't use pre/post increment on passed in argument as macro expands to double inc/decrement variable!!!
+  #define ADDRL(low)	A76bank->ODR = (A76bank->ODR & 0xFCFF) | ((low & 0xC0)<<2);A50bank->ODR = (A50bank->ODR & 0xFF03) | ((low & 0x3F)<<2)
+  //clocks must be initialized, Data bus clear
+  #define ADDRH(high)	DATA_OP(); DATA_SET(high); AHL_CLK(); DATA_IP()
+  #define ADDR_SET(hword)	ADDRL(hword); ADDRH(hword>>8)
 
-	#define ADDR_EN_CLK()	RCC->AHBENR |= RCC_AHBENR_ADDR
-	#define ADDR_EN_FF()	CTL_OP(AHLbank, AHL); CTL_SET_LO(AHLbank, AHL)
-	#define ADDR_ENABLE()	DATA_ENABLE(); ADDR_EN_CLK(); ADDR_EN_FF(); ADDR_OP()
+  #define ADDR_EN_CLK()	RCC->AHBENR |= RCC_AHBENR_ADDR
+  #define ADDR_EN_FF()	CTL_OP(AHLbank, AHL); CTL_SET_LO(AHLbank, AHL)
+  #define ADDR_ENABLE()	DATA_ENABLE(); ADDR_EN_CLK(); ADDR_EN_FF(); ADDR_OP()
 
-#endif	//STM_ADAPTER or STM_NES
+#endif //STM_ADAPTER or STM_NES
 
 #ifdef AVR_KAZZO
 
-	// A15-8 are behind AHL flipflop
-	// A7-0 are on GPIOA perfectly aligned
-	#define ALbank 	GPIOA
+  // A15-8 are behind AHL flipflop
+  // A7-0 are on GPIOA perfectly aligned
+  #define ALbank 	GPIOA
 
-	#define ADDR_PU()      	ALbank->PORT = 0xFF
-	#define ADDR_IP()      	ALbank->DDR = 0x00
-	#define ADDR_OP()      	ALbank->DDR = 0xFF
-	#define ADDRL(low)	GPIOA->PORT = low
-//clocks must be initialized, Data bus clear
-	#define ADDRH(high)	DATA_OP(); DATA_SET(high); AHL_CLK(); DATA_IP();
-	#define ADDR_SET(hword)	ADDRL(hword); ADDRH(hword>>8)
+  #define ADDR_PU()      	ALbank->PORT = 0xFF
+  #define ADDR_IP()      	ALbank->DDR = 0x00
+  #define ADDR_OP()      	ALbank->DDR = 0xFF
+  #define ADDRL(low)	GPIOA->PORT = low
+  //clocks must be initialized, Data bus clear
+  #define ADDRH(high)	DATA_OP(); DATA_SET(high); AHL_CLK(); DATA_IP();
+  #define ADDR_SET(hword)	ADDRL(hword); ADDRH(hword>>8)
 
-	#define ADDR_EN_FF()	CTL_OP(AHLbank, AHL); CTL_SET_LO(AHLbank, AHL)
-	#define ADDR_ENABLE()	DATA_ENABLE(); ADDR_EN_FF(); ADDR_OP();
+  #define ADDR_EN_FF()	CTL_OP(AHLbank, AHL); CTL_SET_LO(AHLbank, AHL)
+  #define ADDR_ENABLE()	DATA_ENABLE(); ADDR_EN_FF(); ADDR_OP();
 
-#endif	//AVR_KAZZO
-
+#endif //AVR_KAZZO
 
 //	---------------------------------------------------------------------------------------
 //	FLIPFLOP ADDR PORT 8bit
@@ -1267,20 +1248,18 @@ void software_AXL_CLK();
 
 #if defined(STM_INL6) || defined(STM_INL6_PROTO)
 
-	//These are behind the AFL flipflop similar to how the STM_NES has A8-15 behind AHL flipflop
-	//But the Flipflop's inputs are AD0-7
-	#define FFADDR_ENABLE()		CTL_OP(AFLbank, AFL); CTL_SET_LO(AFLbank, AFL)
-	#define FFADDR_DISABLE()	CTL_IP_PU(AFLbank, AFL);
+  //These are behind the AFL flipflop similar to how the STM_NES has A8-15 behind AHL flipflop
+  //But the Flipflop's inputs are AD0-7
+  #define FFADDR_ENABLE()		CTL_OP(AFLbank, AFL); CTL_SET_LO(AFLbank, AFL)
+  #define FFADDR_DISABLE()	CTL_IP_PU(AFLbank, AFL);
 
-	//FFADDR must already be enabled
-	#define AFL_CLK()		CTL_SET_HI(AFLbank, AFL); CTL_SET_LO(AFLbank, AFL)
+  //FFADDR must already be enabled
+  #define AFL_CLK()		CTL_SET_HI(AFLbank, AFL); CTL_SET_LO(AFLbank, AFL)
 
-	//assumes A0-7 are enabled & outputs, corrupts AD0-15 (sega A1-16), AFL must be enabled & low/clocked
-	#define FFADDR_SET(high)	ADDR_SET(high); AFL_CLK();
+  //assumes A0-7 are enabled & outputs, corrupts AD0-15 (sega A1-16), AFL must be enabled & low/clocked
+  #define FFADDR_SET(high)	ADDR_SET(high); AFL_CLK();
 
-
-#endif	//STM_INL6
-
+#endif //STM_INL6
 
 //	---------------------------------------------------------------------------------------
 //	EXPANSION PORT 8bit pins #1-8
@@ -1310,93 +1289,91 @@ void software_AXL_CLK();
 
 #ifdef STM_INL6_PROTO
 
-	//pins1-5 = GPIOB10-14 (D8-12), pin6 = GPIOA4 (AUDL), pin7 = GPIOB15 (D13), pin8 = GPIOA14 (SWCLK)
-	//these defines are quite the mess currently due to pins all over the place
-	//there is no real benefit to defining this port as byte wide but defining them this way 'degrades'
-	//them to the same quality as AVR making all devices mostly compatible.
-	//These can be redefined as CONTROL PORT for simpler pin granuarity access
-	#define E157bank 	GPIOB
-	#define E68bank 	GPIOA
+  //pins1-5 = GPIOB10-14 (D8-12), pin6 = GPIOA4 (AUDL), pin7 = GPIOB15 (D13), pin8 = GPIOA14 (SWCLK)
+  //these defines are quite the mess currently due to pins all over the place
+  //there is no real benefit to defining this port as byte wide but defining them this way 'degrades'
+  //them to the same quality as AVR making all devices mostly compatible.
+  //These can be redefined as CONTROL PORT for simpler pin granuarity access
+  #define E157bank 	GPIOB
+  #define E68bank 	GPIOA
 
-	#define EXP_PU()	E157bank->PUPDR |= (PUPDR_PU_ALL & 0xFFF00000); E68bank->PUPDR |= (PUPDR_PU_ALL & 0x30000300)
-	#define EXP_IP()	E157bank->MODER &=~(MODER_OP_ALL & 0xFFF00000); E68bank->MODER &=~(MODER_OP_ALL & 0x30000300)
-	#define EXP_OP()	E157bank->MODER |= (MODER_OP_ALL & 0xFFF00000); E68bank->MODER |= (MODER_OP_ALL & 0x30000300)
-	//not sure these bit shift accesses will work if the value passed in is a uint8_t variable...
-	#define EXP_SET(val)	E157bank->ODR = ((E157bank->ODR & 0x03FF) | (val<<10 & 0x7C00) | (val<<9 & 0x8000)); E68bank->ODR = ((E68bank->ODR & 0xBFEF) | (val>>1 & 0x0010) | (val<<7 & 0x4000))
+  #define EXP_PU()	E157bank->PUPDR |= (PUPDR_PU_ALL & 0xFFF00000); E68bank->PUPDR |= (PUPDR_PU_ALL & 0x30000300)
+  #define EXP_IP()	E157bank->MODER &=~(MODER_OP_ALL & 0xFFF00000); E68bank->MODER &=~(MODER_OP_ALL & 0x30000300)
+  #define EXP_OP()	E157bank->MODER |= (MODER_OP_ALL & 0xFFF00000); E68bank->MODER |= (MODER_OP_ALL & 0x30000300)
+  //not sure these bit shift accesses will work if the value passed in is a uint8_t variable...
+  #define EXP_SET(val)	E157bank->ODR = ((E157bank->ODR & 0x03FF) | (val<<10 & 0x7C00) | (val<<9 & 0x8000)); E68bank->ODR = ((E68bank->ODR & 0xBFEF) | (val>>1 & 0x0010) | (val<<7 & 0x4000))
 
-	#define EXP_EN_CLK()	RCC->AHBENR |= RCC_AHBENR_EXP
-	#define EXP_ENABLE()	ADDR_EN_CLK(); EXP_OP()
-	#define EXP_DISABLE()	EXP_PU(); EXP_IP()
+  #define EXP_EN_CLK()	RCC->AHBENR |= RCC_AHBENR_EXP
+  #define EXP_ENABLE()	ADDR_EN_CLK(); EXP_OP()
+  #define EXP_DISABLE()	EXP_PU(); EXP_IP()
 
-#endif	//STM_INL6_PROTO
+#endif //STM_INL6_PROTO
 
 #ifdef STM_INL6
 
-	//pins1-5 = GPIOB2-6 (D8-12), pin6 = GPIOA4 (AUDL), pin7 = GPIOB7 (D13), pin8 = GPIOA14 (SWCLK)
-	//these defines are quite the mess currently due to pins all over the place
-	//there is no real benefit to defining this port as byte wide but defining them this way 'degrades'
-	//them to the same quality as AVR making all devices mostly compatible.
-	//These can be redefined as CONTROL PORT for simpler pin granuarity access
-	#define E157bank 	GPIOB
-	#define E68bank 	GPIOA
+  //pins1-5 = GPIOB2-6 (D8-12), pin6 = GPIOA4 (AUDL), pin7 = GPIOB7 (D13), pin8 = GPIOA14 (SWCLK)
+  //these defines are quite the mess currently due to pins all over the place
+  //there is no real benefit to defining this port as byte wide but defining them this way 'degrades'
+  //them to the same quality as AVR making all devices mostly compatible.
+  //These can be redefined as CONTROL PORT for simpler pin granuarity access
+  #define E157bank 	GPIOB
+  #define E68bank 	GPIOA
 
-	//TODO this is not complete!!!  it's still a copy paste from the prototype
-	#define EXP_PU()	//E157bank->PUPDR |= (PUPDR_PU_ALL & 0xFFF00000); E68bank->PUPDR |= (PUPDR_PU_ALL & 0x30000300)
-	#define EXP_IP()	//E157bank->MODER &=~(MODER_OP_ALL & 0xFFF00000); E68bank->MODER &=~(MODER_OP_ALL & 0x30000300)
-	#define EXP_OP()	//E157bank->MODER |= (MODER_OP_ALL & 0xFFF00000); E68bank->MODER |= (MODER_OP_ALL & 0x30000300)
-	//not sure these bit shift accesses will work if the value passed in is a uint8_t variable...
-	#define EXP_SET(val)	//E157bank->ODR = ((E157bank->ODR & 0x03FF) | (val<<10 & 0x7C00) | (val<<9 & 0x8000)); E68bank->ODR = ((E68bank->ODR & 0xBFEF) | (val>>1 & 0x0010) | (val<<7 & 0x4000))
+  //TODO this is not complete!!!  it's still a copy paste from the prototype
+  #define EXP_PU() //E157bank->PUPDR |= (PUPDR_PU_ALL & 0xFFF00000); E68bank->PUPDR |= (PUPDR_PU_ALL & 0x30000300)
+  #define EXP_IP() //E157bank->MODER &=~(MODER_OP_ALL & 0xFFF00000); E68bank->MODER &=~(MODER_OP_ALL & 0x30000300)
+  #define EXP_OP() //E157bank->MODER |= (MODER_OP_ALL & 0xFFF00000); E68bank->MODER |= (MODER_OP_ALL & 0x30000300)
+  //not sure these bit shift accesses will work if the value passed in is a uint8_t variable...
+  #define EXP_SET( \
+    val) //E157bank->ODR = ((E157bank->ODR & 0x03FF) | (val<<10 & 0x7C00) | (val<<9 & 0x8000)); E68bank->ODR = ((E68bank->ODR & 0xBFEF) | (val>>1 & 0x0010) | (val<<7 & 0x4000))
 
-	#define EXP_EN_CLK()	//RCC->AHBENR |= RCC_AHBENR_EXP
-	#define EXP_ENABLE()	//ADDR_EN_CLK(); EXP_OP()
-	#define EXP_DISABLE()	//EXP_PU(); EXP_IP()
+  #define EXP_EN_CLK()  //RCC->AHBENR |= RCC_AHBENR_EXP
+  #define EXP_ENABLE()  //ADDR_EN_CLK(); EXP_OP()
+  #define EXP_DISABLE() //EXP_PU(); EXP_IP()
 
-#endif	//STM_INL6
-
+#endif //STM_INL6
 
 #ifdef STM_NES
-	//EXP1-3,6 has dedicated mcu pin
-	// EXP1:PA1, EXP2:PC14, EXP3:PC15, EXP6:PA2
-	//EXP4-5,7-8 connect to A4-7
-	// EXP4:A4->PB6, EXP5:A5->PB7, EXP7:A6->PA8, EXP8:A7->PA9
-	#define E1678bank 	GPIOA
-	#define E45bank 	GPIOB
-	#define E23bank 	GPIOC
+  //EXP1-3,6 has dedicated mcu pin
+  // EXP1:PA1, EXP2:PC14, EXP3:PC15, EXP6:PA2
+  //EXP4-5,7-8 connect to A4-7
+  // EXP4:A4->PB6, EXP5:A5->PB7, EXP7:A6->PA8, EXP8:A7->PA9
+  #define E1678bank 	GPIOA
+  #define E45bank 	GPIOB
+  #define E23bank 	GPIOC
 
-//TODO
-	#define EXP_PU()//	E157bank->PUPDR |= (PUPDR_PU_ALL & 0xFFF00000); E68bank->PUPDR |= (PUPDR_PU_ALL & 0x30000300)
-	#define EXP_IP()//	E157bank->MODER &=~(MODER_OP_ALL & 0xFFF00000); E68bank->MODER &=~(MODER_OP_ALL & 0x30000300)
-	#define EXP_OP()//	E157bank->MODER |= (MODER_OP_ALL & 0xFFF00000); E68bank->MODER |= (MODER_OP_ALL & 0x30000300)
-	//not sure these bit shift accesses will work if the value passed in is a uint8_t variable...
-	#define EXP_SET(val)//	E157bank->ODR = ((E157bank->ODR & 0x03FF) | (val<<10 & 0x7C00) | (val<<9 & 0x8000)); E68bank->ODR = ((E68bank->ODR & 0xBFEF) | (val>>1 & 0x0010) | (val<<7 & 0x4000))
+  //TODO
+  #define EXP_PU() //	E157bank->PUPDR |= (PUPDR_PU_ALL & 0xFFF00000); E68bank->PUPDR |= (PUPDR_PU_ALL & 0x30000300)
+  #define EXP_IP() //	E157bank->MODER &=~(MODER_OP_ALL & 0xFFF00000); E68bank->MODER &=~(MODER_OP_ALL & 0x30000300)
+  #define EXP_OP() //	E157bank->MODER |= (MODER_OP_ALL & 0xFFF00000); E68bank->MODER |= (MODER_OP_ALL & 0x30000300)
+  //not sure these bit shift accesses will work if the value passed in is a uint8_t variable...
+  #define EXP_SET( \
+    val) //	E157bank->ODR = ((E157bank->ODR & 0x03FF) | (val<<10 & 0x7C00) | (val<<9 & 0x8000)); E68bank->ODR = ((E68bank->ODR & 0xBFEF) | (val>>1 & 0x0010) | (val<<7 & 0x4000))
 
-	#define EXP_EN_CLK()//	RCC->AHBENR |= RCC_AHBENR_EXP
-	#define EXP_ENABLE()//	ADDR_EN_CLK(); EXP_OP()
-	#define EXP_DISABLE()//	EXP_PU(); EXP_IP()
+  #define EXP_EN_CLK()  //	RCC->AHBENR |= RCC_AHBENR_EXP
+  #define EXP_ENABLE()  //	ADDR_EN_CLK(); EXP_OP()
+  #define EXP_DISABLE() //	EXP_PU(); EXP_IP()
 
-#endif	//STM_NES
-
+#endif //STM_NES
 
 #if defined(STM_ADAPTER) || defined(AVR_KAZZO)
 
+  // EXP1-8 are behind AXL flipflop
 
-	// EXP1-8 are behind AXL flipflop
+  //clocks must be initialized, Data bus clear
+  #define EXP_SET(val)	DATA_OP(); DATA_SET(val); AXL_CLK(); DATA_IP()
 
-	//clocks must be initialized, Data bus clear
-	#define EXP_SET(val)	DATA_OP(); DATA_SET(val); AXL_CLK(); DATA_IP()
+  #ifdef PURPLE_KAZZO
+    #define EXP_EN_FF()	CTL_OP(AXLbank, AXL); CTL_SET_LO(AXLbank, AXL); CTL_OP(FREEbank, FREE); CTL_SET_LO(FREEbank, FREE);
+    #define EXP_DISABLE()	CTL_IP_PU(AXLbank, AXL); CTL_IP_PU(FREEbank, FREE)
+  #else
+    #define EXP_EN_FF()	CTL_OP(AXLbank, AXL); CTL_SET_LO(AXLbank, AXL)
+    #define EXP_DISABLE()	CTL_IP_PU(AXLbank, AXL)
+  #endif
 
-#ifdef PURPLE_KAZZO
-	#define EXP_EN_FF()	CTL_OP(AXLbank, AXL); CTL_SET_LO(AXLbank, AXL); CTL_OP(FREEbank, FREE); CTL_SET_LO(FREEbank, FREE);
-	#define	EXP_DISABLE()	CTL_IP_PU(AXLbank, AXL); CTL_IP_PU(FREEbank, FREE)
-#else
-	#define EXP_EN_FF()	CTL_OP(AXLbank, AXL); CTL_SET_LO(AXLbank, AXL)
-	#define	EXP_DISABLE()	CTL_IP_PU(AXLbank, AXL)
-#endif
+  #define EXP_ENABLE()	DATA_ENABLE(); CTL_ENABLE(); EXP_EN_FF()
 
-	#define EXP_ENABLE()	DATA_ENABLE(); CTL_ENABLE(); EXP_EN_FF()
-
-#endif	//AVR_KAZZO or STM_ADAPTER
-
+#endif //AVR_KAZZO or STM_ADAPTER
 
 //	---------------------------------------------------------------------------------------
 //	DATA PORT 16bit
@@ -1416,50 +1393,48 @@ void software_AXL_CLK();
 //
 #ifdef STM_INL6
 
-	//Combine 8bit DATA0-7 and 8bit EXP1-8
-//	//A16-21 are on PB10-15	these also map to EXP1-5, & 7
-//	//A22-23 are on PA9-10 these also map to CIRAM A10 & CIRAM /CE respectively
-//	#define A16_21bank	GPIOB
-//	#define A22_23bank 	GPIOA
-//
-	//D0-7 are on PB8-15, D8-13 are on PB2-7
-	// MSByte: 7654_3210 LSByte: 13-12-11-10_9-8-X-X
-	#define D0_13bank	GPIOB  //all of B except PB0-1
-	//D14-15 are on PA9-10
-	#define D14_15bank	GPIOA
+  //Combine 8bit DATA0-7 and 8bit EXP1-8
+  //	//A16-21 are on PB10-15	these also map to EXP1-5, & 7
+  //	//A22-23 are on PA9-10 these also map to CIRAM A10 & CIRAM /CE respectively
+  //	#define A16_21bank	GPIOB
+  //	#define A22_23bank 	GPIOA
+  //
+  //D0-7 are on PB8-15, D8-13 are on PB2-7
+  // MSByte: 7654_3210 LSByte: 13-12-11-10_9-8-X-X
+  #define D0_13bank	GPIOB  //all of B except PB0-1
+  //D14-15 are on PA9-10
+  #define D14_15bank	GPIOA
 
-//
-//	#define HADDR_PU()	A16_21bank->PUPDR |= (PUPDR_PU_ALL & 0xFFF00000); A22_23bank->PUPDR |= (PUPDR_PU_ALL & 0x003C0000)
-//	#define HADDR_IP()	A16_21bank->MODER &=~(MODER_OP_ALL & 0xFFF00000); A22_23bank->MODER &=~(MODER_OP_ALL & 0x003C0000)
-//	#define HADDR_OP()	A16_21bank->MODER |= (MODER_OP_ALL & 0xFFF00000); A22_23bank->MODER |= (MODER_OP_ALL & 0x003C0000)
-//
-//	#define HADDR_SET(val)	A16_21bank->ODR = ((A16_21bank->ODR&0x03FF) | (val<<10 & 0xFC00)); A22_23bank->ODR = ((A22_23bank->ODR & 0xF9FF) | (val<<3 & 0x0600))
+  //
+  //	#define HADDR_PU()	A16_21bank->PUPDR |= (PUPDR_PU_ALL & 0xFFF00000); A22_23bank->PUPDR |= (PUPDR_PU_ALL & 0x003C0000)
+  //	#define HADDR_IP()	A16_21bank->MODER &=~(MODER_OP_ALL & 0xFFF00000); A22_23bank->MODER &=~(MODER_OP_ALL & 0x003C0000)
+  //	#define HADDR_OP()	A16_21bank->MODER |= (MODER_OP_ALL & 0xFFF00000); A22_23bank->MODER |= (MODER_OP_ALL & 0x003C0000)
+  //
+  //	#define HADDR_SET(val)	A16_21bank->ODR = ((A16_21bank->ODR&0x03FF) | (val<<10 & 0xFC00)); A22_23bank->ODR = ((A22_23bank->ODR & 0xF9FF) | (val<<3 & 0x0600))
 
-	//IP and OP assume MODER[1] is clear (ie not set to Alt Func)
-	//also assume PUPDR is reset default floating
-	#define DATA16_IP()	D0_13bank->MODER &= 0x0000000F; D14_15bank->MODER &= 0xFFC3FFFF
-	#define DATA16_OP()	D0_13bank->MODER |= (MODER_OP_ALL & 0xFFFFFFF0); D14_15bank->MODER |= (MODER_OP_ALL & 0x003C0000)
-	#define DATA16_PU()	D0_13bank->PUPDR |= (PUPDR_PU_ALL & 0xFFFFFFF0); D14_15bank->PUPDR |= (PUPDR_PU_ALL & 0x003C0000)
-//	#define DATA16_IP_PU()	DATA16_IP(); DATA16_PU()
+  //IP and OP assume MODER[1] is clear (ie not set to Alt Func)
+  //also assume PUPDR is reset default floating
+  #define DATA16_IP()	D0_13bank->MODER &= 0x0000000F; D14_15bank->MODER &= 0xFFC3FFFF
+  #define DATA16_OP()	D0_13bank->MODER |= (MODER_OP_ALL & 0xFFFFFFF0); D14_15bank->MODER |= (MODER_OP_ALL & 0x003C0000)
+  #define DATA16_PU()	D0_13bank->PUPDR |= (PUPDR_PU_ALL & 0xFFFFFFF0); D14_15bank->PUPDR |= (PUPDR_PU_ALL & 0x003C0000)
+  //	#define DATA16_IP_PU()	DATA16_IP(); DATA16_PU()
 
-//	#define DATA_SET(data)		Dbank->ODR = (Dbank->ODR & 0x00FF) | (data<<8)
-	#define DATA16L_RD(data) data = ((D0_13bank->IDR >> 8) & 0x00FF)
-	// MSByte: 7654_3210 LSByte: 13-12-11-10_9-8-X-X
-	#define DATA16H_RD(data)	data = ((D0_13bank->IDR>>2)&0x003F) | ((D14_15bank->IDR>>3)&0x00C0)
+  //	#define DATA_SET(data)		Dbank->ODR = (Dbank->ODR & 0x00FF) | (data<<8)
+  #define DATA16L_RD(data) data = ((D0_13bank->IDR >> 8) & 0x00FF)
+  // MSByte: 7654_3210 LSByte: 13-12-11-10_9-8-X-X
+  #define DATA16H_RD(data)	data = ((D0_13bank->IDR>>2)&0x003F) | ((D14_15bank->IDR>>3)&0x00C0)
 
-	#define DATA16L_SET(data) \
+  #define DATA16L_SET(data) \
 		D0_13bank->ODR = (D0_13bank->ODR & 0x00FF) | ((data & 0x00FF) << 8)
 
-	#define DATA16H_SET(data) \
+  #define DATA16H_SET(data) \
 		D0_13bank->ODR = (D0_13bank->ODR & 0xFF03) | ((data & 0x003F) << 2); \
 		D14_15bank->ODR = (D14_15bank->ODR & 0xF9FF) | ((data & 0x00C0) << 3)
 
-	#define DATA16_EN_CLK()	RCC->AHBENR |= RCC_AHBENR_DATA16
-	#define DATA16_ENABLE()	DATA16_EN_CLK(); DATA16_IP(); DATA16_PU()
+  #define DATA16_EN_CLK()	RCC->AHBENR |= RCC_AHBENR_DATA16
+  #define DATA16_ENABLE()	DATA16_EN_CLK(); DATA16_IP(); DATA16_PU()
 
-
-#endif	//STM_INL6
-
+#endif //STM_INL6
 
 //	---------------------------------------------------------------------------------------
 //	HIGH ADDRESS PORT 8bits A16-23
@@ -1482,50 +1457,47 @@ void software_AXL_CLK();
 
 #ifdef STM_INL6_PROTO
 
-	//A16-21 are on PB10-15	these also map to EXP1-5, & 7
-	//A22-23 are on PA9-10 these also map to CIRAM A10 & CIRAM /CE respectively
-	#define A16_21bank	GPIOB
-	#define A22_23bank 	GPIOA
+  //A16-21 are on PB10-15	these also map to EXP1-5, & 7
+  //A22-23 are on PA9-10 these also map to CIRAM A10 & CIRAM /CE respectively
+  #define A16_21bank	GPIOB
+  #define A22_23bank 	GPIOA
 
-	#define HADDR_PU()	A16_21bank->PUPDR |= (PUPDR_PU_ALL & 0xFFF00000); A22_23bank->PUPDR |= (PUPDR_PU_ALL & 0x003C0000)
-	#define HADDR_IP()	A16_21bank->MODER &=~(MODER_OP_ALL & 0xFFF00000); A22_23bank->MODER &=~(MODER_OP_ALL & 0x003C0000)
-	#define HADDR_OP()	A16_21bank->MODER |= (MODER_OP_ALL & 0xFFF00000); A22_23bank->MODER |= (MODER_OP_ALL & 0x003C0000)
+  #define HADDR_PU()	A16_21bank->PUPDR |= (PUPDR_PU_ALL & 0xFFF00000); A22_23bank->PUPDR |= (PUPDR_PU_ALL & 0x003C0000)
+  #define HADDR_IP()	A16_21bank->MODER &=~(MODER_OP_ALL & 0xFFF00000); A22_23bank->MODER &=~(MODER_OP_ALL & 0x003C0000)
+  #define HADDR_OP()	A16_21bank->MODER |= (MODER_OP_ALL & 0xFFF00000); A22_23bank->MODER |= (MODER_OP_ALL & 0x003C0000)
 
-	#define HADDR_SET(val)	A16_21bank->ODR = ((A16_21bank->ODR&0x03FF) | (val<<10 & 0xFC00)); A22_23bank->ODR = ((A22_23bank->ODR & 0xF9FF) | (val<<3 & 0x0600))
+  #define HADDR_SET(val)	A16_21bank->ODR = ((A16_21bank->ODR&0x03FF) | (val<<10 & 0xFC00)); A22_23bank->ODR = ((A22_23bank->ODR & 0xF9FF) | (val<<3 & 0x0600))
 
+  #define HADDR_EN_CLK()	RCC->AHBENR |= RCC_AHBENR_HADDR
+  #define HADDR_ENABLE()	HADDR_EN_CLK(); HADDR_OP()
+  #define HADDR_DISABLE()	HADDR_PU(); HADDR_IP()
 
-
-	#define HADDR_EN_CLK()	RCC->AHBENR |= RCC_AHBENR_HADDR
-	#define HADDR_ENABLE()	HADDR_EN_CLK(); HADDR_OP()
-	#define HADDR_DISABLE()	HADDR_PU(); HADDR_IP()
-
-#endif	//STM_INL6_PROTO
+#endif //STM_INL6_PROTO
 
 #ifdef STM_INL6
 
-	//A16-21 are on PB2-7	these also map to EXP1-5, & 7 (changed from prototype)
-	//A22-23 are on PA9-10 these also map to CIRAM A10 & CIRAM /CE respectively
-	#define A16_21bank	GPIOB
-	#define A22_23bank 	GPIOA
+  //A16-21 are on PB2-7	these also map to EXP1-5, & 7 (changed from prototype)
+  //A22-23 are on PA9-10 these also map to CIRAM A10 & CIRAM /CE respectively
+  #define A16_21bank	GPIOB
+  #define A22_23bank 	GPIOA
 
-	#define HADDR_PU()	A16_21bank->PUPDR |= (PUPDR_PU_ALL & 0x0000FFF0); A22_23bank->PUPDR |= (PUPDR_PU_ALL & 0x003C0000)
-	#define HADDR_IP()	A16_21bank->MODER &=~(MODER_OP_ALL & 0x0000FFF0); A22_23bank->MODER &=~(MODER_OP_ALL & 0x003C0000)
-	#define HADDR_OP()	A16_21bank->MODER |= (MODER_OP_ALL & 0x0000FFF0); A22_23bank->MODER |= (MODER_OP_ALL & 0x003C0000)
+  #define HADDR_PU()	A16_21bank->PUPDR |= (PUPDR_PU_ALL & 0x0000FFF0); A22_23bank->PUPDR |= (PUPDR_PU_ALL & 0x003C0000)
+  #define HADDR_IP()	A16_21bank->MODER &=~(MODER_OP_ALL & 0x0000FFF0); A22_23bank->MODER &=~(MODER_OP_ALL & 0x003C0000)
+  #define HADDR_OP()	A16_21bank->MODER |= (MODER_OP_ALL & 0x0000FFF0); A22_23bank->MODER |= (MODER_OP_ALL & 0x003C0000)
 
-	#define HADDR_SET(val)	A16_21bank->ODR = ((A16_21bank->ODR&0xFF03) | (val<<2 & 0x00FC)); A22_23bank->ODR = ((A22_23bank->ODR & 0xF9FF) | (val<<3 & 0x0600))
+  #define HADDR_SET(val)	A16_21bank->ODR = ((A16_21bank->ODR&0xFF03) | (val<<2 & 0x00FC)); A22_23bank->ODR = ((A22_23bank->ODR & 0xF9FF) | (val<<3 & 0x0600))
 
-	//sega reading D8-15
-	//D8-13  are on PB2-7
-	//D14-15 are on PA9-10
-	#define HDATA_VAL	(((A16_21bank->IDR)&0x00FC)>>2)	| (((A22_23bank->IDR)&0x0600) >>3)
-	//can use this to assign:  data = HDATA_VAL
+  //sega reading D8-15
+  //D8-13  are on PB2-7
+  //D14-15 are on PA9-10
+  #define HDATA_VAL	(((A16_21bank->IDR)&0x00FC)>>2)	| (((A22_23bank->IDR)&0x0600) >>3)
+  //can use this to assign:  data = HDATA_VAL
 
-	#define HADDR_EN_CLK()	RCC->AHBENR |= RCC_AHBENR_HADDR
-	#define HADDR_ENABLE()	HADDR_EN_CLK(); HADDR_OP()
-	#define HADDR_DISABLE()	HADDR_PU(); HADDR_IP()
+  #define HADDR_EN_CLK()	RCC->AHBENR |= RCC_AHBENR_HADDR
+  #define HADDR_ENABLE()	HADDR_EN_CLK(); HADDR_OP()
+  #define HADDR_DISABLE()	HADDR_PU(); HADDR_IP()
 
-#endif	//STM_INL6
-
+#endif //STM_INL6
 
 #ifdef STM_NES
 //HADDR is NOT PRESENT!
@@ -1534,17 +1506,16 @@ void software_AXL_CLK();
 //#else	//AVR_KAZZO or STM_ADAPTER
 #if defined(AVR_KAZZO) || defined(STM_ADAPTER)
 
+  // ADDR16-23 are behind AXL flipflop
 
-	// ADDR16-23 are behind AXL flipflop
+  //clocks must be initialized, Data bus clear
+  #define HADDR_SET(val)	EXP_SET(val)
 
-	//clocks must be initialized, Data bus clear
-	#define HADDR_SET(val)	EXP_SET(val)
+  #define HADDR_EN_FF()	EXP_EN_FF()
+  #define HADDR_ENABLE()	EXP_ENABLE()
+  #define HADDR_DISABLE()	EXP_DISABLE()
 
-	#define HADDR_EN_FF()	EXP_EN_FF()
-	#define HADDR_ENABLE()	EXP_ENABLE()
-	#define	HADDR_DISABLE()	EXP_DISABLE()
-
-#endif	//AVR_KAZZO or STM_ADAPTER
+#endif //AVR_KAZZO or STM_ADAPTER
 
 //	---------------------------------------------------------------------------------------
 //	EXTRA (EXT) PORT
@@ -1575,115 +1546,110 @@ void software_AXL_CLK();
 
 #if STM_INL6_PROTO
 
-	//     PE0  "A0"	mcupinC0
-	#define E0bank 		GPIOC
-	#define E0		(0U)
+  // PE0  "A0"	mcupinC0
+  #define E0bank 		GPIOC
+  #define E0		(0U)
 
-	//     PE1  "D0"	mcupinB2
-	#define E1bank 		GPIOB
-	#define E1		(2U)
+  // PE1  "D0"	mcupinB2
+  #define E1bank 		GPIOB
+  #define E1		(2U)
 
-	//     PE2  "D8"	mcupinB10
-	#define E2bank 		GPIOB
-	#define E2		(10U)
+  // PE2  "D8"	mcupinB10
+  #define E2bank 		GPIOB
+  #define E2		(10U)
 
-	//     PE3  "D9"	mcupinB11
-	#define E3bank 		GPIOB
-	#define E3		(11U)
+  // PE3  "D9"	mcupinB11
+  #define E3bank 		GPIOB
+  #define E3		(11U)
 
-	//     PE4  "D10"	mcupinB12
-	#define E4bank 		GPIOB
-	#define E4		(12U)
-
+  // PE4  "D10"	mcupinB12
+  #define E4bank 		GPIOB
+  #define E4		(12U)
 
 #endif //STM_INL6_PROTO
 
 #ifdef STM_INL6
 
-	//     PE0  "A0"	mcupinC0
-	#define E0bank 		GPIOC
-	#define E0		(0U)
+  // PE0  "A0"	mcupinC0
+  #define E0bank 		GPIOC
+  #define E0		(0U)
 
-	//     PE1  "D0"	mcupinB8
-	#define E1bank 		GPIOB
-	#define E1		(8U)
+  // PE1  "D0"	mcupinB8
+  #define E1bank 		GPIOB
+  #define E1		(8U)
 
-	//     PE2  "D8"	mcupinB2
-	#define E2bank 		GPIOB
-	#define E2		(2U)
+  // PE2  "D8"	mcupinB2
+  #define E2bank 		GPIOB
+  #define E2		(2U)
 
-	//     PE3  "D9"	mcupinB3
-	#define E3bank 		GPIOB
-	#define E3		(3U)
+  // PE3  "D9"	mcupinB3
+  #define E3bank 		GPIOB
+  #define E3		(3U)
 
-	//     PE4  "D10"	mcupinB4
-	#define E4bank 		GPIOB
-	#define E4		(4U)
+  // PE4  "D10"	mcupinB4
+  #define E4bank 		GPIOB
+  #define E4		(4U)
 
 #endif //STM_INL6
 
-
 #ifdef STM_NES
-//TODO BLINDLY COPIED FROM STM6, will not work AS-IS
-//TODO actually do this
+  //TODO BLINDLY COPIED FROM STM6, will not work AS-IS
+  //TODO actually do this
 
-	//     PE0  "A0"	mcupinB2
-	//     			TODO!!!
-	#define E0bank 		GPIOB
-	#define E0		(2U)
+  // PE0  "A0"	mcupinB2
+  // 			TODO!!!
+  #define E0bank 		GPIOB
+  #define E0		(2U)
 
-	//     PE1  "D0"	mcupinB2
-	#define E1bank 		GPIOB
-	#define E1		(2U)
+  // PE1  "D0"	mcupinB2
+  #define E1bank 		GPIOB
+  #define E1		(2U)
 
-	//     PE2  "D8"	mcupinB10
-	#define E2bank 		GPIOB
-	#define E2		(10U)
+  // PE2  "D8"	mcupinB10
+  #define E2bank 		GPIOB
+  #define E2		(10U)
 
-	//     PE3  "D9"	mcupinB11
-	#define E3bank 		GPIOB
-	#define E3		(11U)
+  // PE3  "D9"	mcupinB11
+  #define E3bank 		GPIOB
+  #define E3		(11U)
 
-	//     PE4  "D10"	mcupinB12
-	#define E4bank 		GPIOB
-	#define E4		(12U)
-
+  // PE4  "D10"	mcupinB12
+  #define E4bank 		GPIOB
+  #define E4		(12U)
 
 #endif
 
 #ifdef STM_ADAPTER
 
-	//     PE0  "A0"	mcupinB2
-	#define E0bank 		GPIOB
-	#define E0		(2U)
+  // PE0  "A0"	mcupinB2
+  #define E0bank 		GPIOB
+  #define E0		(2U)
 
-	//     PE1  "D0"	mcupinB8
-	#define E1bank 		GPIOB
-	#define E1		(8U)
+  // PE1  "D0"	mcupinB8
+  #define E1bank 		GPIOB
+  #define E1		(8U)
 
-	#define E2nodef
-	#define E3nodef
-	#define E4nodef
+  #define E2nodef
+  #define E3nodef
+  #define E4nodef
 
-#endif	//STM_ADAPTER
-
+#endif //STM_ADAPTER
 
 #ifdef AVR_KAZZO
 
-	//     PE0  "A0"	mcupinA0
-	#define E0bank 		GPIOA
-	#define E0		(0U)
+  // PE0  "A0"	mcupinA0
+  #define E0bank 		GPIOA
+  #define E0		(0U)
 
-	//     PE1  "D0"	mcupinB0
-	#define E1bank 		GPIOB
-	#define E1		(0U)
+  // PE1  "D0"	mcupinB0
+  #define E1bank 		GPIOB
+  #define E1		(0U)
 
-	#define E2nodef
-	#define E3nodef
-	#define E4nodef
+  #define E2nodef
+  #define E3nodef
+  #define E4nodef
 
 #endif //AVR_KAZZO
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //	PORT E pin mappings
@@ -1697,78 +1663,74 @@ void software_AXL_CLK();
 #define D0bank		E1bank
 
 //JTAG pins for INL6
-#if defined (STM_INL6_PROTO) || defined(STM_INL6)
+#if defined(STM_INL6_PROTO) || defined(STM_INL6)
 
-//TDI
-#define D8 		E2
-#define D8bank		E2bank
+  //TDI
+  #define D8 		E2
+  #define D8bank		E2bank
 
-//TMS
-#define D9 		E3
-#define D9bank		E3bank
+  //TMS
+  #define D9 		E3
+  #define D9bank		E3bank
 
-//TCK
-#define D10 		E4
-#define D10bank		E4bank
+  //TCK
+  #define D10 		E4
+  #define D10bank		E4bank
 
-#endif	//JTAG INL6
+#endif //JTAG INL6
 
 //#ifdef STM_CORE
-#if defined (STM_INL6_PROTO) || defined(STM_INL6)
+#if defined(STM_INL6_PROTO) || defined(STM_INL6)
 
-#define EXT_IP_PU(bank, pin)		bank->MODER &= ~(MODER_OP<<(pin*2)); bank->PUPDR |=  (PUPDR_PU<<(pin*2))
-#define EXT_IP_FL(bank, pin)		bank->MODER &= ~(MODER_OP<<(pin*2)); bank->PUPDR &= ~(PUPDR_PU<<(pin*2))
-#define EXT_OP(bank, pin)		bank->MODER |=  (MODER_OP<<(pin*2))
-#define EXT_OD(bank, pin)		bank->OTYPER |=  (OTYPER_OD<<(pin))	//open drain has no effect when pin is input
-#define EXT_PP(bank, pin)		bank->OTYPER &= ~(OTYPER_OD<<(pin))
-#define EXT_SET_LO(bank, pin)		bank->BRR = 1<<pin
-#define EXT_SET_HI(bank, pin)		bank->BSRR = 1<<pin
-#define EXT_RD(bank, pin, val)		val = (bank->IDR & (1<<pin))
-	//NOTE: STM registers are 16bit "halfwords" so must provide a 16bit val
+  #define EXT_IP_PU(bank, pin)		bank->MODER &= ~(MODER_OP<<(pin*2)); bank->PUPDR |=  (PUPDR_PU<<(pin*2))
+  #define EXT_IP_FL(bank, pin)		bank->MODER &= ~(MODER_OP<<(pin*2)); bank->PUPDR &= ~(PUPDR_PU<<(pin*2))
+  #define EXT_OP(bank, pin)		bank->MODER |=  (MODER_OP<<(pin*2))
+  #define EXT_OD(bank, pin)		bank->OTYPER |=  (OTYPER_OD<<(pin))	//open drain has no effect when pin is input
+  #define EXT_PP(bank, pin)		bank->OTYPER &= ~(OTYPER_OD<<(pin))
+  #define EXT_SET_LO(bank, pin)		bank->BRR = 1<<pin
+  #define EXT_SET_HI(bank, pin)		bank->BSRR = 1<<pin
+  #define EXT_RD(bank, pin, val)		val = (bank->IDR & (1<<pin))
+  //NOTE: STM registers are 16bit "halfwords" so must provide a 16bit val
 
-//each pin needs it's own enable macro
-#define EXT_A0_ENABLE()		ADDR_EN_CLK()	//unnecessarily enables both GPIO banks for STM adapter, oh well
-#define EXT_D0_ENABLE()		DATA_EN_CLK()
-#define EXT_D8_10_ENABLE()	DATA_EN_CLK()
+  //each pin needs it's own enable macro
+  #define EXT_A0_ENABLE()		ADDR_EN_CLK()	//unnecessarily enables both GPIO banks for STM adapter, oh well
+  #define EXT_D0_ENABLE()		DATA_EN_CLK()
+  #define EXT_D8_10_ENABLE()	DATA_EN_CLK()
 
 #endif //STM_CORE
 
+#if defined(STM_NES) || defined(STM_ADAPTER)
 
-#if defined (STM_NES) || defined(STM_ADAPTER)
+  #define EXT_IP_PU(bank, pin)		bank->MODER &= ~(MODER_OP<<(pin*2)); bank->PUPDR |=  (PUPDR_PU<<(pin*2))
+  #define EXT_IP_FL(bank, pin)		bank->MODER &= ~(MODER_OP<<(pin*2)); bank->PUPDR &= ~(PUPDR_PU<<(pin*2))
+  #define EXT_OP(bank, pin)		bank->MODER |=  (MODER_OP<<(pin*2))
+  #define EXT_OD(bank, pin)		bank->OTYPER |=  (OTYPER_OD<<(pin))	//open drain has no effect when pin is input
+  #define EXT_PP(bank, pin)		bank->OTYPER &= ~(OTYPER_OD<<(pin))
+  #define EXT_SET_LO(bank, pin)		bank->BRR = 1<<pin
+  #define EXT_SET_HI(bank, pin)		bank->BSRR = 1<<pin
+  #define EXT_RD(bank, pin, val)		val = (bank->IDR & (1<<pin))
+  //NOTE: STM registers are 16bit "halfwords" so must provide a 16bit val
 
-#define EXT_IP_PU(bank, pin)		bank->MODER &= ~(MODER_OP<<(pin*2)); bank->PUPDR |=  (PUPDR_PU<<(pin*2))
-#define EXT_IP_FL(bank, pin)		bank->MODER &= ~(MODER_OP<<(pin*2)); bank->PUPDR &= ~(PUPDR_PU<<(pin*2))
-#define EXT_OP(bank, pin)		bank->MODER |=  (MODER_OP<<(pin*2))
-#define EXT_OD(bank, pin)		bank->OTYPER |=  (OTYPER_OD<<(pin))	//open drain has no effect when pin is input
-#define EXT_PP(bank, pin)		bank->OTYPER &= ~(OTYPER_OD<<(pin))
-#define EXT_SET_LO(bank, pin)		bank->BRR = 1<<pin
-#define EXT_SET_HI(bank, pin)		bank->BSRR = 1<<pin
-#define EXT_RD(bank, pin, val)		val = (bank->IDR & (1<<pin))
-	//NOTE: STM registers are 16bit "halfwords" so must provide a 16bit val
-
-//each pin needs it's own enable macro
-#define EXT_A0_ENABLE()		ADDR_EN_CLK()	//unnecessarily enables both GPIO banks for STM adapter, oh well
-#define EXT_D0_ENABLE()		DATA_EN_CLK()
-#define EXT_D8_10_ENABLE()	DATA_EN_CLK()
+  //each pin needs it's own enable macro
+  #define EXT_A0_ENABLE()		ADDR_EN_CLK()	//unnecessarily enables both GPIO banks for STM adapter, oh well
+  #define EXT_D0_ENABLE()		DATA_EN_CLK()
+  #define EXT_D8_10_ENABLE()	DATA_EN_CLK()
 
 #endif
 
 #ifdef AVR_CORE
 
-#define EXT_IP_PU(bank, pin)		bank->DDR &= ~(1<<pin); bank->PORT |=  (1<<pin)
-#define EXT_IP_FL(bank, pin)		bank->DDR &= ~(1<<pin); bank->PORT &= ~(1<<pin)
-#define EXT_OP(bank, pin)		bank->DDR |=  (1<<pin)
-#define EXT_SET_LO(bank, pin)		bank->PORT &= ~(1<<pin)
-#define EXT_SET_HI(bank, pin)		bank->PORT |=  (1<<pin)
-#define EXT_RD(bank, pin, val)		val = (uint16_t) (bank->PIN & (1<<pin))
+  #define EXT_IP_PU(bank, pin)		bank->DDR &= ~(1<<pin); bank->PORT |=  (1<<pin)
+  #define EXT_IP_FL(bank, pin)		bank->DDR &= ~(1<<pin); bank->PORT &= ~(1<<pin)
+  #define EXT_OP(bank, pin)		bank->DDR |=  (1<<pin)
+  #define EXT_SET_LO(bank, pin)		bank->PORT &= ~(1<<pin)
+  #define EXT_SET_HI(bank, pin)		bank->PORT |=  (1<<pin)
+  #define EXT_RD(bank, pin, val)		val = (uint16_t) (bank->PIN & (1<<pin))
 
-//each pin needs it's own enable macro
-#define EXT_A0_ENABLE()			//nothing to be done for AVR
-#define EXT_D0_ENABLE()			//nothing to be done for AVR
+  //each pin needs it's own enable macro
+  #define EXT_A0_ENABLE() //nothing to be done for AVR
+  #define EXT_D0_ENABLE() //nothing to be done for AVR
 
+#endif //AVR_CORE
 
-#endif	//AVR_CORE
-
-
-
-#endif	//file end
+#endif //file end

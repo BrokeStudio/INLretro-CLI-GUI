@@ -20,7 +20,7 @@
 // BOOTLOAD opcodes
 
 // could never get this to work so just going to cut it out
-// #define		JUMP_BL		1	//jump to the bootloader
+// #define JUMP_BL 1 //jump to the bootloader
 
 #define LOAD_ADDRH 2 // upper address half word used for various functions
 #define JUMP_ADDR 3  // jump to address upper 16bit provided previous opcode
@@ -77,11 +77,11 @@
 // AVR has to use this method..
 
 // APPLICATION VERSION NUMBERS
-// #define	APP_VERSION	"AV00"	//released with usb firmware v2.3
+// #define APP_VERSION "AV00" //released with usb firmware v2.3
 // main update was addition of usb firmware updater
 // also added the bootloader pointer memory access
 // include ram functions & starting to have NES flash algos return data
-//  #define	APP_VERSION	3	//released 8/16 with N64 dump fix and MMC2/4 support
+//  #define APP_VERSION 3 //released 8/16 with N64 dump fix and MMC2/4 support
 #define APP_VERSION 4 // release for INLretro CLI+GUI by Broke Studio
 
 // hardware type (stm6/stmn/stm6p/avr)
