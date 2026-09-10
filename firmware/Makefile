@@ -10,7 +10,7 @@ all:
 	make -f Make_avr clean hex
 
 avr:
-	make -f Make_avr clean all
+	make -f Make_avr clean hex
 	# program
 stm6:
 	make -f Make_stm_inl6 all

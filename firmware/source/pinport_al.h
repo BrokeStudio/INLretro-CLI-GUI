@@ -12,7 +12,7 @@
 //these are used to exclude unecessary code from devices which don't have the connectors present
 #if defined(AVR_KAZZO) || defined(STM_ADAPTER)
   #define NES_CONN //includes famicom as definitions are effectively the same
-  #define SNES_CONN
+  // #define SNES_CONN
 #endif
 
 #ifdef STM_NES
