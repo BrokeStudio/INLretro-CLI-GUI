@@ -1,0 +1,27 @@
+Firmware release process:
+
+nightly:
+make all 
+push build_*** folders
+
+
+full version release: update APP_VERSION in shared_dict_bootloader.h so all firmwares know their version
+make all
+stm32 firmwares: address 0x800 insert "AV##" number of application version and rename file to match
+	Create DFU files so people have that as an update option
+	Creating required .hex files with AV## requires opening the binary with STM32 ST-LINK utility
+	and then saving the binary as .hex which can be used to then create .dfu file
+commit build_*** folders
+update inlretro script app version number checked to suggest to people to update their firmware
+
+
+RELEASE HISTORY:
+
+AV03:	Long overdue release..  Fixed N64 dumping including delays for RE2 needed in testing
+	MMC2/4 flashing support, NES GTROM support, action53 & easyNSF tssop flash support, and others..
+
+AV02:	Late versioning, but was a build from ~Feb 2018 I was recommending people try with early
+	N64 and GBA support.
+
+AV01/00: Oldies, don't really recall.  Just the begining of updates without bootloader
+	

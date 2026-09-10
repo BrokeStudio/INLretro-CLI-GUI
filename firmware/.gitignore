@@ -1,0 +1,25 @@
+########################################
+# Ignore files ending in the following #
+########################################
+*.o
+*.d
+*.swp
+*.swo
+#*.bin
+*.bak
+*.smc
+
+# firmware output files
+firmware/build_*
+firmware/DFU_release
+firmware/release
+
+# ignore shared files that have been copied to host-firmware dirs
+firmware/source/shared_*.h
+
+# OS X Metadata
+.DS_Store
+
+# VSCode Metadata
+.vscode
+clang-format.exe
