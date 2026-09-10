@@ -1,0 +1,54 @@
+name: Build Firmware
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: firmware/firmware
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y gcc-avr avr-libc wget tar
+      - name: Install arm-none-eabi-gcc 7.3.1
+        run: |
+          GCC_VERSION="7-2018q2"
+          GCC_DIR="gcc-arm-none-eabi-7-2018-q2-update"
+          GCC_TAR="${GCC_DIR}-linux.tar.bz2"
+          wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/${GCC_VERSION}/${GCC_TAR}
+          tar -xjf ${GCC_TAR}
+          echo "$PWD/${GCC_DIR}/bin" >> $GITHUB_PATH
+          # export PATH="$PWD/${GCC_DIR}/bin:$PATH" // sous linux
+
+      - name: Verify compiler version
+        run: arm-none-eabi-gcc --version
+
+      - name: Build project
+        run: |
+          make all
+
+      - name: Update firmware binary file
+        run: |
+          mkdir -p release
+          echo -n "AV04" | dd of=build_stm6/inlretro_stm.bin bs=1 seek=$((0x800)) conv=notrunc
+          cp build_stm6/inlretro_stm.bin release/inlretro_stm6_AV04.bin
+          echo -n "AV04" | dd of=build_stmn/inlretro_stm.bin bs=1 seek=$((0x800)) conv=notrunc
+          cp build_stmn/inlretro_stm.bin release/inlretro_stmn_AV04.bin
+          cp build_avr/*.hex release/
+
+      - name: Upload INLretro firmware
+        uses: actions/upload-artifact@v7
+        with:
+          name: INLretro-firmware-AV04
+          path: firmware/firmware/release
+          if-no-files-found: error
