@@ -138,7 +138,7 @@ uint8_t get_device_hardware_type(char retroprog_id)
   transfer.data = data_buff;
 
   // TODO: add check
-  count = usb_vendor_transfer(&transfer, NULL); // this->log);
+  count = usb_vendor_transfer(&transfer, &AppLog::log); // NULL); // this->log);
 
   if (transfer.data[0] != 0x8A) // ERR_UNKN_BOOTLOAD_OPCODE
     rv = transfer.data[2];
@@ -169,7 +169,7 @@ uint8_t get_device_version(char retroprog_id)
   transfer.data = data_buff;
 
   // TODO: add check
-  count = usb_vendor_transfer(&transfer, NULL); // this->log);
+  count = usb_vendor_transfer(&transfer, &AppLog::log); // NULL); // this->log);
 
   if (transfer.data[0] != 0x8A) // ERR_UNKN_BOOTLOAD_OPCODE
     rv = transfer.data[2];
@@ -626,6 +626,19 @@ int usb_vendor_transfer(USBtransfer *transfer, Log *log)
   // debug(log, "wIndexLSB h: %x d: %d", transfer->wIndexLSB, transfer->wIndexLSB);
   debug(log, "wIndex    h: %x", wIndex);
   debug(log, "wIndex    d: %d", wIndex);
+
+  // debug
+  // log->add(
+  //   LogTypes_Info,
+  //   "[USB C] type=0x%02X request=0x%02X value=0x%04X index=0x%04X length=%u",
+  //   (unsigned int)(LIBUSB_REQUEST_TYPE_VENDOR |
+  //     LIBUSB_RECIPIENT_DEVICE |
+  //     transfer->endpoint),
+  //   (unsigned int)transfer->request,
+  //   (unsigned int)wValue,
+  //   (unsigned int)wIndex,
+  //   (unsigned int)transfer->wLength
+  // );
 
   xfr_cnt = libusb_control_transfer(
       transfer->handle,

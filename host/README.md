@@ -72,15 +72,17 @@ I'll try to add support to more mapper in the future but feel free to let me kno
 If you own an INLretro programmer-dumper and want to use this CLI/GUI solution, please follow these steps:
 
 - If you're on Windows you need to install the new driver:
-  - Go to the `Windows/DriverPackages/` folder
+  - Go to the `DriverPackages/` folder
   - Execute `InstallDriver.exe`
 - You need to update the flasher's firmware so it's compatible with the CLI/GUI
-  - Using the CLI: run the command `INLretro -s scripts/inlretro_fwupdate.lua`
+  - Using the CLI: run one of these commands:
+    - 6-connector flasher: `INLretro -s scripts/inlretro_fwupdate.lua -p firmware/inlretro_stm6.bin`
+    - NESmaker flasher: `INLretro -s scripts/inlretro_fwupdate.lua -p firmware/inlretro_stmn.bin`
   - Using the GUI:
     - Go to the `Flashers` menu
     - Make sure your flasher is plugged in
     - Refresh the list if you can't find your flasher in the list
-    - Click on `Update firmware`
+    - Click on `Update firmware` and select your flasher model
 
 ---
 

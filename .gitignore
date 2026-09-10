@@ -1,7 +1,7 @@
 # Directories
 .vs/
 .vscode/
-Binaries/
+host/Binaries/
 
 # Files
 *.vcxproj
@@ -13,10 +13,10 @@ Binaries/
 Makefile
 
 # Exclude
-!Vendor/Binaries/
-Roms/
-Dist/
+!host/Vendor/Binaries/
+host/Roms/
+host/Dist/
 
 # Windows
-Windows/Resources/resources.aps
-Windows/USB
+host/Windows/Resources/resources.aps
+drivers/Windows/USB
