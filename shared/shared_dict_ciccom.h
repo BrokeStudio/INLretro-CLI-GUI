@@ -6,7 +6,6 @@
 //The dictionary number is literally used as usb transfer request field
 //the opcodes and operands in this dictionary are fed directly into usb setup packet's wValue wIndex fields
 
-
 //=============================================================================================
 //=============================================================================================
 // CICCOM DICTIONARY
@@ -16,6 +15,6 @@
 //=============================================================================================
 //=============================================================================================
 
-#define	CICCOM_INIT	0
+#define CICCOM_INIT 0
 
 #endif
