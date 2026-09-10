@@ -1,8 +1,9 @@
 #include "flash.h"
 #include "cic.h"
 
+#ifdef NES_CONN
 // TODO replace all use of this function with write_page_verify below
-uint8_t write_page(uint8_t addrH, buffer* buff, write_funcptr wr_func)
+uint8_t nes_write_page(uint8_t addrH, buffer* buff, write_funcptr wr_func)
 {
   uint16_t cur = buff->cur_byte;
   uint8_t n = buff->cur_byte;
@@ -21,7 +22,7 @@ uint8_t write_page(uint8_t addrH, buffer* buff, write_funcptr wr_func)
   return SUCCESS;
 }
 /*
-uint8_t  write_page_mmc5( uint8_t addrH, buffer *buff, write_funcptr wr_func )
+uint8_t  nes_write_page_mmc5( uint8_t addrH, buffer *buff, write_funcptr wr_func )
 {
   uint16_t cur = buff->cur_byte;
   uint8_t  n = buff->cur_byte;
@@ -53,16 +54,15 @@ uint8_t  write_page_mmc5( uint8_t addrH, buffer *buff, write_funcptr wr_func )
 }
 */
 
-uint8_t write_page_verify(uint8_t addrH, buffer* buff, write_rv_funcptr wr_func)
+uint8_t nes_write_page_verify(uint8_t addrH, buffer* buff, write_rv_funcptr wr_func)
 {
   uint16_t cur = buff->cur_byte;
   uint8_t n = buff->cur_byte;
   uint8_t read;
 
   while(cur <= buff->last_idx) {
-    // only works for NROM right now..
-    read = wr_func(((addrH << 8) | n), buff->data[n]);
     // write function returns read back data post flash attempt
+    read = wr_func(((addrH << 8) | n), buff->data[n]);
 
     // TODO create flag/static variable to determine what behavior to have
     // if write fails
@@ -85,8 +85,10 @@ uint8_t write_page_verify(uint8_t addrH, buffer* buff, write_rv_funcptr wr_func)
   // TODO error check/report
   return SUCCESS;
 }
+#endif
 
-uint8_t write_page_buffer(uint8_t addrH, buffer* buff, write_funcptr_pg wr_func)
+#ifdef SNES_CONN
+uint8_t snes_write_page_buffer(uint8_t addrH, buffer* buff, write_funcptr_pg wr_func)
 {
   uint16_t cur = buff->cur_byte;
   uint8_t n = buff->cur_byte;
@@ -143,6 +145,7 @@ uint8_t write_page_buffer(uint8_t addrH, buffer* buff, write_funcptr_pg wr_func)
   // TODO error check/report
   return SUCCESS;
 }
+#endif
 
 // only used by cninja currently..
 uint8_t write_page_cninja(uint8_t bank,
@@ -303,7 +306,7 @@ uint8_t write_page_tssop(
   return SUCCESS;
 }
 
-uint8_t write_page_dualport(
+uint8_t nes_write_page_dualport(
   uint8_t bank, uint8_t addrH, buffer* buff, write_funcptr wr_func, read_funcptr rd_func)
 {
   uint16_t cur = buff->cur_byte;
@@ -350,15 +353,15 @@ uint8_t write_page_dualport(
 #define PRGM_MODE() NOP()
 #define PLAY_MODE() NOP()
 
-uint8_t write_page_snes(
-  uint8_t bank, uint8_t addrH, buffer* buff, write_snes_funcptr wr_func, read_snes_funcptr rd_func)
+#ifdef SNES_CONN
+uint8_t snes_write_page(uint8_t bank, uint8_t addrH, buffer* buff, write_snes_funcptr wr_func, read_snes_funcptr rd_func)
 {
   uint16_t cur = buff->cur_byte;
   uint8_t n = buff->cur_byte;
   uint8_t read;
-#ifdef AVR_CORE
+  #ifdef AVR_CORE
   wdt_reset();
-#endif
+  #endif
   // set to program mode for first entry
   // EXP0_LO();
   // swim_wotf(SWIM_HS, 0x500F, 0x40)
@@ -401,9 +404,9 @@ uint8_t write_page_snes(
     NOP();
     // pre-fetch next byte of data
     // cur_data = buff->data[n+1];
-#ifdef AVR_CORE
+  #ifdef AVR_CORE
     wdt_reset();
-#endif
+  #endif
     // wait for byte to flash
     //  do {
     //    usbPoll();
@@ -527,22 +530,35 @@ uint8_t write_page_snes(
   PLAY_MODE();
   return SUCCESS;
 }
+#endif
 
 #ifdef GB_CONN
 
-// TODO replace all use of this function with write_page_verify below
-uint8_t write_page_gb_flash(uint8_t addrH, buffer* buff, write_funcptr wr_func)
+uint8_t gb_write_page_flash(uint8_t addrH, buffer* buff, write_rv_funcptr wr_func)
 {
   uint16_t cur = buff->cur_byte;
   uint8_t n = buff->cur_byte;
-  // uint8_t read;
+  uint8_t read;
 
   while(cur <= buff->last_idx) {
-    wr_func(((addrH << 8) | n), buff->data[n]);
-    // write function returns when it's complete or errors out
+    // write function returns read back data post flash attempt
+    read = wr_func(((addrH << 8) | n), buff->data[n]);
 
-    n++;
-    cur++;
+    // TODO create flag/static variable to determine what behavior to have
+    // if write fails
+    if(read != buff->data[n]) {
+      LED_OP();
+      LED_HI();
+    } else { // next byte
+      LED_IP_PU();
+      // LED_LO();
+      // if there's a WDT the device should reset if get stuck here
+      n++;
+      cur++;
+    }
+    // put this increment only in pass case if want to retry
+    // n++;
+    // cur++;
   }
   buff->cur_byte = n;
 
@@ -550,7 +566,7 @@ uint8_t write_page_gb_flash(uint8_t addrH, buffer* buff, write_funcptr wr_func)
   return SUCCESS;
 }
 
-uint8_t gameboy_write_page_buffer(uint8_t addrH, buffer* buff)
+uint8_t gb_write_page_buffer(uint8_t addrH, buffer* buff)
 {
   uint16_t cur = buff->cur_byte; // need 16 bits here so it won't overflow
   uint16_t addr;
@@ -747,30 +763,30 @@ uint8_t flash_buff(buffer* buff)
 
       if(buff->mapper == NROM) {
         // used by other 32KB PRG bank discrete mappers like BNROM, CNROM, & color dreams
-        write_page_verify((0x80 + addrH), buff, nrom_prgrom_flash_wr);
+        nes_write_page_verify((0x80 + addrH), buff, nrom_prgrom_flash_wr);
       }
       if(buff->mapper == MMC1) {
-        write_page((0x80 + addrH), buff, mmc1_prgrom_flash_wr);
+        nes_write_page((0x80 + addrH), buff, mmc1_prgrom_flash_wr);
       }
       if(buff->mapper == UxROM) {
-        write_page((0x80 + addrH), buff, unrom_prgrom_flash_wr);
+        nes_write_page((0x80 + addrH), buff, unrom_prgrom_flash_wr);
       }
       if(buff->mapper == MMC3) {
-        write_page_verify((0x80 + addrH), buff, mmc3_prgrom_flash_wr);
+        nes_write_page_verify((0x80 + addrH), buff, mmc3_prgrom_flash_wr);
       }
       if(buff->mapper == MMC3S) {
-        write_page_verify((0x80 + addrH), buff, mmc3s_prgrom_flash_wr);
+        nes_write_page_verify((0x80 + addrH), buff, mmc3s_prgrom_flash_wr);
       }
       // SOP-44
       /*
     if (buff->mapper == MMC4) {
-      write_page( (0x80+addrH), buff, mmc4_prgrom_sop_flash_wr);
+      nes_write_page( (0x80+addrH), buff, mmc4_prgrom_sop_flash_wr);
     }
     */
       // TODO use mapper variant to differentiate between the two
       // PLCC-32
       if(buff->mapper == MMC4) {
-        write_page_verify((0x80 + addrH), buff, mmc4_prgrom_flash_wr);
+        nes_write_page_verify((0x80 + addrH), buff, mmc4_prgrom_flash_wr);
       }
       if(buff->mapper == MM2) {
         // addrH &= 0b1011 1111 A14 must always be low
@@ -783,7 +799,7 @@ uint8_t flash_buff(buffer* buff)
         write_page_mm2(bank, addrH, 0x5555, 0x2AAA, buff, disc_push_exp0_prgrom_wr, nes_cpu_rd);
       }
       if(buff->mapper == MAP30) {
-        write_page_verify((0x80 + addrH), buff, map30_prgrom_flash_wr);
+        nes_write_page_verify((0x80 + addrH), buff, map30_prgrom_flash_wr);
       }
       if(buff->mapper == CNINJA) {
         // addrH &= 0b1001 1111 A14-13 must always be low
@@ -797,14 +813,14 @@ uint8_t flash_buff(buffer* buff)
         write_page_cninja(0, addrH, 0xD555, 0xAAAA, buff, nes_cpu_wr, nes_cpu_rd);
       }
       if(buff->mapper == A53) {
-        write_page_verify((0x80 + addrH), buff, a53_prgrom_flash_wr);
+        nes_write_page_verify((0x80 + addrH), buff, a53_prgrom_flash_wr);
 
         // // enter unlock bypass mode
         // nes_m2_high_wr(0x8AAA, 0xAA);
         // nes_m2_high_wr(0x8555, 0x55);
         // nes_m2_high_wr(0x8AAA, 0x20);
 
-        // write_page((0x80 + addrH), buff, a53_tssop_prgrom_flash_wr);
+        // nes_write_page((0x80 + addrH), buff, a53_tssop_prgrom_flash_wr);
 
         // // exit unlock bypass mode
         // nes_m2_high_wr(0x8000, 0x90);
@@ -840,12 +856,12 @@ uint8_t flash_buff(buffer* buff)
       write_page_old( bank, (0x80 | addrH), 0xD555, 0xAAAA, buff, nes_cpu_wr, nes_cpu_rd );
       //TSSOP-28 action53:
       //write_page_a53( bank, (0x80 | addrH), buff, nes_m2_high_wr, nes_cpu_rd );
-      //write_page_verify( (0x80+addrH), buff, mmc3_prgrom_flash_wr);
+      //nes_write_page_verify( (0x80+addrH), buff, mmc3_prgrom_flash_wr);
       */
       }
       if(buff->mapper == A53_512K) {
-        // write_page_verify( (0x80+addrH), buff, a53_512k_prgrom_flash_wr);
-        write_page((0x80 + addrH), buff, a53_512k_prgrom_flash_wr);
+        // nes_write_page_verify( (0x80+addrH), buff, a53_512k_prgrom_flash_wr);
+        nes_write_page((0x80 + addrH), buff, a53_512k_prgrom_flash_wr);
       }
       if(buff->mapper == EZNSF) {
         /*
@@ -863,7 +879,7 @@ uint8_t flash_buff(buffer* buff)
         nes_m2_high_wr(0x9555, 0x55);
         nes_m2_high_wr(0x9AAA, 0x20);
 
-        write_page_verify((0x90 + addrH), buff, tssop_prgrom_flash_wr);
+        nes_write_page_verify((0x90 + addrH), buff, tssop_prgrom_flash_wr);
 
         // exit unlock bypass mode
         nes_m2_high_wr(0x9000, 0x90);
@@ -872,7 +888,7 @@ uint8_t flash_buff(buffer* buff)
         nes_m2_high_wr(0x9000, 0xF0);
       }
       if(buff->mapper == GTROM) {
-        write_page_verify((0x80 + addrH), buff, gtrom_prgrom_flash_wr);
+        nes_write_page_verify((0x80 + addrH), buff, gtrom_prgrom_flash_wr);
       }
       if(buff->mapper == RNBW) {
         // enter unlock mode bypass
@@ -881,8 +897,8 @@ uint8_t flash_buff(buffer* buff)
         // nes_cpu_wr(0x8AAA, 0x20);
 
         // write data
-        write_page_verify((0x80 + addrH), buff, rnbw_prgrom_flash_wr);
-        // write_page((0x80 + addrH), buff, rnbw_prgrom_flash_wr);
+        nes_write_page_verify((0x80 + addrH), buff, rnbw_prgrom_flash_wr);
+        // nes_write_page((0x80 + addrH), buff, rnbw_prgrom_flash_wr);
 
         // exit unlock mode bypass
         // nes_cpu_wr(0x8000, 0x90);
@@ -893,28 +909,28 @@ uint8_t flash_buff(buffer* buff)
       }
       if(buff->mapper == VRC6a || buff->mapper == VRC6b) {
         // write_page_verify((0x80 + addrH), buff, rnbw_prgrom_flash_wr);
-        write_page((0x60 + addrH), buff, vrc6_prgrom_flash_wr);
+        nes_write_page((0x60 + addrH), buff, vrc6_prgrom_flash_wr);
       }
       break;
 
     case CHRROM: //$0000
       if(buff->mapper == NROM) {
-        write_page(addrH, buff, nrom_chrrom_flash_wr);
+        nes_write_page(addrH, buff, nrom_chrrom_flash_wr);
       }
       if(buff->mapper == MMC1) {
-        write_page(addrH, buff, mmc1_chrrom_flash_wr);
+        nes_write_page(addrH, buff, mmc1_chrrom_flash_wr);
       }
       if(buff->mapper == CNROM) {
-        write_page(addrH, buff, cnrom_chrrom_flash_wr);
+        nes_write_page(addrH, buff, cnrom_chrrom_flash_wr);
       }
       if(buff->mapper == MMC3) {
-        write_page(addrH, buff, mmc3_chrrom_flash_wr);
+        nes_write_page(addrH, buff, mmc3_chrrom_flash_wr);
       }
       if(buff->mapper == MMC4) {
-        write_page(addrH, buff, mmc4_chrrom_flash_wr);
+        nes_write_page(addrH, buff, mmc4_chrrom_flash_wr);
       }
       if(buff->mapper == CDREAM) {
-        write_page(addrH, buff, cdream_chrrom_flash_wr);
+        nes_write_page(addrH, buff, cdream_chrrom_flash_wr);
       }
       if(buff->mapper == DPROM) {
         // select bank
@@ -924,11 +940,11 @@ uint8_t flash_buff(buffer* buff)
         // write bank to register
         nes_ppu_wr(0x3FFF, bank);
         addrH &= 0x1F; // only A12-8 are directly addressable
-        write_page_dualport(0, addrH, buff, nes_dualport_wr, nes_dualport_rd);
+        nes_write_page_dualport(0, addrH, buff, nes_dualport_wr, nes_dualport_rd);
       }
       if(buff->mapper == VRC6a || buff->mapper == VRC6b) {
-        // write_page(addrH, buff, vrc6_chrrom_flash_wr);
-        write_page(addrH, buff, mmc3_chrrom_flash_wr);
+        // nes_write_page(addrH, buff, vrc6_chrrom_flash_wr);
+        nes_write_page(addrH, buff, mmc3_chrrom_flash_wr);
       }
       if(buff->mapper == RNBW) {
         // enter unlock mode bypass
@@ -937,8 +953,8 @@ uint8_t flash_buff(buffer* buff)
         nes_ppu_wr(0x0AAA, 0x20);
 
         // write data
-        write_page_verify((0x80 + addrH), buff, rnbw_chrrom_flash_wr);
-        // write_page((0x80 + addrH), buff, rnbw_chrrom_flash_wr);
+        nes_write_page_verify((0x80 + addrH), buff, rnbw_chrrom_flash_wr);
+        // nes_write_page((0x80 + addrH), buff, rnbw_chrrom_flash_wr);
 
         // exit unlock mode bypass
         nes_ppu_wr(0x0000, 0x90);
@@ -951,47 +967,47 @@ uint8_t flash_buff(buffer* buff)
 
     case PRGRAM:
       // if (buff->mapper == MMC5) {
-      //  write_page_mmc5( addrH+0x60, buff, nes_cpu_wr);
+      //  nes_write_page_mmc5( addrH+0x60, buff, nes_cpu_wr);
       // } else {
-      write_page(addrH + 0x60, buff, nes_cpu_wr);
+      nes_write_page(addrH + 0x60, buff, nes_cpu_wr);
       //}
       break;
 #endif
 
 #ifdef SNES_CONN
     case SNESROM:
-      if(buff->mapper == LOROM_5VOLT) {
-        // LOROM banks start at $XX:8000
-        write_page(addrH + 0x80, buff, snes_5v_flash_wr);
-      }
-      if(buff->mapper == HIROM_5VOLT) {
-        // HIROM banks start at $XX:0000
-        write_page(addrH, buff, snes_5v_flash_wr);
-      }
-      if(buff->mapper == LOROM_3VOLT) {
-        // LOROM banks start at $XX:8000
-        write_page(addrH + 0x80, buff, snes_3v_flash_wr);
-      }
-      if(buff->mapper == HIROM_3VOLT) {
-        // HIROM banks start at $XX:0000
-        write_page(addrH, buff, snes_3v_flash_wr);
-      }
-      if(buff->mapper == LOROM_3V_VERIFY) {
-        // LOROM banks start at $XX:8000
-        write_page_verify(addrH + 0x80, buff, snes_3v_verify_wr);
-      }
-      if(buff->mapper == HIROM_3V_VERIFY) {
-        // HIROM banks start at $XX:0000
-        write_page_verify(addrH, buff, snes_3v_verify_wr);
-      }
-      if(buff->mapper == LOROM_3V_PAGE) {
-        // LOROM banks start at $XX:8000
-        write_page_buffer(addrH + 0x80, buff, snes_3v_buffer_wr);
-      }
-      if(buff->mapper == HIROM_3V_PAGE) {
-        // HIROM banks start at $XX:0000
-        write_page_buffer(addrH, buff, snes_3v_buffer_wr);
-      }
+      // if(buff->mapper == LOROM_5VOLT) {
+      //   // LOROM banks start at $XX:8000
+      //   write_page(addrH + 0x80, buff, snes_5v_flash_wr);
+      // }
+      // if(buff->mapper == HIROM_5VOLT) {
+      //   // HIROM banks start at $XX:0000
+      //   write_page(addrH, buff, snes_5v_flash_wr);
+      // }
+      // if(buff->mapper == LOROM_3VOLT) {
+      //   // LOROM banks start at $XX:8000
+      //   write_page(addrH + 0x80, buff, snes_3v_flash_wr);
+      // }
+      // if(buff->mapper == HIROM_3VOLT) {
+      //   // HIROM banks start at $XX:0000
+      //   write_page(addrH, buff, snes_3v_flash_wr);
+      // }
+      // if(buff->mapper == LOROM_3V_VERIFY) {
+      //   // LOROM banks start at $XX:8000
+      //   write_page_verify(addrH + 0x80, buff, snes_3v_verify_wr);
+      // }
+      // if(buff->mapper == HIROM_3V_VERIFY) {
+      //   // HIROM banks start at $XX:0000
+      //   write_page_verify(addrH, buff, snes_3v_verify_wr);
+      // }
+      // if(buff->mapper == LOROM_3V_PAGE) {
+      //   // LOROM banks start at $XX:8000
+      //   snes_write_page_buffer(addrH + 0x80, buff, snes_3v_buffer_wr);
+      // }
+      // if(buff->mapper == HIROM_3V_PAGE) {
+      //   // HIROM banks start at $XX:0000
+      //   snes_write_page_buffer(addrH, buff, snes_3v_buffer_wr);
+      // }
 
       if(buff->mapper == LOROM) {
         addrH |= 0x80; //$8000 LOROM space
@@ -1003,7 +1019,7 @@ uint8_t flash_buff(buffer* buff)
         // clear any reset state
         // EXP0_HI();
         HADDR_SET(bank);
-        write_page_snes(0, addrH, buff, snes_wr, snes_rd);
+        snes_write_page(0, addrH, buff, snes_wr, snes_rd);
       }
       if(buff->mapper == HIROM) {
         // need to split page_num
@@ -1013,7 +1029,7 @@ uint8_t flash_buff(buffer* buff)
         // A23 ~page_num[14] (bank CO starts first half, bank 40 starts second)
         bank = ((((buff->page_num) >> 8) | 0x40) & 0x7F);
         HADDR_SET(bank);
-        write_page_snes(0, addrH, buff, snes_wr, snes_rd);
+        snes_write_page(0, addrH, buff, snes_wr, snes_rd);
       }
     case SNESRAM:
       // warn      addrX = ((buff->page_num)>>8);
@@ -1050,18 +1066,19 @@ uint8_t flash_buff(buffer* buff)
 #ifdef GB_CONN
     case GBROM:
       if(buff->mapper == ROMONLY) {
-        write_page(addrH, buff, gameboy_flash_wr);
+        // write_page(addrH, buff, gameboy_flash_wr);
+        gb_write_page_flash(addrH, buff, gameboy_flash_wr);
       }
 
       if(buff->mapper == MBC1_DISCRETE) {
         // bank 0 address cleanup will be handled in the gameboy_flash_pin31_wr function
-        write_page_gb_flash(addrH + 0x40, buff, gameboy_flash_pin31_wr);
+        gb_write_page_flash(addrH + 0x40, buff, gameboy_flash_pin31_wr);
       }
 
       if(buff->mapper == MBC1) {
         // flash data using flash chip buffer to speed things up
         // buffer write doesn't work with SST39VF1681/1682
-        // gameboy_write_page_buffer(addrH + 0x40, buff);
+        // gb_write_page_buffer(addrH + 0x40, buff);
 
         // enter unlock bypass mode
         // unlock bypass mode doesn't work with SST39VF1681/1682
@@ -1069,8 +1086,8 @@ uint8_t flash_buff(buffer* buff)
         // gameboy_pin31_wr(0x0555, 0x55);
         // gameboy_pin31_wr(0x0AAA, 0x20);
 
-        // write_page_gb_flash(addrH + 0x40, buff, gameboy_unlock_3v_flash_pin31_wr);
-        write_page_gb_flash(addrH + 0x40, buff, gameboy_3v_flash_pin31_wr);
+        // gb_write_page_flash(addrH + 0x40, buff, gameboy_unlock_3v_flash_pin31_wr);
+        gb_write_page_flash(addrH + 0x40, buff, gameboy_3v_flash_pin31_wr);
 
         // unlock bypass reset
         // gameboy_pin31_wr(0x0000, 0x90);
@@ -1080,7 +1097,7 @@ uint8_t flash_buff(buffer* buff)
       if(buff->mapper == MBC5) {
         // flash data using flash chip buffer to speed things up
         // buffer write doesn't work with SST39VF1681/1682
-        // gameboy_write_page_buffer(addrH + 0x40, buff);
+        // gb_write_page_buffer(addrH + 0x40, buff);
 
         // enter unlock bypass mode
         // unlock bypass mode doesn't work with SST39VF1681/1682
@@ -1088,8 +1105,8 @@ uint8_t flash_buff(buffer* buff)
         // gameboy_pin31_wr(0x0555, 0x55);
         // gameboy_pin31_wr(0x0AAA, 0x20);
 
-        // write_page_gb_flash(addrH + 0x40, buff, gameboy_unlock_3v_flash_pin31_wr);
-        write_page_gb_flash(addrH + 0x40, buff, gameboy_3v_flash_pin31_wr);
+        // gb_write_page_flash(addrH + 0x40, buff, gameboy_unlock_3v_flash_pin31_wr);
+        gb_write_page_flash(addrH + 0x40, buff, gameboy_3v_flash_pin31_wr);
 
         // exit unlock bypass mode
         // gameboy_pin31_wr(0x0000, 0x90);
@@ -1099,7 +1116,8 @@ uint8_t flash_buff(buffer* buff)
       break;
 
     case GBRAM:
-      write_page(addrH + 0xA0, buff, gameboy_wr);
+      // write_page(addrH + 0xA0, buff, gameboy_wr);
+      gb_write_page_flash(addrH + 0xA0, buff, gameboy_wr);
       break;
 #endif
 

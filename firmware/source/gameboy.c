@@ -183,7 +183,7 @@ void gameboy_wr(uint16_t addr, uint8_t data)
  *       data left on bus, but pullup only
  * Rtn:  None
  */
-void gameboy_flash_wr(uint16_t addr, uint8_t data)
+uint8_t gameboy_flash_wr(uint16_t addr, uint8_t data)
 {
   uint8_t rv;
 
@@ -197,6 +197,8 @@ void gameboy_flash_wr(uint16_t addr, uint8_t data)
     usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
   } while(rv != gameboy_rd(addr));
   // TODO handle timeout
+
+  return rv;
 }
 
 void gameboy_pin31_wr(uint16_t addr, uint8_t data)
@@ -240,7 +242,7 @@ void gameboy_pin31_wr(uint16_t addr, uint8_t data)
   DATA_IP();
 }
 
-void gameboy_flash_pin31_wr(uint16_t addr, uint8_t data)
+uint8_t gameboy_flash_pin31_wr(uint16_t addr, uint8_t data)
 {
   uint8_t rv;
 
@@ -268,9 +270,11 @@ void gameboy_flash_pin31_wr(uint16_t addr, uint8_t data)
     usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
   } while(rv != gameboy_rd(addr));
   // TODO handle timeout
+
+  return rv;
 }
 
-void gameboy_unlock_3v_flash_pin31_wr(uint16_t addr, uint8_t data)
+uint8_t gameboy_unlock_3v_flash_pin31_wr(uint16_t addr, uint8_t data)
 {
   uint8_t rv;
 
@@ -287,9 +291,11 @@ void gameboy_unlock_3v_flash_pin31_wr(uint16_t addr, uint8_t data)
   } while(rv != gameboy_rd(addr));
 
   // TODO handle timeout
+
+  return rv;
 }
 
-void gameboy_3v_flash_pin31_wr(uint16_t addr, uint8_t data)
+uint8_t gameboy_3v_flash_pin31_wr(uint16_t addr, uint8_t data)
 {
   uint8_t rv;
 
@@ -310,6 +316,8 @@ void gameboy_3v_flash_pin31_wr(uint16_t addr, uint8_t data)
   } while(rv != gameboy_rd(addr));
 
   // TODO handle timeout
+
+  return rv;
 }
 
 /* Desc: GAME BOY WRAM Page Write Random from LFSR

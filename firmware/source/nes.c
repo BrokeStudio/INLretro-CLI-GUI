@@ -518,6 +518,13 @@ void nes_cpu_wr(uint16_t addr, uint8_t data)
   NOP();
   NOP();
   NOP(); // Writing to RNBW PRG-ROM needs 6 NOPs minimum
+  #ifdef AVR_KAZZO
+  if(addr >= 0x6000 && addr < 0x8000) {
+    NOP();
+    // NOP();
+    // NOP();
+  }
+  #endif
   // NOP();
   // NOP();
   // NOP();
