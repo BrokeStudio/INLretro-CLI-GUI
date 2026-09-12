@@ -97,9 +97,15 @@ local function read_flashID(debug)
   end
 end
 
-
---Cart should be in reset state upon calling this function
---this function processes all user requests for this specific board/mapper
+--- Process all requested operations for this cartridge board/mapper.
+---@param test boolean Run cartridge identification tests
+---@param read boolean Dump ROM contents
+---@param erase boolean Erase ROM flash
+---@param program boolean Program ROM flash from the input file
+---@param verify boolean Dump ROM contents for verification
+---@param dumpfile string Output dump file path, used when read is enabled
+---@param flashfile string Input ROM file path, used when program is enabled
+---@param verifyfile string Verification dump file path, used when verify is enabled
 local function process(test, read, erase, program, verify, dumpfile, flashfile, verifyfile)
   local rv = nil
   local file

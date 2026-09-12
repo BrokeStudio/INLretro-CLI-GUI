@@ -12,11 +12,9 @@ local apperase = require "scripts.app.erase"
 
 -- local functions
 
-
--- Desc: attempt to read flash rom ID
--- Pre: snes_init() been called to setup i/o
--- Post:Address left on bus memories disabled
--- Rtn: true if proper flash ID found
+--- Read and identify the ROM flash manufacturer/device ID.
+---@param debug? boolean Enable verbose progress logging
+---@return boolean success True when the flash chip is recognized
 local function rom_manf_id(debug)
   local rv
   --enter software mode A11 is highest address bit that needs to be valid
@@ -215,10 +213,15 @@ local function flash_rom(file, rom_size_KB, debug)
   print("Done Programming ROM flash")
 end
 
-
-
---Cart should be in reset state upon calling this function
---this function processes all user requests for this specific board/mapper
+--- Process all requested operations for this cartridge board/mapper.
+---@param test boolean Run cartridge identification tests
+---@param read boolean Dump ROM contents
+---@param erase boolean Erase ROM flash
+---@param program boolean Program ROM flash from the input file
+---@param verify boolean Dump ROM contents for verification
+---@param dumpfile string Output dump file path, used when read is enabled
+---@param flashfile string Input ROM file path, used when program is enabled
+---@param verifyfile string Verification dump file path, used when verify is enabled
 local function process(test, read, erase, program, verify, dumpfile, flashfile, verifyfile)
   local rv = nil
   local file

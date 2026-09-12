@@ -503,7 +503,9 @@ end
 --]]
 
 
--- try to detect ram
+--- Detect FPGA-RAM by preserving, toggling, and restoring one test byte.
+---@param debug? boolean Enable verbose progress logging
+---@return boolean success True when FPGA-RAM read/write behavior is detected
 local function fpga_ram_test(debug)
   local test = true
   local read_value
@@ -546,6 +548,11 @@ local function fpga_ram_test(debug)
   return test
 end
 
+--- Exercise FPGA-RAM with an LFSR pattern and compare the dumped result.
+--- Overwrites FPGA-RAM contents with the test pattern.
+---@param retroprog_id string|integer Identifier used in the temporary dump filename
+---@param debug? boolean Enable verbose compare/progress logging
+---@return boolean success True when the FPGA-RAM dump matches the expected LFSR data
 local function fpga_ram_exercise(retroprog_id, debug)
   --[[
   SRAM covers the $200001-$20FFFF address range, and only every other byte is used (i.e. $200001, $200003, $200005, etc.).
@@ -603,8 +610,6 @@ end
 
 --]]
 
--- Cart should be in reset state upon calling this function
--- this function processes all user requests for this specific board/mapper
 --- Process all requested operations for the Genesis Rainbow mapper.
 --- The cartridge should be in reset state before calling.
 ---@param process_opts table Parsed operation options from the main application

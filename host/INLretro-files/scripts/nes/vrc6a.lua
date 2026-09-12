@@ -117,7 +117,9 @@ end
 
 --]]
 
---read PRG-ROM flash ID
+--- Read and identify the PRG-ROM flash manufacturer/device ID.
+---@return boolean found True when the flash chip is recognized
+---@return table device Flash chip information, or an empty table when unknown
 local function prg_rom_manf_id()
   local manufacturer_id
   local device_id
@@ -173,9 +175,11 @@ local function prg_rom_manf_id()
   return found, device
 end
 
--- write a single byte to PRG-ROM flash
--- PRE: assumes mapper is initialized and bank is selected as prescribed in mapper_init
--- REQ: addr must be in the first bank $8000-9FFF
+--- Program one byte to PRG-ROM flash and poll for completion.
+---@param addr integer Address to program
+---@param value integer 8-bit value to write
+---@param bank integer Mapper bank value selecting the target flash bank
+---@param debug? boolean Enable verbose progress logging
 local function prg_rom_flash_byte(addr, value, bank, debug)
   if (addr < 0x8000 or addr > 0x9FFF) then
     log.error("ERROR! flash write to PRG-ROM", help.hex_0x4(addr), "must be $8000-9FFF")
@@ -219,7 +223,10 @@ local function prg_rom_flash_byte(addr, value, bank, debug)
   --TODO return pass/fail/info
 end
 
--- dump the PRG ROM
+--- Dump PRG-ROM contents to an already-open output file.
+---@param file file* Open binary output file
+---@param rom_size_KB integer PRG-ROM size in kilobytes
+---@param debug? boolean Enable verbose progress logging
 local function prg_rom_dump(file, rom_size_KB, debug)
   -- PRG-ROM dump 16KB at a time
   local KB_per_read = 16
@@ -252,7 +259,10 @@ local function prg_rom_dump(file, rom_size_KB, debug)
   spinner.clear()
 end
 
--- host flash one bank at a time
+--- Program PRG-ROM contents from an already-open input file, one bank at a time.
+---@param file file* Open binary input file
+---@param rom_size_KB integer PRG-ROM size in kilobytes
+---@param debug? boolean Enable verbose progress logging
 local function prg_rom_flash(file, rom_size_KB, debug)
   init_mapper()
 
@@ -305,7 +315,10 @@ end
 
 --]]
 
--- read CHR-ROM flash ID
+--- Read and identify the CHR-ROM flash manufacturer/device ID.
+---@param debug? boolean Enable verbose progress logging
+---@return boolean found True when the flash chip is recognized
+---@return table device Flash chip information, or an empty table when unknown
 local function chr_rom_manf_id(debug)
   local manufacturer_id
   local device_id
@@ -343,9 +356,11 @@ local function chr_rom_manf_id(debug)
   return found, device
 end
 
--- write a single byte to CHR-ROM flash
--- PRE: assumes mapper is initialized and bank is selected as prescribed in mapper_init
--- REQ: addr must be in the first 2 banks $0000-0FFF
+--- Program one byte to CHR flash and poll for completion.
+---@param addr integer Address to program, 0x0000-0x0FFF
+---@param value integer 8-bit value to write
+---@param bank integer Mapper bank value selecting the target flash bank
+---@param debug? boolean Enable verbose progress logging
 local function wr_chr_flash_byte(addr, value, bank, debug)
   if addr < 0x0000 or addr > 0x0FFF then
     log.error("ERROR! flash write to CHR-ROM", help.hex_0x4(addr), "must be $0000-0FFF")
@@ -373,7 +388,10 @@ local function wr_chr_flash_byte(addr, value, bank, debug)
   --TODO return pass/fail/info
 end
 
--- dump CHR-ROM/RAM
+--- Dump CHR contents to an already-open output file.
+---@param file file* Open binary output file
+---@param rom_size_KB integer CHR size in kilobytes
+---@param debug? boolean Enable verbose progress logging
 local function chr_dump(file, rom_size_KB, debug)
   local KB_per_read = 4 -- 1KByte bank x 4
   local num_banks = math.floor(rom_size_KB / KB_per_read)
@@ -409,7 +427,10 @@ local function chr_dump(file, rom_size_KB, debug)
   spinner.clear()
 end
 
--- host flash one bank at a time
+--- Program CHR contents from an already-open input file, one bank at a time.
+---@param file file* Open binary input file
+---@param rom_size_KB integer CHR size in kilobytes
+---@param debug? boolean Enable verbose progress logging
 local function chr_rom_flash(file, rom_size_KB, debug)
   init_mapper()
 
@@ -453,7 +474,10 @@ end
 
 --]]
 
--- dump the PRG-RAM, assumes the PRG-RAM was enabled/disabled as desired prior to calling
+--- Dump PRG-RAM contents to an already-open output file.
+---@param file file* Open binary output file
+---@param ram_size_KB integer PRG-RAM size in kilobytes
+---@param debug? boolean Enable verbose progress logging
 local function prg_ram_dump(file, ram_size_KB, debug)
   local KB_per_read = 8
   local num_banks = math.floor(ram_size_KB / KB_per_read)
@@ -477,7 +501,10 @@ local function prg_ram_dump(file, ram_size_KB, debug)
   spinner.clear()
 end
 
--- write to the PRG-RAM, assumes the PRG-RAM was enabled/disabled as desired prior to calling
+--- Write PRG-RAM contents from an already-open input file.
+---@param file file* Open binary input file
+---@param ram_size_KB integer PRG-RAM size in kilobytes
+---@param debug? boolean Enable verbose progress logging
 local function prg_ram_write(file, ram_size_KB, debug)
   init_mapper()
 
@@ -512,7 +539,9 @@ local function prg_ram_write(file, ram_size_KB, debug)
   log.success("Done programming PRG-RAM")
 end
 
--- try to detect if PRG-RAM is present
+--- Detect PRG-RAM by writing and reading back a test byte.
+---@param debug? boolean Enable verbose progress logging
+---@return boolean success True when RAM read/write behavior is detected
 local function prg_ram_test(debug)
   local test = true
   local read_value
@@ -552,6 +581,12 @@ local function prg_ram_test(debug)
   return test
 end
 
+--- Exercise PRG-RAM with an LFSR pattern and compare the dumped result.
+--- Overwrites PRG-RAM contents with the test pattern.
+---@param wram_size integer PRG-RAM size in kilobytes
+---@param retroprog_id string|integer Identifier used in the temporary dump filename
+---@param debug? boolean Enable verbose compare/progress logging
+---@return boolean success True when the PRG-RAM dump matches the expected LFSR data
 local function prg_ram_exercise(wram_size, retroprog_id, debug)
   dict.stuff("RESET_LFSR") -- sets it to 1
 
@@ -617,6 +652,12 @@ end
 
 --]]
 
+--- Exercise CHR-RAM with an LFSR pattern and compare the dumped result.
+--- Overwrites CHR-RAM contents with the test pattern.
+---@param chr_ram_size integer CHR-RAM size in kilobytes
+---@param retroprog_id string|integer Identifier used in the temporary dump filename
+---@param debug? boolean Enable verbose compare/progress logging
+---@return boolean success True when the CHR-RAM dump matches the expected LFSR data
 local function chr_ram_exercise(chr_ram_size, retroprog_id, debug)
   dict.stuff("RESET_LFSR") -- sets it to 1
 
@@ -689,8 +730,10 @@ end
 
 --]]
 
--- Cart should be in reset state upon calling this function
--- this function processes all user requests for this specific board/mapper
+--- Process all requested operations for this cartridge board/mapper.
+---@param process_opts table Parsed operation options from the main application
+---@param console_opts table Console/cartridge size options
+---@return false|nil result False on explicitly reported failure; otherwise no value
 local function process(process_opts, console_opts)
   -- some local variables
   local rv               = nil

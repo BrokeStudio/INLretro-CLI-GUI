@@ -88,7 +88,9 @@ end
 
 --]]
 
--- read PRG-ROM flash ID
+--- Read and identify the PRG-ROM flash manufacturer/device ID.
+---@return boolean found True when the flash chip is recognized
+---@return table device Flash chip information, or an empty table when unknown
 local function prg_rom_manf_id()
   init_mapper()
 
@@ -122,7 +124,11 @@ local function prg_rom_manf_id()
   return found, device
 end
 
--- write a single byte to PRG-ROM flash
+--- Program one byte to PRG-ROM flash and poll for completion.
+---@param addr integer Address to program, 0x8000-0xFFFF
+---@param value integer 8-bit value to write
+---@param bank integer Mapper bank value selecting the target flash bank
+---@param debug? boolean Enable verbose progress logging
 local function wr_prg_flash_byte(addr, value, bank, debug)
   if addr < 0x8000 or addr > 0xFFFF then
     log.error("ERROR! flash write to PRG-ROM", help.hex_0x4(addr), "must be $8000-FFFF")
@@ -150,7 +156,10 @@ local function wr_prg_flash_byte(addr, value, bank, debug)
   end
 end
 
--- dump PRG-ROM
+--- Dump PRG-ROM contents to an already-open output file.
+---@param file file* Open binary output file
+---@param rom_size_KB integer PRG-ROM size in kilobytes
+---@param debug? boolean Enable verbose progress logging
 local function prg_rom_dump(file, rom_size_KB, debug)
   local KB_per_read = 16
   local num_banks = math.floor(rom_size_KB / KB_per_read)
@@ -187,7 +196,10 @@ local function prg_rom_dump(file, rom_size_KB, debug)
   spinner.clear()
 end
 
--- host flash one bank at a time
+--- Program PRG-ROM contents from an already-open input file, one bank at a time.
+---@param file file* Open binary input file
+---@param rom_size_KB integer PRG-ROM size in kilobytes
+---@param debug? boolean Enable verbose progress logging
 local function prg_rom_flash(file, rom_size_KB, debug)
   init_mapper()
 
@@ -229,7 +241,10 @@ local function prg_rom_flash(file, rom_size_KB, debug)
   log.success("Done programming PRG-ROM")
 end
 
---base is the actual NES CPU address, not the rom offset (ie $FFF0, not $7FF0)
+--- Program a bank-selection table using PRG-ROM bank 0.
+---@param base integer CPU address of the bank table
+---@param entries integer Number of bank table entries to write
+---@param numtables? integer Unused table-count parameter
 local function wr_bank_table(base, entries, numtables)
   local cur_bank
 
@@ -290,7 +305,10 @@ end
 
 --]]
 
--- dump CHR
+--- Dump CHR contents to an already-open output file.
+---@param file file* Open binary output file
+---@param rom_size_KB integer CHR size in kilobytes
+---@param debug? boolean Enable verbose progress logging
 local function chr_dump(file, rom_size_KB, debug)
   local KB_per_read = 8
   local num_banks = math.floor(rom_size_KB / KB_per_read)
@@ -310,6 +328,12 @@ local function chr_dump(file, rom_size_KB, debug)
   spinner.clear()
 end
 
+--- Exercise CHR-RAM with an LFSR pattern and compare the dumped result.
+--- Overwrites CHR-RAM contents with the test pattern.
+---@param chrram_size integer CHR-RAM size in kilobytes
+---@param retroprog_id string|integer Identifier used in the temporary dump filename
+---@param debug? boolean Enable verbose compare/progress logging
+---@return boolean success True when the CHR-RAM dump matches the expected LFSR data
 local function chr_ram_exercise(chrram_size, retroprog_id, debug)
   dict.stuff("RESET_LFSR") -- sets it to 1
   -- dict.stuff("SET_LFSR_L", 0) --lock it up to clear ram
@@ -362,8 +386,10 @@ end
 
 --]]
 
--- Cart should be in reset state upon calling this function
--- this function processes all user requests for this specific board/mapper
+--- Process all requested operations for this cartridge board/mapper.
+---@param process_opts table Parsed operation options from the main application
+---@param console_opts table Console/cartridge size options
+---@return false|nil result False on explicitly reported failure; otherwise no value
 local function process(process_opts, console_opts)
   -- some local variables
   local rv               = nil

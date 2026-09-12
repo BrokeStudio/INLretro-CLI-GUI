@@ -65,10 +65,9 @@ local function dump_rom(file, rom_size_KB, debug)
   end
 end
 
-
-
---Cart should be in reset state upon calling this function
---this function processes all user requests for this specific board/mapper
+--- Process all requested operations for this cartridge board/mapper.
+---@param process_opts table Parsed operation options from the main application
+---@param console_opts table Console/cartridge size options
 local function process(process_opts, console_opts)
   local test = process_opts["test"]
   local read = process_opts["read"]

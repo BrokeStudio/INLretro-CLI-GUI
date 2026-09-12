@@ -379,8 +379,6 @@ end
 
 --]]
 
--- Cart should be in reset state upon calling this function
--- this function processes all user requests for this specific board/mapper
 --- Process all requested operations for the Genesis 32Mb mapper.
 --- The cartridge should be in reset state before calling.
 ---@param process_opts table Parsed operation options from the main application

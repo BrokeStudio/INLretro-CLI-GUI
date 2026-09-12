@@ -40,7 +40,10 @@ local mapname = "LOROM"
 
 --]]
 
--- read ROM flash ID
+--- Read and identify the ROM flash manufacturer/device ID.
+---@param debug? boolean Enable verbose progress logging
+---@return boolean found True when the flash chip is recognized
+---@return table device Flash chip information, or an empty table when unknown
 local function rom_manf_id(debug)
   local manufacturer_id
   local device_id
@@ -82,7 +85,7 @@ local function rom_manf_id(debug)
   return found, device
 end
 
--- erase ROM
+--- Erase the entire ROM flash chip and poll until consecutive reads match.
 local function rom_erase()
   local i = 0
   local rv
@@ -108,8 +111,10 @@ local function rom_erase()
   log.success("Done erasing ROM", i .. " naks")
 end
 
---write a single byte to SNES ROM flash
---writes to currently selected bank address
+--- Program one byte to ROM flash and poll for completion.
+---@param addr integer Address to program
+---@param value integer 8-bit value to write
+---@param debug? boolean Enable verbose progress logging
 local function rom_flash_byte(addr, value, debug)
   if (addr < 0x0000 or addr > 0xFFFF) then
     print("\n  ERROR! flash write to SNES", string.format("$%X", addr), "must be $0000-FFFF \n\n")
@@ -138,7 +143,10 @@ local function rom_flash_byte(addr, value, debug)
   --TODO return pass/fail/info
 end
 
--- dump ROM
+--- Dump ROM contents to an already-open output file.
+---@param file file* Open binary output file
+---@param rom_size_KB integer ROM size in kilobytes
+---@param debug? boolean Enable verbose progress logging
 local function rom_dump(file, rom_size_KB, debug)
   -- /ROMSEL is always low for this dump
 
@@ -179,7 +187,10 @@ local function rom_dump(file, rom_size_KB, debug)
   spinner.clear()
 end
 
--- host flash one bank at a time
+--- Program ROM contents from an already-open input file, one bank at a time.
+---@param file file* Open binary input file
+---@param rom_size_KB integer ROM size in kilobytes
+---@param debug? boolean Enable verbose progress logging
 local function rom_flash(file, rom_size_KB, debug)
   local KB_per_bank
   -- local addr_base
@@ -230,8 +241,10 @@ end
 
 --]]
 
--- Cart should be in reset state upon calling this function
--- this function processes all user requests for this specific board/mapper
+--- Process all requested operations for this cartridge board/mapper.
+---@param process_opts table Parsed operation options from the main application
+---@param console_opts table Console/cartridge size options
+---@return false|nil result False on explicitly reported failure; otherwise no value
 local function process(process_opts, console_opts)
   -- some local variables
   local rv             = nil

@@ -400,11 +400,9 @@ end
 
 -- local functions
 
-
--- Desc: attempt to read flash rom ID
--- Pre: snes_init() been called to setup i/o
--- Post:Address left on bus memories disabled
--- Rtn: true if proper flash ID found
+--- Read and identify the ROM flash manufacturer/device ID.
+---@param debug? boolean Enable verbose progress logging
+---@return boolean success True when the flash chip is recognized
 local function rom_manf_id(debug)
   local rv
   --enter software mode A11 is highest address bit that needs to be valid
@@ -835,10 +833,9 @@ local function wr_ram(file, first_bank, ram_size_KB, mapping, debug)
   print("Done Programming ROM flash")
 end
 
-
-
---Cart should be in reset state upon calling this function
---this function processes all user requests for this specific board/mapper
+--- Process all requested operations for this cartridge board/mapper.
+---@param process_opts table Parsed operation options from the main application
+---@param console_opts table Console/cartridge size options
 local function process(process_opts, console_opts)
   local rv = nil
   local file
