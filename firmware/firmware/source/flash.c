@@ -672,7 +672,55 @@ uint8_t gb_write_page_buffer(uint8_t addrH, buffer* buff)
 #endif
 
 #ifdef SEGA_CONN
-uint8_t genesis_ssf2_write_page_verify(buffer* buff)
+uint8_t genesis_rom_write_page_verify(buffer* buff)
+{
+  uint16_t cur = buff->cur_byte; // need 16 bits here so it won't overflow
+
+  uint8_t saved_addr_hi = gen_get_addr_hi();
+  uint8_t page_addr_hi = saved_addr_hi + (buff->page_num >> 8);
+  uint16_t base_addr = (buff->page_num & 0x00FF) << 8; // byte address for 256 bytes
+
+  gen_set_addr_hi(page_addr_hi);
+
+  uint16_t addr;
+  uint16_t value;
+  uint16_t read;
+  uint8_t retries;
+
+  while(cur <= buff->last_idx) {
+    buff->cur_byte = cur;
+
+    value = buff->data[cur + 0] << 8;
+    value |= buff->data[cur + 1];
+    addr = base_addr + cur;
+
+    retries = 3;
+
+    do {
+      // write word
+      read = gen_sst_flash_wr(addr, value);
+      if(read == value) {
+        LED_IP_PU();
+        cur += 2;
+        break;
+      } else {
+        LED_OP();
+        LED_HI();
+      }
+    } while(--retries);
+
+    if(read != value) {
+      gen_set_addr_hi(saved_addr_hi);
+      buff->cur_byte = cur;
+      return STOPPED;
+    }
+  }
+  gen_set_addr_hi(saved_addr_hi);
+  buff->cur_byte = cur;
+  return SUCCESS;
+}
+
+uint8_t genesis_rom_write_page_buffer_verify(buffer* buff)
 {
   uint16_t cur = buff->cur_byte; // need 16 bits here so it won't overflow
 
@@ -720,54 +768,6 @@ uint8_t genesis_ssf2_write_page_verify(buffer* buff)
     return STOPPED;
   }
 
-  return SUCCESS;
-}
-
-uint8_t genesis_rom_page_write_verify(buffer* buff)
-{
-  uint16_t cur = buff->cur_byte; // need 16 bits here so it won't overflow
-
-  uint8_t saved_addr_hi = gen_get_addr_hi();
-  uint8_t page_addr_hi = saved_addr_hi + (buff->page_num >> 8);
-  uint16_t base_addr = (buff->page_num & 0x00FF) << 8; // byte address for 256 bytes
-
-  gen_set_addr_hi(page_addr_hi);
-
-  uint16_t addr;
-  uint16_t value;
-  uint16_t read;
-  uint8_t retries;
-
-  while(cur <= buff->last_idx) {
-    buff->cur_byte = cur;
-
-    value = buff->data[cur + 0] << 8;
-    value |= buff->data[cur + 1];
-    addr = base_addr + cur;
-
-    retries = 3;
-
-    do {
-      // write word
-      read = gen_sst_flash_wr(addr, value);
-      if(read == value) {
-        LED_IP_PU();
-        cur += 2;
-        break;
-      } else {
-        LED_OP();
-        LED_HI();
-      }
-    } while(--retries);
-
-    if(read != value) {
-      gen_set_addr_hi(saved_addr_hi);
-      buff->cur_byte = cur;
-      return STOPPED;
-    }
-  }
-  gen_set_addr_hi(saved_addr_hi);
-  buff->cur_byte = cur;
   return SUCCESS;
 }
 
@@ -1123,15 +1123,19 @@ uint8_t flash_buff(buffer* buff)
       // we need to map page_num to A16-A8 here before writing a page
 
       if(buff->mapper == BASIC) {
-        result = genesis_rom_page_write_verify(buff);
+        if(buff->part_num == USE_BUFFER) {
+          result = genesis_rom_write_page_buffer_verify(buff);
+        } else {
+          result = genesis_rom_write_page_verify(buff);
+        }
       }
 
-      if(buff->mapper == SSF2) {
-        result = genesis_ssf2_write_page_verify(buff);
-      }
-
-      if(buff->mapper == RNBW) {
-        result = genesis_ssf2_write_page_verify(buff);
+      if(buff->mapper == SSF2 || buff->mapper == RNBW) {
+        if(buff->part_num == USE_BUFFER) {
+          result = genesis_rom_write_page_buffer_verify(buff);
+        } else {
+          result = genesis_rom_write_page_verify(buff);
+        }
       }
 
       break;
