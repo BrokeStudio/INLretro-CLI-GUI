@@ -10,7 +10,7 @@ files
   "./Source/**.h", "./Source/**.cpp",
   "./include/**.h",
 
-  "../INLretro-files/shared/**.h",
+  "../../shared/**.h",
   "../External/lua/**.h", "../External/lua/**.c",
   "../External/libusb/INL/include/**.h",
   "../External/termcolor/*.hpp",
@@ -19,7 +19,7 @@ files
 vpaths {
   ["Lua"] = { "../External/lua/**.h", "../External/lua/**.c" },
   ["libusb"] = {"../External/libusb/include/**.h"},
-  ["shared"] = {"../INLretro-files/shared/**.h"},
+  ["shared"] = {"../../shared/**.h"},
   ["termcolor"] = {"../External/termcolor/*.hpp"},
 }
 
@@ -28,11 +28,11 @@ includedirs
   "./Source",
   "./include",
 
-  "../INLretro-files/shared",
+  "../../shared",
 
   "../External/lua",
   "../External/termcolor",
-  "../INLretro-files/shared",
+  "../../shared",
 }
 
 targetdir("../Binaries/" .. OutputDir .. "/%{prj.name}")

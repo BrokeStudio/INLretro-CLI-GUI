@@ -30,13 +30,11 @@ jobs:
           name: INLretro-firmware-AV04
           path: host/INLretro-files/firmware
 
-      - name: Prepare firmware and shared headers
+      - name: Prepare firmware
         shell: bash
         run: |
           cp INLretro-files/firmware/inlretro_stm6_AV04.bin INLretro-files/firmware/inlretro_stm6.bin
           cp INLretro-files/firmware/inlretro_stmn_AV04.bin INLretro-files/firmware/inlretro_stmn.bin
-          mkdir -p INLretro-files/shared
-          cp ../shared/*.h INLretro-files/shared/
 
       - uses: abel0b/setup-premake@v2.4
         with:
@@ -87,13 +85,11 @@ jobs:
           name: INLretro-firmware-AV04
           path: host/INLretro-files/firmware
 
-      - name: Prepare firmware and shared headers
+      - name: Prepare firmware
         shell: bash
         run: |
           cp INLretro-files/firmware/inlretro_stm6_AV04.bin INLretro-files/firmware/inlretro_stm6.bin
           cp INLretro-files/firmware/inlretro_stmn_AV04.bin INLretro-files/firmware/inlretro_stmn.bin
-          mkdir -p INLretro-files/shared
-          cp ../shared/*.h INLretro-files/shared/
 
       - uses: abel0b/setup-premake@v2.4
         with:
@@ -151,13 +147,11 @@ jobs:
           name: INLretro-firmware-AV04
           path: host/INLretro-files/firmware
 
-      - name: Prepare firmware and shared headers
+      - name: Prepare firmware
         shell: bash
         run: |
           cp INLretro-files/firmware/inlretro_stm6_AV04.bin INLretro-files/firmware/inlretro_stm6.bin
           cp INLretro-files/firmware/inlretro_stmn_AV04.bin INLretro-files/firmware/inlretro_stmn.bin
-          mkdir -p INLretro-files/shared
-          cp ../shared/*.h INLretro-files/shared/
 
       - uses: abel0b/setup-premake@v2.4
         with:

@@ -1,6 +1,35 @@
-# Directories
-.vs/
-.vscode/
+##### GLOBAL
+
+dist/
+
+# OS X Metadata
+.DS_Store
+
+# VSCode Metadata
+.vscode
+clang-format.exe
+
+##### FIRMWARE
+
+*.o
+*.d
+*.swp
+*.swo
+#*.bin
+*.bak
+*.smc
+
+# firmware output files
+firmware/firmware/build_*
+firmware/firmware/DFU_release
+firmware/firmware/release
+
+# ignore shared files that have been copied to host-firmware dirs
+firmware/firmware/source/shared_*.h
+
+##### HOST
+
+host/.vs/
 host/Binaries/
 
 # Files
@@ -15,7 +44,7 @@ Makefile
 # Exclude
 !host/Vendor/Binaries/
 host/Roms/
-host/Dist/
+
 
 # Windows
 host/Windows/Resources/resources.aps

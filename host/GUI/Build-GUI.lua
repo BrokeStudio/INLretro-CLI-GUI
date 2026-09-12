@@ -33,7 +33,7 @@ vpaths {
     "../External/FileBrowser/**.cpp",
   },
   ["shared"] = {
-    "../INLretro-files/shared/**.h",
+    "../../shared/**.h",
   }
 }
 
@@ -44,7 +44,7 @@ includedirs
 
   "../Core/Source",
 
-  "../INLretro-files/shared",
+  "../../shared",
 
   "../External/imgui",
   "../External/imgui/backends",
@@ -80,7 +80,10 @@ filter "configurations:Release"
 filter "configurations:Debug or Release or Dist"
   postbuildcommands
   {
-    "{COPYDIR} \"../INLretro-files\\.\" \"%{cfg.targetdir}\""
+    "{MKDIR} \"%{cfg.targetdir}/shared\"",
+
+    "{COPYDIR} \"../INLretro-files/\" \"%{cfg.targetdir}\"",
+    "{COPYDIR} \"../../shared/\" \"%{cfg.targetdir}/shared\""
   }
 
 filter "configurations:Debug or Release"
@@ -241,7 +244,7 @@ filter { "system:macosx", "configurations:Dist" }
   {
     "{RMDIR} \"%{cfg.targetdir}/../app/INLretroGUI.app\"",
     "{MKDIR} \"%{cfg.targetdir}/../app/INLretroGUI.app/Contents/MacOS\"",
-    "{MKDIR} \"%{cfg.targetdir}/../app/INLretroGUI.app/Contents/Resources\"",
+    "{MKDIR} \"%{cfg.targetdir}/../app/INLretroGUI.app/Contents/Resources/shared\"",
     "{MKDIR} \"%{cfg.targetdir}/../app/INLretroGUI.app/Contents/Frameworks\"",
 
     "ditto \"../External/SDL2-macOS/SDL2.framework\" \"%{cfg.targetdir}/../app/INLretroGUI.app/Contents/Frameworks/SDL2.framework\"",
@@ -249,4 +252,5 @@ filter { "system:macosx", "configurations:Dist" }
     "{COPY} \"../macOS/AppIcon.icns\" \"%{cfg.targetdir}/../app/INLretroGUI.app/Contents/Resources/AppIcon.icns\"",
     "{COPY} \"%{cfg.targetdir}/INLretroGUI\" \"%{cfg.targetdir}/../app/INLretroGUI.app/Contents/MacOS/INLretroGUI\"",
     "{COPYDIR} \"../INLretro-files/\" \"%{cfg.targetdir}/../app/INLretroGUI.app/Contents/Resources\"",
+    "{COPYDIR} \"../../shared/\" \"%{cfg.targetdir}/../app/INLretroGUI.app/Contents/Resources/shared\"",
   }

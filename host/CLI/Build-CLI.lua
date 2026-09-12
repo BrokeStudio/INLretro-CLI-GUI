@@ -22,7 +22,7 @@ includedirs
 
   "../Core/Source",
 
-  "../INLretro-files/shared",
+  "../../shared",
 
   "../External/lua",
   "../External/termcolor",
