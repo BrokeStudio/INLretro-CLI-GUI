@@ -772,7 +772,7 @@ nes.cic = {
     log.point("Dumping program")
     time.start()
 
-    dump.dumptofile(file, 1, 0x80, "CIC_READ_BUFFER", false)
+    dump.dumptofile(file, 1, { mapper = 0x80, mem_type = "CIC_READ_BUFFER" }, false)
 
     time.report(1)
     log.success("CIC dumping done")
@@ -800,7 +800,7 @@ nes.cic = {
     log.point("Flashing program")
     time.start()
 
-    flash.write_file(file, 1, "CIC_WRITE_BUFFER", "CIC", false)
+    flash.write_file(file, 1, { mapper = "CIC_WRITE_BUFFER", mem_type = "CIC" }, false)
 
     time.report(1)
     log.success("CIC program flashed successfully")

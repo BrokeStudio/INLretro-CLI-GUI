@@ -23,16 +23,11 @@ void nes_ppu_wr(uint16_t addr, uint8_t data);
 uint8_t nes_dualport_rd(uint16_t addr);
 void nes_dualport_wr(uint16_t addr, uint8_t data);
 // uint8_t	ciram_a10_mirroring( void );
-uint8_t
-nes_cpu_page_rd_poll(uint8_t* data, uint8_t addrH, uint8_t first, uint8_t last, uint8_t poll);
-uint8_t
-nes_cpu_page_rd_toggle(uint8_t* data, uint8_t addrH, uint8_t first, uint8_t last, uint8_t poll);
-uint8_t
-nes_ppu_page_rd_poll(uint8_t* data, uint8_t addrH, uint8_t first, uint8_t last, uint8_t poll);
-uint8_t
-nes_ppu_page_rd_toggle(uint8_t* data, uint8_t addrH, uint8_t first, uint8_t len, uint8_t poll);
-uint8_t
-nes_dualport_page_rd_poll(uint8_t* data, uint8_t addrH, uint8_t first, uint8_t len, uint8_t poll);
+uint8_t nes_cpu_page_rd_poll(uint8_t* data, uint8_t addrH, uint8_t first, uint8_t last, uint8_t poll);
+uint8_t nes_cpu_page_rd_toggle(uint8_t* data, uint8_t addrH, uint8_t first, uint8_t last, uint8_t poll);
+uint8_t nes_ppu_page_rd_poll(uint8_t* data, uint8_t addrH, uint8_t first, uint8_t last, uint8_t poll);
+uint8_t nes_ppu_page_rd_toggle(uint8_t* data, uint8_t addrH, uint8_t first, uint8_t len, uint8_t poll);
+uint8_t nes_dualport_page_rd_poll(uint8_t* data, uint8_t addrH, uint8_t first, uint8_t len, uint8_t poll);
 
 void mmc1_wr(uint16_t addr, uint8_t data, uint8_t reset);
 
@@ -60,6 +55,7 @@ uint8_t a53_prgrom_flash_wr(uint16_t addr, uint8_t data);
 uint8_t tssop_prgrom_flash_wr(uint16_t addr, uint8_t data);
 uint8_t mmc5_prgram_wr(uint16_t addr, uint8_t data);
 uint8_t rnbw_prgrom_flash_wr(uint16_t addr, uint8_t data);
+uint8_t rnbw_prgrom_flash_unlock_wr(uint16_t addr, uint8_t data);
 uint8_t rnbw_chrrom_flash_wr(uint16_t addr, uint8_t data);
 void vrc6_prgrom_flash_wr(uint16_t addr, uint8_t data);
 

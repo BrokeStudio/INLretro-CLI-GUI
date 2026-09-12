@@ -15,7 +15,7 @@
   // #define SNES_CONN
 #endif
 
-#ifdef STM_NES
+#if defined(STM_NES)
   #define NES_CONN //famicom isn't actually present but a pin adapter should work
 #endif
 

@@ -174,7 +174,7 @@ local function rom_dump(file, rom_size_KB, debug)
     --select desired bank
     dict.snes("SNES_SET_BANK", cur_bank) -- start_bank+cur_bank)
 
-    dump.dumptofile(file, KB_per_bank, addr_base, "SNESROM_PAGE", false)
+    dump.dumptofile(file, KB_per_bank, { mapper = addr_base, mem_type = "SNESROM_PAGE" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -215,7 +215,7 @@ local function rom_flash(file, rom_size_KB, debug)
     --select desired bank
     dict.snes("SNES_SET_BANK", cur_bank) -- start_bank+cur_bank)
 
-    flash.write_file(file, KB_per_bank, mapname .. "_3VOLT", "SNESROM", true)
+    flash.write_file(file, KB_per_bank, { mapper = mapname .. "_3VOLT", mem_type = "SNESROM" }, true)
 
     cur_bank = cur_bank + 1
   end

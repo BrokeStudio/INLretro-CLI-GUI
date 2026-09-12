@@ -9,11 +9,21 @@ local buffers = require "scripts.app.buffers"
 -- file constants and global variables
 
 -- local functions
-local function dumptocallback(callback, sizeKB, map, mem, debug)
+local function dumptocallback(callback, sizeKB, config, debug)
   local buff0 = 0
   local buff1 = 1
   local cur_buff_status = 0
   local data = nil --lua stores data in strings
+
+  --need to handle raw data, or defines being used for mapper
+  --op_buffer[map] will be nil for raw values
+  local mapper = op_buffer[config.mapper]
+  if not mapper then
+    if debug then print("mapper isn't defined, evaluated as raw number") end
+    mapper = config.mapper
+  end
+  local mem_type = config.mem_type
+  local options = config.options or op_buffer["NOVAR"]
 
   if debug then print("dumping cart") end
 
@@ -34,19 +44,12 @@ local function dumptocallback(callback, sizeKB, map, mem, debug)
   --set page_num to non-zero if offset arg sent
   --set mem_type and part_num to designate how to get/write data
   if debug then print("setting map n part") end
-  dict.buffer("SET_MEM_N_PART", (op_buffer[mem] << 8 | op_buffer["MASKROM"]), buff0)
-  dict.buffer("SET_MEM_N_PART", (op_buffer[mem] << 8 | op_buffer["MASKROM"]), buff1)
+  dict.buffer("SET_MEM_N_PART", (op_buffer[mem_type] << 8 | options), buff0)
+  dict.buffer("SET_MEM_N_PART", (op_buffer[mem_type] << 8 | options), buff1)
   --set multiple and add_mult only when flashing
   --set mapper, map_var, and function to designate read/write algo
 
   if debug then print("setting map n mapvar") end
-  --need to handle raw data, or defines being used for mapper
-  --op_buffer[map] will be nil for raw values
-  local mapper = op_buffer[map]
-  if not mapper then
-    if debug then print("mapper isn't defined, evaluated as raw number") end
-    mapper = map
-  end
   --dict.buffer("SET_MAP_N_MAPVAR", (op_buffer[map]<<8 | op_buffer["NOVAR"]), buff0 )
   --dict.buffer("SET_MAP_N_MAPVAR", (op_buffer[map]<<8 | op_buffer["NOVAR"]), buff1 )
   dict.buffer("SET_MAP_N_MAPVAR", (mapper << 8 | op_buffer["NOVAR"]), buff0)
@@ -141,12 +144,12 @@ local function dumptocallback(callback, sizeKB, map, mem, debug)
   dict.buffer("RAW_BUFFER_RESET")
 end
 
-local function dumptofile(file, sizeKB, map, mem, debug)
+local function dumptofile(file, sizeKB, config, debug)
   dumptocallback(
     function(data)
       file:write(data)
     end,
-    sizeKB, map, mem, debug
+    sizeKB, config, debug
   )
 end
 

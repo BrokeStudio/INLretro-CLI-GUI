@@ -77,9 +77,6 @@ local function rom_manf_id()
   chips.display_manufacturer(manufacturer_id)
   flash_chip = manufacturer_id
 
-  device_id = genesis.rom_rd(0x0001 << 1)
-  device_test = chips.display_device(manufacturer_id, device_id)
-
   if manufacturer_id == 0xC2 then
     -- MX chips
     device_id = genesis.rom_rd(0x0001 << 1)
@@ -186,8 +183,8 @@ local function rom_dump(file, rom_size_kb, debug)
       return
     end
 
-    dump.dumptofile(file, kb_per_bank / 2, addr_base, "GENESIS_ROM_PAGE0", false)
-    dump.dumptofile(file, kb_per_bank / 2, addr_base, "GENESIS_ROM_PAGE1", false)
+    dump.dumptofile(file, kb_per_bank / 2, { mapper = addr_base, mem_type = "GENESIS_ROM_PAGE0" }, false)
+    dump.dumptofile(file, kb_per_bank / 2, { mapper = addr_base, mem_type = "GENESIS_ROM_PAGE1" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -225,7 +222,7 @@ local function rom_write(file, rom_size_kb, debug)
       return
     end
 
-    flash.write_file(file, kb_per_bank, mapname, "GENESISROM", false)
+    flash.write_file(file, kb_per_bank, { mapper = mapname, mem_type = "GENESISROM" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -270,7 +267,7 @@ local function ram_dump(file, addr_hi, ram_size_kb, debug)
     end
 
     -- currently don't have means of dumping RAM with A16 high
-    dump.dumptofile(file, ram_size_kb, addr_base, "GENESIS_RAM_PAGE", false) -- A16 low
+    dump.dumptofile(file, ram_size_kb, { mapper = addr_base, mem_type = "GENESIS_RAM_PAGE" }, false) -- A16 low
 
     cur_bank = cur_bank + 1
   end
@@ -303,7 +300,7 @@ local function ram_write(file, addr_hi, ram_size_kb, debug)
 
     genesis.set_addr_hi(addr_hi + cur_bank)
 
-    flash.write_file(file, ram_size_kb, mapname, "GENESISRAM", false)
+    flash.write_file(file, ram_size_kb, { mapper = mapname, mem_type = "GENESISRAM" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -607,7 +604,7 @@ local function process(process_opts, console_opts)
 
   -- erase the cart
   if do_erase then
-    -- local i = 0
+    local i = 0
     local temp
     local size_to_erase = rom_size
 

@@ -138,7 +138,7 @@ local function prg_rom_dump(file, rom_size_KB, debug)
     -- mapper 30 bank register is $C000-FFFF
     dict.nes("NES_CPU_WR", 0xFC80, cur_bank) -- 16KB @ CPU $8000
 
-    dump.dumptofile(file, KB_per_read, addr_base, "NESCPU_PAGE", false)
+    dump.dumptofile(file, KB_per_read, { mapper = addr_base, mem_type = "NESCPU_PAGE" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -170,7 +170,7 @@ local function prg_rom_flash(file, rom_size_KB, debug)
     -- end
 
     -- have the device write a bank worth of data
-    flash.write_file(file, bank_size, mapname, "PRGROM", false)
+    flash.write_file(file, bank_size, { mapper = mapname, mem_type = "PRGROM" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -208,7 +208,7 @@ local function chr_dump(file, rom_size_KB, debug)
 
     dict.nes("NES_CPU_WR", 0xC000, cur_bank << 5) -- 8KB bank at $0000
 
-    dump.dumptofile(file, KB_per_read, addr_base, "NESPPU_PAGE", false)
+    dump.dumptofile(file, KB_per_read, { mapper = addr_base, mem_type = "NESPPU_PAGE" }, false)
 
     cur_bank = cur_bank + 1
   end

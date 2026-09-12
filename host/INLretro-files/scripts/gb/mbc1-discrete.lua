@@ -145,7 +145,7 @@ local function rom_dump(file, rom_size_KB, debug)
   else
     spinner.update("Dumping", cur_bank, "/", num_banks - 1)
   end
-  dump.dumptofile(file, KB_per_read, addr_base, "GAMEBOY_PAGE", false)
+  dump.dumptofile(file, KB_per_read, { mapper = addr_base, mem_type = "GAMEBOY_PAGE" }, false)
   cur_bank = 1
 
   -- remaining banks must be read from $4000-7FFF
@@ -166,7 +166,7 @@ local function rom_dump(file, rom_size_KB, debug)
     -- set bank
     dict.gameboy("GAMEBOY_WR", 0x2000, cur_bank)
 
-    dump.dumptofile(file, KB_per_read, addr_base, "GAMEBOY_PAGE", false)
+    dump.dumptofile(file, KB_per_read, { mapper = addr_base, mem_type = "GAMEBOY_PAGE" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -190,7 +190,7 @@ local function rom_flash(file, rom_size_KB, debug)
     spinner.update("Flashing", cur_bank, "/", num_banks - 1)
   end
   dict.gameboy("GAMEBOY_SET_CUR_BANK", cur_bank)
-  flash.write_file(file, bank_size, mapname, "GBROM", false)
+  flash.write_file(file, bank_size, { mapper = mapname, mem_type = "GBROM" }, false)
   cur_bank = cur_bank + 1
 
   -- flash switchable banks
@@ -206,7 +206,7 @@ local function rom_flash(file, rom_size_KB, debug)
     dict.gameboy("GAMEBOY_WR", 0x2000, cur_bank)
 
     -- have the device write a bank worth of data
-    flash.write_file(file, bank_size, mapname, "GBROM", false)
+    flash.write_file(file, bank_size, { mapper = mapname, mem_type = "GBROM" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -245,7 +245,7 @@ local function ram_dump(file, ram_size_KB, debug)
     dict.gameboy("GAMEBOY_WR", 0x4000, cur_bank)
 
     -- have the device dump a bank worth of data
-    dump.dumptofile(file, KB_per_read, addr_base, "GAMEBOY_PAGE", false)
+    dump.dumptofile(file, KB_per_read, { mapper = addr_base, mem_type = "GAMEBOY_PAGE" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -276,7 +276,7 @@ local function ram_write(file, ram_size_KB, debug)
     dict.gameboy("GAMEBOY_WR", 0x4000, cur_bank)
 
     -- have the device write a bank worth of data
-    flash.write_file(file, bank_size, mapname, "GBRAM", false)
+    flash.write_file(file, bank_size, { mapper = mapname, mem_type = "GBRAM" }, false)
 
     cur_bank = cur_bank + 1
   end

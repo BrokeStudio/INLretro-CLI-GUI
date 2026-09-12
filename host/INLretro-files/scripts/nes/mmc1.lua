@@ -242,7 +242,7 @@ local function prg_rom_dump(file, rom_size_KB, debug)
     dict.nes("NES_MMC1_WR", 0xE000, cur_bank << 1) -- LSBit ignored in 32KB mode
 
     -- dump a bank worth of data
-    dump.dumptofile(file, KB_per_read, addr_base, "NESCPU_PAGE", false)
+    dump.dumptofile(file, KB_per_read, { mapper = addr_base, mem_type = "NESCPU_PAGE" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -276,7 +276,7 @@ local function prg_rom_flash(file, rom_size_KB, debug)
     dict.nes("NES_MMC1_WR", 0xE000, cur_bank << 1) -- LSBit ignored in 32KB mode
 
     -- have the device write a bank worth of data
-    flash.write_file(file, bank_size, mapname, "PRGROM", false)
+    flash.write_file(file, bank_size, { mapper = mapname, mem_type = "PRGROM" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -385,7 +385,7 @@ local function chr_dump(file, rom_size_KB, debug)
     dict.nes("NES_MMC1_WR", 0xC000, cur_bank * 2 + 1) -- 4KB bank at $1000
 
     -- have the device dump a bank worth of data
-    dump.dumptofile(file, KB_per_read, addr_base, "NESPPU_1KB", false)
+    dump.dumptofile(file, KB_per_read, { mapper = addr_base, mem_type = "NESPPU_1KB" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -416,7 +416,7 @@ local function chr_rom_flash(file, rom_size_KB, debug)
     if debug then log.point("get bank", dict.nes("GET_CUR_BANK")) end
 
     -- have the device write a bank worth of data
-    flash.write_file(file, bank_size, mapname, "CHRROM", false)
+    flash.write_file(file, bank_size, { mapper = mapname, mem_type = "CHRROM" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -458,7 +458,7 @@ local function prg_ram_dump(file, ram_size_KB, debug)
     dict.nes("NES_MMC1_WR", 0xC000, cur_bank << 2) -- 8KB PRG-RAM bank at $6000
 
     -- have the device dump a bank worth of data
-    dump.dumptofile(file, KB_per_read, addr_base, "NESCPU_PAGE", false)
+    dump.dumptofile(file, KB_per_read, { mapper = addr_base, mem_type = "NESCPU_PAGE" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -495,7 +495,7 @@ local function prg_ram_write(file, ram_size_KB, debug)
     dict.nes("NES_MMC1_WR", 0xC000, cur_bank << 2) -- 8KB PRG-RAM bank at $6000
 
     --have the device write a bank worth of data
-    flash.write_file(file, bank_size, "NOVAR", "PRGRAM", false)
+    flash.write_file(file, bank_size, { mapper = "NOVAR", mem_type = "PRGRAM" }, false)
 
     cur_bank = cur_bank + 1
   end

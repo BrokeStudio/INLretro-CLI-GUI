@@ -73,12 +73,12 @@ local function rom_erase()
 
   log.section("Erasing ROM")
   dict.gameboy("GAMEBOY_WR", 0x2000, 0x01)
-  dict.gameboy("GAMEBOY_PIN31_WR", 0x5555, 0xAA)
-  dict.gameboy("GAMEBOY_PIN31_WR", 0x2AAA, 0x55)
-  dict.gameboy("GAMEBOY_PIN31_WR", 0x5555, 0x80)
-  dict.gameboy("GAMEBOY_PIN31_WR", 0x5555, 0xAA)
-  dict.gameboy("GAMEBOY_PIN31_WR", 0x2AAA, 0x55)
-  dict.gameboy("GAMEBOY_PIN31_WR", 0x5555, 0x10)
+  dict.gameboy("GAMEBOY_WR", 0x5555, 0xAA)
+  dict.gameboy("GAMEBOY_WR", 0x2AAA, 0x55)
+  dict.gameboy("GAMEBOY_WR", 0x5555, 0x80)
+  dict.gameboy("GAMEBOY_WR", 0x5555, 0xAA)
+  dict.gameboy("GAMEBOY_WR", 0x2AAA, 0x55)
+  dict.gameboy("GAMEBOY_WR", 0x5555, 0x10)
 
   -- TODO create some function to pass the read value
   -- that's smart enough to figure out if the board is actually erasing or not
@@ -107,7 +107,7 @@ local function rom_dump(file, rom_size_KB, debug)
     spinner.update("Dumping", cur_bank, "/", num_banks - 1)
   end
 
-  dump.dumptofile(file, KB_per_read, addr_base, "GAMEBOY_PAGE", false)
+  dump.dumptofile(file, KB_per_read, { mapper = addr_base, mem_type = "GAMEBOY_PAGE" }, false)
 
   spinner.clear()
 end
@@ -130,7 +130,7 @@ local function rom_flash(file, rom_size_KB, debug)
 
   dict.gameboy("GAMEBOY_SET_CUR_BANK", cur_bank)
 
-  flash.write_file(file, bank_size, mapname, "GBROM", false)
+  flash.write_file(file, bank_size, { mapper = mapname, mem_type = "GBROM" }, false)
 
   spinner.clear()
   log.success("Done programming ROM")
@@ -196,7 +196,7 @@ local function ram_dump(file, ram_size_KB, debug)
     end
 
     -- have the device dump a bank worth of data
-    dump.dumptofile(file, KB_per_read, addr_base, "GAMEBOY_PAGE", false)
+    dump.dumptofile(file, KB_per_read, { mapper = addr_base, mem_type = "GAMEBOY_PAGE" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -221,7 +221,7 @@ local function ram_write(file, ram_size_KB, debug)
     end
 
     -- have the device write a bank worth of data
-    flash.write_file(file, bank_size, mapname, "GBRAM", false)
+    flash.write_file(file, bank_size, { mapper = mapname, mem_type = "GBRAM" }, false)
 
     cur_bank = cur_bank + 1
   end

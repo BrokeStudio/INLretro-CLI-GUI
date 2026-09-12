@@ -516,7 +516,7 @@ local function dump_rom(file, start_bank, rom_size_KB, mapping, debug)
     --select desired bank
     dict.snes("SNES_SET_BANK", start_bank + cur_bank)
 
-    dump.dumptofile(file, KB_per_bank, addr_base, "SNESROM_PAGE", debug)
+    dump.dumptofile(file, KB_per_bank, { mapper = addr_base, mem_type = "SNESROM_PAGE" }, debug)
 
     cur_bank = cur_bank + 1
   end
@@ -559,9 +559,9 @@ local function dump_ram(file, start_bank, ram_size_KB, mapping, debug)
     dict.snes("SNES_SET_BANK", start_bank + cur_bank)
 
     if (mapping == lorom_name) then --LOROM sram is inside /ROMSEL space
-      dump.dumptofile(file, KB_per_bank, addr_base, "SNESROM_PAGE", false)
+      dump.dumptofile(file, KB_per_bank, { mapper = addr_base, mem_type = "SNESROM_PAGE" }, false)
     else                            -- HIROM is outside of /ROMSEL space
-      dump.dumptofile(file, KB_per_bank, addr_base, "SNESSYS_PAGE", false)
+      dump.dumptofile(file, KB_per_bank, { mapper = addr_base, mem_type = "SNESSYS_PAGE" }, false)
     end
 
     cur_bank = cur_bank + 1
@@ -681,9 +681,9 @@ local function flash_rom(file, rom_size_KB, mapping, debug)
 
     --have the device write a bank worth of data
     if (mapping == lorom_name) then
-      flash.write_file(file, bank_size / 1024, "LOROM_3VOLT", "SNESROM", false)
+      flash.write_file(file, bank_size / 1024, { mapper = "LOROM_3VOLT", mem_type = "SNESROM" }, false)
     else
-      flash.write_file(file, bank_size / 1024, "HIROM_3VOLT", "SNESROM", false)
+      flash.write_file(file, bank_size / 1024, { mapper = "HIROM_3VOLT", mem_type = "SNESROM" }, false)
     end
 
     cur_bank = cur_bank + 1
@@ -781,7 +781,7 @@ local function wr_ram(file, first_bank, ram_size_KB, mapping, debug)
     --]]
 
     --have the device write a bank worth of data
-    --flash.write_file( file, bank_size/1024, "LOROM_3VOLT", "SNESROM", false )
+    --flash.write_file(file, bank_size/1024, { mapper = "LOROM_3VOLT", mem_type = "SNESROM" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -944,8 +944,8 @@ local function process(process_opts, console_opts)
 
     file = assert(io.open(process_opts["writeram_filename"], "rb"))
 
-    --flash.write_file( file, ram_size, "NOVAR", "PRGRAM", false )
-    --flash.write_file( file, ram_size, "LOROM_3VOLT", "SNESROM", false )
+    --flash.write_file(file, ram_size, { mapper = "NOVAR", mem_type = "PRGRAM" }, false)
+    --flash.write_file(file, ram_size, { mapper = "LOROM_3VOLT", mem_type = "SNESROM" }, false)
     wr_ram(file, rambank, ram_size, snes_mapping, true)
 
     -- close file

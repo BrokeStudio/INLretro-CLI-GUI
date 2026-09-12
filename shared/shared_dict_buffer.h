@@ -134,29 +134,32 @@
 #define NESCPU_PAGE_TOGGLE 0x34 // mapper byte specifies A15-8 read but M2 toggles with each read
 
 // operand LSB
+#define USE_UNLOCK_BYPASS 0x01  // tells the flash routine that unlock bypass programming can be used if available
+#define USE_BUFFER 0x02         // tells the flash routine that buffered programing can be used if available
+
 // manufacturer IDs
-#define SST_MANF_ID 0xBF
-#define MX_MANF_ID 0x00C2
-#define CYPRESS_MANF_ID 0x01
-// SST 39SF0x0 prod IDs
-#define SST_PROD_128 0xB5
-#define SST_PROD_256 0xB6
-#define SST_PROD_512 0xB7
-// SST 39VF320
-#define SST_PROD_320_BOTTOM 0x235B
-#define SST_PROD_320_TOP 0x235A
-// MX 29LV320
-#define MX_PROD_320_BOTTOM 0x22A8
-#define MX_PROD_320_TOP 0x22A7
-// CYPRESS S29GL
-#define CYPRESS_PROD_S29GL01GS 0x2228
-#define CYPRESS_PROD_S29GL512S 0x2223
-#define CYPRESS_PROD_S29GL256S 0x2222
-#define CYPRESS_PROD_S29GL128S 0x2221
-// SRAM manf/prod ID
-#define SRAM 0xAA
-// MASK ROM read only
-#define MASKROM 0xDD
+// #define SST_MANF_ID 0xBF
+// #define MX_MANF_ID 0x00C2
+// #define CYPRESS_MANF_ID 0x01
+// // SST 39SF0x0 prod IDs
+// #define SST_PROD_128 0xB5
+// #define SST_PROD_256 0xB6
+// #define SST_PROD_512 0xB7
+// // SST 39VF320
+// #define SST_PROD_320_BOTTOM 0x235B
+// #define SST_PROD_320_TOP 0x235A
+// // MX 29LV320
+// #define MX_PROD_320_BOTTOM 0x22A8
+// #define MX_PROD_320_TOP 0x22A7
+// // CYPRESS S29GL
+// #define CYPRESS_PROD_S29GL01GS 0x2228
+// #define CYPRESS_PROD_S29GL512S 0x2223
+// #define CYPRESS_PROD_S29GL256S 0x2222
+// #define CYPRESS_PROD_S29GL128S 0x2221
+// // SRAM manf/prod ID
+// #define SRAM 0xAA
+// // MASK ROM read only
+// #define MASKROM 0xDD
 
 // set multiple and add multiple
 // miscdata: buffer number

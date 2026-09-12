@@ -273,7 +273,7 @@ local function parse_header_cart()
   -- dict.snes("SNES_SET_BANK", 0) -- not required?
   dump.dumptocallback(
     function(data) byte_str = byte_str .. data end,
-    64, "HIROM", "SNESROM", false
+    64, { mapper = "HIROM", mem_type = "SNESROM" }, false
   )
 
   byte_str = string.sub(byte_str, 0xFFC0 + 1, 0xFFFF + 1)
@@ -294,7 +294,7 @@ local function parse_header_cart()
   -- dict.snes("SNES_SET_BANK", 0) -- not required?
   dump.dumptocallback(
     function(data) byte_str = byte_str .. data end,
-    32, "LOROM", "SNESROM", false
+    32, { mapper = "LOROM", mem_type = "SNESROM" }, false
   )
 
   -- reset device i/o

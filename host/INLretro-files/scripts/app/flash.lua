@@ -38,11 +38,15 @@ local function check_stopped(buff_nums)
   end
 end
 
-local function write_file(file, sizeKB, map, mem, debug)
+local function write_file(file, sizeKB, config, debug)
   local buff0 = 0
   local buff1 = 1
   local cur_buff_status = 0
   local data = nil --lua stores data in strings
+
+  local mapper = config.mapper
+  local mem_type = config.mem_type
+  local options = config.options or "NOVAR"
 
   if debug then print("flashing cart") end
 
@@ -61,16 +65,16 @@ local function write_file(file, sizeKB, map, mem, debug)
 
   --set mem_type and part_num to designate how to get/write data
   if debug then print("setting map n part") end
-  dict.buffer("SET_MEM_N_PART", (op_buffer[mem] << 8 | op_buffer["MASKROM"]), buff0)
-  dict.buffer("SET_MEM_N_PART", (op_buffer[mem] << 8 | op_buffer["MASKROM"]), buff1)
+  dict.buffer("SET_MEM_N_PART", (op_buffer[mem_type] << 8 | op_buffer[options]), buff0)
+  dict.buffer("SET_MEM_N_PART", (op_buffer[mem_type] << 8 | op_buffer[options]), buff1)
   --set multiple and add_mult only when flashing
   --TODO
 
   --set mapper, map_var, and function to designate read/write algo
   --just dump visible NROM memory to start
   if debug then print("setting map n mapvar") end
-  dict.buffer("SET_MAP_N_MAPVAR", (op_buffer[map] << 8 | op_buffer["NOVAR"]), buff0)
-  dict.buffer("SET_MAP_N_MAPVAR", (op_buffer[map] << 8 | op_buffer["NOVAR"]), buff1)
+  dict.buffer("SET_MAP_N_MAPVAR", (op_buffer[mapper] << 8 | op_buffer["NOVAR"]), buff0)
+  dict.buffer("SET_MAP_N_MAPVAR", (op_buffer[mapper] << 8 | op_buffer["NOVAR"]), buff1)
 
   if debug then print("\n\nsetting operation STARTFLASH") end
   --inform buffer manager to start flashing operation now that buffers are initialized

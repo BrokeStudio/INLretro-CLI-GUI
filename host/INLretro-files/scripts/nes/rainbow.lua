@@ -97,7 +97,7 @@ local function nt_dump(file, nt, debug)
   local KB_per_read = 1
   local addr_base = 0x20 + nt * 4
 
-  dump.dumptofile(file, KB_per_read, addr_base, "NESPPU_1KB_TOGGLE", debug)
+  dump.dumptofile(file, KB_per_read, { mapper = addr_base, mem_type = "NESPPU_1KB_TOGGLE" }, debug)
 end
 
 local function _mirror_test(retroprog_id, debug)
@@ -515,7 +515,7 @@ local function prg_rom_dump(file, rom_size_KB, debug)
     dict.nes("NES_CPU_WR", PRG_8_HI, (cur_bank & 0xff00) >> 8) -- 32KB @ CPU $8000
     dict.nes("NES_CPU_WR", PRG_8_LO, (cur_bank & 0x00ff) >> 0) -- 32KB @ CPU $8000
 
-    dump.dumptofile(file, KB_per_read, addr_base, "NESCPU_PAGE_TOGGLE", false)
+    dump.dumptofile(file, KB_per_read, { mapper = addr_base, mem_type = "NESCPU_PAGE_TOGGLE" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -551,7 +551,7 @@ local function prg_rom_flash(file, rom_size_KB, debug)
     dict.nes("NES_CPU_WR", PRG_8_LO, (cur_bank & 0x00ff) >> 0) -- 32KB @ CPU $8000
 
     -- have the device write a bank worth of data
-    flash.write_file(file, bank_size, mapname, "PRGROM", false)
+    flash.write_file(file, bank_size, { mapper = mapname, mem_type = "PRGROM" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -710,7 +710,7 @@ local function chr_dump(file, rom_size_KB, debug)
     dict.nes("NES_CPU_WR", CHR_0_HI, (cur_bank & 0xff00) >> 8) -- 8KB @ PPU $0000
     dict.nes("NES_CPU_WR", CHR_0_LO, cur_bank & 0xff)          -- 8KB @ PPU $0000
 
-    dump.dumptofile(file, KB_per_read, addr_base, "NESPPU_1KB_TOGGLE", false)
+    dump.dumptofile(file, KB_per_read, { mapper = addr_base, mem_type = "NESPPU_1KB_TOGGLE" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -741,7 +741,7 @@ local function chr_rom_flash(file, rom_size_KB, debug)
     dict.nes("NES_CPU_WR", CHR_0_LO, cur_bank & 0xff)          -- 8KB @ PPU $0000
 
     -- have the device write a bank worth of data
-    flash.write_file(file, bank_size, mapname, "CHRROM", false)
+    flash.write_file(file, bank_size, { mapper = mapname, mem_type = "CHRROM" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -779,7 +779,7 @@ local function prg_ram_dump(file, ram_size_KB, debug)
     -- set bank
     dict.nes("NES_CPU_WR", PRG_6_LO, cur_bank)
 
-    dump.dumptofile(file, KB_per_read, addr_base, "NESCPU_PAGE_TOGGLE", false)
+    dump.dumptofile(file, KB_per_read, { mapper = addr_base, mem_type = "NESCPU_PAGE_TOGGLE" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -815,7 +815,7 @@ local function prg_ram_write(file, ram_size_KB, debug)
     dict.nes("NES_CPU_WR", PRG_6_LO, cur_bank)
 
     --have the device write a bank worth of data
-    flash.write_file(file, bank_size, "NOVAR", "PRGRAM", false)
+    flash.write_file(file, bank_size, { mapper = "NOVAR", mem_type = "PRGRAM" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -1003,7 +1003,7 @@ local function fpga_ram_dump(file, rom_size_KB, debug)
       spinner.update("Dumping", cur_bank, "/", num_banks - 1)
     end
 
-    dump.dumptofile(file, KB_per_read, addr_base, "NESCPU_PAGE_TOGGLE", false)
+    dump.dumptofile(file, KB_per_read, { mapper = addr_base, mem_type = "NESCPU_PAGE_TOGGLE" }, false)
 
     cur_bank = cur_bank + 1
   end

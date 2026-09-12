@@ -148,13 +148,7 @@ uint8_t snes_write_page_buffer(uint8_t addrH, buffer* buff, write_funcptr_pg wr_
 #endif
 
 // only used by cninja currently..
-uint8_t write_page_cninja(uint8_t bank,
-  uint8_t addrH,
-  uint16_t unlock1,
-  uint16_t unlock2,
-  buffer* buff,
-  write_funcptr wr_func,
-  read_funcptr rd_func)
+uint8_t write_page_cninja(uint8_t bank, uint8_t addrH, uint16_t unlock1, uint16_t unlock2, buffer* buff, write_funcptr wr_func, read_funcptr rd_func)
 {
   uint16_t cur = buff->cur_byte;
   uint8_t n = buff->cur_byte;
@@ -175,13 +169,7 @@ uint8_t write_page_cninja(uint8_t bank,
 }
 
 // only used by MM2 currently
-uint8_t write_page_mm2(uint8_t bank,
-  uint8_t addrH,
-  uint16_t unlock1,
-  uint16_t unlock2,
-  buffer* buff,
-  write_funcptr wr_func,
-  read_funcptr rd_func)
+uint8_t write_page_mm2(uint8_t bank, uint8_t addrH, uint16_t unlock1, uint16_t unlock2, buffer* buff, write_funcptr wr_func, read_funcptr rd_func)
 {
   uint16_t cur = buff->cur_byte;
   uint8_t n = buff->cur_byte;
@@ -211,8 +199,7 @@ uint8_t write_page_mm2(uint8_t bank,
   return SUCCESS;
 }
 
-uint8_t write_page_a53(
-  uint8_t bank, uint8_t addrH, buffer* buff, write_funcptr wr_func, read_funcptr rd_func)
+uint8_t write_page_a53(uint8_t bank, uint8_t addrH, buffer* buff, write_funcptr wr_func, read_funcptr rd_func)
 {
   uint16_t cur = buff->cur_byte;
   uint8_t n = buff->cur_byte;
@@ -263,8 +250,7 @@ uint8_t write_page_a53(
   return SUCCESS;
 }
 
-uint8_t write_page_tssop(
-  uint8_t bank, uint8_t addrH, buffer* buff, write_funcptr wr_func, read_funcptr rd_func)
+uint8_t write_page_tssop(uint8_t bank, uint8_t addrH, buffer* buff, write_funcptr wr_func, read_funcptr rd_func)
 {
   uint16_t cur = buff->cur_byte;
   uint8_t n = buff->cur_byte;
@@ -306,8 +292,7 @@ uint8_t write_page_tssop(
   return SUCCESS;
 }
 
-uint8_t nes_write_page_dualport(
-  uint8_t bank, uint8_t addrH, buffer* buff, write_funcptr wr_func, read_funcptr rd_func)
+uint8_t nes_write_page_dualport(uint8_t bank, uint8_t addrH, buffer* buff, write_funcptr wr_func, read_funcptr rd_func)
 {
   uint16_t cur = buff->cur_byte;
   uint8_t n = buff->cur_byte;
@@ -569,33 +554,37 @@ uint8_t gb_write_page_flash(uint8_t addrH, buffer* buff, write_rv_funcptr wr_fun
 uint8_t gb_write_page_buffer(uint8_t addrH, buffer* buff)
 {
   uint16_t cur = buff->cur_byte; // need 16 bits here so it won't overflow
+  uint16_t base_addr = (uint16_t)addrH << 8;
   uint16_t addr;
   uint8_t value;
-  uint16_t word_count = (buff->last_idx + 1 - buff->cur_byte) >> 1;
+  uint16_t byte_count = (buff->last_idx + 1 - buff->cur_byte);
 
   // write "write to buffer" command and sector address
-  gameboy_pin31_wr(0x0555, 0x00AA);
-  gameboy_pin31_wr(0x02AA, 0x0055);
-  gameboy_pin31_wr(0x0000, 0x0025);         // the bank set before calling sets the sector
-  gameboy_pin31_wr(0x0000, word_count - 1); // number of words to write minus one
+  gameboy_pin31_wr(0x0AAA, 0xAA);
+  gameboy_pin31_wr(0x0555, 0x55);
+  gameboy_pin31_wr(base_addr, 0x25);           // the bank set before calling sets the sector
+  gameboy_pin31_wr(base_addr, byte_count - 1); // number of words to write minus one
 
   while(cur <= buff->last_idx) {
     value = buff->data[cur + 0];
-    addr += cur;
+    addr = base_addr + cur;
 
     // add word to write buffer
     gameboy_pin31_wr(addr, value);
 
-    cur = cur + 1;
+    cur++
   }
   buff->cur_byte = cur;
 
   // write program buffer to flash (confirm)
-  gameboy_pin31_wr(0x0000, 0x29);
+  gameboy_pin31_wr(addrH << 8, 0x29);
 
+  // TODO: add timeout
   do {
     value = gameboy_rd(addr);
   } while(value != gameboy_rd(addr));
+
+  // TODO: add flash control
 
   // TODO error check/report
   return SUCCESS;
@@ -744,15 +733,16 @@ uint8_t flash_buff(buffer* buff)
   // #endif
 
   switch(buff->mem_type) {
-#ifdef STM_INL6
+#ifdef NES_CONN
+
+  #if defined(STM_INL6) || defined(STM_NES)
     case CIC:
       if(buff->mapper == CIC_WRITE_BUFFER) {
         cic_write_buffer(buff);
       }
       break;
-#endif
+  #endif
 
-#ifdef NES_CONN
     case PRGROM: //$8000
 
       // Latest method used here!
@@ -891,21 +881,25 @@ uint8_t flash_buff(buffer* buff)
         nes_write_page_verify((0x80 + addrH), buff, gtrom_prgrom_flash_wr);
       }
       if(buff->mapper == RNBW) {
-        // enter unlock mode bypass
-        // nes_cpu_wr(0x8AAA, 0xAA);
-        // nes_cpu_wr(0x8555, 0x55);
-        // nes_cpu_wr(0x8AAA, 0x20);
+        if(buff->part_num == USE_UNLOCK_BYPASS) {
+          // enter unlock mode bypass
+          nes_cpu_wr(0x8AAA, 0xAA);
+          nes_cpu_wr(0x8555, 0x55);
+          nes_cpu_wr(0x8AAA, 0x20);
 
-        // write data
-        nes_write_page_verify((0x80 + addrH), buff, rnbw_prgrom_flash_wr);
-        // nes_write_page((0x80 + addrH), buff, rnbw_prgrom_flash_wr);
+          // write data
+          nes_write_page_verify((0x80 + addrH), buff, rnbw_prgrom_flash_unlock_wr);
 
-        // exit unlock mode bypass
-        // nes_cpu_wr(0x8000, 0x90);
-        // nes_cpu_wr(0x8000, 0x00);
+          // exit unlock mode bypass
+          nes_cpu_wr(0x8000, 0x90);
+          nes_cpu_wr(0x8000, 0x00);
 
-        // reset the flash chip, supposed to exit too
-        // nes_cpu_wr(0x8000, 0xF0);
+          // reset the flash chip, supposed to exit too
+          nes_cpu_wr(0x8000, 0xF0);
+        } else {
+          // write data
+          nes_write_page_verify((0x80 + addrH), buff, rnbw_prgrom_flash_wr);
+        }
       }
       if(buff->mapper == VRC6a || buff->mapper == VRC6b) {
         // write_page_verify((0x80 + addrH), buff, rnbw_prgrom_flash_wr);
@@ -1075,49 +1069,37 @@ uint8_t flash_buff(buffer* buff)
         gb_write_page_flash(addrH + 0x40, buff, gameboy_flash_pin31_wr);
       }
 
-      if(buff->mapper == MBC1) {
-        // flash data using flash chip buffer to speed things up
-        // buffer write doesn't work with SST39VF1681/1682
-        // gb_write_page_buffer(addrH + 0x40, buff);
+      if(buff->mapper == MBC1 || buff->mapper == MBC5) {
+        if(buff->part_num == USE_BUFFER) {
+          // write data
+          result = gb_write_page_buffer(addrH + 0x40, buff);
+        } else if(buff->part_num == USE_UNLOCK_BYPASS) {
+          // enter unlock bypass mode
+          gameboy_pin31_wr(0x0AAA, 0xAA);
+          gameboy_pin31_wr(0x0555, 0x55);
+          gameboy_pin31_wr(0x0AAA, 0x20);
 
-        // enter unlock bypass mode
-        // unlock bypass mode doesn't work with SST39VF1681/1682
-        // gameboy_pin31_wr(0x0AAA, 0xAA);
-        // gameboy_pin31_wr(0x0555, 0x55);
-        // gameboy_pin31_wr(0x0AAA, 0x20);
+          // write data
+          gb_write_page_flash(addrH + 0x40, buff, gameboy_unlock_3v_flash_pin31_wr);
 
-        // gb_write_page_flash(addrH + 0x40, buff, gameboy_unlock_3v_flash_pin31_wr);
-        gb_write_page_flash(addrH + 0x40, buff, gameboy_3v_flash_pin31_wr);
+          // unlock bypass reset
+          gameboy_pin31_wr(0x0000, 0x90);
+          gameboy_pin31_wr(0x0000, 0x00);
 
-        // unlock bypass reset
-        // gameboy_pin31_wr(0x0000, 0x90);
-        // gameboy_pin31_wr(0x0000, 0x00);
-      }
-
-      if(buff->mapper == MBC5) {
-        // flash data using flash chip buffer to speed things up
-        // buffer write doesn't work with SST39VF1681/1682
-        // gb_write_page_buffer(addrH + 0x40, buff);
-
-        // enter unlock bypass mode
-        // unlock bypass mode doesn't work with SST39VF1681/1682
-        // gameboy_pin31_wr(0x0AAA, 0xAA);
-        // gameboy_pin31_wr(0x0555, 0x55);
-        // gameboy_pin31_wr(0x0AAA, 0x20);
-
-        // gb_write_page_flash(addrH + 0x40, buff, gameboy_unlock_3v_flash_pin31_wr);
-        gb_write_page_flash(addrH + 0x40, buff, gameboy_3v_flash_pin31_wr);
-
-        // exit unlock bypass mode
-        // gameboy_pin31_wr(0x0000, 0x90);
-        // gameboy_pin31_wr(0x0000, 0x00);
+          // reset/exit
+          gameboy_pin31_wr(0x0000, 0xF0);
+        } else {
+          // write data
+          gb_write_page_flash(addrH + 0x40, buff, gameboy_3v_flash_pin31_wr);
+        }
       }
 
       break;
 
     case GBRAM:
-      // write_page(addrH + 0xA0, buff, gameboy_wr);
-      gb_write_page_flash(addrH + 0xA0, buff, gameboy_wr);
+      // TODO: rename nes_write_page to something generic like write_page as before
+      // or create a specific gb_write_page?
+      nes_write_page(addrH + 0xA0, buff, gameboy_wr);
       break;
 #endif
 

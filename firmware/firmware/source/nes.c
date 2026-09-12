@@ -186,6 +186,7 @@ uint8_t nes_call(uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_t* rd
       rdata[RD_LEN] = BYTE_LEN;
       rdata[RD0] = mmc5_prgram_wr(operand, miscdata);
       break;
+  #if defined(STM_INL6) || defined(STM_NES)
     case CIC_GET_SIGNATURE:
       rdata[RD_LEN] = 3;
       cic_read_signature(&rdata[RD0]);
@@ -202,6 +203,7 @@ uint8_t nes_call(uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_t* rd
       rdata[RD_LEN] = BYTE_LEN;
       rdata[RD0] = cic_write_fuses(operand, operand >> 8);
       break;
+  #endif
     default:
       // macro doesn't exist
       return ERR_UNKN_NES_OPCODE;
@@ -1224,10 +1226,28 @@ uint8_t rnbw_prgrom_flash_wr(uint16_t addr, uint8_t data)
   nes_cpu_wr(0x8AAA, 0xA0);
   nes_cpu_wr(addr, data);
 
+  do {
+    rv = nes_cpu_rd(addr);
+    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
+  } while(rv != nes_cpu_rd(addr));
+  // TODO handle timeout
+
+  return rv;
+}
+
+/* Desc: NES RNBW PRG-ROM FLASH Write in unlock bypass mode
+ * Pre:  nes_init() setup of io pins
+ * Post: Byte written and ready for another write
+ * Rtn:  None
+ */
+uint8_t rnbw_prgrom_flash_unlock_wr(uint16_t addr, uint8_t data)
+{
+  uint8_t rv;
+
   // needs to be in unlock bypass mode
   // write data
-  // nes_cpu_wr(addr, 0xA0);
-  // nes_cpu_wr(addr, data);
+  nes_cpu_wr(addr, 0xA0);
+  nes_cpu_wr(addr, data);
 
   do {
     rv = nes_cpu_rd(addr);

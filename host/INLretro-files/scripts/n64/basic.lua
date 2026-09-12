@@ -44,13 +44,13 @@ local function rom_dump(file, rom_size_KB, debug)
   print("read: ", help.hex(dict.n64("N64_RD")))
   dict.n64("N64_SET_BANK", bank_base + 0)
   dict.n64("N64_LATCH_ADDR", 0x0000)
-  dump.dumptofile( file, KB_per_bank, addr_base, "N64_ROM_PAGE", false )
+  dump.dumptofile(file, KB_per_bank, { mapper = addr_base, mem_type = "N64_ROM_PAGE" }, false)
 
   dict.n64("N64_LATCH_ADDR", 0x0000)
   print("read: ", help.hex(dict.n64("N64_RD")))
   print("read: ", help.hex(dict.n64("N64_RD")))
   dict.n64("N64_LATCH_ADDR", 0x0000)
-  dump.dumptofile( file, KB_per_bank, addr_base, "N64_ROM_PAGE", false )
+  dump.dumptofile(file, KB_per_bank, { mapper = addr_base, mem_type = "N64_ROM_PAGE" }, false)
   --]]
 
   log.info("ROM size", rom_size_KB .. "KB")
@@ -66,7 +66,7 @@ local function rom_dump(file, rom_size_KB, debug)
     dict.n64("N64_SET_BANK", bank_base + cur_bank)
 
     -- dump a 64KByte chunk of rom
-    dump.dumptofile(file, KB_per_bank, addr_base, "N64_ROM_PAGE", debug)
+    dump.dumptofile(file, KB_per_bank, { mapper = addr_base, mem_type = "N64_ROM_PAGE" }, debug)
 
     -- prob don't need this till done..
     dict.n64("N64_RELEASE_BUS")
@@ -228,8 +228,8 @@ local function process(process_opts, console_opts)
     --
     --    file = assert(io.open(ramwritefile, "rb"))
     --
-    --    --flash.write_file( file, ram_size, "NOVAR", "PRGRAM", false )
-    --    --flash.write_file( file, ram_size, "LOROM_3VOLT", "SNESROM", false )
+    --    --flash.write_file(file, ram_size, { mapper = "NOVAR", mem_type = "PRGRAM" }, false)
+    --    --flash.write_file(file, ram_size, { mapper = "LOROM_3VOLT", mem_type = "SNESROM" }, false)
     --    wr_ram(file, rambank, ram_size, snes_mapping, true)
     --
     --    -- close file

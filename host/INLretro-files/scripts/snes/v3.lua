@@ -158,7 +158,7 @@ local function process(test, read, erase, program, verify, dumpfile, flashfile, 
 
     --TODO find bank table to avoid bus conflicts!
     -- dump cart to file
-    dump.dumptofile(file, rom_size, snes_mapping, "SNESROM", true)
+    dump.dumptofile(file, rom_size, { mapper = snes_mapping, mem_type = "SNESROM" }, true)
 
     -- close file
     assert(file:close())
@@ -224,7 +224,7 @@ local function process(test, read, erase, program, verify, dumpfile, flashfile, 
     --not susceptible to bus conflicts
 
     --flash cart
-    flash.write_file(file, rom_size, snes_mapping, "SNESROM", true)
+    flash.write_file(file, rom_size, { mapper = snes_mapping, mem_type = "SNESROM" }, true)
     -- close file
     assert(file:close())
   end
@@ -236,7 +236,7 @@ local function process(test, read, erase, program, verify, dumpfile, flashfile, 
     file = assert(io.open(verifyfile, "wb"))
 
     -- dump cart to file
-    dump.dumptofile(file, rom_size, snes_mapping, "SNESROM", true)
+    dump.dumptofile(file, rom_size, { mapper = snes_mapping, mem_type = "SNESROM" }, true)
 
     -- close file
     assert(file:close())

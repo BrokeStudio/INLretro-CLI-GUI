@@ -332,7 +332,7 @@ local function parse_header_cart()
   local byte_str = ""
   dump.dumptocallback(
     function(data) byte_str = byte_str .. data end,
-    1, 0x0000, "GAMEBOY_PAGE", false
+    1, { mapper = 0x0000, mem_type = "GAMEBOY_PAGE" }, false
   )
 
   -- reset device i/o

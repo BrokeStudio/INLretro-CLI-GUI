@@ -293,8 +293,8 @@ local function rom_dump(file, rom_size_kb, debug)
     -- -- set address hi bits (A23-A16)
     dict.sega("GEN_SET_ADDR_HI", 0x08 | ((cur_bank & 0x03) << 1)) -- 0x08 controls A19, set to 1 to read from bank 1 (0x80000-0xFFFFF)
 
-    dump.dumptofile(file, kb_per_bank / 2, addr_base, "GENESIS_ROM_PAGE0", false)
-    dump.dumptofile(file, kb_per_bank / 2, addr_base, "GENESIS_ROM_PAGE1", false)
+    dump.dumptofile(file, kb_per_bank / 2, { mapper = addr_base, mem_type = "GENESIS_ROM_PAGE0" }, false)
+    dump.dumptofile(file, kb_per_bank / 2, { mapper = addr_base, mem_type = "GENESIS_ROM_PAGE1" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -326,7 +326,7 @@ local function rom_write(file, rom_size_kb, debug)
     -- set address hi bits (A23-A16)
     dict.sega("GEN_SET_ADDR_HI", 0x08 | ((cur_bank & 0x03) << 1)) -- 0x08 controls A19, set to 1 to read from bank 1 (0x80000-0xFFFFF)
 
-    flash.write_file(file, kb_per_bank, mapname, "GENESISROM", false)
+    flash.write_file(file, kb_per_bank, { mapper = mapname, mem_type = "GENESISROM" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -367,7 +367,7 @@ local function ram_dump(file, addr_hi, ram_size_kb, debug)
     end
 
     -- currently don't have means of dumping RAM with A16 high
-    dump.dumptofile(file, ram_size_kb, addr_base, "GENESIS_RAM_PAGE", false) -- A16 low
+    dump.dumptofile(file, ram_size_kb, { mapper = addr_base, mem_type = "GENESIS_RAM_PAGE" }, false) -- A16 low
 
     cur_bank = cur_bank + 1
   end
@@ -396,7 +396,7 @@ local function ram_write(file, start_bank, ram_size_kb, debug)
 
     dict.sega("GEN_SET_ADDR_HI", start_bank + cur_bank)
 
-    flash.write_file(file, ram_size_kb, mapname, "GENESISRAM", false)
+    flash.write_file(file, ram_size_kb, { mapper = mapname, mem_type = "GENESISRAM" }, false)
 
     cur_bank = cur_bank + 1
   end
