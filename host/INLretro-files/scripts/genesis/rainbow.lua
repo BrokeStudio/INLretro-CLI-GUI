@@ -36,8 +36,6 @@ local R_SRAM        = 0xF1
 
 --]]
 
--- local functions
-
 local function test_bootrom()
   local rv
 
@@ -135,39 +133,9 @@ end
 
 --]]
 
--- Test that cartridge is readable by looking for valid entries in internal header.
-local function rom_manf_id()
-  local manufacturer_id
-  local device_id
-  local device_test
-
-  -- compatible SST39VF / MX29
-  -- compatible S29GL01GS / S29GL512S / S29GL256S / S29GL128S
-
-  -- flash manf ID
-  genesis.rom_wr(0x000555 << 1, 0x00AA)
-  genesis.rom_wr(0x0002AA << 1, 0x0055)
-  genesis.rom_wr(0x000555 << 1, 0x0090)
-
-  manufacturer_id = dict.sega("GEN_ROM_RD", 0x0000 << 1)
-  chips.display_manufacturer(manufacturer_id)
-  flash_chip = manufacturer_id
-
-  device_id = dict.sega("GEN_ROM_RD", 0x000E << 1)
-  device_test = chips.display_device(manufacturer_id, device_id)
-
-  -- exit software
-  genesis.rom_wr(0x000000, 0x00F0)
-
-  if device_test == false then
-    log.error("Flash chip unknown")
-    return false
-  else
-    log.success("Flash chip deteted successfully")
-    return true
-  end
-end
-
+--- Erase one flash sector on the 32Mb Genesis cartridge.
+---@param addr integer 24-bit sector address, 0x000000-0x3FFFFF
+---@param debug? boolean Enable verbose progress logging
 local function rom_erase_sector(addr, debug)
   local cur_bank = addr >> 17       -- 128KB banks
   local local_addr = addr & 0x1FFFF -- offset inside 128KB bank
@@ -215,18 +183,18 @@ local function rom_erase_sector(addr, debug)
   return true
 end
 
--- write a single byte to ROM flash
+--- Program one 16-bit word to ROM flash and poll until it reads back.
+---@param addr integer 24-bit ROM address, 0x000000-0x3FFFFF
+---@param value integer 16-bit value to write
+---@param debug? boolean Enable verbose progress logging
 local function rom_flash_byte(addr, value, debug)
   if (addr < 0x000000 or addr > 0x3FFFFF) then
-    log.error("ERROR! flash write to ROM", string.format("$%X", addr), "must be $000000-$3FFFFF")
+    log.error("ERROR! flash write to ROM", help.hex_0x6(addr), "must be $000000-$3FFFFF")
     return
   end
 
   local addr_hi = (addr >> 16) & 0xff
   local addr_lo = addr & 0xffff
-
-  -- genesis.time_wr(0xF3, addr_hi >> 2)
-  -- dict.sega("GEN_SET_ADDR_HI", 0x08 | (addr_hi & 0x03))
 
   if debug then
     log.info("write a byte", help.hex_0x6(addr), help.hex_0x4(value))
@@ -237,12 +205,12 @@ local function rom_flash_byte(addr, value, debug)
   genesis.rom_wr(0x000555 << 1, 0x00A0)
   genesis.rom_wr(addr, value)
 
-  local rv = dict.sega("GEN_ROM_RD", addr_lo)
+  local rv = genesis.rom_rd(addr_lo)
 
   local i = 0
 
   while (rv ~= value) do
-    rv = dict.sega("GEN_ROM_RD", addr_lo)
+    rv = genesis.rom_rd(addr_lo)
     -- if debug then print("post write read:", help.hex(rv)) end
     i = i + 1
     if i > 30 then
@@ -258,13 +226,13 @@ local function rom_flash_byte(addr, value, debug)
   --TODO handle timeout for problems
 
   --TODO return pass/fail/info
-  return rv
 end
 
--- /ROMSEL (#C_CE) is always low for this dump
+--- Dump SSF2 banked ROM contents to an already-open output file.
+---@param file file* Open binary output file
+---@param rom_size_kb integer ROM size in kilobytes
+---@param debug? boolean Enable verbose progress logging
 local function rom_dump(file, rom_size_kb, debug)
-  -- we're dumping from 0x040000 which is second 512 kB / 256 kW bank ($080000-$0FFFFF)
-
   local kb_per_bank = 2 * 64 -- 2 bytes per address, 64K addresses
   local addr_base = 0x0000   -- control signals are manually controlled
   local num_banks = math.floor(rom_size_kb / kb_per_bank)
@@ -287,11 +255,11 @@ local function rom_dump(file, rom_size_kb, debug)
       spinner.update("Dumping", cur_bank, "/", num_banks - 1)
     end
 
-    -- -- select desired bank
+    -- select desired SSF2 bank
     genesis.time_wr(0xF3, cur_bank >> 2) -- 0xF3 => 0xA130F3
 
-    -- -- set address hi bits (A23-A16)
-    dict.sega("GEN_SET_ADDR_HI", 0x08 | ((cur_bank & 0x03) << 1)) -- 0x08 controls A19, set to 1 to read from bank 1 (0x80000-0xFFFFF)
+    -- set address hi bits (A23-A16)
+    genesis.set_addr_hi(0x08 | ((cur_bank & 0x03) << 1)) -- 0x08 controls A19 and selects the $080000-$0FFFFF window
 
     dump.dumptofile(file, kb_per_bank / 2, { mapper = addr_base, mem_type = "GENESIS_ROM_PAGE0" }, false)
     dump.dumptofile(file, kb_per_bank / 2, { mapper = addr_base, mem_type = "GENESIS_ROM_PAGE1" }, false)
@@ -302,13 +270,23 @@ local function rom_dump(file, rom_size_kb, debug)
   spinner.clear()
 end
 
-local function rom_write(file, rom_size_kb, debug)
+--- Program SSF2 banked ROM contents from an already-open input file, one bank at a time.
+---@param file file* Open binary input file
+---@param rom_size_kb integer ROM size in kilobytes
+---@param debug? boolean Enable verbose progress logging
+local function rom_flash(file, rom_size_kb, debug)
+  log.section("Programming ROM")
+  log.info("ROM size", rom_size_kb .. "KB")
+
   local kb_per_bank = 2 * 64 -- 2 bytes per address, 64K addresses
   local num_banks = math.floor(rom_size_kb / kb_per_bank)
   local cur_bank = 0
 
-  log.section("Programming ROM")
-  log.info("ROM size", rom_size_kb .. "KB")
+  local options
+  if flash_chip.buffer == true then
+    options = "USE_BUFFER"
+    log.info("Using buffer programming")
+  end
 
   -- disable SRAM
   genesis.ram_disable()
@@ -320,13 +298,13 @@ local function rom_write(file, rom_size_kb, debug)
       spinner.update("Flashing", cur_bank, "/", num_banks - 1)
     end
 
-    -- select desired bank
+    -- select desired SSF2 bank
     genesis.time_wr(0xF3, cur_bank >> 2) -- 0xF3 => 0xA130F3
 
     -- set address hi bits (A23-A16)
-    dict.sega("GEN_SET_ADDR_HI", 0x08 | ((cur_bank & 0x03) << 1)) -- 0x08 controls A19, set to 1 to read from bank 1 (0x80000-0xFFFFF)
+    genesis.set_addr_hi(0x08 | ((cur_bank & 0x03) << 1)) -- 0x08 controls A19 and selects the $080000-$0FFFFF window
 
-    flash.write_file(file, kb_per_bank, { mapper = mapname, mem_type = "GENESISROM" }, false)
+    flash.write_file(file, kb_per_bank, { mapper = mapname, mem_type = "GENESISROM", options = options }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -345,10 +323,14 @@ end
 
 --]]
 
--- dump the RAM, assumes the RAM was enabled as desired prior to calling
+--- Dump SRAM contents to an already-open output file.
+--- Assumes SRAM was enabled as desired before calling.
+---@param file file* Open binary output file
+---@param addr_hi integer High address byte selecting the SRAM window
+---@param ram_size_kb integer SRAM size in kilobytes
+---@param debug? boolean Enable verbose progress logging
 local function ram_dump(file, addr_hi, ram_size_kb, debug)
-  local kb_per_bank =
-      ram_size_kb        -- TODO: FIXME? => -- 128KByte addressable per bank, but only use lower byte of each 16bit word
+  local kb_per_bank = ram_size_kb -- TODO: FIXME? => -- 128KByte addressable per bank, but only use lower byte of each 16bit word
   local num_banks = math.floor(ram_size_kb / kb_per_bank)
   local addr_base = 0x00 -- A15-8 address of ram start
   local cur_bank = 0
@@ -356,8 +338,8 @@ local function ram_dump(file, addr_hi, ram_size_kb, debug)
   log.info("SRAM size", ram_size_kb .. "KB")
 
   -- select desired bank
-  -- A23-A17
-  dict.sega("GEN_SET_ADDR_HI", addr_hi)
+  -- set address hi bits (A23-A16)
+  genesis.set_addr_hi(addr_hi)
 
   while cur_bank < num_banks do
     if debug then
@@ -375,8 +357,12 @@ local function ram_dump(file, addr_hi, ram_size_kb, debug)
   spinner.clear()
 end
 
--- write to the PRG-RAM, assumes the PRG-RAM was enabled/disabled as desired prior to calling
-local function ram_write(file, start_bank, ram_size_kb, debug)
+--- Program SRAM contents from an already-open input file.
+---@param file file* Open binary input file
+---@param addr_hi integer High address byte selecting the SRAM window
+---@param ram_size_kb integer SRAM size in kilobytes
+---@param debug? boolean Enable verbose progress logging
+local function ram_write(file, addr_hi, ram_size_kb, debug)
   local kb_per_bank = 32 -- 128KByte addressable per bank, but only use lower byte of each 16bit word
   local num_banks = math.floor(ram_size_kb / kb_per_bank)
   local cur_bank = 0
@@ -394,7 +380,7 @@ local function ram_write(file, start_bank, ram_size_kb, debug)
       spinner.update("Writing", cur_bank, "/", num_banks - 1)
     end
 
-    dict.sega("GEN_SET_ADDR_HI", start_bank + cur_bank)
+    genesis.set_addr_hi(addr_hi + cur_bank)
 
     flash.write_file(file, ram_size_kb, { mapper = mapname, mem_type = "GENESISRAM" }, false)
 
@@ -408,14 +394,14 @@ local function ram_write(file, start_bank, ram_size_kb, debug)
   log.success("Done programming SRAM")
 end
 
--- try to detect ram
+--- Detect SRAM by preserving, toggling, and restoring one test byte.
+---@param debug? boolean Enable verbose progress logging
+---@return boolean success True when SRAM read/write behavior is detected
 local function ram_test(debug)
   local test = true
   local saved_value
   local write_value
   local read_value
-
-  local addr_hi = 0x20
 
   log.section("Detecting SRAM")
 
@@ -423,29 +409,19 @@ local function ram_test(debug)
   genesis.ram_enable()
 
   -- save potential battery backed data first
-  -- saved_value = genesis.ram_rd(0x200000)
-  dict.sega("GEN_SET_ADDR_HI", addr_hi)
-  saved_value = dict.sega("GEN_RAM_RD", 0x0000)
+  saved_value = genesis.ram_rd(0x200000)
   write_value = saved_value ~ 0xff
 
   -- try to write and read back
-  -- genesis.ram_wr(0x200000, write_value)
-  -- read_value = dict.sega("GEN_RAM_RD", 0x0000)
-  -- dict.sega("GEN_SET_ADDR", 0x0000, addr_hi)
-  dict.sega("GEN_RAM_WR", 0x0000, write_value)
-  -- dict.sega("GEN_SET_ADDR", 0x0000, addr_hi)
-  read_value = dict.sega("GEN_RAM_RD", 0x0000)
+  genesis.ram_wr(0x200000, write_value)
+  read_value = genesis.ram_rd(0x200000)
   if read_value ~= write_value then
     test = false
   end
 
   -- put back original value
-  -- genesis.ram_wr(0x200000, saved_value)
-  -- read_value = genesis.ram_rd(0x200000)
-  -- dict.sega("GEN_SET_ADDR", 0x0000, addr_hi)
-  dict.sega("GEN_RAM_WR", 0x0000, saved_value)
-  -- dict.sega("GEN_SET_ADDR", 0x0000, addr_hi)
-  read_value = dict.sega("GEN_RAM_RD", 0x0000)
+  genesis.ram_wr(0x200000, saved_value)
+  read_value = genesis.ram_rd(0x200000)
   if read_value ~= (saved_value) then
     test = false
   end
@@ -454,14 +430,19 @@ local function ram_test(debug)
   genesis.ram_disable()
 
   if test then
-    log.success("RAM detected")
+    log.success("SRAM detected")
   else
-    log.error("RAM not detected")
+    log.error("SRAM not detected")
   end
 
   return test
 end
 
+--- Exercise SRAM with an LFSR pattern and compare the dumped result.
+---@param ram_size integer SRAM size in kilobytes
+---@param retroprog_id string|integer Identifier used in the temporary dump filename
+---@param debug? boolean Enable verbose compare/progress logging
+---@return boolean success True when the SRAM dump matches the expected LFSR data
 local function ram_exercise(ram_size, retroprog_id, debug)
   --[[
   SRAM covers the $200001-$20FFFF address range, and only every other byte is used (i.e. $200001, $200003, $200005, etc.).
@@ -477,19 +458,19 @@ local function ram_exercise(ram_size, retroprog_id, debug)
   genesis.ram_enable()
 
   -- set SRAM address high bits
-  dict.sega("GEN_SET_ADDR_HI", addr_hi)
+  genesis.set_addr_hi(addr_hi)
 
-  log.section("Exercising SRAM")
-  log.info("SRAM size", ram_size .. "KB")
+  log.section("Exercising RAM")
+  log.info("RAM size", ram_size .. "KB")
 
   -- write random data to all banks
-  log.point("Writing random data to SRAM")
-  dict.sega("GEN_PAGE_RAM_WR_LFSR", 0x0000, ram_size)
+  log.point("Writing random data to RAM")
+  dict.sega("GEN_PAGE_RAM_WR_LFSR", 0x00, ram_size)
 
   --dump sram into file
   local filename = opts.write_path .. "./ignore/gen_sram_dump-" .. retroprog_id .. ".bin"
   local file = assert(io.open(filename, "wb"))
-  log.point("Dumping SRAM")
+  log.point("Dumping RAM")
   ram_dump(file, addr_hi, ram_size, debug)
 
   -- disable SRAM
@@ -624,6 +605,10 @@ end
 
 -- Cart should be in reset state upon calling this function
 -- this function processes all user requests for this specific board/mapper
+--- Process all requested operations for the Genesis Rainbow mapper.
+--- The cartridge should be in reset state before calling.
+---@param process_opts table Parsed operation options from the main application
+---@param console_opts table Console/cartridge size options
 local function process(process_opts, console_opts)
   -- some local variables
   local rv             = nil
@@ -670,7 +655,7 @@ local function process(process_opts, console_opts)
 
     -- attempt to read ROM flash ID
     if options.force_flash_test or (do_rom_write and rom_size ~= 0) then
-      rv = rom_manf_id()
+      rv, flash_chip = genesis.rom_manf_id()
       if not rv then
         if do_rom_write then
           log.error("Couldn't identify flash chip")
@@ -815,11 +800,11 @@ local function process(process_opts, console_opts)
   -- Compare avec banque 0.
 
   --[[
-  88""Yb    db    8b    d8     8888b.  88   88 8b    d8 88""Yb
-  88__dP   dPYb   88b  d88      8I  Yb 88   88 88b  d88 88__dP
-  88"Yb   dP__Yb  88YbdP88      8I  dY Y8   8P 88YbdP88 88"""
-  88  Yb dP""""Yb 88 YY 88     8888Y"  `YbodP' 88 YY 88 88
-  --]]
+88""Yb    db    8b    d8     8888b.  88   88 8b    d8 88""Yb
+88__dP   dPYb   88b  d88      8I  Yb 88   88 88b  d88 88__dP
+88"Yb   dP__Yb  88YbdP88      8I  dY Y8   8P 88YbdP88 88"""
+88  Yb dP""""Yb 88 YY 88     8888Y"  `YbodP' 88 YY 88 88
+--]]
 
   -- dump cart RAM to file
   if do_ram_dump then
@@ -845,11 +830,11 @@ local function process(process_opts, console_opts)
   end
 
   --[[
-  88""Yb    db    8b    d8     Yb        dP 88""Yb 88 888888 888888
-  88__dP   dPYb   88b  d88      Yb  db  dP  88__dP 88   88   88__
-  88"Yb   dP__Yb  88YbdP88       YbdPYbdP   88"Yb  88   88   88""
-  88  Yb dP""""Yb 88 YY 88        YP  YP    88  Yb 88   88   888888
-  --]]
+88""Yb    db    8b    d8     Yb        dP 88""Yb 88 888888 888888
+88__dP   dPYb   88b  d88      Yb  db  dP  88__dP 88   88   88__
+88"Yb   dP__Yb  88YbdP88       YbdPYbdP   88"Yb  88   88   88""
+88  Yb dP""""Yb 88 YY 88        YP  YP    88  Yb 88   88   888888
+--]]
 
   -- write file to the cart RAM
   if do_ram_write then
@@ -859,7 +844,7 @@ local function process(process_opts, console_opts)
     local addr_hi = 0x20
     time.start()
     ram_write(file, addr_hi, ram_size, DEBUG)
-    time.report(rom_size)
+    time.report(ram_size)
 
     -- close file
     assert(file:close())
@@ -911,7 +896,7 @@ local function process(process_opts, console_opts)
 
   -- erase the cart
   if do_erase then
-    -- local i = 0
+    local i = 0
     local temp
     local size_to_erase = rom_size
 
@@ -920,7 +905,7 @@ local function process(process_opts, console_opts)
       log.section("Erasing ROM")
 
       time.start()
-      if (flash_chip == 0x01) then -- Cypress / Spansion
+      if (flash_chip.manufacturer_id == 0x01) then -- Cypress / Spansion
         -- [[
         log.info("erasing only needed sectors because erasing full chip takes 4 min...")
 
@@ -958,15 +943,14 @@ local function process(process_opts, console_opts)
         genesis.rom_wr(0x000555 << 1, 0x0010)
 
         local nak = 1
-        temp = dict.sega("GEN_ROM_RD", 0x0000)
-        while (temp ~= dict.sega("GEN_ROM_RD", 0x0000)) do
-          temp = dict.sega("GEN_ROM_RD", 0x0000)
+        temp = genesis.rom_rd(0x0000)
+        while (temp ~= genesis.rom_rd(0x0000)) do
+          temp = genesis.rom_rd(0x0000)
           nak = nak + 1
         end
-        temp = dict.sega("GEN_ROM_RD", 0x0000)
+        temp = genesis.rom_rd(0x0000)
         log.success("Done erasing ROM", nak .. " naks")
       end
-
       time.report(size_to_erase)
     end
   end
@@ -988,7 +972,7 @@ local function process(process_opts, console_opts)
 
       --flash cart
       time.start()
-      rom_write(file, rom_size, DEBUG)
+      rom_flash(file, rom_size, DEBUG)
       time.report(rom_size)
 
       -- close file

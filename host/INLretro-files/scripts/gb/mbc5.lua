@@ -72,7 +72,8 @@ end
 local function rom_manf_id()
   local manufacturer_id
   local device_id
-  local device_test
+  local found
+  local device
 
   log.section("Reading ROM manufacturer/device ID")
 
@@ -86,27 +87,23 @@ local function rom_manf_id()
   if manufacturer_id == 0xC2 then
     -- MX chips
     device_id = dict.gameboy("GAMEBOY_RD", 0x0002)
-  device_test = chips.display_device(manufacturer_id, device_id)
+  found, device = chips.display_device(manufacturer_id, device_id)
   elseif manufacturer_id == 0x01 then
     -- Cypress / Spansion
     device_id = dict.gameboy("GAMEBOY_RD", 0x0002) << 16
     device_id = device_id | (dict.gameboy("GAMEBOY_RD", 0x001C) << 8)
     device_id = device_id | dict.gameboy("GAMEBOY_RD", 0x001E)
-    device_test = chips.display_device(manufacturer_id, device_id)
+    found, device = chips.display_device(manufacturer_id, device_id)
   else
     -- fallback (SST)
     device_id = dict.gameboy("GAMEBOY_RD", 0x0001)
-    device_test = chips.display_device(manufacturer_id, device_id)
+    found, device = chips.display_device(manufacturer_id, device_id)
   end
 
   -- exit software
   dict.gameboy("GAMEBOY_PIN31_WR", 0x0000, 0xF0)
 
-  if device_test == false then
-    return false
-  else
-    return true
-  end
+  return found, device
 end
 
 -- erase ROM

@@ -42,7 +42,8 @@ local mapname = "ROMONLY"
 local function rom_manf_id()
   local manufacturer_id
   local device_id
-  local device_test
+  local found
+  local device
 
   log.section("Reading ROM manufacturer/device ID")
 
@@ -54,16 +55,12 @@ local function rom_manf_id()
   chips.display_manufacturer(manufacturer_id)
 
   device_id = dict.gameboy("GAMEBOY_RD", 0x0001)
-  device_test = chips.display_device(manufacturer_id, device_id)
+  found, device = chips.display_device(manufacturer_id, device_id)
 
   -- exit software
   dict.gameboy("GAMEBOY_WR", 0x0000, 0xF0)
 
-  if device_test == false then
-    return false
-  else
-    return true
-  end
+  return found, device
 end
 
 -- erase ROM

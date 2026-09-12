@@ -44,7 +44,8 @@ local mapname = "LOROM"
 local function rom_manf_id(debug)
   local manufacturer_id
   local device_id
-  local device_test
+  local found
+  local device
 
   -- enter software mode A11 is highest address bit that needs to be valid
   -- datasheet not exactly explicit, A11 might not need to be valid
@@ -62,27 +63,23 @@ local function rom_manf_id(debug)
   if manufacturer_id == 0xC2 then
     -- MX chips
     device_id = dict.snes("SNES_ROM_RD", 0x0002)
-    device_test = chips.display_device(manufacturer_id, device_id)
+    found, device = chips.display_device(manufacturer_id, device_id)
   elseif manufacturer_id == 0x01 then
     -- Cypress / Spansion
     device_id = dict.snes("SNES_ROM_RD", 0x0002) << 16
     device_id = device_id | (dict.snes("SNES_ROM_RD", 0x001C) << 8)
     device_id = device_id | dict.snes("SNES_ROM_RD", 0x001E)
-  device_test = chips.display_device(manufacturer_id, device_id)
+  found, device = chips.display_device(manufacturer_id, device_id)
   else
     -- fallback (SST)
     device_id = dict.snes("SNES_ROM_RD", 0x0001)
-    device_test = chips.display_device(manufacturer_id, device_id)
+    found, device = chips.display_device(manufacturer_id, device_id)
   end
 
   -- exit software
   dict.snes("SNES_ROM_WR", 0x8000, 0xF0)
 
-  if device_test == false then
-    return false
-  else
-    return true
-  end
+  return found, device
 end
 
 -- erase ROM

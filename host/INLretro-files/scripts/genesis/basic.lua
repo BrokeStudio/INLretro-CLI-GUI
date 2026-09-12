@@ -28,11 +28,9 @@ local flash_chip
 
 --]]
 
--- local functions
-
 --- Erase one flash sector on the 32Mb Genesis cartridge.
 ---@param addr integer 24-bit sector address, 0x000000-0x3FFFFF
-local function erase_sector(addr)
+local function rom_erase_sector(addr)
   genesis.rom_wr(0x000555 << 1, 0x00AA)
   genesis.rom_wr(0x0002AA << 1, 0x0055)
   genesis.rom_wr(0x000555 << 1, 0x0080)
@@ -57,51 +55,6 @@ end
 ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝
 
 --]]
-
---- Read and identify the ROM flash manufacturer/device ID.
----@return boolean success True when the flash chip is recognized
-local function rom_manf_id()
-  local manufacturer_id
-  local device_id
-  local device_test
-
-  -- compatible SST39VF / MX29
-  -- compatible S29GL01GS / S29GL512S / S29GL256S / S29GL128S
-
-  -- flash manf ID
-  genesis.rom_wr(0x000555 << 1, 0x00AA)
-  genesis.rom_wr(0x0002AA << 1, 0x0055)
-  genesis.rom_wr(0x000555 << 1, 0x0090)
-
-  manufacturer_id = genesis.rom_rd(0x0000 << 1)
-  chips.display_manufacturer(manufacturer_id)
-  flash_chip = manufacturer_id
-
-  if manufacturer_id == 0xC2 then
-    -- MX chips
-    device_id = genesis.rom_rd(0x0001 << 1)
-    device_test = chips.display_device(manufacturer_id, device_id)
-  elseif manufacturer_id == 0x01 then
-    -- Cypress / Spansion
-    device_id = genesis.rom_rd(0x000E << 1)
-    device_test = chips.display_device(manufacturer_id, device_id)
-  else
-    -- fallback (SST)
-    device_id = genesis.rom_rd(0x0001 << 1)
-    device_test = chips.display_device(manufacturer_id, device_id)
-  end
-
-  -- exit software
-  genesis.rom_wr(0x000000, 0x00F0)
-
-  if device_test == false then
-    log.error("Flash chip unknown")
-    return false
-  else
-    log.success("Flash chip deteted successfully")
-    return true
-  end
-end
 
 --- Program one 16-bit word to ROM flash and poll until it reads back.
 ---@param addr integer 24-bit ROM address, 0x000000-0x3FFFFF
@@ -176,7 +129,7 @@ local function rom_dump(file, rom_size_kb, debug)
     end
 
     -- select the current bank
-    if (cur_bank <= 0x7F) then
+    if cur_bank <= 0x7F then
       genesis.set_addr_hi(cur_bank << 1)
     else
       log.error("SEGA bank cannot exceed 0x7F, it was: ", help.hex_0x2(cur_bank))
@@ -196,13 +149,19 @@ end
 ---@param file file* Open binary input file
 ---@param rom_size_kb integer ROM size in kilobytes
 ---@param debug? boolean Enable verbose progress logging
-local function rom_write(file, rom_size_kb, debug)
+local function rom_flash(file, rom_size_kb, debug)
+  log.section("Programming ROM")
+  log.info("ROM size", rom_size_kb .. "KB")
+
   local kb_per_bank = 2 * 64 -- 2 bytes per address, 64K addresses
   local num_banks = math.floor(rom_size_kb / kb_per_bank)
   local cur_bank = 0
 
-  log.section("Programming ROM")
-  log.info("ROM size", rom_size_kb .. "KB")
+  local options
+  if flash_chip.buffer == true then
+    options = "USE_BUFFER"
+    log.info("Using buffer programming")
+  end
 
   -- disable SRAM
   genesis.ram_disable()
@@ -215,14 +174,14 @@ local function rom_write(file, rom_size_kb, debug)
     end
 
     -- select the current bank
-    if (cur_bank <= 0x7F) then
+    if cur_bank <= 0x7F then
       genesis.set_addr_hi(cur_bank << 1)
     else
       log.error("SEGA bank cannot exceed 0x7F, it was: ", help.hex_0x2(cur_bank))
       return
     end
 
-    flash.write_file(file, kb_per_bank, { mapper = mapname, mem_type = "GENESISROM" }, false)
+    flash.write_file(file, kb_per_bank, { mapper = mapname, mem_type = "GENESISROM", options = options }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -248,7 +207,7 @@ end
 ---@param ram_size_kb integer SRAM size in kilobytes
 ---@param debug? boolean Enable verbose progress logging
 local function ram_dump(file, addr_hi, ram_size_kb, debug)
-  local kb_per_bank = 32 -- TODO: FIXME? => -- 128KByte addressable per bank, but only use lower byte of each 16bit word
+  local kb_per_bank = ram_size_kb -- TODO: FIXME? => -- 128KByte addressable per bank, but only use lower byte of each 16bit word
   local num_banks = math.floor(ram_size_kb / kb_per_bank)
   local addr_base = 0x00 -- A15-8 address of ram start
   local cur_bank = 0
@@ -256,7 +215,7 @@ local function ram_dump(file, addr_hi, ram_size_kb, debug)
   log.info("SRAM size", ram_size_kb .. "KB")
 
   -- select desired bank
-  -- A17-23
+  -- set address hi bits (A23-A16)
   genesis.set_addr_hi(addr_hi)
 
   while cur_bank < num_banks do
@@ -469,7 +428,7 @@ local function process(process_opts, console_opts)
 
     -- attempt to read ROM flash ID
     if options.force_flash_test or (do_rom_write and rom_size ~= 0) then
-      rv = rom_manf_id()
+      rv, flash_chip = genesis.rom_manf_id()
       if not rv then
         if do_rom_write then
           log.error("Couldn't identify flash chip")
@@ -613,7 +572,7 @@ local function process(process_opts, console_opts)
       log.section("Erasing ROM")
 
       time.start()
-      if (flash_chip == 0x01) then -- Cypress / Spansion
+      if flash_chip.manufacturer_id == 0x01 then -- Cypress / Spansion
         -- [[
         log.info("erasing only needed sectors because erasing full chip takes 4 min...")
 
@@ -628,7 +587,7 @@ local function process(process_opts, console_opts)
           else
             spinner.update("Erasing sector ", i, "/", sectors - 1) --, string.format("(%06X)", addr))
           end
-          temp = erase_sector(addr, DEBUG)
+          temp = rom_erase_sector(addr, DEBUG)
         end
         spinner.clear()
         log.success("Done erasing ROM (" .. sectors .. " sectors)")
@@ -674,7 +633,7 @@ local function process(process_opts, console_opts)
 
       --flash cart
       time.start()
-      rom_write(file, rom_size, DEBUG)
+      rom_flash(file, rom_size, DEBUG)
       time.report(rom_size)
 
       -- close file

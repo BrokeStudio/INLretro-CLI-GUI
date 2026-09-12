@@ -2,6 +2,7 @@
 local genesis = {}
 
 -- import required modules
+local chips   = require "scripts.app.chips"
 local dict    = require "scripts.app.dict"
 local dump    = require "scripts.app.dump"
 local help    = require "scripts.app.help"
@@ -234,6 +235,51 @@ end
 
 --]]
 
+--- Read and identify the ROM flash manufacturer/device ID.
+---@return boolean success True when the flash chip is recognized
+---@return table info Flash chip information
+local function rom_manf_id()
+  local found
+  local manufacturer_id
+  local device_id
+  local device
+
+  -- compatible SST39VF / MX29
+  -- compatible S29GL01GS / S29GL512S / S29GL256S / S29GL128S
+
+  -- flash manf ID
+  genesis.rom_wr(0x000555 << 1, 0x00AA)
+  genesis.rom_wr(0x0002AA << 1, 0x0055)
+  genesis.rom_wr(0x000555 << 1, 0x0090)
+
+  found, manufacturer_id = genesis.rom_rd(0x0000 << 1)
+  chips.display_manufacturer(manufacturer_id)
+
+  if manufacturer_id == 0xC2 then
+    -- MX chips
+    device_id = genesis.rom_rd(0x0001 << 1)
+    found, device = chips.display_device(manufacturer_id, device_id)
+  elseif manufacturer_id == 0x01 then
+    -- Cypress / Spansion
+    device_id = genesis.rom_rd(0x000E << 1)
+    found, device = chips.display_device(manufacturer_id, device_id)
+  else
+    -- fallback (SST)
+    device_id = genesis.rom_rd(0x0001 << 1)
+    found, device = chips.display_device(manufacturer_id, device_id)
+  end
+
+  -- exit software
+  genesis.rom_wr(0x000000, 0x00F0)
+
+  if found then
+    log.success("Flash chip deteted successfully")
+  else
+    log.error("Flash chip unknown")
+  end
+  return found, device
+end
+
 --- Read an 8-bit value from a Genesis /TIME register.
 --- Register offset maps to CPU address 0xA13000 | addr.
 ---@param addr integer /TIME register offset, 0x00-0xFF
@@ -422,6 +468,8 @@ genesis.dbg_time_wr       = dbg_time_wr
 genesis.set_addr          = set_addr
 genesis.set_addr_hi       = set_addr_hi
 genesis.set_addr_lo       = set_addr_lo
+
+genesis.rom_manf_id       = rom_manf_id
 
 genesis.rom_rd            = rom_rd
 genesis.dbg_rom_rd        = dbg_rom_rd

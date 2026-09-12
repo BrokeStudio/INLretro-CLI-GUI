@@ -44,16 +44,16 @@ local function dumptocallback(callback, sizeKB, config, debug)
   --set page_num to non-zero if offset arg sent
   --set mem_type and part_num to designate how to get/write data
   if debug then print("setting map n part") end
-  dict.buffer("SET_MEM_N_PART", (op_buffer[mem_type] << 8 | options), buff0)
-  dict.buffer("SET_MEM_N_PART", (op_buffer[mem_type] << 8 | options), buff1)
+  dict.buffer("SET_MEM_N_PART", (op_buffer[mem_type] << 8) | options, buff0)
+  dict.buffer("SET_MEM_N_PART", (op_buffer[mem_type] << 8) | options, buff1)
   --set multiple and add_mult only when flashing
   --set mapper, map_var, and function to designate read/write algo
 
   if debug then print("setting map n mapvar") end
   --dict.buffer("SET_MAP_N_MAPVAR", (op_buffer[map]<<8 | op_buffer["NOVAR"]), buff0 )
   --dict.buffer("SET_MAP_N_MAPVAR", (op_buffer[map]<<8 | op_buffer["NOVAR"]), buff1 )
-  dict.buffer("SET_MAP_N_MAPVAR", (mapper << 8 | op_buffer["NOVAR"]), buff0)
-  dict.buffer("SET_MAP_N_MAPVAR", (mapper << 8 | op_buffer["NOVAR"]), buff1)
+  dict.buffer("SET_MAP_N_MAPVAR", (mapper << 8) | op_buffer["NOVAR"], buff0)
+  dict.buffer("SET_MAP_N_MAPVAR", (mapper << 8) | op_buffer["NOVAR"], buff1)
 
   --tell buffers what function to use for dumping
   --TODO when start implementing other mappers

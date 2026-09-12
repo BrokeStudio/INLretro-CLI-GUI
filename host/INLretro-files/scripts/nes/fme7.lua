@@ -184,7 +184,8 @@ end
 local function prg_rom_manf_id()
   local manufacturer_id
   local device_id
-  local device_test
+  local found
+  local device
 
   init_mapper()
 
@@ -198,16 +199,12 @@ local function prg_rom_manf_id()
   chips.display_manufacturer(manufacturer_id)
 
   device_id = dict.nes("NES_CPU_RD", 0x8001)
-  device_test = chips.display_device(manufacturer_id, device_id)
+  found, device = chips.display_device(manufacturer_id, device_id)
 
   -- exit software
   dict.nes("NES_CPU_WR", 0x8000, 0xF0)
 
-  if device_test == false then
-    return false
-  else
-    return true
-  end
+  return found, device
 end
 
 -- write a single byte to PRG-ROM flash
@@ -333,7 +330,8 @@ end
 local function chr_rom_manf_id()
   local manufacturer_id
   local device_id
-  local device_test
+  local found
+  local device
 
   init_mapper()
 
@@ -347,16 +345,12 @@ local function chr_rom_manf_id()
   chips.display_manufacturer(manufacturer_id)
 
   device_id = dict.nes("NES_PPU_RD", 0x0001)
-  device_test = chips.display_device(manufacturer_id, device_id)
+  found, device = chips.display_device(manufacturer_id, device_id)
 
   -- exit software
   dict.nes("NES_PPU_WR", 0x0000, 0xF0)
 
-  if device_test == false then
-    return false
-  else
-    return true
-  end
+  return found, device
 end
 
 -- write a single byte to CHR-ROM flash

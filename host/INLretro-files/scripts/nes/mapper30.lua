@@ -48,7 +48,8 @@ end
 local function prg_rom_manf_id()
   local manufacturer_id
   local device_id
-  local device_test
+  local found
+  local device
 
   log.section("Reading PRG-ROM manufacturer/device ID")
 
@@ -73,16 +74,12 @@ local function prg_rom_manf_id()
   chips.display_manufacturer(manufacturer_id)
 
   device_id = dict.nes("NES_CPU_RD", 0x8001)
-  device_test = chips.display_device(manufacturer_id, device_id)
+  found, device = chips.display_device(manufacturer_id, device_id)
 
   -- exit software
   dict.nes("NES_CPU_WR", 0x8000, 0xF0)
 
-  if device_test == false then
-    return false
-  else
-    return true
-  end
+  return found, device
 end
 
 -- REQ: addr must be in the first bank $8000-BFFF

@@ -386,7 +386,8 @@ end
 local function prg_rom_manf_id()
   local manufacturer_id
   local device_id
-  local device_test
+  local device
+  local found
 
   log.section("Reading PRG-ROM manufacturer/device ID")
 
@@ -399,26 +400,23 @@ local function prg_rom_manf_id()
 
   manufacturer_id = dict.nes("NES_CPU_RD", 0x8000)
   chips.display_manufacturer(manufacturer_id)
-  prg_flash_chip = manufacturer_id
 
   device_id = dict.nes("NES_CPU_RD", 0x8001)
-  device_test = chips.display_device(manufacturer_id, device_id)
+  found, device = chips.display_device(manufacturer_id, device_id)
 
-  if not device_test then
+  if not found then
     device_id = dict.nes("NES_CPU_RD", 0x8002) << 16
     device_id = device_id | (dict.nes("NES_CPU_RD", 0x801C) << 8)
     device_id = device_id | dict.nes("NES_CPU_RD", 0x801E)
-    device_test = chips.display_device(manufacturer_id, device_id)
+    found, device = chips.display_device(manufacturer_id, device_id)
   end
+
+  prg_flash_chip = device
 
   -- exit software
   dict.nes("NES_CPU_WR", 0x8000, 0xF0)
 
-  if device_test == false then
-    return false
-  else
-    return true
-  end
+  return found, device
 end
 
 local function prg_erase_sector(addr, debug)
@@ -534,10 +532,14 @@ local function prg_rom_flash(file, rom_size_KB, debug)
   local cur_bank = 0
   local num_banks = math.floor(rom_size_KB / bank_size)
 
-  -- -- enter unlock bypass mode
-  -- dict.nes("NES_CPU_WR", 0x8AAA, 0xAA)
-  -- dict.nes("NES_CPU_WR", 0x8555, 0x55)
-  -- dict.nes("NES_CPU_WR", 0x8AAA, 0x20)
+  local options
+  if prg_flash_chip.buffer == true then
+    options = "USE_BUFFER"
+    log.info("Using buffer programming")
+  elseif prg_flash_chip.unlock_bypass == true then
+    options = "USE_UNLOCK_BYPASS"
+    log.info("Using unlock bypass mode")
+  end
 
   while cur_bank < num_banks do
     if debug then
@@ -551,14 +553,10 @@ local function prg_rom_flash(file, rom_size_KB, debug)
     dict.nes("NES_CPU_WR", PRG_8_LO, (cur_bank & 0x00ff) >> 0) -- 32KB @ CPU $8000
 
     -- have the device write a bank worth of data
-    flash.write_file(file, bank_size, { mapper = mapname, mem_type = "PRGROM" }, false)
+    flash.write_file(file, bank_size, { mapper = mapname, mem_type = "PRGROM", options = options }, false)
 
     cur_bank = cur_bank + 1
   end
-
-  -- -- exit unlock bypass mode
-  -- dict.nes("NES_CPU_WR", 0x8000, 0x90)
-  -- dict.nes("NES_CPU_WR", 0x8000, 0x00)
 
   spinner.clear()
   log.success("Done programming PRG-ROM")
@@ -578,7 +576,8 @@ end
 local function chr_rom_manf_id()
   local manufacturer_id
   local device_id
-  local device_test
+  local device
+  local found
 
   init_mapper()
 
@@ -595,24 +594,21 @@ local function chr_rom_manf_id()
 
   manufacturer_id = dict.nes("NES_PPU_RD", 0x0000)
   chips.display_manufacturer(manufacturer_id)
-  chr_flash_chip = manufacturer_id
 
   device_id = dict.nes("NES_PPU_RD", 0x0001)
-  device_test = chips.display_device(manufacturer_id, device_id)
+  found, device = chips.display_device(manufacturer_id, device_id)
 
   device_id = dict.nes("NES_PPU_RD", 0x0002) << 16
   device_id = device_id | (dict.nes("NES_PPU_RD", 0x001C) << 8)
   device_id = device_id | dict.nes("NES_PPU_RD", 0x001E)
-  device_test = chips.display_device(manufacturer_id, device_id)
+  found, device = chips.display_device(manufacturer_id, device_id)
 
   -- exit software
   dict.nes("NES_PPU_WR", 0x0000, 0xF0)
 
-  if device_test == false then
-    return false
-  else
-    return true
-  end
+  chr_flash_chip = device
+
+  return found, device
 end
 
 local function chr_erase_sector(addr, debug)
@@ -729,6 +725,15 @@ local function chr_rom_flash(file, rom_size_KB, debug)
   local cur_bank = 0
   local num_banks = math.floor(rom_size_KB / bank_size)
 
+  local options
+  if chr_flash_chip.buffer == true then
+    options = "USE_BUFFER"
+    log.info("Using buffer programming")
+  elseif chr_flash_chip.unlock_bypass == true then
+    options = "USE_UNLOCK_BYPASS"
+    log.info("Using unlock bypass mode")
+  end
+
   while cur_bank < num_banks do
     if debug then
       log.point("writing CHR bank", cur_bank, "of", num_banks - 1)
@@ -741,7 +746,7 @@ local function chr_rom_flash(file, rom_size_KB, debug)
     dict.nes("NES_CPU_WR", CHR_0_LO, cur_bank & 0xff)          -- 8KB @ PPU $0000
 
     -- have the device write a bank worth of data
-    flash.write_file(file, bank_size, { mapper = mapname, mem_type = "CHRROM" }, false)
+    flash.write_file(file, bank_size, { mapper = mapname, mem_type = "CHRROM", options = options }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -1489,7 +1494,7 @@ local function process(process_opts, console_opts)
       log.section("Erasing PRG-ROM")
       time.start()
 
-      if (prg_flash_chip == 0x01666) then -- Cypress / Spansion
+      if (prg_flash_chip.manufacturer_id == 0x01666) then -- Cypress / Spansion
         -- [[
         log.info("erasing only needed sectors...")
 
@@ -1547,8 +1552,8 @@ local function process(process_opts, console_opts)
       time.start()
       size_to_erase = chr_size
 
-      -- if (chr_flash_chip == 0x01) then -- Cypress / Spansion
-      if (chr_flash_chip == 0x01666) then -- Cypress / Spansion
+      -- if (chr_flash_chip.manufacturer_id == 0x01) then -- Cypress / Spansion
+      if (chr_flash_chip.manufacturer_id == 0x01666) then -- Cypress / Spansion
         local sectors = math.floor(chr_size / 64)
         size_to_erase = sectors * 64
         local addr
