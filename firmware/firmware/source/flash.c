@@ -85,6 +85,46 @@ uint8_t nes_write_page_verify(uint8_t addrH, buffer* buff, write_rv_funcptr wr_f
   // TODO error check/report
   return SUCCESS;
 }
+
+uint8_t nes_ppu_write_page_buffer_verify(uint8_t addrH, buffer* buff)
+{
+  uint16_t cur = buff->cur_byte; // need 16 bits here so it won't overflow
+  uint16_t base_addr = (uint16_t)addrH << 8;
+  uint16_t addr;
+  uint8_t value;
+  uint16_t byte_count = (buff->last_idx + 1 - buff->cur_byte);
+
+  // write "write to buffer" command and sector address
+  nes_ppu_wr(0x0AAA, 0xAA);
+  nes_ppu_wr(0x0555, 0x55);
+  nes_ppu_wr(base_addr, 0x25);
+  nes_ppu_wr(base_addr, byte_count - 1);
+
+  while(cur <= buff->last_idx) {
+    value = buff->data[cur + 0];
+    addr = base_addr + cur;
+
+    // add word to write buffer
+    nes_ppu_wr(addr, value);
+
+    cur++;
+  }
+  buff->cur_byte = cur;
+
+  // write program buffer to flash (confirm)
+  nes_ppu_wr(base_addr, 0x29);
+
+  // TODO: add timeout
+  do {
+    value = nes_ppu_rd(addr);
+  } while(value != nes_ppu_rd(addr));
+
+  // TODO: add flash control
+
+  // TODO error check/report
+  return SUCCESS;
+}
+
 #endif
 
 #ifdef SNES_CONN
@@ -941,21 +981,26 @@ uint8_t flash_buff(buffer* buff)
         nes_write_page(addrH, buff, mmc3_chrrom_flash_wr);
       }
       if(buff->mapper == RNBW) {
-        // enter unlock mode bypass
-        nes_ppu_wr(0x0AAA, 0xAA);
-        nes_ppu_wr(0x0555, 0x55);
-        nes_ppu_wr(0x0AAA, 0x20);
+        if(buff->part_num == USE_BUFFER) {
+          nes_ppu_write_page_buffer_verify(addrH, buff);
+        } else if(buff->part_num == USE_UNLOCK_BYPASS) {
+          // enter unlock mode bypass
+          nes_ppu_wr(0x0AAA, 0xAA);
+          nes_ppu_wr(0x0555, 0x55);
+          nes_ppu_wr(0x0AAA, 0x20);
 
-        // write data
-        nes_write_page_verify((0x80 + addrH), buff, rnbw_chrrom_flash_wr);
-        // nes_write_page((0x80 + addrH), buff, rnbw_chrrom_flash_wr);
+          // write data
+          nes_write_page_verify(addrH, buff, rnbw_chrrom_flash_unlock_wr);
 
-        // exit unlock mode bypass
-        nes_ppu_wr(0x0000, 0x90);
-        nes_ppu_wr(0x0000, 0x00);
+          // exit unlock mode bypass
+          nes_ppu_wr(0x0000, 0x90);
+          nes_ppu_wr(0x0000, 0x00);
 
-        // reset the flash chip, supposed to exit too
-        nes_ppu_wr(0x0000, 0xF0);
+          // reset the flash chip, supposed to exit too
+          nes_ppu_wr(0x0000, 0xF0);
+        } else {
+          nes_write_page_verify(addrH, buff, rnbw_chrrom_flash_wr);
+        }
       }
       break;
 

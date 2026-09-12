@@ -57,6 +57,7 @@ uint8_t mmc5_prgram_wr(uint16_t addr, uint8_t data);
 uint8_t rnbw_prgrom_flash_wr(uint16_t addr, uint8_t data);
 uint8_t rnbw_prgrom_flash_unlock_wr(uint16_t addr, uint8_t data);
 uint8_t rnbw_chrrom_flash_wr(uint16_t addr, uint8_t data);
+uint8_t rnbw_chrrom_flash_unlock_wr(uint16_t addr, uint8_t data);
 void vrc6_prgrom_flash_wr(uint16_t addr, uint8_t data);
 
 #define A10_BYTE 0x04

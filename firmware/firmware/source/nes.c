@@ -1221,6 +1221,7 @@ uint8_t rnbw_prgrom_flash_wr(uint16_t addr, uint8_t data)
 {
   uint8_t rv;
 
+  // write data
   nes_cpu_wr(0x8AAA, 0xAA);
   nes_cpu_wr(0x8555, 0x55);
   nes_cpu_wr(0x8AAA, 0xA0);
@@ -1264,6 +1265,30 @@ uint8_t rnbw_prgrom_flash_unlock_wr(uint16_t addr, uint8_t data)
  * Rtn:  None
  */
 uint8_t rnbw_chrrom_flash_wr(uint16_t addr, uint8_t data)
+{
+  uint8_t rv;
+
+  // send unlock command and write byte
+  nes_ppu_wr(0x0AAA, 0xAA);
+  nes_ppu_wr(0x0555, 0x55);
+  nes_ppu_wr(0x0AAA, 0xA0);
+  nes_ppu_wr(addr, data);
+
+  do {
+    rv = nes_ppu_rd(addr);
+    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
+  } while(rv != nes_ppu_rd(addr));
+  // TODO handle timeout
+
+  return rv;
+}
+
+/* Desc: NES RNBW CHR-ROM FLASH Write in unlock bypass mode
+ * Pre:  nes_init() setup of io pins
+ * Post: Byte written and ready for another write
+ * Rtn:  None
+ */
+uint8_t rnbw_chrrom_flash_unlock_wr(uint16_t addr, uint8_t data)
 {
   uint8_t rv;
 
