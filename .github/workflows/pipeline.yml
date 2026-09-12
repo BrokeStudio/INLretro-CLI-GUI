@@ -2,7 +2,7 @@ name: Build and Release
 
 on:
   push:
-    branches: [master, merge-workflow-tests]
+    branches: ["**"]
     tags: ["v*"]
   pull_request:
     branches: [master]
