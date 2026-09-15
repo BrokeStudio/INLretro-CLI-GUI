@@ -111,17 +111,17 @@ end
 
 --- Dump PRG-ROM contents to an already-open output file.
 ---@param file file* Open binary output file
----@param rom_size_KB integer PRG-ROM size in kilobytes
+---@param rom_size_kb integer PRG-ROM size in kilobytes
 ---@param debug? boolean Enable verbose progress logging
-local function prg_rom_dump(file, rom_size_KB, debug)
+local function prg_rom_dump(file, rom_size_kb, debug)
   -- handles 16KB and 32KB NROM
-  local KB_per_read = rom_size_KB
+  local kb_per_read = rom_size_kb
 
-  local num_banks = math.floor(rom_size_KB / KB_per_read)
+  local num_banks = math.floor(rom_size_kb / kb_per_read)
   local cur_bank = 0
   local addr_base = 0x80 -- $8000
 
-  log.info("PRG-ROM size", rom_size_KB .. "KB")
+  log.info("PRG-ROM size", rom_size_kb .. "KB")
 
   while cur_bank < num_banks do
     if debug then
@@ -130,7 +130,7 @@ local function prg_rom_dump(file, rom_size_KB, debug)
       spinner.update("Dumping", cur_bank, "/", num_banks - 1)
     end
 
-    dump.dumptofile(file, KB_per_read, { mapper = addr_base, mem_type = "NESCPU_PAGE" }, false)
+    dump.dumptofile(file, kb_per_read, { mapper = addr_base, mem_type = "NESCPU_PAGE" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -140,15 +140,15 @@ end
 
 --- Program PRG-ROM contents from an already-open input file, one bank at a time.
 ---@param file file* Open binary input file
----@param rom_size_KB integer PRG-ROM size in kilobytes
+---@param rom_size_kb integer PRG-ROM size in kilobytes
 ---@param debug? boolean Enable verbose progress logging
-local function prg_rom_flash(file, rom_size_KB, debug)
+local function prg_rom_flash(file, rom_size_kb, debug)
   log.section("Programming PRG-ROM")
-  log.info("PRG-ROM size", rom_size_KB .. "KB")
+  log.info("PRG-ROM size", rom_size_kb .. "KB")
 
   local bank_size = 32
   local cur_bank = 0
-  local num_banks = math.floor(rom_size_KB / bank_size)
+  local num_banks = math.floor(rom_size_kb / bank_size)
 
   while cur_bank < num_banks do
     if debug then
@@ -247,15 +247,15 @@ end
 
 --- Dump CHR contents to an already-open output file.
 ---@param file file* Open binary output file
----@param rom_size_KB integer CHR size in kilobytes
+---@param rom_size_kb integer CHR size in kilobytes
 ---@param debug? boolean Enable verbose progress logging
-local function chr_dump(file, rom_size_KB, debug)
-  local KB_per_read = 8
-  local num_banks = math.floor(rom_size_KB / KB_per_read)
+local function chr_dump(file, rom_size_kb, debug)
+  local kb_per_read = 8
+  local num_banks = math.floor(rom_size_kb / kb_per_read)
   local cur_bank = 0
   local addr_base = 0x00 -- $0000
 
-  log.info("CHR size", rom_size_KB .. "KB")
+  log.info("CHR size", rom_size_kb .. "KB")
 
   if debug then
     log.point("dump CHR bank", cur_bank, "of", num_banks - 1)
@@ -263,22 +263,22 @@ local function chr_dump(file, rom_size_KB, debug)
     spinner.update("Dumping", cur_bank, "/", num_banks - 1)
   end
 
-  dump.dumptofile(file, KB_per_read, { mapper = addr_base, mem_type = "NESPPU_PAGE" }, false)
+  dump.dumptofile(file, kb_per_read, { mapper = addr_base, mem_type = "NESPPU_PAGE" }, false)
 
   spinner.clear()
 end
 
 --- Program CHR contents from an already-open input file, one bank at a time.
 ---@param file file* Open binary input file
----@param rom_size_KB integer CHR size in kilobytes
+---@param rom_size_kb integer CHR size in kilobytes
 ---@param debug? boolean Enable verbose progress logging
-local function chr_rom_flash(file, rom_size_KB, debug)
+local function chr_rom_flash(file, rom_size_kb, debug)
   log.section("Programming CHR-ROM")
-  log.info("CHR-ROM size", rom_size_KB .. "KB")
+  log.info("CHR-ROM size", rom_size_kb .. "KB")
 
   local bank_size = 8
   local cur_bank = 0
-  local num_banks = math.floor(rom_size_KB / bank_size)
+  local num_banks = math.floor(rom_size_kb / bank_size)
 
   while cur_bank < num_banks do
     if debug then
@@ -316,7 +316,7 @@ local function process(process_opts, console_opts)
   local rv               = nil
   local file
   local chr_ram_detected = false
-  local chr_ram_size     = 0
+  local chr_ram_size_kb  = 0
 
   -- process options
   local DEBUG            = process_opts.debug
@@ -337,9 +337,9 @@ local function process(process_opts, console_opts)
   local options          = process_opts.additional_opts
 
   -- console options
-  local prg_size         = console_opts.prg_rom_size_kb
-  local chr_size         = console_opts.chr_rom_size_kb
-  local wram_size        = console_opts.wram_size_kb
+  local prg_size_kb      = console_opts.prg_rom_size_kb
+  local chr_size_kb      = console_opts.chr_rom_size_kb
+  local wram_size_kb     = console_opts.wram_size_kb
 
   -- Initialize device i/o
   dict.io("IO_RESET")
@@ -374,7 +374,7 @@ local function process(process_opts, console_opts)
     end
 
     -- attempt to read PRG-ROM flash ID
-    if options.force_flash_test or (do_rom_write and prg_size ~= 0) then
+    if options.force_flash_test or (do_rom_write and prg_size_kb ~= 0) then
       rv = prg_rom_manf_id()
       if not rv then
         if do_rom_write then
@@ -387,7 +387,7 @@ local function process(process_opts, console_opts)
     end
 
     -- attempt to read CHR-ROM flash ID
-    if options.force_flash_test or (do_rom_write and chr_size ~= 0) then
+    if options.force_flash_test or (do_rom_write and chr_size_kb ~= 0) then
       rv = chr_rom_manf_id()
       if not rv then
         if do_rom_write then
@@ -414,23 +414,23 @@ local function process(process_opts, console_opts)
 
     -- create header: pass open & empty file & rom sizes
     if rom_dump_file.ext == "nes" then
-      create_header(file, prg_size, chr_size)
+      create_header(file, prg_size_kb, chr_size_kb)
     end
 
     -- dump cart to file
-    if prg_size ~= 0 then
+    if prg_size_kb ~= 0 then
       log.section("Dumping PRG-ROM")
       time.start()
-      prg_rom_dump(file, prg_size, DEBUG)
-      time.report(prg_size)
+      prg_rom_dump(file, prg_size_kb, DEBUG)
+      time.report(prg_size_kb)
       log.success("PRG-ROM dumping done")
     end
 
-    if chr_size ~= 0 then
+    if chr_size_kb ~= 0 then
       log.section("Dumping CHR-ROM")
       time.start()
-      chr_dump(file, chr_size, DEBUG)
-      time.report(chr_size)
+      chr_dump(file, chr_size_kb, DEBUG)
+      time.report(chr_size_kb)
       log.success("CHR-ROM dumping done")
     end
 
@@ -450,7 +450,7 @@ local function process(process_opts, console_opts)
     local i = 0
 
     -- erase PRG-ROM only if needed
-    if prg_size ~= 0 then
+    if prg_size_kb ~= 0 then
       log.section("Erasing PRG-ROM")
       time.start()
       dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x5555, 0xAA)
@@ -470,11 +470,11 @@ local function process(process_opts, console_opts)
       end
       spinner.clear()
       log.success("Done erasing PRG-ROM", i .. " naks")
-      time.report(prg_size)
+      time.report(prg_size_kb)
     end
 
     -- erase CHR-ROM only if needed
-    if chr_size ~= 0 then
+    if chr_size_kb ~= 0 then
       log.section("Erasing CHR-ROM")
       time.start()
       dict.nes("NES_PPU_WR", 0x1555, 0xAA)
@@ -495,7 +495,7 @@ local function process(process_opts, console_opts)
       end
       spinner.clear()
       log.success("Done erasing CHR-ROM", i .. " naks")
-      time.report(chr_size)
+      time.report(chr_size_kb)
     end
   end
 
@@ -512,16 +512,16 @@ local function process(process_opts, console_opts)
     file = assert(io.open(rom_write_file.filename, "rb"))
 
     -- flash cart
-    if prg_size ~= 0 then
+    if prg_size_kb ~= 0 then
       time.start()
-      prg_rom_flash(file, prg_size, DEBUG)
-      time.report(prg_size)
+      prg_rom_flash(file, prg_size_kb, DEBUG)
+      time.report(prg_size_kb)
     end
 
-    if chr_size ~= 0 then
+    if chr_size_kb ~= 0 then
       time.start()
-      chr_rom_flash(file, chr_size, DEBUG)
-      time.report(chr_size)
+      chr_rom_flash(file, chr_size_kb, DEBUG)
+      time.report(chr_size_kb)
     end
 
     -- close file
@@ -541,19 +541,19 @@ local function process(process_opts, console_opts)
     file = assert(io.open(verify_file.filename, "wb"))
 
     -- dump cart to file
-    if prg_size ~= 0 then
+    if prg_size_kb ~= 0 then
       log.section("Dumping PRG-ROM")
       time.start()
-      prg_rom_dump(file, prg_size, DEBUG)
-      time.report(prg_size)
+      prg_rom_dump(file, prg_size_kb, DEBUG)
+      time.report(prg_size_kb)
       log.success("PRG-ROM dumping done")
     end
 
-    if chr_size ~= 0 then
+    if chr_size_kb ~= 0 then
       log.section("Dumping CHR-ROM")
       time.start()
-      chr_dump(file, chr_size, DEBUG)
-      time.report(chr_size)
+      chr_dump(file, chr_size_kb, DEBUG)
+      time.report(chr_size_kb)
       log.success("CHR-ROM dumping done")
     end
 

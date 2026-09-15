@@ -13,9 +13,9 @@ local function start()
 end
 
 --send the number of KBytes flashed so it can report KBps
-local function report(sizeKB)
+local function report(size_kb)
   local total_time = os.clock() - tstart
-  local speed = string.format("%.2f", (sizeKB / total_time))
+  local speed = string.format("%.2f", (size_kb / total_time))
   total_time = string.format("%.3f", total_time)
   log.info("Total time: " .. total_time .. " seconds, average speed: " .. speed .. " KBps")
 end

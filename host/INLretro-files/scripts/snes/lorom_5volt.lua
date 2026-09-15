@@ -189,16 +189,16 @@ end
 ---@param flashfile string Input ROM file path, used when program is enabled
 ---@param verifyfile string Verification dump file path, used when verify is enabled
 local function process(test, read, erase, program, verify, dumpfile, flashfile, verifyfile)
-  local rv = nil
+  local rv           = nil
   local file
 
   local snes_mapping = "LOROM"
   --local snes_mapping = "HIROM"
 
-  local ram_size = 0
+  local ram_size     = 0
 
   --local rom_size = 32
-  local rom_size = 512
+  local rom_size     = 512
   --local rom_size = 1024
   --local rom_size = 2048
   --local rom_size = 4096

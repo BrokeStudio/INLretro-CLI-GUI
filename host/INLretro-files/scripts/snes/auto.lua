@@ -145,29 +145,29 @@ end
 
 --- Dump ROM contents to an already-open output file.
 ---@param file file* Open binary output file
----@param rom_size_KB integer ROM size in kilobytes
+---@param rom_size_kb integer ROM size in kilobytes
 ---@param debug? boolean Enable verbose progress logging
-local function rom_dump(file, rom_size_KB, debug)
+local function rom_dump(file, rom_size_kb, debug)
   -- /ROMSEL is always low for this dump
 
-  local KB_per_bank
+  local kb_per_bank
   local addr_base
 
   if mapname == "LOROM" then
-    KB_per_bank = 32 -- LOROM has 32KB per bank
+    kb_per_bank = 32 -- LOROM has 32KB per bank
     addr_base = 0x80 -- LOROM data starts at $8000
   elseif mapname == "HIROM" then
-    KB_per_bank = 64 -- HIROM has 64KB per bank
+    kb_per_bank = 64 -- HIROM has 64KB per bank
     addr_base = 0x00 -- HIROM data starts at $0000
   else
     log.error("Mapper unknown:", mapname)
     do return end
   end
 
-  local num_banks = math.floor(rom_size_KB / KB_per_bank)
+  local num_banks = math.floor(rom_size_kb / kb_per_bank)
   local cur_bank = 0
 
-  log.info("ROM size", rom_size_KB .. "KB")
+  log.info("ROM size", rom_size_kb .. "KB")
 
   while cur_bank < num_banks do
     if debug then
@@ -179,7 +179,7 @@ local function rom_dump(file, rom_size_KB, debug)
     --select desired bank
     dict.snes("SNES_SET_BANK", cur_bank) -- start_bank+cur_bank)
 
-    dump.dumptofile(file, KB_per_bank, { mapper = addr_base, mem_type = "SNESROM_PAGE" }, false)
+    dump.dumptofile(file, kb_per_bank, { mapper = addr_base, mem_type = "SNESROM_PAGE" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -189,29 +189,29 @@ end
 
 --- Program ROM contents from an already-open input file, one bank at a time.
 ---@param file file* Open binary input file
----@param rom_size_KB integer ROM size in kilobytes
+---@param rom_size_kb integer ROM size in kilobytes
 ---@param debug? boolean Enable verbose progress logging
-local function rom_flash(file, rom_size_KB, debug)
-  local KB_per_bank
+local function rom_flash(file, rom_size_kb, debug)
+  local kb_per_bank
   -- local addr_base
   local mapmode
 
   if mapname == "LOROM" then
-    KB_per_bank = 32 -- LOROM has 32KB per bank
+    kb_per_bank = 32 -- LOROM has 32KB per bank
     -- addr_base = 0x80 -- LOROM data starts at $8000
   elseif mapname == "HIROM" then
-    KB_per_bank = 64 -- HIROM has 64KB per bank
+    kb_per_bank = 64 -- HIROM has 64KB per bank
     -- addr_base = 0x00 -- HIROM data starts at $0000
   else
     log.error("Mapper unknown:", mapname)
     do return end
   end
 
-  local num_banks = math.floor(rom_size_KB / KB_per_bank)
+  local num_banks = math.floor(rom_size_kb / kb_per_bank)
   local cur_bank = 0
 
   log.section("Programming ROM")
-  log.info("ROM size", rom_size_KB .. "KB")
+  log.info("ROM size", rom_size_kb .. "KB")
 
   while cur_bank < num_banks do
     if debug then
@@ -223,7 +223,7 @@ local function rom_flash(file, rom_size_KB, debug)
     --select desired bank
     dict.snes("SNES_SET_BANK", cur_bank) -- start_bank+cur_bank)
 
-    flash.write_file(file, KB_per_bank, { mapper = mapname .. "_3VOLT", mem_type = "SNESROM" }, true)
+    flash.write_file(file, kb_per_bank, { mapper = mapname .. "_3VOLT", mem_type = "SNESROM" }, true)
 
     cur_bank = cur_bank + 1
   end
@@ -268,8 +268,8 @@ local function process(process_opts, console_opts)
   local options        = process_opts.additional_opts
 
   -- console options
-  local rom_size       = console_opts.rom_size_kb
-  local ram_size       = console_opts.wram_size_kb
+  local rom_size_kb    = console_opts.rom_size_kb
+  local ram_size_kb    = console_opts.wram_size_kb
 
   if snes.cart_header.is_valid then
     if snes.cart_header.rom_type.mode == 0 then
@@ -309,7 +309,7 @@ local function process(process_opts, console_opts)
     log.section("Testing", mapname)
 
     -- attempt to read ROM flash ID
-    if options.force_flash_test or (do_rom_write and rom_size ~= 0) then
+    if options.force_flash_test or (do_rom_write and rom_size_kb ~= 0) then
       rv = rom_manf_id()
       if not rv then
         if do_rom_write then
@@ -331,7 +331,7 @@ local function process(process_opts, console_opts)
 
   -- dump cart ROM to file
   if do_rom_dump then
-    if rom_size ~= 0 then
+    if rom_size_kb ~= 0 then
     -- open file
     file = assert(io.open(rom_dump_file.filename, "wb"))
 
@@ -343,8 +343,8 @@ local function process(process_opts, console_opts)
     log.section("Dumping ROM", cartridge_title)
 
     time.start()
-    rom_dump(file, rom_size, DEBUG)
-    time.report(rom_size)
+    rom_dump(file, rom_size_kb, DEBUG)
+    time.report(rom_size_kb)
     log.success("ROM dumping done")
 
     -- close file
@@ -372,10 +372,10 @@ local function process(process_opts, console_opts)
   -- erase the cart
   if do_erase then
     -- erase ROM only if needed
-    if rom_size ~= 0 then
+    if rom_size_kb ~= 0 then
       time.start()
       rom_erase()
-      time.report(rom_size)
+      time.report(rom_size_kb)
     end
   end
 
@@ -392,10 +392,10 @@ local function process(process_opts, console_opts)
     file = assert(io.open(rom_write_file.filename, "rb"))
 
     -- flash cart
-    if rom_size ~= 0 then
+    if rom_size_kb ~= 0 then
       time.start()
-      rom_flash(file, rom_size, DEBUG)
-      time.report(rom_size)
+      rom_flash(file, rom_size_kb, DEBUG)
+      time.report(rom_size_kb)
     end
 
     -- close file
@@ -411,15 +411,15 @@ local function process(process_opts, console_opts)
 
   -- verify what we just flashed
   if do_verify then
-    if rom_size ~= 0 then
+    if rom_size_kb ~= 0 then
     -- open file
     file = assert(io.open(verify_file.filename, "wb"))
 
     -- dump cart to file
       log.section("Dumping ROM")
       time.start()
-      rom_dump(file, rom_size, DEBUG)
-      time.report(rom_size)
+      rom_dump(file, rom_size_kb, DEBUG)
+      time.report(rom_size_kb)
       log.success("ROM dumping done")
 
     -- close file

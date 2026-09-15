@@ -38,7 +38,7 @@ local function check_stopped(buff_nums)
   end
 end
 
-local function write_file(file, sizeKB, config, debug)
+local function write_file(file, size_kb, config, debug)
   local buff0 = 0
   local buff1 = 1
   local cur_buff_status = 0
@@ -101,7 +101,7 @@ local function write_file(file, sizeKB, config, debug)
 
     --if ( i == 2048*1024/buff_size) then break end
     --if ( i == 32*1024/buff_size) then break end
-    if (i == sizeKB * 1024 / buff_size) then break end
+    if (i == size_kb * 1024 / buff_size) then break end
     i = i + 1
     -- if ( (i % (4*2048*1024/buff_size/16)) == 0) then
     --   local tdelta = os.clock() - tlast
@@ -114,7 +114,7 @@ local function write_file(file, sizeKB, config, debug)
   if debug then print("number of naks", nak) end
   tstop = os.clock()
   timediff = (tstop - tstart)
-  if debug then print("total time:", timediff, "seconds, average speed:", (sizeKB / timediff), "KBps") end
+  if debug then print("total time:", timediff, "seconds, average speed:", (size_kb / timediff), "KBps") end
 
   -- wait till all buffers are done
   --while flashing buffer manager updates from USB_FULL -> FLASHING -> FLASHED

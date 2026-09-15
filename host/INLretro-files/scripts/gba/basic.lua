@@ -15,11 +15,11 @@ local mapname = "BASIC" --IDK what else to call it right now, no real mappers.  
 
 
 --dump the ROM
-local function dump_rom(file, rom_size_KB, debug)
+local function dump_rom(file, rom_size_kb, debug)
   --ROM ONLY dump all 32KB, most of this code is overkill for no MBC.
   -- but follows same format as MBC's
-  local KB_per_read = 128 --read 16bit address space 2Bytes per address (2*64K = 128KByte)
-  local num_banks = rom_size_KB / KB_per_read
+  local kb_per_read = 128 --read 16bit address space 2Bytes per address (2*64K = 128KByte)
+  local num_banks = rom_size_kb / kb_per_read
   local cur_bank = 0
   local addr_base = 0 --this value doesn't matter, but dumptofile won't like it if it's nil
 
@@ -40,7 +40,7 @@ local function dump_rom(file, rom_size_KB, debug)
   --latch address         AD0-15  A16-23
   dict.gba("LATCH_ADDR", 0x0000, 0x00)
 
-  dump.dumptofile(file, rom_size_KB, { mapper = addr_base, mem_type = "GBA_PAGE" }, false)
+  dump.dumptofile(file, rom_size_kb, { mapper = addr_base, mem_type = "GBA_PAGE" }, false)
 
   dict.gba("RELEASE_BUS")
   --]]
@@ -57,7 +57,7 @@ local function dump_rom(file, rom_size_KB, debug)
     --latch address         AD0-15  A16-23
     dict.gba("LATCH_ADDR", 0x0000, cur_bank)
 
-    dump.dumptofile(file, KB_per_read, { mapper = addr_base, mem_type = "GBA_ROM_PAGE" }, false)
+    dump.dumptofile(file, kb_per_read, { mapper = addr_base, mem_type = "GBA_ROM_PAGE" }, false)
 
     cur_bank = cur_bank + 1
 
@@ -69,20 +69,20 @@ end
 ---@param process_opts table Parsed operation options from the main application
 ---@param console_opts table Console/cartridge size options
 local function process(process_opts, console_opts)
-  local test = process_opts["test"]
-  local read = process_opts["read"]
-  local erase = process_opts["erase"]
-  local program = process_opts["program"]
-  local verify = process_opts["verify"]
-  local dumpfile = process_opts["dump_filename"]
-  local flashfile = process_opts["flash_filename"]
-  local verifyfile = process_opts["verify_filename"]
+  local test         = process_opts["test"]
+  local read         = process_opts["read"]
+  local erase        = process_opts["erase"]
+  local program      = process_opts["program"]
+  local verify       = process_opts["verify"]
+  local dumpfile     = process_opts["dump_filename"]
+  local flashfile    = process_opts["flash_filename"]
+  local verifyfile   = process_opts["verify_filename"]
 
-  local rv = nil
+  local rv           = nil
   local file
-  local rom_size = console_opts["rom_size_kb"]
-  local wram_size = console_opts["wram_size_kb"]
-  local mirror = console_opts["mirror"]
+  local rom_size_kb  = console_opts["rom_size_kb"]
+  local wram_size_kb = console_opts["wram_size_kb"]
+  local mirror       = console_opts["mirror"]
 
   --initialize device i/o for NES
   dict.io("IO_RESET")
@@ -112,8 +112,8 @@ local function process(process_opts, console_opts)
 
     -- dump cart to file
     time.start()
-    dump_rom(file, rom_size, false)
-    time.report(rom_size)
+    dump_rom(file, rom_size_kb, false)
+    time.report(rom_size_kb)
 
     -- close file
     assert(file:close())
@@ -151,8 +151,8 @@ local function process(process_opts, console_opts)
 
     -- dump cart to file
     time.start()
-    dump_rom(file, rom_size, false)
-    time.report(rom_size)
+    dump_rom(file, rom_size_kb, false)
+    time.report(rom_size_kb)
 
     -- close file
     assert(file:close())

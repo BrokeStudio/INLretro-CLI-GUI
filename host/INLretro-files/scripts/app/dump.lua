@@ -9,7 +9,7 @@ local buffers = require "scripts.app.buffers"
 -- file constants and global variables
 
 -- local functions
-local function dumptocallback(callback, sizeKB, config, debug)
+local function dumptocallback(callback, size_kb, config, debug)
   local buff0 = 0
   local buff1 = 1
   local cur_buff_status = 0
@@ -86,7 +86,7 @@ local function dumptocallback(callback, sizeKB, config, debug)
 
   if debug then print("starting first payload") end
   --now just need to call series of payload IN transfers to retrieve data
-  for i = 1, (sizeKB * 1024 / buff_size) do --dump next buff
+  for i = 1, (size_kb * 1024 / buff_size) do --dump next buff
     --stm adapter had trouble dumping
     --same buffer was getting sent twice, so I think
     --buffer mangager wasn't getting enough time to update
@@ -124,7 +124,7 @@ local function dumptocallback(callback, sizeKB, config, debug)
 
   tstop = os.clock()
   timediff = (tstop - tstart)
-  if debug then print("total time:", timediff, "seconds, average speed:", (sizeKB / timediff), "KBps") end
+  if debug then print("total time:", timediff, "seconds, average speed:", (size_kb / timediff), "KBps") end
 
   --buffer manager updates from USB_UNLOADING -> DUMPING -> DUMPED
   --while one buffer is unloading, it sends next buffer off to dump
@@ -144,12 +144,12 @@ local function dumptocallback(callback, sizeKB, config, debug)
   dict.buffer("RAW_BUFFER_RESET")
 end
 
-local function dumptofile(file, sizeKB, config, debug)
+local function dumptofile(file, size_kb, config, debug)
   dumptocallback(
     function(data)
       file:write(data)
     end,
-    sizeKB, config, debug
+    size_kb, config, debug
   )
 end
 

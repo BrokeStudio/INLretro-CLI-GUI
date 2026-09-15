@@ -29,13 +29,13 @@ local help    = require "scripts.app.help"
 
 --- Dump ROM contents to an already-open output file.
 ---@param file file* Open binary output file
----@param rom_size_KB integer ROM size in kilobytes
+---@param rom_size_kb integer ROM size in kilobytes
 ---@param debug? boolean Enable verbose progress logging
-local function rom_dump(file, rom_size_KB, debug)
-  local KB_per_bank = 64   -- AD0-15 = 64K address space, A0 ignored so 1Byte per address!
+local function rom_dump(file, rom_size_kb, debug)
+  local kb_per_bank = 64   -- AD0-15 = 64K address space, A0 ignored so 1Byte per address!
   local addr_base = 0x0000 -- control signals are manually controlled
   local bank_base = 0x1000 -- N64 roms start at address 0x1000_0000
-  local num_banks = math.floor(rom_size_KB / KB_per_bank)
+  local num_banks = math.floor(rom_size_kb / kb_per_bank)
   local cur_bank = 0
   --  local cur_bank = 512 --second half of RE2
 
@@ -47,16 +47,16 @@ local function rom_dump(file, rom_size_KB, debug)
   print("read: ", help.hex(dict.n64("N64_RD")))
   dict.n64("N64_SET_BANK", bank_base + 0)
   dict.n64("N64_LATCH_ADDR", 0x0000)
-  dump.dumptofile(file, KB_per_bank, { mapper = addr_base, mem_type = "N64_ROM_PAGE" }, false)
+  dump.dumptofile(file, kb_per_bank, { mapper = addr_base, mem_type = "N64_ROM_PAGE" }, false)
 
   dict.n64("N64_LATCH_ADDR", 0x0000)
   print("read: ", help.hex(dict.n64("N64_RD")))
   print("read: ", help.hex(dict.n64("N64_RD")))
   dict.n64("N64_LATCH_ADDR", 0x0000)
-  dump.dumptofile(file, KB_per_bank, { mapper = addr_base, mem_type = "N64_ROM_PAGE" }, false)
+  dump.dumptofile(file, kb_per_bank, { mapper = addr_base, mem_type = "N64_ROM_PAGE" }, false)
   --]]
 
-  log.info("ROM size", rom_size_KB .. "KB")
+  log.info("ROM size", rom_size_kb .. "KB")
 
   while cur_bank < num_banks do
     if debug then
@@ -69,7 +69,7 @@ local function rom_dump(file, rom_size_KB, debug)
     dict.n64("N64_SET_BANK", bank_base + cur_bank)
 
     -- dump a 64KByte chunk of rom
-    dump.dumptofile(file, KB_per_bank, { mapper = addr_base, mem_type = "N64_ROM_PAGE" }, debug)
+    dump.dumptofile(file, kb_per_bank, { mapper = addr_base, mem_type = "N64_ROM_PAGE" }, debug)
 
     -- prob don't need this till done..
     dict.n64("N64_RELEASE_BUS")
@@ -119,8 +119,8 @@ local function process(process_opts, console_opts)
   local options        = process_opts.additional_opts
 
   -- console options
-  local rom_size       = console_opts.rom_size_kb
-  local ram_size       = console_opts.wram_size_kb
+  local rom_size_kb    = console_opts.rom_size_kb
+  local ram_size_kb    = console_opts.wram_size_kb
 
   -- initialize device i/o
   dict.io("IO_RESET")
@@ -212,8 +212,8 @@ local function process(process_opts, console_opts)
     log.info("Ouput format is Big Endian (.z64 format)")
 
     time.start()
-    rom_dump(file, rom_size, DEBUG)
-    time.report(rom_size)
+    rom_dump(file, rom_size_kb, DEBUG)
+    time.report(rom_size_kb)
 
     log.success("ROM dumping done")
 

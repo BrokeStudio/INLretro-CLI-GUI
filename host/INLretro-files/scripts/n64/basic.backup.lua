@@ -14,13 +14,13 @@ local time = require "scripts.app.time"
 
 --dump the SNES ROM starting at the provided bank
 --/ROMSEL is always low for this dump
-local function dump_rom(file, rom_size_KB, debug)
-  local KB_per_bank = 64   --AD0-15 = 64K address space, A0 ignored so 1Byte per address!
+local function dump_rom(file, rom_size_kb, debug)
+  local kb_per_bank = 64   --AD0-15 = 64K address space, A0 ignored so 1Byte per address!
   local addr_base = 0x0000 -- control signals are manually controlled
 
   local bank_base = 0x1000 --N64 roms start at address 0x1000_0000
 
-  local num_banks = rom_size_KB / KB_per_bank
+  local num_banks = rom_size_kb / kb_per_bank
   local cur_bank = 0
   -- local cur_bank = 512 --second half of RE2
 
@@ -32,13 +32,13 @@ local function dump_rom(file, rom_size_KB, debug)
   print("read: ", help.hex(dict.n64("N64_RD")))
   dict.n64("N64_SET_BANK", bank_base + 0)
   dict.n64("N64_LATCH_ADDR", 0x0000)
-  dump.dumptofile(file, KB_per_bank, { mapper = addr_base, mem_type = "N64_ROM_PAGE" }, false)
+  dump.dumptofile(file, kb_per_bank, { mapper = addr_base, mem_type = "N64_ROM_PAGE" }, false)
 
   dict.n64("N64_LATCH_ADDR", 0x0000)
   print("read: ", help.hex(dict.n64("N64_RD")))
   print("read: ", help.hex(dict.n64("N64_RD")))
   dict.n64("N64_LATCH_ADDR", 0x0000)
-  dump.dumptofile(file, KB_per_bank, { mapper = addr_base, mem_type = "N64_ROM_PAGE" }, false)
+  dump.dumptofile(file, kb_per_bank, { mapper = addr_base, mem_type = "N64_ROM_PAGE" }, false)
   --]]
 
   while cur_bank < num_banks do
@@ -52,7 +52,7 @@ local function dump_rom(file, rom_size_KB, debug)
     dict.n64("N64_SET_BANK", (bank_base + cur_bank))
 
     --dump a 64KByte chunk of rom
-    dump.dumptofile(file, KB_per_bank, { mapper = addr_base, mem_type = "N64_ROM_PAGE" }, false)
+    dump.dumptofile(file, kb_per_bank, { mapper = addr_base, mem_type = "N64_ROM_PAGE" }, false)
 
     --prob don't need this till done..
     dict.n64("N64_RELEASE_BUS")
@@ -67,20 +67,20 @@ end
 ---@param process_opts table Parsed operation options from the main application
 ---@param console_opts table Console/cartridge size options
 local function process(process_opts, console_opts)
-  local test = process_opts["test"]
-  local read = process_opts["read"]
-  local erase = process_opts["erase"]
-  local program = process_opts["program"]
-  local verify = process_opts["verify"]
-  local dumpfile = process_opts["dump_filename"]
-  local flashfile = process_opts["flash_filename"]
-  local verifyfile = process_opts["verify_filename"]
+  local test         = process_opts["test"]
+  local read         = process_opts["read"]
+  local erase        = process_opts["erase"]
+  local program      = process_opts["program"]
+  local verify       = process_opts["verify"]
+  local dumpfile     = process_opts["dump_filename"]
+  local flashfile    = process_opts["flash_filename"]
+  local verifyfile   = process_opts["verify_filename"]
 
-  local rv = nil
+  local rv           = nil
   local file
-  local rom_size = console_opts["rom_size_kb"]
-  local wram_size = console_opts["wram_size_kb"]
-  local mirror = console_opts["mirror"]
+  local rom_size_kb  = console_opts["rom_size_kb"]
+  local wram_size_kb = console_opts["wram_size_kb"]
+  local mirror       = console_opts["mirror"]
 
 
   --initialize device i/o for N64
@@ -160,8 +160,8 @@ local function process(process_opts, console_opts)
 
     -- dump cart to file
     time.start()
-    dump_rom(file, rom_size, false)
-    time.report(rom_size)
+    dump_rom(file, rom_size_kb, false)
+    time.report(rom_size_kb)
 
     -- close file
     assert(file:close())

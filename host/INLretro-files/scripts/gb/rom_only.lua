@@ -93,12 +93,12 @@ end
 
 --- Dump ROM contents to an already-open output file.
 ---@param file file* Open binary output file
----@param rom_size_KB integer ROM size in kilobytes
+---@param rom_size_kb integer ROM size in kilobytes
 ---@param debug? boolean Enable verbose progress logging
-local function rom_dump(file, rom_size_KB, debug)
+local function rom_dump(file, rom_size_kb, debug)
   -- ROM dump 32KB at a time
-  local KB_per_read = 32
-  local num_banks = math.floor(rom_size_KB / KB_per_read)
+  local kb_per_read = 32
+  local num_banks = math.floor(rom_size_kb / kb_per_read)
   local cur_bank = 0
   local addr_base = 0x00 -- $0000
 
@@ -109,22 +109,22 @@ local function rom_dump(file, rom_size_KB, debug)
     spinner.update("Dumping", cur_bank, "/", num_banks - 1)
   end
 
-  dump.dumptofile(file, KB_per_read, { mapper = addr_base, mem_type = "GAMEBOY_PAGE" }, false)
+  dump.dumptofile(file, kb_per_read, { mapper = addr_base, mem_type = "GAMEBOY_PAGE" }, false)
 
   spinner.clear()
 end
 
 --- Program ROM contents from an already-open input file, one bank at a time.
 ---@param file file* Open binary input file
----@param rom_size_KB integer ROM size in kilobytes
+---@param rom_size_kb integer ROM size in kilobytes
 ---@param debug? boolean Enable verbose progress logging
-local function rom_flash(file, rom_size_KB, debug)
+local function rom_flash(file, rom_size_kb, debug)
   log.section("Programming ROM")
-  log.info("ROM size", rom_size_KB .. "KB")
+  log.info("ROM size", rom_size_kb .. "KB")
 
   local bank_size = 32
   local cur_bank = 0
-  local num_banks = math.floor(rom_size_KB / bank_size)
+  local num_banks = math.floor(rom_size_kb / bank_size)
 
   -- flash fixed bank first
   if debug then
@@ -189,15 +189,15 @@ end
 
 --- Dump RAM contents to an already-open output file.
 ---@param file file* Open binary output file
----@param ram_size_KB integer RAM size in kilobytes
+---@param ram_size_kb integer RAM size in kilobytes
 ---@param debug? boolean Enable verbose progress logging
-local function ram_dump(file, ram_size_KB, debug)
-  local KB_per_read = 8
-  local num_banks = math.floor(ram_size_KB / KB_per_read)
+local function ram_dump(file, ram_size_kb, debug)
+  local kb_per_read = 8
+  local num_banks = math.floor(ram_size_kb / kb_per_read)
   local cur_bank = 0
   local addr_base = 0xA0 -- $A000
 
-  log.info("RAM size", ram_size_KB .. "KB")
+  log.info("RAM size", ram_size_kb .. "KB")
 
   while cur_bank < num_banks do
     if debug then
@@ -207,7 +207,7 @@ local function ram_dump(file, ram_size_KB, debug)
     end
 
     -- have the device dump a bank worth of data
-    dump.dumptofile(file, KB_per_read, { mapper = addr_base, mem_type = "GAMEBOY_PAGE" }, false)
+    dump.dumptofile(file, kb_per_read, { mapper = addr_base, mem_type = "GAMEBOY_PAGE" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -217,15 +217,15 @@ end
 
 --- Write RAM contents from an already-open input file.
 ---@param file file* Open binary input file
----@param ram_size_KB integer RAM size in kilobytes
+---@param ram_size_kb integer RAM size in kilobytes
 ---@param debug? boolean Enable verbose progress logging
-local function ram_write(file, ram_size_KB, debug)
+local function ram_write(file, ram_size_kb, debug)
   log.section("Programming RAM")
-  log.info("RAM size", ram_size_KB .. "KB")
+  log.info("RAM size", ram_size_kb .. "KB")
 
   local bank_size = 8
   local cur_bank = 0
-  local num_banks = math.floor(ram_size_KB / bank_size)
+  local num_banks = math.floor(ram_size_kb / bank_size)
 
   while cur_bank < num_banks do
     if debug then
@@ -282,18 +282,18 @@ end
 
 --- Exercise RAM with an LFSR pattern and compare the dumped result.
 --- Overwrites RAM contents with the test pattern.
----@param ram_size integer RAM size in kilobytes
+---@param ram_size_kb integer RAM size in kilobytes
 ---@param retroprog_id string|integer Identifier used in the temporary dump filename
 ---@param debug? boolean Enable verbose compare/progress logging
 ---@return boolean success True when the RAM dump matches the expected LFSR data
-local function ram_exercise(ram_size, retroprog_id, debug)
+local function ram_exercise(ram_size_kb, retroprog_id, debug)
   dict.stuff("RESET_LFSR") -- sets it to 1
 
   local cur_bank = 0
-  local num_banks = math.floor(ram_size / 8)
+  local num_banks = math.floor(ram_size_kb / 8)
 
   log.section("Exercising RAM")
-  log.info("RAM size", ram_size .. "KB")
+  log.info("RAM size", ram_size_kb .. "KB")
 
   -- write random data to all banks
   log.point("Writing random data to RAM")
@@ -322,7 +322,7 @@ local function ram_exercise(ram_size, retroprog_id, debug)
 
   -- dump RAM
   log.point("Dumping RAM")
-  ram_dump(file, ram_size, debug)
+  ram_dump(file, ram_size_kb, debug)
 
   -- close file
   assert(file:close())
@@ -377,8 +377,8 @@ local function process(process_opts, console_opts)
   local options        = process_opts.additional_opts
 
   -- console options
-  local rom_size       = console_opts.rom_size_kb
-  local ram_size       = console_opts.wram_size_kb
+  local rom_size_kb    = console_opts.rom_size_kb
+  local ram_size_kb    = console_opts.wram_size_kb
 
   -- Initialize device i/o
   dict.io("IO_RESET")
@@ -398,7 +398,7 @@ local function process(process_opts, console_opts)
     log.section("Testing", mapname)
 
     -- attempt to read ROM flash ID
-    if options.force_flash_test or (do_rom_write and rom_size ~= 0) then
+    if options.force_flash_test or (do_rom_write and rom_size_kb ~= 0) then
       rv = rom_manf_id()
       if not rv then
         if do_rom_write then
@@ -425,10 +425,10 @@ local function process(process_opts, console_opts)
           log.print()
           log.warning("Can't exercise RAM because ROM has battery backed data")
         else
-          -- if wram_size == 0 then
-          --   wram_size = ram_get_size(DEBUG)
+          -- if wram_size_kb == 0 then
+          --   wram_size_kb = ram_get_size(DEBUG)
           -- end
-          -- if wram_size ~= 0 then
+          -- if wram_size_kb ~= 0 then
           rv = ram_exercise(8, retroprog_id, DEBUG)
           -- exit script if test fails
           if not rv then return end
@@ -453,11 +453,11 @@ local function process(process_opts, console_opts)
     file = assert(io.open(ram_dump_file.filename, "wb"))
 
     -- dump cart to file
-    if ram_size ~= 0 then
+    if ram_size_kb ~= 0 then
       log.section("Dumping RAM")
       time.start()
-      ram_dump(file, ram_size, DEBUG)
-      time.report(ram_size)
+      ram_dump(file, ram_size_kb, DEBUG)
+      time.report(ram_size_kb)
       log.success("RAM dumping done")
     else
       log.error("RAM size not provided")
@@ -481,10 +481,10 @@ local function process(process_opts, console_opts)
     file = assert(io.open(ram_write_file.filename, "rb"))
 
     -- flash cart
-    if ram_size ~= 0 then
+    if ram_size_kb ~= 0 then
       time.start()
-      ram_write(file, ram_size, DEBUG)
-      time.report(ram_size)
+      ram_write(file, ram_size_kb, DEBUG)
+      time.report(ram_size_kb)
     else
       log.error("RAM size not provided")
       return
@@ -504,15 +504,15 @@ local function process(process_opts, console_opts)
 
   -- dump cart ROM to file
   if do_rom_dump then
-    if rom_size ~= 0 then
+    if rom_size_kb ~= 0 then
     -- open file
     file = assert(io.open(rom_dump_file.filename, "wb"))
 
     -- dump cart to file
       log.section("Dumping ROM")
       time.start()
-      rom_dump(file, rom_size, DEBUG)
-      time.report(rom_size)
+      rom_dump(file, rom_size_kb, DEBUG)
+      time.report(rom_size_kb)
       log.success("ROM dumping done")
 
     -- close file
@@ -530,10 +530,10 @@ local function process(process_opts, console_opts)
   -- erase the cart
   if do_erase then
     -- erase ROM only if needed
-    if rom_size ~= 0 then
+    if rom_size_kb ~= 0 then
       time.start()
       rom_erase()
-      time.report(rom_size)
+      time.report(rom_size_kb)
     end
   end
 
@@ -550,10 +550,10 @@ local function process(process_opts, console_opts)
     file = assert(io.open(rom_write_file.filename, "rb"))
 
     -- flash cart
-    if rom_size ~= 0 then
+    if rom_size_kb ~= 0 then
       time.start()
-      rom_flash(file, rom_size, DEBUG)
-      time.report(rom_size)
+      rom_flash(file, rom_size_kb, DEBUG)
+      time.report(rom_size_kb)
     end
 
     -- close file
@@ -570,15 +570,15 @@ local function process(process_opts, console_opts)
 
   -- verify what we just flashed
   if do_verify then
-    if rom_size ~= 0 then
+    if rom_size_kb ~= 0 then
     -- open file
     file = assert(io.open(verify_file.filename, "wb"))
 
     -- dump cart to file
       log.section("Dumping ROM")
       time.start()
-      rom_dump(file, rom_size, DEBUG)
-      time.report(rom_size)
+      rom_dump(file, rom_size_kb, DEBUG)
+      time.report(rom_size_kb)
       log.success("ROM dumping done")
 
     -- close file
