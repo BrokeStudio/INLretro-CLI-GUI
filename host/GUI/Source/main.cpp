@@ -17,7 +17,7 @@
 #include <SDL.h>
 #include <SDL_opengl.h>
 #ifdef _WIN32
-#include <windows.h> // SetProcessDPIAware()
+  #include <windows.h> // SetProcessDPIAware()
 #endif
 
 // FontAwesome
@@ -40,7 +40,7 @@
 #include "Settings.h"
 
 #ifdef __APPLE__
-#include "macos.h"
+  #include "macos.h"
 #endif
 
 // Helpers macros
@@ -76,14 +76,14 @@ void show_status_bar_window(void)
 //       return false;
 //     }
 
-//     window_width = view->Size.x;
-//     window_height = view->Size.y;
+// window_width = view->Size.x;
+// window_height = view->Size.y;
 
-//     return true;
-//   }
+// return true;
+//}
 
-//   return false;
-// }
+// return false;
+//}
 
 /*
 
@@ -99,14 +99,12 @@ void show_status_bar_window(void)
 
 */
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
-
   // Setup USB
   int usb_init = libusb_init(NULL);
   // check(usb_init == LIBUSB_SUCCESS, "Failed to initialize libusb: %s", libusb_strerror((libusb_error)usb_init));
-  if (usb_init < 0)
-  {
+  if(usb_init < 0) {
     printf("Error: %s\n", libusb_error_name(usb_init));
     printf("Error: %s\n", libusb_error_name(usb_init));
     return usb_init;
@@ -117,8 +115,7 @@ int main(int argc, char **argv)
 #ifdef _WIN32
   ::SetProcessDPIAware();
 #endif
-  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
-  {
+  if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0) {
     libusb_exit(NULL);
     printf("Error: %s\n", SDL_GetError());
     return -1;
@@ -139,9 +136,8 @@ int main(int argc, char **argv)
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
   float main_scale = ImGui_ImplSDL2_GetContentScaleForDisplay(0);
   SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-  SDL_Window *window = SDL_CreateWindow("INL retroprog GUI", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, (int)(min_width * main_scale), (int)(min_height * main_scale), window_flags);
-  if (window == nullptr)
-  {
+  SDL_Window* window = SDL_CreateWindow("INL retroprog GUI", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, (int)(min_width * main_scale), (int)(min_height * main_scale), window_flags);
+  if(window == nullptr) {
     libusb_exit(NULL);
     SDL_Quit();
     printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
@@ -157,7 +153,7 @@ int main(int argc, char **argv)
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
-  ImGuiIO &io = ImGui::GetIO();
+  ImGuiIO& io = ImGui::GetIO();
   (void)io;
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
   // io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;	// Enable Gamepad Controls
@@ -182,36 +178,33 @@ int main(int argc, char **argv)
   std::string writePath = "./";
 
 #ifdef __APPLE__
-  char *basePath = SDL_GetBasePath();
-  char *prefPath = SDL_GetPrefPath("Broke Studio", "INLretro");
+  char* basePath = SDL_GetBasePath();
+  char* prefPath = SDL_GetPrefPath("Broke Studio", "INLretro");
 
-  if (basePath != nullptr)
-  {
+  if(basePath != nullptr) {
     luaPath = basePath;
     SDL_free(basePath);
   }
 
-  if (prefPath != nullptr)
-  {
+  if(prefPath != nullptr) {
     writePath = prefPath;
     SDL_free(prefPath);
   }
 
   std::filesystem::create_directories(
-      std::filesystem::path(writePath) / "ignore");
+    std::filesystem::path(writePath) / "ignore");
 #endif
 
   // Setup Dear ImGui style
   ImGui::StyleColorsDark();
 
   // Setup scaling
-  ImGuiStyle &style = ImGui::GetStyle();
+  ImGuiStyle& style = ImGui::GetStyle();
   style.ScaleAllSizes(main_scale); // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
   style.FontScaleDpi = main_scale; // Set initial font scale. (using io.ConfigDpiScaleFonts=true makes this unnecessary. We leave both here for documentation purpose)
 
   // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
-  if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-  {
+  if(io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
     style.WindowRounding = 0.0f;
     style.Colors[ImGuiCol_WindowBg].w = 1.0f;
   }
@@ -239,11 +232,11 @@ int main(int argc, char **argv)
   float baseFontSize = 18.0f; // 13.0f is the size of the default font. Change to the font size you use.
 
   // add Roboto Mono Regular font
-  ImFont *RobotoMonoRegularFont = io.Fonts->AddFontFromMemoryCompressedBase85TTF(RobotoMonoRegular_compressed_data_base85, baseFontSize);
+  ImFont* RobotoMonoRegularFont = io.Fonts->AddFontFromMemoryCompressedBase85TTF(RobotoMonoRegular_compressed_data_base85, baseFontSize);
 
   // add FontAwesome fonts
   float iconFontSize = baseFontSize * 2.0f / 3.0f; // FontAwesome fonts need to have their sizes reduced by 2.0f/3.0f in order to align correctly
-  static const ImWchar icons_ranges[] = {ICON_MIN_FA, ICON_MAX_16_FA, 0};
+  static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_16_FA, 0 };
   ImFontConfig icons_config;
   icons_config.MergeMode = true;
   icons_config.PixelSnapH = true;
@@ -252,13 +245,13 @@ int main(int argc, char **argv)
   io.Fonts->AddFontFromMemoryCompressedBase85TTF(fa_solid_900_compressed_data_base85, iconFontSize, &icons_config, icons_ranges);
 
   // add Rubik Regular font
-  ImFont *RubikRegularFont = io.Fonts->AddFontFromMemoryCompressedBase85TTF(RubikRegular_compressed_data_base85, baseFontSize);
+  ImFont* RubikRegularFont = io.Fonts->AddFontFromMemoryCompressedBase85TTF(RubikRegular_compressed_data_base85, baseFontSize);
 
   // add FontAwesome fonts
   io.Fonts->AddFontFromMemoryCompressedBase85TTF(fa_regular_400_compressed_data_base85, iconFontSize, &icons_config, icons_ranges);
   io.Fonts->AddFontFromMemoryCompressedBase85TTF(fa_solid_900_compressed_data_base85, iconFontSize, &icons_config, icons_ranges);
 
-  ImFont *fonts[] = {RobotoMonoRegularFont, RubikRegularFont};
+  ImFont* fonts[] = { RobotoMonoRegularFont, RubikRegularFont };
 
   // Our state
   ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -268,8 +261,7 @@ int main(int argc, char **argv)
   Ini::load();
   Ini::parse();
 
-  for (Console *console : Console::list)
-  {
+  for(Console* console : Console::list) {
     console->set_paths(luaPath, writePath);
   }
 
@@ -294,9 +286,7 @@ int main(int argc, char **argv)
   */
   // Main loop
   bool done = false;
-  while (!done)
-  {
-
+  while(!done) {
 #define TOP_MIN_Y 200
 #define TOP_MAX_Y 300
 
@@ -334,23 +324,23 @@ int main(int argc, char **argv)
     // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application, or clear/overwrite your copy of the keyboard data.
     // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
     SDL_Event event;
-    while (SDL_PollEvent(&event))
-    {
+    while(SDL_PollEvent(&event)) {
       ImGui_ImplSDL2_ProcessEvent(&event);
-      if (event.type == SDL_QUIT)
-      {
-        if (!Flasher::is_flashing())
+      if(event.type == SDL_QUIT) {
+        if(!Flasher::is_flashing()) {
           done = true;
+        }
       }
 
-      if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
-      {
-        if (!Flasher::is_flashing())
+      if(event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window)) {
+        if(!Flasher::is_flashing()) {
           done = true;
+        }
       }
 
-      if (event.type == SDL_DROPFILE)
+      if(event.type == SDL_DROPFILE) {
         droppedFilename = std::string(event.drop.file);
+      }
     }
 
     // Start the Dear ImGui frame
@@ -360,15 +350,12 @@ int main(int argc, char **argv)
     ImGui::PushFont(fonts[Settings::settings.font]);
 
     // #if 0
-    ImGuiViewport *viewport = ImGui::GetMainViewport();
-    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-    {
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
+    if(io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
       ImGui::SetNextWindowPos(viewport->Pos);
       ImGui::SetNextWindowSize(viewport->Size);
       ImGui::SetNextWindowViewport(viewport->ID);
-    }
-    else
-    {
+    } else {
       ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
       ImGui::SetNextWindowSize(viewport->Size); // ImGui::GetIO().DisplaySize);
     }
@@ -398,30 +385,30 @@ int main(int argc, char **argv)
     //   ImGui::DockBuilderAddNode(dockspace_id);    // Add empty node
     //   ImGui::DockBuilderSetNodeSize(dockspace_id, viewport->Size);
 
-    //   ImGui::DockBuilderGetCentralNode(dockspace_id);
+    // ImGui::DockBuilderGetCentralNode(dockspace_id);
 
-    //   ImGuiID dock_main_id = dockspace_id; // This variable will track the document node, however we are not using it here as we aren't docking anything into it.
-    //   ImGuiID dock_up_id = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Up, 0.375f, nullptr, &dock_main_id);
-    //   // ImGui::DockBuilderSplitNode(dock_up_id, ImGuiDir_Left, 0.33f, &dock_up_left_id, &dock_up_right_id);
-    //   ImGuiID dock_down_id = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Down, 0.25f, nullptr, &dock_main_id);
+    // ImGuiID dock_main_id = dockspace_id; // This variable will track the document node, however we are not using it here as we aren't docking anything into it.
+    // ImGuiID dock_up_id = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Up, 0.375f, nullptr, &dock_main_id);
+    // // ImGui::DockBuilderSplitNode(dock_up_id, ImGuiDir_Left, 0.33f, &dock_up_left_id, &dock_up_right_id);
+    // ImGuiID dock_down_id = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Down, 0.25f, nullptr, &dock_main_id);
 
-    //   ImGui::DockBuilderDockWindow("Top", dock_up_id);
-    //   ImGui::DockBuilderDockWindow("Middle", dock_main_id);
-    //   ImGui::DockBuilderDockWindow("Bottom", dock_down_id);
+    // ImGui::DockBuilderDockWindow("Top", dock_up_id);
+    // ImGui::DockBuilderDockWindow("Middle", dock_main_id);
+    // ImGui::DockBuilderDockWindow("Bottom", dock_down_id);
 
-    //   // Set specific behaviour for top-left window
-    //   // node = ImGui::DockBuilderGetNode(dock_up_left_id);
-    //   // node->LocalFlags |= ImGuiDockNodeFlags_NoResizeX; // ImGuiDockNodeFlags_NoTabBar | ImGuiDockNodeFlags_NoResize; // ImGuiDockNodeFlags_NoCloseButton
-    //   // ImGui::DockBuilderSetNodeSize(dock_up_left_id, ImVec2(200.0f, FLT_MAX));
+    // // Set specific behaviour for top-left window
+    // // node = ImGui::DockBuilderGetNode(dock_up_left_id);
+    // // node->LocalFlags |= ImGuiDockNodeFlags_NoResizeX; // ImGuiDockNodeFlags_NoTabBar | ImGuiDockNodeFlags_NoResize; // ImGuiDockNodeFlags_NoCloseButton
+    // // ImGui::DockBuilderSetNodeSize(dock_up_left_id, ImVec2(200.0f, FLT_MAX));
 
-    //   // // Set specific behaviour for top-left window
-    //   // node = ImGui::DockBuilderGetNode(dock_up_id);
-    //   // ImGui::DockBuilderSetNodeSize(dock_up_id, ImVec2(FLT_MAX, dock_up_y));
+    // // // Set specific behaviour for top-left window
+    // // node = ImGui::DockBuilderGetNode(dock_up_id);
+    // // ImGui::DockBuilderSetNodeSize(dock_up_id, ImVec2(FLT_MAX, dock_up_y));
 
-    //   ImGui::DockBuilderFinish(dockspace_id);
+    // ImGui::DockBuilderFinish(dockspace_id);
 
-    //   reset_layout = false;
-    // }
+    // reset_layout = false;
+    //}
 
     // ----------------------------------------------------------------------------------------------------
 
@@ -447,8 +434,9 @@ int main(int argc, char **argv)
 
     // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
 #if defined(_DEBUG)
-    if (Settings::settings.imgui_demo)
+    if(Settings::settings.imgui_demo) {
       ImGui::ShowDemoWindow(&Settings::settings.imgui_demo);
+    }
 #endif
 
     // file dialog
@@ -469,32 +457,27 @@ int main(int argc, char **argv)
 
     // MIDDLE
     float middle_max_y = IM_MAX(middle_size_min.y, viewport->Size.y - style.ItemSpacing.y * 6 - top_size.y - bottom_size.y);
-    if (middle_size.y != middle_max_y)
-    {
+    if(middle_size.y != middle_max_y) {
       ImGui::SetNextWindowSize(ImVec2(0, middle_max_y));
     }
     ImGui::BeginChild("Middle", ImVec2(0, middle_max_y), ImGuiChildFlags_ResizeY); // MIDDLE start
 
     // count active flashers
     size_t activeFlashers = 0;
-    for (auto &flasher : Flasher::list)
-    {
-      if (flasher->isActive)
+    for(auto& flasher : Flasher::list) {
+      if(flasher->isActive) {
         activeFlashers++;
+      }
     }
 
     // any active flashers?
-    if (activeFlashers != 0)
-    {
+    if(activeFlashers != 0) {
       ImVec2 child_size = ImVec2(ImGui::GetContentRegionAvail().x / activeFlashers, 0);
-      if (activeFlashers > 1)
-      {
+      if(activeFlashers > 1) {
         child_size.x = child_size.x - (style.WindowPadding.x / activeFlashers) * (activeFlashers - 1);
       }
-      for (auto &flasher : Flasher::list)
-      {
-        if (!flasher->isActive)
-        {
+      for(auto& flasher : Flasher::list) {
+        if(!flasher->isActive) {
           continue;
         }
 
@@ -502,31 +485,34 @@ int main(int argc, char **argv)
         char spinner[2] = "";
         spinner[0] = flasher->isFlashing ? "|/-\\"[(int)(ImGui::GetTime() / 0.05f) & 3] : 0;
         snprintf(label, 64, "INL Retro-Pro%s [%s] %s", flasher->id.c_str(), flasher->isFlashing ? "Processing" : "Idle", spinner);
-        ImGui::BeginChild(label, child_size, ImGuiChildFlags_Border);
+        // keep the window ID stable while the status and spinner change
+        ImGui::PushID(flasher->id.c_str());
+        ImGui::BeginChild("Flasher", child_size, ImGuiChildFlags_Border);
         ImGui::SeparatorText(label);
         flasher->log.render();
         ImGui::EndChild();
+        ImGui::PopID();
         ImGui::SameLine();
       }
-    }
-    else
-    {
+    } else {
 #define NO_FLASHER_TEXT "No flasher active or detected..."
       ImGui::BeginChild(NO_FLASHER_TEXT, ImVec2(0, 0), ImGuiChildFlags_Border);
 
-      ImGuiStyle &style = ImGui::GetStyle();
+      ImGuiStyle& style = ImGui::GetStyle();
       ImVec2 text_size = ImGui::CalcTextSize(NO_FLASHER_TEXT);
       float size_x = text_size.x + style.FramePadding.x * 2.0f;
       float size_y = text_size.y + style.FramePadding.y * 2.0f;
       ImVec2 avail = ImGui::GetContentRegionAvail();
 
       float off_x = (avail.x - size_x) * 0.5f;
-      if (off_x > 0.0f)
+      if(off_x > 0.0f) {
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off_x);
+      }
 
       float off_y = (avail.y - size_y) * 0.5f;
-      if (off_y > 0.0f)
+      if(off_y > 0.0f) {
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + off_y);
+      }
 
       ImGui::Text(NO_FLASHER_TEXT);
       ImGui::EndChild();
@@ -557,9 +543,8 @@ int main(int argc, char **argv)
     // Update and Render additional Platform Windows
     // (Platform functions may change the current OpenGL context, so we save/restore it to make it easier to paste this code elsewhere.
     //  For this specific demo app we could also call SDL_GL_MakeCurrent(window, gl_context) directly)
-    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-    {
-      SDL_Window *backup_current_window = SDL_GL_GetCurrentWindow();
+    if(io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+      SDL_Window* backup_current_window = SDL_GL_GetCurrentWindow();
       SDL_GLContext backup_current_context = SDL_GL_GetCurrentContext();
       ImGui::UpdatePlatformWindows();
       ImGui::RenderPlatformWindowsDefault();
@@ -574,8 +559,7 @@ int main(int argc, char **argv)
   Flasher::clear_list();
   Ini::save();
 
-  if (usb_init == LIBUSB_SUCCESS)
-  {
+  if(usb_init == LIBUSB_SUCCESS) {
     libusb_exit(NULL);
   }
 
