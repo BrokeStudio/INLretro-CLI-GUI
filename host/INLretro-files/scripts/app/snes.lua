@@ -374,10 +374,10 @@ local function play_mode(debug)
 end
 
 
--- Desc:read reset vector from passed in bank
--- Pre: snes_init() been called to setup i/o
--- Post:Address left on bus memories disabled
--- Rtn: reset vector that was found
+-- Desc: read reset vector from passed in bank
+-- Pre:  snes_init() been called to setup i/o
+-- Post: Address left on bus memories disabled
+-- Rtn:  reset vector that was found
 local function read_reset_vector(bank, debug)
   --ensure cart is in play mode
   play_mode()
@@ -398,9 +398,9 @@ local function read_reset_vector(bank, debug)
 end
 
 -- Desc: attempt to read flash rom ID
--- Pre: snes_init() been called to setup i/o
--- Post:Address left on bus memories disabled
--- Rtn: true if flash ID found
+-- Pre:  snes_init() been called to setup i/o
+-- Post: Address left on bus memories disabled
+-- Rtn:  true if flash ID found
 local function read_flashID(debug)
   local rv
   --enter software mode A11 is highest address bit that needs to be valid

@@ -164,68 +164,6 @@ uint8_t nes_ppu_write_page_buffer_verify(uint8_t addrH, buffer* buff)
   return SUCCESS;
 }
 
-#endif
-
-#ifdef SNES_CONN
-uint8_t snes_write_page_buffer(uint8_t addrH, buffer* buff, write_funcptr_pg wr_func)
-{
-  uint16_t cur = buff->cur_byte;
-  uint8_t n = buff->cur_byte;
-  uint8_t i;
-  uint8_t rv;
-  uint8_t rv1;
-  // uint8_t read;
-  //
-
-  uint16_t addr = addrH << 8;
-
-  while(cur <= buff->last_idx) {
-    // wr_func( ((addrH<<8)| n), &(buff->data[n]) );
-    //write function returns when it's complete or errors out
-
-    // unlock and write data
-    snes_wr(0x8AAA, 0xAA, 0);
-    snes_wr(0x8555, 0x55, 0);
-    // write buffer write to SA
-    snes_wr(addr | n, 0x25, 0);
-    // write number of words - 1 to SA
-    snes_wr(addr | n, 31, 0);
-
-    // write first data to first address, then write others to their address
-    // snes_wr(addr|n, data, 0);
-
-    // write 31 more bytes of data
-    for(i = 0; i < 32; i++) {
-      snes_wr(addr + i + n, buff->data[n + i], 0);
-    }
-
-    // write program buffer command
-    snes_wr(addr | n, 0x29, 0);
-
-    // LED_IP_PU();
-    // LED_LO();
-    // LED_OP();
-    // LED_HI();
-
-    do {
-      rv = snes_rd(addr, 0);
-      rv1 = snes_rd(addr, 0);
-      usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-                 // wdt_reset();
-                 ////} while (rv != snes_rd(addr, 0));
-    } while(rv != rv1);
-
-    // n++;
-    n += 32;
-    cur += 32;
-  }
-  buff->cur_byte = n;
-
-  // TODO error check/report
-  return SUCCESS;
-}
-#endif
-
 // only used by cninja currently..
 uint8_t write_page_cninja(uint8_t bank, uint8_t addrH, uint16_t unlock1, uint16_t unlock2, buffer* buff, write_funcptr wr_func, read_funcptr rd_func)
 {
@@ -410,190 +348,292 @@ uint8_t write_page_a53(uint8_t bank, uint8_t addrH, buffer* buff, write_funcptr 
 //   return SUCCESS;
 // }
 
-// #define PRGM_MODE() swim_wotf(SWIM_HS, 0x500F, 0x40)
-// #define PLAY_MODE() swim_wotf(SWIM_HS, 0x500F, 0x00)
-// #define PRGM_MODE() EXP0_LO()
-// #define PLAY_MODE() EXP0_HI()
-#define PRGM_MODE() NOP()
-#define PLAY_MODE() NOP()
+#endif
 
 #ifdef SNES_CONN
-uint8_t snes_write_page(uint8_t bank, uint8_t addrH, buffer* buff, write_snes_funcptr wr_func, read_snes_funcptr rd_func)
+uint8_t snes_write_page_buffer(uint8_t addrH, buffer* buff)
 {
   uint16_t cur = buff->cur_byte;
-  uint8_t n = buff->cur_byte;
+  uint16_t addr = (addrH << 8);
+  uint8_t value;
   uint8_t read;
-  #ifdef AVR_CORE
-  wdt_reset();
-  #endif
-  // set to program mode for first entry
-  // EXP0_LO();
-  // swim_wotf(SWIM_HS, 0x500F, 0x40)
-  PRGM_MODE();
+  uint16_t byte_count = (buff->last_idx + 1 - buff->cur_byte);
+  uint8_t romsel = 0;
+  uint16_t timeout = 0xFFFF;
 
-  //; TODO I don't think all these NOPs are actually needed, but they work and don't seem to significantly affect program time on stm32
-  NOP();
-  NOP();
-  NOP();
-  NOP();
-  NOP();
-  NOP();
-  NOP();
-  NOP();
-  // enter unlock bypass mode
-  wr_func(0x8AAA, 0xAA, 0);
-  wr_func(0x8555, 0x55, 0);
-  wr_func(0x8AAA, 0x20, 0);
+  // unlock and write data
+  snes_wr(0x8AAA, 0xAA, romsel);
+  snes_wr(0x8555, 0x55, romsel);
+  snes_wr(addr, 0x25, romsel);
+  snes_wr(addr, byte_count - 1, romsel);
+
   while(cur <= buff->last_idx) {
-    // write unlock sequence
-    // unlocked  wr_func( 0x0AAA, 0xAA );
-    // unlocked  wr_func( 0x0555, 0x55 );
-    // wr_func( 0x0000, 0xA0 );
-    snes_wr_cur_addr(0xA0, 0); // gained ~3KBps (59.13KBps) inl6 with v3.0 proto
-    wr_func(((addrH << 8) | n), buff->data[n], 0);
-    // wr_func( ((addrH<<8)| n), cur_data );  //didn't actually speed up
-    // Targetting 2MByte 16mbit flash which doesn't have buffered writes
-    // currently have average flash speed of 21.05KBps going to start removing some of these NOPs
-    // and optimizing flash routine to get time down.
-    // exit program mode
-    //  EXP0_HI();
-    PLAY_MODE();
-    NOP();
-    NOP();
-    NOP();
-    NOP();
-    NOP();
-    NOP();
-    NOP();
-    NOP();
-    // pre-fetch next byte of data
-    // cur_data = buff->data[n+1];
-  #ifdef AVR_CORE
-    wdt_reset();
-  #endif
-    // wait for byte to flash
-    //  do {
-    //    usbPoll();
-    //    read = rd_func((addrH<<8)|n);
-    //
-    //  //} while( read != rd_func((addrH<<8)|n) );
-    //  } while( read != buff->data[n] );
-    // this can cause things to hang on failed programs..
-    // need a smarter flash polling algo, kind of a pain because we don't have
-    // a good way to toggle /OE or /CE quickly on v3 SNES boards
-    usbPoll();
-    read = rd_func((addrH << 8) | n, 0);
-    // prepare for upcoming write cycle, or allow for a polling read
-    // EXP0_LO();
-    PRGM_MODE();
-    NOP();
-    NOP();
-    NOP();
-    NOP();
-    NOP();
-    NOP();
-    NOP();
-    NOP();
-    // First check if already outputting final data
-    if(read != buff->data[n]) {
-      // if not, lets see if toggle is occuring
-      // EXP0_HI();
-      PLAY_MODE();
-      NOP();
-      NOP();
-      NOP();
-      NOP();
-      NOP();
-      NOP();
-      NOP();
-      NOP();
-      while(read != rd_func((addrH << 8) | n, 0)) {
-        // EXP0_LO();
-        PRGM_MODE();
-        NOP();
-        NOP();
-        NOP();
-        NOP();
-        NOP();
-        NOP();
-        NOP();
-        NOP();
-        NOP();
-        NOP();
-        NOP();
-        NOP();
-        NOP();
-        NOP();
-        NOP();
-        NOP();
-        NOP();
-        NOP();
-        NOP();
-        NOP();
-        // EXP0_HI();
-        PLAY_MODE();
-        NOP();
-        NOP();
-        NOP();
-        NOP();
-        NOP();
-        NOP();
-        NOP();
-        NOP();
-        read = rd_func((addrH << 8) | n, 0);
-      }
-      // prepare for upcoming write cycle
-      // EXP0_LO();
-      PRGM_MODE();
-      NOP();
-      NOP();
-      NOP();
-      NOP();
-      NOP();
-      NOP();
-      NOP();
-      NOP();
-    }
-    // //IDK why, but AVR will exit early sometimes
-    // //without this second check, ~20 errors per 32KByte on SNES v3.0
-    // //All error bytes are 0xFF instead of true data
-    // //may need a smarter flash polling routine..
-    // //Tried to add extra delay to read algo, and didn't change anything
-    // //Also have decent trust in read routine as it's comparable to page read
-    // //which works flawlessly for dumps.  So think it has to do with flashing specifically...
-    // //Hmm maybe the avr is missing a read..  flash /CE, /OE, and /WE never toggle
-    // //so why would flash polling output different data between polls..?
-    // //Ahh this is the issue, adding the code below only adds delay which gives flash
-    // //enough time to complete write.
+    value = buff->data[cur + 0];
+    addr = (addrH << 8) | cur;
+    //write function returns when it's complete or errors out
 
-    // retry if write failed
-    // this helped but still seeing similar fails to dumps
-    n++;
+    snes_wr(addr, value, romsel);
+
     cur++;
-    // if (read == buff->data[n]) {
-    //   //n++;
-    //   //cur++;
-    //   LED_IP_PU();
-    //   LED_LO();
-    // } else {
-    //   LED_OP();
-    //   LED_HI();
-    // }
   }
 
-  buff->cur_byte = n;
+  // write program buffer command
+  snes_wr(addr, 0x29, romsel);
 
-  // exit unlock bypass mode
-  wr_func(0x8000, 0x90, 0);
-  wr_func(0x8000, 0x00, 0);
-  // reset the flash chip, supposed to exit too
-  wr_func(0x8000, 0xF0, 0);
+  do {
+    usbPoll();
+    read = snes_rd(addr, romsel);
+    if(read == value) {
+      break;
+    }
+  } while(--timeout);
 
-  // exit program mode
-  // EXP0_HI();
-  PLAY_MODE();
+  if(read != value) {
+    return STOPPED;
+  }
+
+  // control written buffer
+  cur = buff->cur_byte;
+  while(cur <= buff->last_idx) {
+    value = buff->data[cur + 0];
+    addr = (addrH << 8) | cur;
+    //write function returns when it's complete or errors out
+
+    read = snes_rd(addr, romsel);
+
+    if(read != value) {
+      buff->cur_byte = cur;
+      return STOPPED;
+    }
+
+    cur++;
+  }
+
+  buff->cur_byte = cur;
   return SUCCESS;
 }
+#endif
+
+#ifdef SNES_CONN
+
+  // #define PRGM_MODE() swim_wotf(SWIM_HS, 0x500F, 0x40)
+  // #define PLAY_MODE() swim_wotf(SWIM_HS, 0x500F, 0x00)
+  // #define PRGM_MODE() EXP0_LO()
+  // #define PLAY_MODE() EXP0_HI()
+  #define PRGM_MODE() NOP()
+  #define PLAY_MODE() NOP()
+
+uint8_t snes_write_page_verify(uint8_t addrH, buffer* buff, write_rv_funcptr wr_func)
+{
+  uint16_t cur = buff->cur_byte;
+  uint16_t addr;
+  uint8_t value;
+  uint8_t read;
+  uint8_t retries;
+
+  while(cur <= buff->last_idx) {
+    addr = (addrH << 8) | cur;
+    value = buff->data[cur];
+    retries = 3;
+
+    do {
+      read = wr_func(addr, value);
+      if(read == value) {
+        LED_IP_PU();
+        cur++;
+        break;
+      } else {
+        LED_OP();
+        LED_HI();
+      }
+    } while(--retries);
+
+    if(read != value) {
+      buff->cur_byte = cur;
+      return STOPPED;
+    }
+  }
+
+  buff->cur_byte = cur;
+  return SUCCESS;
+}
+
+// uint8_t snes_write_page_unlock(uint8_t bank, uint8_t addrH, buffer* buff, write_snes_funcptr wr_func, read_snes_funcptr rd_func)
+// {
+//   uint16_t cur = buff->cur_byte;
+//   uint8_t n = buff->cur_byte;
+//   uint8_t read;
+//   #ifdef AVR_CORE
+//   wdt_reset();
+//   #endif
+//   // set to program mode for first entry
+//   // EXP0_LO();
+//   // swim_wotf(SWIM_HS, 0x500F, 0x40)
+//   PRGM_MODE();
+
+// //; TODO I don't think all these NOPs are actually needed, but they work and don't seem to significantly affect program time on stm32
+// NOP();
+// NOP();
+// NOP();
+// NOP();
+// NOP();
+// NOP();
+// NOP();
+// NOP();
+// // enter unlock bypass mode
+// wr_func(0x8AAA, 0xAA, 0);
+// wr_func(0x8555, 0x55, 0);
+// wr_func(0x8AAA, 0x20, 0);
+// while(cur <= buff->last_idx) {
+//   // write unlock sequence
+//   // unlocked  wr_func( 0x0AAA, 0xAA );
+//   // unlocked  wr_func( 0x0555, 0x55 );
+//   // wr_func( 0x0000, 0xA0 );
+//   snes_wr_cur_addr(0xA0, 0); // gained ~3KBps (59.13KBps) inl6 with v3.0 proto
+//   wr_func(((addrH << 8) | n), buff->data[n], 0);
+//   // wr_func( ((addrH<<8)| n), cur_data );  //didn't actually speed up
+//   // Targetting 2MByte 16mbit flash which doesn't have buffered writes
+//   // currently have average flash speed of 21.05KBps going to start removing some of these NOPs
+//   // and optimizing flash routine to get time down.
+//   // exit program mode
+//   //  EXP0_HI();
+//   PLAY_MODE();
+//   NOP();
+//   NOP();
+//   NOP();
+//   NOP();
+//   NOP();
+//   NOP();
+//   NOP();
+//   NOP();
+//   // pre-fetch next byte of data
+//   // cur_data = buff->data[n+1];
+// #ifdef AVR_CORE
+//   wdt_reset();
+// #endif
+//   // wait for byte to flash
+//   //  do {
+//   //    usbPoll();
+//   //    read = rd_func((addrH<<8)|n);
+//   //
+//   //  //} while( read != rd_func((addrH<<8)|n) );
+//   //  } while( read != buff->data[n] );
+//   // this can cause things to hang on failed programs..
+//   // need a smarter flash polling algo, kind of a pain because we don't have
+//   // a good way to toggle /OE or /CE quickly on v3 SNES boards
+//   usbPoll();
+//   read = rd_func((addrH << 8) | n, 0);
+//   // prepare for upcoming write cycle, or allow for a polling read
+//   // EXP0_LO();
+//   PRGM_MODE();
+//   NOP();
+//   NOP();
+//   NOP();
+//   NOP();
+//   NOP();
+//   NOP();
+//   NOP();
+//   NOP();
+//   // First check if already outputting final data
+//   if(read != buff->data[n]) {
+//     // if not, lets see if toggle is occuring
+//     // EXP0_HI();
+//     PLAY_MODE();
+//     NOP();
+//     NOP();
+//     NOP();
+//     NOP();
+//     NOP();
+//     NOP();
+//     NOP();
+//     NOP();
+//     while(read != rd_func((addrH << 8) | n, 0)) {
+//       // EXP0_LO();
+//       PRGM_MODE();
+//       NOP();
+//       NOP();
+//       NOP();
+//       NOP();
+//       NOP();
+//       NOP();
+//       NOP();
+//       NOP();
+//       NOP();
+//       NOP();
+//       NOP();
+//       NOP();
+//       NOP();
+//       NOP();
+//       NOP();
+//       NOP();
+//       NOP();
+//       NOP();
+//       NOP();
+//       NOP();
+//       // EXP0_HI();
+//       PLAY_MODE();
+//       NOP();
+//       NOP();
+//       NOP();
+//       NOP();
+//       NOP();
+//       NOP();
+//       NOP();
+//       NOP();
+//       read = rd_func((addrH << 8) | n, 0);
+//     }
+//     // prepare for upcoming write cycle
+//     // EXP0_LO();
+//     PRGM_MODE();
+//     NOP();
+//     NOP();
+//     NOP();
+//     NOP();
+//     NOP();
+//     NOP();
+//     NOP();
+//     NOP();
+//   }
+//   // //IDK why, but AVR will exit early sometimes
+//   // //without this second check, ~20 errors per 32KByte on SNES v3.0
+//   // //All error bytes are 0xFF instead of true data
+//   // //may need a smarter flash polling routine..
+//   // //Tried to add extra delay to read algo, and didn't change anything
+//   // //Also have decent trust in read routine as it's comparable to page read
+//   // //which works flawlessly for dumps.  So think it has to do with flashing specifically...
+//   // //Hmm maybe the avr is missing a read..  flash /CE, /OE, and /WE never toggle
+//   // //so why would flash polling output different data between polls..?
+//   // //Ahh this is the issue, adding the code below only adds delay which gives flash
+//   // //enough time to complete write.
+
+// // retry if write failed
+// // this helped but still seeing similar fails to dumps
+// n++;
+// cur++;
+// // if (read == buff->data[n]) {
+// //   //n++;
+// //   //cur++;
+// //   LED_IP_PU();
+// //   LED_LO();
+// // } else {
+// //   LED_OP();
+// //   LED_HI();
+// // }
+//}
+
+// buff->cur_byte = n;
+
+// // exit unlock bypass mode
+// wr_func(0x8000, 0x90, 0);
+// wr_func(0x8000, 0x00, 0);
+// // reset the flash chip, supposed to exit too
+// wr_func(0x8000, 0xF0, 0);
+
+// // exit program mode
+// // EXP0_HI();
+// PLAY_MODE();
+// return SUCCESS;
+//}
 #endif
 
 #ifdef GB_CONN
@@ -1055,61 +1095,76 @@ uint8_t flash_buff(buffer* buff)
 
 #ifdef SNES_CONN
     case SNESROM:
-      // if(buff->mapper == LOROM_5VOLT) {
-      //   // LOROM banks start at $XX:8000
-      //   write_page(addrH + 0x80, buff, snes_5v_flash_wr);
-      // }
-      // if(buff->mapper == HIROM_5VOLT) {
-      //   // HIROM banks start at $XX:0000
-      //   write_page(addrH, buff, snes_5v_flash_wr);
-      // }
-      // if(buff->mapper == LOROM_3VOLT) {
-      //   // LOROM banks start at $XX:8000
-      //   write_page(addrH + 0x80, buff, snes_3v_flash_wr);
-      // }
-      // if(buff->mapper == HIROM_3VOLT) {
-      //   // HIROM banks start at $XX:0000
-      //   write_page(addrH, buff, snes_3v_flash_wr);
-      // }
-      // if(buff->mapper == LOROM_3V_VERIFY) {
-      //   // LOROM banks start at $XX:8000
-      //   write_page_verify(addrH + 0x80, buff, snes_3v_verify_wr);
-      // }
-      // if(buff->mapper == HIROM_3V_VERIFY) {
-      //   // HIROM banks start at $XX:0000
-      //   write_page_verify(addrH, buff, snes_3v_verify_wr);
-      // }
-      // if(buff->mapper == LOROM_3V_PAGE) {
-      //   // LOROM banks start at $XX:8000
-      //   snes_write_page_buffer(addrH + 0x80, buff, snes_3v_buffer_wr);
-      // }
-      // if(buff->mapper == HIROM_3V_PAGE) {
-      //   // HIROM banks start at $XX:0000
-      //   snes_write_page_buffer(addrH, buff, snes_3v_buffer_wr);
-      // }
-
       if(buff->mapper == LOROM) {
-        addrH |= 0x80; //$8000 LOROM space
-        // need to split page_num
-        // A14-8 page_num[7-0]
-        // A15 high (LOROM)
-        // A23-16 page_num[14-8]
-        bank = (buff->page_num) >> 7;
-        // clear any reset state
-        // EXP0_HI();
-        HADDR_SET(bank);
-        snes_write_page(0, addrH, buff, snes_wr, snes_rd);
+        // LOROM banks start at $XX:8000
+        addrH = 0x80 | buff->page_num;
+        if(buff->part_num == USE_BUFFER) {
+          result = snes_write_page_buffer(addrH, buff);
+        } else if(buff->part_num == USE_UNLOCK_BYPASS) {
+          // enter unlock bypass mode
+          snes_wr(0x8AAA, 0xAA, 0);
+          snes_wr(0x8555, 0x55, 0);
+          snes_wr(0x8AAA, 0x20, 0);
+
+          result = snes_write_page_verify(addrH, buff, snes_flash_unlock_wr);
+
+          // exit unlock bypass mode
+          snes_wr(0x8000, 0x90, 0);
+          snes_wr(0x8000, 0x00, 0);
+
+          // reset the flash chip, supposed to exit too
+          snes_wr(0x8000, 0xF0, 0);
+
+        } else {
+          result = snes_write_page_verify(addrH, buff, snes_flash_wr);
+        }
       }
       if(buff->mapper == HIROM) {
-        // need to split page_num
-        // A15-8 page_num[7-0]
-        // A21-16 page_num[13-8]
-        // A22 high (HIROM)
-        // A23 ~page_num[14] (bank CO starts first half, bank 40 starts second)
-        bank = ((((buff->page_num) >> 8) | 0x40) & 0x7F);
-        HADDR_SET(bank);
-        snes_write_page(0, addrH, buff, snes_wr, snes_rd);
+        // HIROM banks start at $XX:0000
+        addrH = 0x00 | buff->page_num;
+        if(buff->part_num == USE_BUFFER) {
+          result = snes_write_page_buffer(addrH, buff);
+        } else if(buff->part_num == USE_UNLOCK_BYPASS) {
+          // enter unlock bypass mode
+          snes_wr(0x8AAA, 0xAA, 0);
+          snes_wr(0x8555, 0x55, 0);
+          snes_wr(0x8AAA, 0x20, 0);
+
+          result = snes_write_page_verify(addrH, buff, snes_flash_unlock_wr);
+
+          // exit unlock bypass mode
+          snes_wr(0x8000, 0x90, 0);
+          snes_wr(0x8000, 0x00, 0);
+
+          // reset the flash chip, supposed to exit too
+          snes_wr(0x8000, 0xF0, 0);
+        } else {
+          result = snes_write_page_verify(addrH, buff, snes_flash_wr);
+        }
       }
+
+      // if(buff->mapper == LOROM) {
+      //   addrH |= 0x80; //$8000 LOROM space
+      //   // need to split page_num
+      //   // A14-8 page_num[7-0]
+      //   // A15 high (LOROM)
+      //   // A23-16 page_num[14-8]
+      //   bank = (buff->page_num) >> 7;
+      //   // clear any reset state
+      //   // EXP0_HI();
+      //   HADDR_SET(bank);
+      //   snes_write_page(0, addrH, buff, snes_wr, snes_rd);
+      // }
+      // if(buff->mapper == HIROM) {
+      //   // need to split page_num
+      //   // A15-8 page_num[7-0]
+      //   // A21-16 page_num[13-8]
+      //   // A22 high (HIROM)
+      //   // A23 ~page_num[14] (bank CO starts first half, bank 40 starts second)
+      //   bank = ((((buff->page_num) >> 8) | 0x40) & 0x7F);
+      //   HADDR_SET(bank);
+      //   snes_write_page(0, addrH, buff, snes_wr, snes_rd);
+      // }
     case SNESRAM:
       // warn      addrX = ((buff->page_num)>>8);
       break;
@@ -1174,7 +1229,7 @@ uint8_t flash_buff(buffer* buff)
           gameboy_pin31_wr(0x0000, 0x90);
           gameboy_pin31_wr(0x0000, 0x00);
 
-          // reset/exit
+          // reset the flash chip, supposed to exit too
           gameboy_pin31_wr(0x0000, 0xF0);
         } else {
           gb_write_page_flash(addrH + 0x40, buff, gameboy_3v_flash_pin31_wr);

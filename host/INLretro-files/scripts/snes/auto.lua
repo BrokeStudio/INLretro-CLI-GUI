@@ -15,6 +15,7 @@ local help    = require "scripts.app.help"
 
 -- file constants and global variables
 local mapname = "LOROM"
+local flash_chip
 
 -- local functions
 
@@ -82,6 +83,11 @@ local function rom_manf_id(debug)
   -- exit software
   dict.snes("SNES_ROM_WR", 0x8000, 0xF0)
 
+  if found then
+    log.success("Flash chip deteted successfully")
+  else
+    log.error("Flash chip unknown")
+  end
   return found, device
 end
 
@@ -179,7 +185,7 @@ local function rom_dump(file, rom_size_kb, debug)
     --select desired bank
     dict.snes("SNES_SET_BANK", cur_bank) -- start_bank+cur_bank)
 
-    dump.dumptofile(file, kb_per_bank, { mapper = addr_base, mem_type = "SNESROM_PAGE" }, false)
+    dump.dumptofile(file, kb_per_bank, { addr_base = addr_base, mem_type = "SNESROM_PAGE" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -192,26 +198,31 @@ end
 ---@param rom_size_kb integer ROM size in kilobytes
 ---@param debug? boolean Enable verbose progress logging
 local function rom_flash(file, rom_size_kb, debug)
+  log.section("Programming ROM")
+  log.info("ROM size", rom_size_kb .. "KB")
+
   local kb_per_bank
-  -- local addr_base
-  local mapmode
+  local cur_bank = 0
 
   if mapname == "LOROM" then
     kb_per_bank = 32 -- LOROM has 32KB per bank
-    -- addr_base = 0x80 -- LOROM data starts at $8000
   elseif mapname == "HIROM" then
     kb_per_bank = 64 -- HIROM has 64KB per bank
-    -- addr_base = 0x00 -- HIROM data starts at $0000
   else
     log.error("Mapper unknown:", mapname)
     do return end
   end
 
   local num_banks = math.floor(rom_size_kb / kb_per_bank)
-  local cur_bank = 0
 
-  log.section("Programming ROM")
-  log.info("ROM size", rom_size_kb .. "KB")
+  local options
+  if flash_chip.buffer == true then
+    options = "USE_BUFFER"
+    log.info("Using buffer programming")
+  elseif flash_chip.unlock_bypass == true then
+    options = "USE_UNLOCK_BYPASS"
+    log.info("Using unlock bypass mode")
+  end
 
   while cur_bank < num_banks do
     if debug then
@@ -221,9 +232,9 @@ local function rom_flash(file, rom_size_kb, debug)
     end
 
     --select desired bank
-    dict.snes("SNES_SET_BANK", cur_bank) -- start_bank+cur_bank)
+    dict.snes("SNES_SET_BANK", cur_bank)
 
-    flash.write_file(file, kb_per_bank, { mapper = mapname .. "_3VOLT", mem_type = "SNESROM" }, true)
+    flash.write_file(file, kb_per_bank, { mapper = mapname, mem_type = "SNESROM", options = options }, true)
 
     cur_bank = cur_bank + 1
   end
@@ -284,9 +295,9 @@ local function process(process_opts, console_opts)
 
   if snes.file_header.is_valid then
     if snes.file_header.rom_type.mode == 0 then
-    mapname = "LOROM"
+      mapname = "LOROM"
     elseif snes.file_header.rom_type.mode == 1 then
-    mapname = "HIROM"
+      mapname = "HIROM"
     else
       log.error("File ROM header rom type is invalid")
       return false
@@ -310,7 +321,7 @@ local function process(process_opts, console_opts)
 
     -- attempt to read ROM flash ID
     if options.force_flash_test or (do_rom_write and rom_size_kb ~= 0) then
-      rv = rom_manf_id()
+      rv, flash_chip = rom_manf_id()
       if not rv then
         if do_rom_write then
           log.error("Couldn't identify flash chip")
@@ -332,23 +343,23 @@ local function process(process_opts, console_opts)
   -- dump cart ROM to file
   if do_rom_dump then
     if rom_size_kb ~= 0 then
-    -- open file
-    file = assert(io.open(rom_dump_file.filename, "wb"))
+      -- open file
+      file = assert(io.open(rom_dump_file.filename, "wb"))
 
-    -- dump cart to file
-    local cartridge_title = ""
+      -- dump cart to file
+      local cartridge_title = ""
       if snes.cart_header.is_valid then
         cartridge_title = snes.cart_header.cartridge_title
-    end
-    log.section("Dumping ROM", cartridge_title)
+      end
+      log.section("Dumping ROM", cartridge_title)
 
-    time.start()
-    rom_dump(file, rom_size_kb, DEBUG)
-    time.report(rom_size_kb)
-    log.success("ROM dumping done")
+      time.start()
+      rom_dump(file, rom_size_kb, DEBUG)
+      time.report(rom_size_kb)
+      log.success("ROM dumping done")
 
-    -- close file
-    assert(file:close())
+      -- close file
+      assert(file:close())
     end
 
     -- -- parse ROM dump file header

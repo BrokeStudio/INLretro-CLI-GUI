@@ -34,17 +34,17 @@ uint8_t snes_call(uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_t* r
     case SNES_SET_BANK:
       HADDR_SET(operand);
       break;
+
     case SNES_ROM_WR:
       snes_wr(operand, miscdata, 0); //last arg is romsel state
       break;
-    case SNES_SYS_WR:
-      snes_wr(operand, miscdata, 1); //last arg is romsel state
-      break;
-    case FLASH_WR_5V:
-      snes_5v_flash_wr(operand, miscdata);
-      break;
-    case FLASH_WR_3V:
-      snes_3v_flash_wr(operand, miscdata);
+
+      // case SNES_SYS_WR:
+      //   snes_wr(operand, miscdata, 1); //last arg is romsel state
+      //   break;
+
+    case SNES_FLASH_WR:
+      snes_flash_wr(operand, miscdata); //last arg is romsel state
       break;
 
     //8bit return values:
@@ -52,10 +52,12 @@ uint8_t snes_call(uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_t* r
       rdata[RD_LEN] = BYTE_LEN;
       rdata[RD0] = snes_rd(operand, 0); //last arg is romsel state
       break;
-    case SNES_SYS_RD:
-      rdata[RD_LEN] = BYTE_LEN;
-      rdata[RD0] = snes_rd(operand, 1); //last arg is romsel state
-      break;
+
+      // case SNES_SYS_RD:
+      //   rdata[RD_LEN] = BYTE_LEN;
+      //   rdata[RD0] = snes_rd(operand, 1); //last arg is romsel state
+      //   break;
+
     default:
       //macro doesn't exist
       return ERR_UNKN_SNES_OPCODE;
@@ -223,8 +225,7 @@ void snes_wr_cur_addr(uint8_t data, uint8_t romsel)
  *       data buffer filled starting at first to last
  * Rtn:  Index of last byte read
  */
-uint8_t snes_page_rd_poll(
-  uint8_t* data, uint8_t addrH, uint8_t romsel, uint8_t first, uint8_t len, uint8_t poll)
+uint8_t snes_page_rd_poll(uint8_t* data, uint8_t addrH, uint8_t romsel, uint8_t first, uint8_t len, uint8_t poll)
 {
   uint8_t i;
 
@@ -255,14 +256,6 @@ uint8_t snes_page_rd_poll(
       NOP();
     }
 
-    //gameboy needed some extra NOPS
-    //I cut these back out because didn't want the delay in SNES
-    //		NOP();
-    //		NOP();
-    //		NOP();
-    //		NOP();
-    //		NOP();
-    //		NOP();
     //latch data
     DATA_RD(data[i]);
 
@@ -280,7 +273,7 @@ uint8_t snes_page_rd_poll(
   return i;
 }
 
-/* Desc: SNES 5v ROM FLASH Write
+/* Desc: SNES ROM FLASH Write
  * NOTE: /ROMSEL is always taken low
  * NOTE: if the byte isn't erased it will stop over current value
  * NOTE: doesn't hang if write fails, just returns, goal is to be fast
@@ -289,79 +282,30 @@ uint8_t snes_page_rd_poll(
  * Post: Byte written and ready for another write
  * Rtn:  None
  */
-void snes_5v_flash_wr(uint16_t addr, uint8_t data)
+uint8_t snes_flash_wr(uint16_t addr, uint8_t data)
 {
   uint8_t rv;
+  uint8_t romsel = 0;
+  uint16_t timeout = 0xFFFF;
 
   //unlock and write data
-  snes_wr(0x5555, 0xAA, 0);
-  snes_wr(0x2AAA, 0x55, 0);
-  snes_wr(0x5555, 0xA0, 0);
-  snes_wr(addr, data, 0);
+  snes_wr(0x8AAA, 0xAA, romsel);
+  snes_wr(0x8555, 0x55, romsel);
+  snes_wr(0x8AAA, 0xA0, romsel);
+  snes_wr(addr, data, romsel);
 
   do {
-    rv = snes_rd(addr, 0);
-    usbPoll(); //orignal kazzo needs this frequently to slurp up incoming data
-  } while(rv != snes_rd(addr, 0));
-
-  return;
-}
-
-/* Desc: SNES 3v ROM FLASH Write
- * NOTE: /ROMSEL is always taken low
- * NOTE: if the byte isn't erased it will stop over current value
- * NOTE: doesn't hang if write fails, just returns, goal is to be fast
- * Pre:  snes_init() setup of io pins
- *       desired bank must already be selected
- * Post: Byte written and ready for another write
- * Rtn:  None
- */
-void snes_3v_flash_wr(uint16_t addr, uint8_t data)
-{
-  uint8_t rv;
-
-  //unlock and write data
-  snes_wr(0x8AAA, 0xAA, 0);
-  snes_wr(0x8555, 0x55, 0);
-  snes_wr(0x8AAA, 0xA0, 0);
-  snes_wr(addr, data, 0);
-
-  do {
-    rv = snes_rd(addr, 0);
-    usbPoll(); //orignal kazzo needs this frequently to slurp up incoming data
-  } while(rv != snes_rd(addr, 0));
-
-  return;
-}
-
-/* Desc: SNES 3v ROM FLASH VERIFY Write
- * NOTE: /ROMSEL is always taken low
- * NOTE: if the byte isn't erased it will stop over current value
- * NOTE: doesn't hang if write fails, just returns, goal is to be fast
- * Pre:  snes_init() setup of io pins
- *       desired bank must already be selected
- * Post: Byte written and ready for another write
- * Rtn:  None
- */
-uint8_t snes_3v_verify_wr(uint16_t addr, uint8_t data)
-{
-  uint8_t rv;
-
-  //unlock and write data
-  snes_wr(0x8AAA, 0xAA, 0);
-  snes_wr(0x8555, 0x55, 0);
-  snes_wr(0x8AAA, 0xA0, 0);
-  snes_wr(addr, data, 0);
-
-  do {
-    rv = snes_rd(addr, 0);
-    usbPoll(); //orignal kazzo needs this frequently to slurp up incoming data
-  } while(rv != snes_rd(addr, 0));
+    rv = snes_rd(addr, romsel);
+    usbPoll();
+    if(rv == data) {
+      break;
+    }
+  } while(--timeout);
 
   return rv;
 }
 
-/* Desc: SNES 3v ROM FLASH BUFFER Write 32Bytes at a time
+/* Desc: SNES ROM FLASH Write using unlock bypass mode
  * NOTE: /ROMSEL is always taken low
  * NOTE: if the byte isn't erased it will stop over current value
  * NOTE: doesn't hang if write fails, just returns, goal is to be fast
@@ -370,28 +314,24 @@ uint8_t snes_3v_verify_wr(uint16_t addr, uint8_t data)
  * Post: Byte written and ready for another write
  * Rtn:  None
  */
-void snes_3v_buffer_wr(uint16_t addr, uint8_t* data)
+uint8_t snes_flash_unlock_wr(uint16_t addr, uint8_t data)
 {
-  /* TODO, actually implement this, currently everything is done on flash.c side
   uint8_t rv;
+  uint8_t romsel = 0;
+  uint16_t timeout = 0xFFFF;
 
-  //unlock and write data
-  snes_wr(0x8AAA, 0xAA, 0);
-  snes_wr(0x8555, 0x55, 0);
-  //write buffer write to SA
-  snes_wr(addr, 0x25, 0);
-  //write number of words - 1 to SA
-
-  //write first data to first address
-  snes_wr(addr, data[1], 0);
+  snes_wr(addr, 0xA0, romsel); // unlock bypass command
+  snes_wr(addr, data, romsel);
 
   do {
-    rv = snes_rd(addr, 0);
-    usbPoll();	//orignal kazzo needs this frequently to slurp up incoming data
-  } while (rv != snes_rd(addr, 0));
+    rv = snes_rd(addr, romsel);
+    usbPoll();
+    if(rv == data) {
+      break;
+    }
+  } while(--timeout);
 
-  return;
-  */
+  return rv;
 }
 
 #endif //SNES_CONN

@@ -175,47 +175,14 @@ uint8_t dump_buff(buffer* buff)
 
 #ifdef SNES_CONN
     case SNESROM_PAGE: // ROMSEL is always taken low
-      // mapper byte specifies SNES CPU A15-8
-      addrH |= (buff->mapper); // no shift needed
-      buff->cur_byte = snes_page_rd_poll(buff->data,
-        addrH,
-        0,
-        buff->id,
-        // id contains MSb of page when <256B buffer
-        buff->last_idx,
-        ~FALSE);
-      break;
 
-    case SNESSYS_PAGE: // ROMSEL stays high
-      // mapper byte specifies SNES CPU A15-8
-      addrH |= (buff->mapper); // no shift needed
-      buff->cur_byte = snes_page_rd_poll(buff->data,
-        addrH,
-        1,
-        buff->id,
-        // id contains MSb of page when <256B buffer
-        buff->last_idx,
-        ~FALSE);
-      break;
-
-    case SNESROM:
       if(buff->mapper == LOROM) {
-        addrH |= 0x80; //$8000 LOROM space
-        // need to split page_num
-        // A14-8 page_num[6-0]
-        // A15 high (LOROM)
-        // A23-16 page_num[14-7]
-        bank = (buff->page_num) >> 7;
+        addrH = 0x80 | buff->page_num;
+      } else if(buff->mapper == HIROM) {
+        addrH = 0x00 | buff->page_num;
       }
-      if(buff->mapper == HIROM) {
-        // need to split page_num
-        // A15-8 page_num[7-0]
-        // A21-16 page_num[13-8]
-        // A22 high (HIROM)
-        // A23 ~page_num[14] (bank CO starts first half, bank 40 starts second)
-        bank = ((((buff->page_num) >> 8) | 0x40) & 0x7F);
-      }
-      HADDR_SET(bank);
+
+      // mapper byte specifies SNES CPU A15-8
       buff->cur_byte = snes_page_rd_poll(buff->data,
         addrH,
         0,
@@ -224,6 +191,45 @@ uint8_t dump_buff(buffer* buff)
         buff->last_idx,
         ~FALSE);
       break;
+
+      // case SNESSYS_PAGE: // ROMSEL stays high
+      //   // mapper byte specifies SNES CPU A15-8
+      //   addrH |= (buff->mapper); // no shift needed
+      //   buff->cur_byte = snes_page_rd_poll(buff->data,
+      //     addrH,
+      //     1,
+      //     buff->id,
+      //     // id contains MSb of page when <256B buffer
+      //     buff->last_idx,
+      //     ~FALSE);
+      //   break;
+
+      // case SNESROM:
+      //   if(buff->mapper == LOROM) {
+      //     addrH |= 0x80; //$8000 LOROM space
+      //     // need to split page_num
+      //     // A14-8 page_num[6-0]
+      //     // A15 high (LOROM)
+      //     // A23-16 page_num[14-7]
+      //     bank = (buff->page_num) >> 7;
+      //   }
+      //   if(buff->mapper == HIROM) {
+      //     // need to split page_num
+      //     // A15-8 page_num[7-0]
+      //     // A21-16 page_num[13-8]
+      //     // A22 high (HIROM)
+      //     // A23 ~page_num[14] (bank CO starts first half, bank 40 starts second)
+      //     bank = ((((buff->page_num) >> 8) | 0x40) & 0x7F);
+      //   }
+      //   HADDR_SET(bank);
+      //   buff->cur_byte = snes_page_rd_poll(buff->data,
+      //     addrH,
+      //     0,
+      //     buff->id,
+      //     // id contains MSb of page when <256B buffer
+      //     buff->last_idx,
+      //     ~FALSE);
+      //   break;
 #endif
 
 #ifdef GB_CONN

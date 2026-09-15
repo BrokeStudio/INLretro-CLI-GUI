@@ -220,19 +220,19 @@
 #define LOROM 0
 #define HIROM 1   // file starts at bank 40 and is mirrored to C0
 #define EXHIROM 2 // file starts at bank C0
-#define SOROM 3   // 12MB star ocean mapping
+// #define SOROM 3   // 12MB star ocean mapping
 
-#define LOROM_5VOLT 4 // Catskull 5v SNES board with SST PLCC flash
-#define HIROM_5VOLT 5
+// #define LOROM_5VOLT 4 // Catskull 5v SNES board with SST PLCC flash
+// #define HIROM_5VOLT 5
 
-#define LOROM_3VOLT 6
-#define HIROM_3VOLT 7
+// #define LOROM_3VOLT 6
+// #define HIROM_3VOLT 7
 
-#define LOROM_3V_PAGE 8
-#define HIROM_3V_PAGE 9
+// #define LOROM_3V_PAGE 8
+// #define HIROM_3V_PAGE 9
 
-#define LOROM_3V_VERIFY 10 // same as 3VOLT above, but verifies each byte while writing
-#define HIROM_3V_VERIFY 11
+// #define LOROM_3V_VERIFY 10 // same as 3VOLT above, but verifies each byte while writing
+// #define HIROM_3V_VERIFY 11
 
 // GAMEBOY mapper definitions
 #define ROMONLY 0

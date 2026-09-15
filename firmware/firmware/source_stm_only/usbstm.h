@@ -155,7 +155,7 @@
 //Bits 15:1 ADDRn_TX[15:1]: Transmission buffer address
 //These bits point to the starting address of the packet buffer containing data to be transmitted
 //by the endpoint associated with the USB_EPnR register at the next IN token addressed to it.
-//Bit 0 Must always be written as Î÷Îõ0 since packet memory is half-word wide and all packet buffers
+//Bit 0 Must always be written as ï¿½ï¿½ï¿½ï¿½0 since packet memory is half-word wide and all packet buffers
 //must be half-word aligned.
 
 //Transmission byte count n (USB_COUNTn_TX)
@@ -194,7 +194,7 @@
 //These bits point to the starting address of the packet buffer, which will contain the data
 //received by the endpoint associated with the USB_EPnR register at the next OUT/SETUP
 //token addressed to it.
-//Bit 0 This bit must always be written as Î÷Îõ0 since packet memory is half-word wide and all packet
+//Bit 0 This bit must always be written as ï¿½ï¿½ï¿½ï¿½0 since packet memory is half-word wide and all packet
 //buffers must be half-word aligned.
 
 //Reception byte count n (USB_COUNTn_RX)
@@ -218,7 +218,7 @@
 //memory blocks, where block size can be selected to choose the trade-off between fine-granularity/small-buffer
 //and coarse-granularity/large-buffer. The size of allocated buffer is a part of the endpoint descriptor
 //and it is normally defined during the enumeration process according to its maxPacketSize parameter value
-//(See ÎéÎíUniversal Serial Bus SpecificationÎéÎí).
+//(See ï¿½ï¿½ï¿½ï¿½Universal Serial Bus Specificationï¿½ï¿½ï¿½ï¿½).
 //
 //Bit 15 BL_SIZE: Block size
 //This bit selects the size of memory block used to define the allocated buffer area.
@@ -281,7 +281,8 @@ typedef struct usbRequest_t
 //defined to be same as Vusb
 //not sure this is actually how we want to do things..
 #define USB_NO_MSG	255
-#define usbPoll()	NOP()
+// #define usbPoll()	NOP()
+#define usbPoll()	((void)0)
 
 #define usbMsgPtr_t uint16_t *
 //extern  usbMsgPtr_t usbMsgPtr;	//this variable is defined in usbstm.c
