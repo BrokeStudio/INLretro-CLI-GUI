@@ -15,6 +15,7 @@ local help    = require "scripts.app.help"
 
 -- file constants and global variables
 local mapname = "MBC5"
+local flash_chip
 
 -- local functions
 
@@ -92,7 +93,7 @@ local function rom_manf_id()
   if manufacturer_id == 0xC2 then
     -- MX chips
     device_id = dict.gameboy("GAMEBOY_RD", 0x0002)
-  found, device = chips.display_device(manufacturer_id, device_id)
+    found, device = chips.display_device(manufacturer_id, device_id)
   elseif manufacturer_id == 0x01 then
     -- Cypress / Spansion
     device_id = dict.gameboy("GAMEBOY_RD", 0x0002) << 16
@@ -178,6 +179,15 @@ local function rom_flash(file, rom_size_kb, debug)
   local cur_bank = 0
   local num_banks = math.floor(rom_size_kb / bank_size)
 
+  local options
+  if flash_chip.buffer == true then
+    options = "USE_BUFFER"
+    log.info("Using buffer programming")
+  elseif flash_chip.unlock_bypass == true then
+    options = "USE_UNLOCK_BYPASS"
+    log.info("Using unlock bypass mode")
+  end
+
   while cur_bank < num_banks do
     if debug then
       log.point("writing bank", cur_bank, "of", num_banks - 1)
@@ -186,12 +196,12 @@ local function rom_flash(file, rom_size_kb, debug)
     end
 
     -- set bank
-    dict.gameboy("GAMEBOY_SET_CUR_BANK", cur_bank) -- FIXME
+    dict.gameboy("GAMEBOY_SET_CUR_BANK", cur_bank) -- FIXME (?)
     dict.gameboy("GAMEBOY_WR", 0x3000, (cur_bank & 0x100) >> 8)
     dict.gameboy("GAMEBOY_WR", 0x2000, cur_bank & 0xff)
 
     -- have the device write a bank worth of data
-    flash.write_file(file, bank_size, { mapper = mapname, mem_type = "GBROM" }, false)
+    flash.write_file(file, bank_size, { mapper = mapname, mem_type = "GBROM", options = options }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -489,7 +499,7 @@ local function process(process_opts, console_opts)
 
     -- attempt to read ROM flash ID
     if options.force_flash_test or (do_rom_write and rom_size_kb ~= 0) then
-      rv = rom_manf_id()
+      rv, flash_chip = rom_manf_id()
       if not rv then
         if do_rom_write then
           log.error("Couldn't identify flash chip")
@@ -553,11 +563,11 @@ local function process(process_opts, console_opts)
   end
 
   --[[
-88""Yb    db    8b    d8     8888b.  88   88 8b    d8 88""Yb
-88__dP   dPYb   88b  d88      8I  Yb 88   88 88b  d88 88__dP
-88"Yb   dP__Yb  88YbdP88      8I  dY Y8   8P 88YbdP88 88"""
-88  Yb dP""""Yb 88 YY 88     8888Y"  `YbodP' 88 YY 88 88
---]]
+  88""Yb    db    8b    d8     8888b.  88   88 8b    d8 88""Yb
+  88__dP   dPYb   88b  d88      8I  Yb 88   88 88b  d88 88__dP
+  88"Yb   dP__Yb  88YbdP88      8I  dY Y8   8P 88YbdP88 88"""
+  88  Yb dP""""Yb 88 YY 88     8888Y"  `YbodP' 88 YY 88 88
+  --]]
 
   -- dump cart RAM to file
   if do_ram_dump then
@@ -587,11 +597,11 @@ local function process(process_opts, console_opts)
   end
 
   --[[
-88""Yb    db    8b    d8     Yb        dP 88""Yb 88 888888 888888
-88__dP   dPYb   88b  d88      Yb  db  dP  88__dP 88   88   88__
-88"Yb   dP__Yb  88YbdP88       YbdPYbdP   88"Yb  88   88   88""
-88  Yb dP""""Yb 88 YY 88        YP  YP    88  Yb 88   88   888888
---]]
+  88""Yb    db    8b    d8     Yb        dP 88""Yb 88 888888 888888
+  88__dP   dPYb   88b  d88      Yb  db  dP  88__dP 88   88   88__
+  88"Yb   dP__Yb  88YbdP88       YbdPYbdP   88"Yb  88   88   88""
+  88  Yb dP""""Yb 88 YY 88        YP  YP    88  Yb 88   88   888888
+  --]]
 
   -- write file to the cart RAM
   if do_ram_write then
@@ -628,19 +638,19 @@ local function process(process_opts, console_opts)
   -- dump cart ROM to file
   if do_rom_dump then
     if rom_size_kb ~= 0 then
-    -- open file
-    file = assert(io.open(rom_dump_file.filename, "wb"))
+      -- open file
+      file = assert(io.open(rom_dump_file.filename, "wb"))
 
-    -- dump cart to file
+      -- dump cart to file
       log.section("Dumping ROM")
       time.start()
       rom_dump(file, rom_size_kb, DEBUG)
       time.report(rom_size_kb)
       log.success("ROM dumping done")
 
-    -- close file
-    assert(file:close())
-  end
+      -- close file
+      assert(file:close())
+    end
   end
 
   --[[
@@ -694,25 +704,25 @@ local function process(process_opts, console_opts)
   -- verify what we just flashed
   if do_verify then
     if rom_size_kb ~= 0 then
-    -- open file
-    file = assert(io.open(verify_file.filename, "wb"))
+      -- open file
+      file = assert(io.open(verify_file.filename, "wb"))
 
-    -- dump cart to file
+      -- dump cart to file
       log.section("Dumping ROM")
       time.start()
       rom_dump(file, rom_size_kb, DEBUG)
       time.report(rom_size_kb)
       log.success("ROM dumping done")
 
-    -- close file
-    assert(file:close())
+      -- close file
+      assert(file:close())
 
-    -- compare the flash file vs post dump file
-    log.section("Verifying data")
-    if files.compare(verify_file.filename, rom_write_file.filename, true, true) then
-      log.success("Flash successfully verified")
-    else
-      log.error("Flash verification did not match")
+      -- compare the flash file vs post dump file
+      log.section("Verifying data")
+      if files.compare(verify_file.filename, rom_write_file.filename, true, true) then
+        log.success("Flash successfully verified")
+      else
+        log.error("Flash verification did not match")
       end
     end
   end

@@ -976,6 +976,8 @@ local function prg_ram_exercise(wram_size_kb, retroprog_id, debug)
   while cur_bank < num_banks do
     if debug then
       log.point("init PRG-RAM 8K bank", cur_bank, "of", num_banks - 1)
+    else
+      spinner.update("Writing", cur_bank, "/", num_banks - 1)
     end
 
     -- set bank
@@ -989,6 +991,8 @@ local function prg_ram_exercise(wram_size_kb, retroprog_id, debug)
     end
     cur_bank = cur_bank + 1
   end
+
+  spinner.clear()
 
   -- open file
   local filename = opts.write_path .. "./ignore/nes_prg_ram_dump-" .. retroprog_id .. ".bin"
@@ -1077,7 +1081,12 @@ local function fpga_ram_exercise(retroprog_id, debug)
   -- write random data to all banks
   log.point("Writing random data to FPGA-RAM")
   while cur_bank < num_banks do
-    if debug then log.point("init FPGA-RAM 4K bank", cur_bank, "of", num_banks - 1) end
+    if debug then
+      log.point("init FPGA-RAM 4K bank", cur_bank, "of", num_banks - 1)
+    else
+      spinner.update("Writing", cur_bank, "/", num_banks - 1)
+    end
+
     dict.nes("NES_CPU_WR", PRG_5_LO, cur_bank) -- 8KB bank at $5000
     local addr = 0x5000
     while (addr < 0x6000) do
@@ -1086,6 +1095,8 @@ local function fpga_ram_exercise(retroprog_id, debug)
     end
     cur_bank = cur_bank + 1
   end
+
+  spinner.clear();
 
   -- open file
   local filename = opts.write_path .. "./ignore/nes_fpga_ram_dump-" .. retroprog_id .. ".bin"
@@ -1577,24 +1588,24 @@ local function process(process_opts, console_opts)
         log.success("Done erasing ROM (" .. sectors .. " sectors)")
       else
         --]]
-      dict.nes("NES_CPU_WR", 0x8000, 0xF0)
-      dict.nes("NES_CPU_WR", 0x8AAA, 0xAA)
-      dict.nes("NES_CPU_WR", 0x8555, 0x55)
-      dict.nes("NES_CPU_WR", 0x8AAA, 0x80)
-      dict.nes("NES_CPU_WR", 0x8AAA, 0xAA)
-      dict.nes("NES_CPU_WR", 0x8555, 0x55)
-      dict.nes("NES_CPU_WR", 0x8AAA, 0x10)
+        dict.nes("NES_CPU_WR", 0x8000, 0xF0)
+        dict.nes("NES_CPU_WR", 0x8AAA, 0xAA)
+        dict.nes("NES_CPU_WR", 0x8555, 0x55)
+        dict.nes("NES_CPU_WR", 0x8AAA, 0x80)
+        dict.nes("NES_CPU_WR", 0x8AAA, 0xAA)
+        dict.nes("NES_CPU_WR", 0x8555, 0x55)
+        dict.nes("NES_CPU_WR", 0x8AAA, 0x10)
 
-      -- TODO create some function to pass the read value
-      -- that's smart enough to figure out if the board is actually erasing or not
+        -- TODO create some function to pass the read value
+        -- that's smart enough to figure out if the board is actually erasing or not
         nak = 0
-      repeat
-      rv = dict.nes("NES_CPU_RD", 0x8000)
-        spinner.update("Erasing")
+        repeat
+          rv = dict.nes("NES_CPU_RD", 0x8000)
+          spinner.update("Erasing")
           nak = nak + 1
-      until rv == dict.nes("NES_CPU_RD", 0x8000)
+        until rv == dict.nes("NES_CPU_RD", 0x8000)
 
-      spinner.clear()
+        spinner.clear()
         log.success("Done erasing PRG-ROM", nak .. " naks")
       end
 
@@ -1632,23 +1643,23 @@ local function process(process_opts, console_opts)
         spinner.clear()
         log.success("Done erasing CHR-ROM (" .. sectors .. " sectors)")
       else
-      dict.nes("NES_PPU_WR", 0x1AAA, 0xAA)
-      dict.nes("NES_PPU_WR", 0x1555, 0x55)
-      dict.nes("NES_PPU_WR", 0x1AAA, 0x80)
-      dict.nes("NES_PPU_WR", 0x1AAA, 0xAA)
-      dict.nes("NES_PPU_WR", 0x1555, 0x55)
-      dict.nes("NES_PPU_WR", 0x1AAA, 0x10)
+        dict.nes("NES_PPU_WR", 0x1AAA, 0xAA)
+        dict.nes("NES_PPU_WR", 0x1555, 0x55)
+        dict.nes("NES_PPU_WR", 0x1AAA, 0x80)
+        dict.nes("NES_PPU_WR", 0x1AAA, 0xAA)
+        dict.nes("NES_PPU_WR", 0x1555, 0x55)
+        dict.nes("NES_PPU_WR", 0x1AAA, 0x10)
 
-      -- TODO create some function to pass the read value
-      -- that's smart enough to figure out if the board is actually erasing or not
+        -- TODO create some function to pass the read value
+        -- that's smart enough to figure out if the board is actually erasing or not
         nak = 0
-      repeat
-      rv = dict.nes("NES_PPU_RD", 0x0000)
-        spinner.update("Erasing")
+        repeat
+          rv = dict.nes("NES_PPU_RD", 0x0000)
+          spinner.update("Erasing")
           nak = nak + 1
-      until rv == dict.nes("NES_PPU_RD", 0x0000)
+        until rv == dict.nes("NES_PPU_RD", 0x0000)
 
-      spinner.clear()
+        spinner.clear()
         log.success("Done erasing CHR-ROM", nak .. " naks")
       end
 

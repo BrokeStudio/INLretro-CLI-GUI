@@ -19,16 +19,6 @@ local mapname = "ROMONLY"
 -- local functions
 
 --[[
-███╗   ███╗██╗███████╗ ██████╗    ███████╗██╗   ██╗███╗   ██╗ ██████╗███████╗
-████╗ ████║██║██╔════╝██╔════╝    ██╔════╝██║   ██║████╗  ██║██╔════╝██╔════╝
-██╔████╔██║██║███████╗██║         █████╗  ██║   ██║██╔██╗ ██║██║     ███████╗
-██║╚██╔╝██║██║╚════██║██║         ██╔══╝  ██║   ██║██║╚██╗██║██║     ╚════██║
-██║ ╚═╝ ██║██║███████║╚██████╗    ██║     ╚██████╔╝██║ ╚████║╚██████╗███████║
-╚═╝     ╚═╝╚═╝╚══════╝ ╚═════╝    ╚═╝      ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝╚══════╝
-
---]]
-
---[[
 ██████╗  ██████╗ ███╗   ███╗
 ██╔══██╗██╔═══██╗████╗ ████║
 ██████╔╝██║   ██║██╔████╔██║
@@ -410,7 +400,6 @@ local function process(process_opts, console_opts)
       end
     end
 
-
     -- RAM tests
     rv = ram_test(DEBUG)
     if rv == true then
@@ -441,11 +430,11 @@ local function process(process_opts, console_opts)
   end
 
   --[[
-88""Yb    db    8b    d8     8888b.  88   88 8b    d8 88""Yb
-88__dP   dPYb   88b  d88      8I  Yb 88   88 88b  d88 88__dP
-88"Yb   dP__Yb  88YbdP88      8I  dY Y8   8P 88YbdP88 88"""
-88  Yb dP""""Yb 88 YY 88     8888Y"  `YbodP' 88 YY 88 88
---]]
+  88""Yb    db    8b    d8     8888b.  88   88 8b    d8 88""Yb
+  88__dP   dPYb   88b  d88      8I  Yb 88   88 88b  d88 88__dP
+  88"Yb   dP__Yb  88YbdP88      8I  dY Y8   8P 88YbdP88 88"""
+  88  Yb dP""""Yb 88 YY 88     8888Y"  `YbodP' 88 YY 88 88
+  --]]
 
   -- dump cart RAM to file
   if do_ram_dump then
@@ -469,11 +458,11 @@ local function process(process_opts, console_opts)
   end
 
   --[[
-88""Yb    db    8b    d8     Yb        dP 88""Yb 88 888888 888888
-88__dP   dPYb   88b  d88      Yb  db  dP  88__dP 88   88   88__
-88"Yb   dP__Yb  88YbdP88       YbdPYbdP   88"Yb  88   88   88""
-88  Yb dP""""Yb 88 YY 88        YP  YP    88  Yb 88   88   888888
---]]
+  88""Yb    db    8b    d8     Yb        dP 88""Yb 88 888888 888888
+  88__dP   dPYb   88b  d88      Yb  db  dP  88__dP 88   88   88__
+  88"Yb   dP__Yb  88YbdP88       YbdPYbdP   88"Yb  88   88   88""
+  88  Yb dP""""Yb 88 YY 88        YP  YP    88  Yb 88   88   888888
+  --]]
 
   -- write file to the cart RAM
   if do_ram_write then
@@ -494,7 +483,6 @@ local function process(process_opts, console_opts)
     assert(file:close())
   end
 
-
   --[[
   88""Yb  dP"Yb  8b    d8     8888b.  88   88 8b    d8 88""Yb
   88__dP dP   Yb 88b  d88      8I  Yb 88   88 88b  d88 88__dP
@@ -505,19 +493,19 @@ local function process(process_opts, console_opts)
   -- dump cart ROM to file
   if do_rom_dump then
     if rom_size_kb ~= 0 then
-    -- open file
-    file = assert(io.open(rom_dump_file.filename, "wb"))
+      -- open file
+      file = assert(io.open(rom_dump_file.filename, "wb"))
 
-    -- dump cart to file
+      -- dump cart to file
       log.section("Dumping ROM")
       time.start()
       rom_dump(file, rom_size_kb, DEBUG)
       time.report(rom_size_kb)
       log.success("ROM dumping done")
 
-    -- close file
-    assert(file:close())
-  end
+      -- close file
+      assert(file:close())
+    end
   end
 
   --[[
@@ -571,25 +559,25 @@ local function process(process_opts, console_opts)
   -- verify what we just flashed
   if do_verify then
     if rom_size_kb ~= 0 then
-    -- open file
-    file = assert(io.open(verify_file.filename, "wb"))
+      -- open file
+      file = assert(io.open(verify_file.filename, "wb"))
 
-    -- dump cart to file
+      -- dump cart to file
       log.section("Dumping ROM")
       time.start()
       rom_dump(file, rom_size_kb, DEBUG)
       time.report(rom_size_kb)
       log.success("ROM dumping done")
 
-    -- close file
-    assert(file:close())
+      -- close file
+      assert(file:close())
 
-    -- compare the flash file vs post dump file
-    log.section("Verifying data")
-    if files.compare(verify_file.filename, rom_write_file.filename, true, true) then
-      log.success("Flash successfully verified")
-    else
-      log.error("Flash verification did not match")
+      -- compare the flash file vs post dump file
+      log.section("Verifying data")
+      if files.compare(verify_file.filename, rom_write_file.filename, true, true) then
+        log.success("Flash successfully verified")
+      else
+        log.error("Flash verification did not match")
       end
     end
   end

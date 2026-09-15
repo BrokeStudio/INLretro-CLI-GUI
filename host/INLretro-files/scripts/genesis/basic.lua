@@ -2,19 +2,19 @@
 local genesis_basic = {}
 
 -- import required modules
-local dict         = require "scripts.app.dict"
-local genesis      = require "scripts.app.genesis"
-local dump         = require "scripts.app.dump"
-local flash        = require "scripts.app.flash"
-local chips        = require "scripts.app.chips"
-local time         = require "scripts.app.time"
-local log          = require "scripts.app.log"
-local spinner      = require "scripts.app.spinner"
-local files        = require "scripts.app.files"
-local help         = require "scripts.app.help"
+local dict          = require "scripts.app.dict"
+local genesis       = require "scripts.app.genesis"
+local dump          = require "scripts.app.dump"
+local flash         = require "scripts.app.flash"
+local chips         = require "scripts.app.chips"
+local time          = require "scripts.app.time"
+local log           = require "scripts.app.log"
+local spinner       = require "scripts.app.spinner"
+local files         = require "scripts.app.files"
+local help          = require "scripts.app.help"
 
 -- file constants and global variables
-local mapname      = "BASIC"
+local mapname       = "BASIC"
 
 local flash_chip
 
@@ -207,7 +207,8 @@ end
 ---@param ram_size_kb integer SRAM size in kilobytes
 ---@param debug? boolean Enable verbose progress logging
 local function ram_dump(file, addr_hi, ram_size_kb, debug)
-  local kb_per_bank = ram_size_kb -- TODO: FIXME? => -- 128KByte addressable per bank, but only use lower byte of each 16bit word
+  local kb_per_bank =
+      ram_size_kb        -- TODO: FIXME? => -- 128KByte addressable per bank, but only use lower byte of each 16bit word
   local num_banks = math.floor(ram_size_kb / kb_per_bank)
   local addr_base = 0x00 -- A15-8 address of ram start
   local cur_bank = 0
@@ -467,11 +468,11 @@ local function process(process_opts, console_opts)
   end
 
   --[[
-88""Yb    db    8b    d8     8888b.  88   88 8b    d8 88""Yb
-88__dP   dPYb   88b  d88      8I  Yb 88   88 88b  d88 88__dP
-88"Yb   dP__Yb  88YbdP88      8I  dY Y8   8P 88YbdP88 88"""
-88  Yb dP""""Yb 88 YY 88     8888Y"  `YbodP' 88 YY 88 88
---]]
+  88""Yb    db    8b    d8     8888b.  88   88 8b    d8 88""Yb
+  88__dP   dPYb   88b  d88      8I  Yb 88   88 88b  d88 88__dP
+  88"Yb   dP__Yb  88YbdP88      8I  dY Y8   8P 88YbdP88 88"""
+  88  Yb dP""""Yb 88 YY 88     8888Y"  `YbodP' 88 YY 88 88
+  --]]
 
   -- dump cart RAM to file
   if do_ram_dump then
@@ -497,11 +498,11 @@ local function process(process_opts, console_opts)
   end
 
   --[[
-88""Yb    db    8b    d8     Yb        dP 88""Yb 88 888888 888888
-88__dP   dPYb   88b  d88      Yb  db  dP  88__dP 88   88   88__
-88"Yb   dP__Yb  88YbdP88       YbdPYbdP   88"Yb  88   88   88""
-88  Yb dP""""Yb 88 YY 88        YP  YP    88  Yb 88   88   888888
---]]
+  88""Yb    db    8b    d8     Yb        dP 88""Yb 88 888888 888888
+  88__dP   dPYb   88b  d88      Yb  db  dP  88__dP 88   88   88__
+  88"Yb   dP__Yb  88YbdP88       YbdPYbdP   88"Yb  88   88   88""
+  88  Yb dP""""Yb 88 YY 88        YP  YP    88  Yb 88   88   888888
+  --]]
 
   -- write file to the cart RAM
   if do_ram_write then

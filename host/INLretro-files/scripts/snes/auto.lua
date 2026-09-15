@@ -423,25 +423,25 @@ local function process(process_opts, console_opts)
   -- verify what we just flashed
   if do_verify then
     if rom_size_kb ~= 0 then
-    -- open file
-    file = assert(io.open(verify_file.filename, "wb"))
+      -- open file
+      file = assert(io.open(verify_file.filename, "wb"))
 
-    -- dump cart to file
+      -- dump cart to file
       log.section("Dumping ROM")
       time.start()
       rom_dump(file, rom_size_kb, DEBUG)
       time.report(rom_size_kb)
       log.success("ROM dumping done")
 
-    -- close file
-    assert(file:close())
+      -- close file
+      assert(file:close())
 
-    -- compare the flash file vs post dump file
-    log.section("Verifying data")
-    if files.compare(verify_file.filename, rom_write_file.filename, true, true) then
-      log.success("Flash successfully verified")
-    else
-      log.error("Flash verification did not match")
+      -- compare the flash file vs post dump file
+      log.section("Verifying data")
+      if files.compare(verify_file.filename, rom_write_file.filename, true, true) then
+        log.success("Flash successfully verified")
+      else
+        log.error("Flash verification did not match")
       end
     end
   end
