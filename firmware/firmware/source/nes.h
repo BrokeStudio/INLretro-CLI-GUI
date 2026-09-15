@@ -35,7 +35,7 @@ uint8_t nrom_prgrom_flash_wr(uint16_t addr, uint8_t data);
 void nrom_chrrom_flash_wr(uint16_t addr, uint8_t data);
 void mmc1_prgrom_flash_wr(uint16_t addr, uint8_t data);
 void mmc1_chrrom_flash_wr(uint16_t addr, uint8_t data);
-void unrom_prgrom_flash_wr(uint16_t addr, uint8_t data);
+uint8_t unrom_prgrom_flash_wr(uint16_t addr, uint8_t data);
 void cnrom_chrrom_flash_wr(uint16_t addr, uint8_t data);
 uint8_t mmc3_prgrom_flash_wr(uint16_t addr, uint8_t data);
 uint8_t mmc3s_prgrom_flash_wr(uint16_t addr, uint8_t data);

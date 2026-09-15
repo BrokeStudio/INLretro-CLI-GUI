@@ -1545,11 +1545,12 @@ void mmc1_chrrom_flash_wr(uint16_t addr, uint8_t data)
  *       cur_bank global var must be set to desired mapper register value
  *       bank_table global var must be set to base address of the bank table
  * Post: Byte written and ready for another write
- * Rtn:  None
+ * Rtn:  Byte read from PRG-ROM at addr
  */
-void unrom_prgrom_flash_wr(uint16_t addr, uint8_t data)
+uint8_t unrom_prgrom_flash_wr(uint16_t addr, uint8_t data)
 {
-  uint8_t rv;
+  uint8_t read;
+  uint16_t timeout = 0xFFFF;
 
   // set A14 low for lower bank so to satisfy unlock commands
   nes_cpu_wr(bank_table, 0x00);
@@ -1564,11 +1565,13 @@ void unrom_prgrom_flash_wr(uint16_t addr, uint8_t data)
   discrete_exp0_prgrom_wr(addr, data);
 
   do {
-    rv = nes_cpu_rd(addr);
-    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-  } while(rv != nes_cpu_rd(addr));
+    read = nes_cpu_rd(addr);
+    if(read == data) {
+      break;
+    }
+  } while(--timeout);
 
-  return;
+  return read;
 }
 
 /* Desc: NES CNROM CHR-ROM FLASH Write

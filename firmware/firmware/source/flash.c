@@ -104,7 +104,7 @@ uint8_t nes_cpu_write_page_buffer_verify(uint8_t addrH, buffer* buff)
     value = buff->data[cur + 0];
     addr = base_addr + cur;
 
-    // add word to write buffer
+    // add byte to write buffer
     nes_cpu_wr(addr, value);
 
     cur++;
@@ -878,7 +878,7 @@ uint8_t flash_buff(buffer* buff)
         nes_write_page((0x80 + addrH), buff, mmc1_prgrom_flash_wr);
       }
       if(buff->mapper == UxROM) {
-        nes_write_page((0x80 + addrH), buff, unrom_prgrom_flash_wr);
+        nes_write_page_verify((0x80 + addrH), buff, unrom_prgrom_flash_wr);
       }
       if(buff->mapper == MMC3) {
         nes_write_page_verify((0x80 + addrH), buff, mmc3_prgrom_flash_wr);
