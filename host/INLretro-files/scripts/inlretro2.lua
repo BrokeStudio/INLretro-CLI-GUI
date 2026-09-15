@@ -336,7 +336,7 @@ local function genesis_exec(process_opts, console_opts)
 
   local mappers = {
     basic   = require "scripts.genesis.basic",
-    ssf2     = require "scripts.genesis.ssf2",
+    ssf2    = require "scripts.genesis.ssf2",
     rainbow = require "scripts.genesis.rainbow",
   }
 
@@ -408,7 +408,7 @@ local function nes_exec(process_opts, console_opts)
         end
         if console_opts.prg_rom_size_kb ~= 0 and prg_nes_rom_size_kb ~= 0 then
           bytes_to_copy = console_opts.prg_rom_size_kb * 1024
-          nesfile:seek("set", 16)
+          nesfile:seek("set", 16) -- skip ROM header
           for j = 1, bytes_to_copy, 1 do
             binfile:write(nesfile:read(1))
             if (j % nes.header.prg_rom_size == 0) then nesfile:seek("set", 16) end
@@ -588,6 +588,7 @@ local function main()
   local do_erase = do_rom_write
 
   -- If the verify flag was provided, dump data from cartridge after flash to a file and compare it to flashed file.
+  -- TODO: verify also for ram write? use do_rom_verify and do_ram_verify?
   local do_verify = do_rom_write and opts.verify
 
   local do_ram_dump = not isempty(opts.ram_dump_file)
@@ -634,6 +635,7 @@ local function main()
     log.error(error)
     do return end
   end
+  if options.force_debug then process_opts.debug = true end
   process_opts.additional_opts = options
 
   local consoles = {
