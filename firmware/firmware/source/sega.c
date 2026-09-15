@@ -21,13 +21,15 @@ uint16_t sega_addr_lo = 0; // A15-A0
 //
 //=================================================================================================
 
-/* Desc: Function takes an opcode which was transmitted via USB
- *       then decodes it to call designated function.
- *       shared_dict_sega.h is used in both host and fw to ensure opcodes/names align
- * Pre:  Macros must be defined in firmware pinport.h
- *       opcode must be defined in shared_dict_sega.h
- * Post: function call complete.
- * Rtn:  SUCCESS if opcode found and completed, error if opcode not present or other problem.
+/* Desc: Dispatch a Sega dictionary opcode received over USB
+ *       shared_dict_sega.h defines opcodes shared by host and firmware
+ * Pre:  I/O and address state satisfy the selected operation requirements
+ *       rdata has room for the response length and up to two data bytes
+ * Post: Read operations set rdata[0] and the response bytes
+ *       ROM words returned low byte first; writes leave rdata unchanged
+ *       address commands update the cached address and apply it to the bus
+ * Rtn:  SUCCESS for a recognized opcode
+ *       ERR_UNKN_SEGA_OPCODE for an unsupported opcode
  */
 uint8_t sega_call(uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_t* rdata)
 {
@@ -100,6 +102,17 @@ uint8_t sega_call(uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_t* r
   return SUCCESS;
 }
 
+/* Desc: Apply cached 24-bit byte address sega_addr_hi:sega_addr_lo to the bus
+ *       shift by one to drive A23-A1; A0 is not a physical address output
+ *       assert /TIME for 0xA13000-0xA130FF unless force_set_time is nonzero
+ *       force_set_time forces /TIME high, not low
+ *       hold /ASEL (LOMEM_MASK) high and drive A19 separately
+ * Pre:  sega_init() setup of I/O pins
+ *       cached address contains the desired byte address
+ * Post: High address latch and A19 updated; A16-A1 restored after latch access
+ *       cached address unchanged; /TIME reflects the requested decode
+ * Rtn:  None
+ */
 void gen_refresh_addr(uint8_t force_set_time)
 {
   // TODO decode #TIME & #LO_MEM
@@ -127,23 +140,53 @@ void gen_refresh_addr(uint8_t force_set_time)
   ADDR_SET(addr_lo);
 }
 
+/* Desc: Return the cached high byte of the Genesis byte address
+ * Pre:  None
+ * Post: No hardware access or state change
+ * Rtn:  sega_addr_hi, representing A23-A16
+ */
 uint8_t gen_get_addr_hi(void)
 {
   return sega_addr_hi;
 }
 
+/* Desc: Set the cached high byte-address part (A23-A16)
+ *       apply the full cached address through gen_refresh_addr(0)
+ * Pre:  sega_init() setup of I/O pins
+ *       the cached low address part already has the desired value
+ * Post: Cached hi address updated and full address applied to the bus
+ *       /TIME decoded from the full address; /ASEL held high
+ * Rtn:  None
+ */
 void gen_set_addr_hi(uint8_t addr_hi) // A23-A16
 {
   sega_addr_hi = addr_hi;
   gen_refresh_addr(0);
 }
 
+/* Desc: Set the cached low byte-address part (A15-A0)
+ *       apply the full cached address through gen_refresh_addr(0)
+ * Pre:  sega_init() setup of I/O pins
+ *       the cached high address part already has the desired value
+ * Post: Cached lo address updated and full address applied to the bus
+ *       /TIME decoded from the full address; /ASEL held high
+ * Rtn:  None
+ */
 void gen_set_addr_lo(uint16_t addr_lo) // A15-A0
 {
   sega_addr_lo = addr_lo;
   gen_refresh_addr(0);
 }
 
+/* Desc: Read a 16-bit Genesis ROM word using the cached high byte address
+ *       addr_lo contains A15-A0; physical address outputs omit A0
+ * Pre:  sega_init() setup of I/O pins
+ *       sega_addr_hi selected; addr_lo should be even for word accesses
+ * Post: sega_addr_lo updated; target address left on bus
+ *       16-bit data bus input; /C_OE, /C_CE, /LDSW and /UDSW high
+ *       /TIME decoded by gen_set_addr_lo; /AS unchanged
+ * Rtn:  16-bit word read at the selected address
+ */
 uint16_t gen_rom_rd(uint16_t addr_lo)
 {
   uint16_t rv;
@@ -184,6 +227,16 @@ uint16_t gen_rom_rd(uint16_t addr_lo)
   return rv;
 }
 
+/* Desc: Write a 16-bit Genesis word using the cached high byte address
+ *       drive both byte lanes and pulse /LDSW and /UDSW with /AS low
+ *       assert /C_CE outside 0xA13000-0xA130FF; use /TIME inside that range
+ * Pre:  sega_init() setup of I/O pins
+ *       sega_addr_hi selected; addr_lo should be even for word accesses
+ * Post: Write cycle issued without readback verification; sega_addr_lo updated
+ *       16-bit data bus input; /AS, /C_CE, /C_OE, /LDSW and /UDSW high
+ *       /TIME high after the access; cached high address unchanged
+ * Rtn:  None
+ */
 void gen_rom_wr(uint16_t addr_lo, uint16_t data)
 {
   uint8_t temp = data;
@@ -241,16 +294,18 @@ void gen_rom_wr(uint16_t addr_lo, uint16_t data)
   DATA16_IP();
 }
 
-/* Desc: SEGA GENESIS ROM Page Read with optional USB polling
- *       /ROMSEL based on romsel arg, EXP0/RESET unaffected
- *       if poll is true calls usbdrv.h usbPoll fuction
- *       this is needed to keep from timing out when double buffering usb data
- * Pre:  snes_init() setup of io pins
- *       num_bytes can't exceed 256B page boundary
- * Post: address left on bus
- *       data bus left clear
- *       data buffer filled starting at first to last
- * Rtn:  Index of last byte read
+/* Desc: Read Genesis ROM words into data, high byte then low byte
+ *       initial physical A16-A1 is (addrH << 7) | (first >> 1)
+ *       hold /AS and /C_CE low; toggle /C_OE per word for SSF2/Rainbow
+ *       no USB polling is performed
+ * Pre:  sega_init() setup of I/O pins
+ *       high address outputs A23-A17 already selected
+ *       first must be even; len must be odd and below 255
+ *       first + len must be at most 255; data has room for len + 1 bytes
+ * Post: data[0..len] filled; physical word address advanced after the last read
+ *       16-bit data bus input; /AS, /C_CE, /C_OE, /LDSW and /UDSW high
+ *       cached sega_addr_hi and sega_addr_lo unchanged
+ * Rtn:  Number of bytes read (len + 1) for the required even-sized range
  */
 uint8_t gen_rom_page_rd(uint8_t* data, uint16_t addrH, uint8_t first, uint8_t len)
 {
@@ -312,9 +367,21 @@ uint8_t gen_rom_page_rd(uint8_t* data, uint16_t addrH, uint8_t first, uint8_t le
   return i;
 }
 
+/* Desc: Program a 16-bit SST flash word through the Genesis ROM bus
+ *       use byte addresses 0x0AAA and 0x0554 for the unlock sequence
+ *       poll until the word matches data or 0xFFFF attempts expire
+ *       no USB polling is performed
+ * Pre:  sega_init() setup of I/O pins
+ *       high byte address and mapper selected for the target and unlock commands
+ *       addr_lo even; flash supports the 0x00AA/0x0055/0x00A0 sequence
+ * Post: Write attempted; return does not guarantee successful programming
+ *       sega_addr_lo left at target; data bus input
+ *       /AS, /C_CE, /C_OE, /LDSW and /UDSW high
+ * Rtn:  Last 16-bit word read at target; compare with data to detect failure
+ */
 uint16_t gen_sst_flash_wr(uint16_t addr_lo, uint16_t data)
 {
-  uint16_t read;
+  uint16_t rv;
   uint16_t timeout = 0xFFFF;
 
   gen_rom_wr(0x0555 << 1, 0x00AA);
@@ -323,15 +390,26 @@ uint16_t gen_sst_flash_wr(uint16_t addr_lo, uint16_t data)
   gen_rom_wr(addr_lo, data);
 
   do {
-    read = gen_rom_rd(addr_lo);
-    if(read == data) {
+    rv = gen_rom_rd(addr_lo);
+    if(rv == data) {
       break;
     }
   } while(--timeout);
 
-  return read;
+  return rv;
 }
 
+/* Desc: Read D7-D0 with /TIME asserted and /ASEL high
+ *       addr_lo is passed directly to physical A16-A1 without shifting
+ *       this address convention differs from gen_time_wr
+ * Pre:  sega_init() setup of I/O pins
+ *       addr_lo contains the intended physical word address
+ *       A19 already set as required; this function does not clear it
+ * Post: /C_OE, /C_CE, /AS, /LDSW and /UDSW high
+ *       cached address reapplied through gen_refresh_addr(0), including /TIME
+ *       16-bit data bus input; cached address values unchanged
+ * Rtn:  Byte sampled on D7-D0
+ */
 uint8_t gen_time_rd(uint16_t addr_lo)
 {
   uint16_t rv;
@@ -379,6 +457,17 @@ uint8_t gen_time_rd(uint16_t addr_lo)
   return rv;
 }
 
+/* Desc: Write D7-D0 with /TIME asserted and /ASEL high
+ *       addr_lo is a byte address shifted right once for physical A16-A1
+ *       drive D15-D8 as zero and pulse both /LDSW and /UDSW
+ * Pre:  sega_init() setup of I/O pins
+ *       A19 and other cartridge controls already set for the intended access
+ * Post: Write cycle issued without readback verification
+ *       /AS, /LDSW, /UDSW and /TIME high; 16-bit data bus input
+ *       final address latch update also changes A16-A1 through FFADDR_SET
+ *       cached address unchanged and not reapplied to hardware
+ * Rtn:  None
+ */
 void gen_time_wr(uint16_t addr_lo, uint8_t data)
 {
   uint8_t temp;
@@ -424,9 +513,17 @@ void gen_time_wr(uint16_t addr_lo, uint8_t data)
   DATA16_IP();
 }
 
+/* Desc: Read one Genesis RAM byte on D7-D0
+ *       addr_lo is a byte address; gen_set_addr_lo drives physical A16-A1
+ * Pre:  sega_init() setup of I/O pins
+ *       RAM enabled and sega_addr_hi set for the desired RAM bank
+ * Post: sega_addr_lo updated; target address left on bus
+ *       low data bus input; /AS, /C_CE, /C_OE, /LDSW and /UDSW high
+ * Rtn:  Byte read on D7-D0
+ */
 uint8_t gen_ram_rd(uint16_t addr_lo)
 {
-  uint8_t read;
+  uint8_t rv;
 
   // SRAM needs to be enabled and address hi bits set
   // before calling this function
@@ -455,7 +552,7 @@ uint8_t gen_ram_rd(uint16_t addr_lo)
   NOP();
   NOP();
 
-  DATA_RD(read);
+  DATA_RD(rv);
 
   // set #C_OE
   GEN_C_OE_HI();
@@ -466,9 +563,19 @@ uint8_t gen_ram_rd(uint16_t addr_lo)
   // set #AS B18 CPU access entire memory map, indicating address bus valid
   GBP_HI();
 
-  return read;
+  return rv;
 }
 
+/* Desc: Write one Genesis RAM byte on D7-D0
+ *       pulse /LDSW with /UDSW high; /AS and /C_CE asserted
+ *       addr_lo is a byte address; gen_set_addr_lo drives physical A16-A1
+ * Pre:  sega_init() setup of I/O pins
+ *       RAM enabled and sega_addr_hi set for the desired RAM bank
+ * Post: Write cycle issued without readback verification; sega_addr_lo updated
+ *       target address left on bus; low data bus input
+ *       /AS, /C_CE, /C_OE, /LDSW and /UDSW high
+ * Rtn:  None
+ */
 void gen_ram_wr(uint16_t addr_lo, uint8_t data)
 {
   // SRAM needs to be enabled and address hi bits set
@@ -512,16 +619,18 @@ void gen_ram_wr(uint16_t addr_lo, uint8_t data)
   DATA_IP();
 }
 
-/* Desc: SEGA GENESIS RAM Page Read with optional USB polling
- *       /ROMSEL based on romsel arg, EXP0/RESET unaffected
- *       if poll is true calls usbdrv.h usbPoll fuction
- *       this is needed to keep from timing out when double buffering usb data
- * Pre:  sega_init() setup of io pins
- *       num_bytes can't exceed 256B page boundary
- * Post: address left on bus
- *       data bus left clear
- *       data buffer filled starting at first to last
- * Rtn:  Index of last byte read
+/* Desc: Read len + 1 Genesis RAM bytes on D7-D0 into data[0..len]
+ *       addrH and first directly set physical word-address outputs
+ *       pulse /C_CE for each read; hold /AS and /C_OE low
+ *       no USB polling is performed
+ * Pre:  sega_init() setup of I/O pins
+ *       RAM enabled and high address outputs selected
+ *       data has room for len + 1 bytes; len must be below 255
+ *       first + len must be at most 255 to stay within the address page
+ * Post: data[0..len] filled; physical word address advanced past the last read
+ *       low data bus input; /AS, /C_CE, /C_OE, /LDSW and /UDSW high
+ *       cached address unchanged
+ * Rtn:  Number of bytes read (len + 1)
  */
 uint8_t gen_ram_page_rd(uint8_t* data, uint16_t addrH, uint8_t first, uint8_t len)
 {
@@ -581,6 +690,19 @@ uint8_t gen_ram_page_rd(uint8_t* data, uint16_t addrH, uint8_t first, uint8_t le
   return i;
 }
 
+/* Desc: Write size_kb * 1024 LFSR-generated RAM bytes on D7-D0
+ *       addr directly drives physical A16-A1 and advances once per byte
+ *       pulse /LDSW and /C_CE with /AS low; keep /UDSW and /C_OE high
+ * Pre:  sega_init() setup of I/O pins
+ *       RAM enabled, high address outputs selected and LFSR initialized
+ *       size_kb must be below 64 to avoid wrapping the 16-bit loop counter
+ *       requested physical word-address range must fit the selected bank
+ * Post: LFSR advanced once per write; no readback verification
+ *       low data bus input; /UDSW and /C_OE high
+ *       for a nonempty range, last address left on bus and /AS, /C_CE, /LDSW high
+ *       cached address unchanged
+ * Rtn:  None
+ */
 void gen_ram_page_wr_lfsr(uint16_t addr, uint8_t size_kb)
 {
   uint8_t data;

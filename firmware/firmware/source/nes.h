@@ -32,33 +32,33 @@ uint8_t nes_dualport_page_rd_poll(uint8_t* data, uint8_t addrH, uint8_t first, u
 void mmc1_wr(uint16_t addr, uint8_t data, uint8_t reset);
 
 uint8_t nrom_prgrom_flash_wr(uint16_t addr, uint8_t data);
-void nrom_chrrom_flash_wr(uint16_t addr, uint8_t data);
-void mmc1_prgrom_flash_wr(uint16_t addr, uint8_t data);
-void mmc1_chrrom_flash_wr(uint16_t addr, uint8_t data);
+uint8_t nrom_chrrom_flash_wr(uint16_t addr, uint8_t data);
+uint8_t mmc1_prgrom_flash_wr(uint16_t addr, uint8_t data);
+uint8_t mmc1_chrrom_flash_wr(uint16_t addr, uint8_t data);
 uint8_t unrom_prgrom_flash_wr(uint16_t addr, uint8_t data);
-void cnrom_chrrom_flash_wr(uint16_t addr, uint8_t data);
+uint8_t cnrom_chrrom_flash_wr(uint16_t addr, uint8_t data);
 uint8_t mmc3_prgrom_flash_wr(uint16_t addr, uint8_t data);
-uint8_t mmc3s_prgrom_flash_wr(uint16_t addr, uint8_t data);
-void mmc3_chrrom_flash_wr(uint16_t addr, uint8_t data);
-void mmc4_prgrom_sop_flash_wr(uint16_t addr, uint8_t data);
+// uint8_t mmc3s_prgrom_flash_wr(uint16_t addr, uint8_t data);
+uint8_t mmc3_chrrom_flash_wr(uint16_t addr, uint8_t data);
+uint8_t mmc4_prgrom_sop_flash_wr(uint16_t addr, uint8_t data);
 uint8_t mmc4_prgrom_flash_wr(uint16_t addr, uint8_t data);
-void mmc2_prgrom_flash_wr(uint16_t addr, uint8_t data);
-void mmc4_chrrom_flash_wr(uint16_t addr, uint8_t data);
-void cdream_chrrom_flash_wr(uint16_t addr, uint8_t data);
+uint8_t mmc2_prgrom_flash_wr(uint16_t addr, uint8_t data);
+uint8_t mmc4_chrrom_flash_wr(uint16_t addr, uint8_t data);
+uint8_t cdream_chrrom_flash_wr(uint16_t addr, uint8_t data);
 uint8_t map30_prgrom_flash_wr(uint16_t addr, uint8_t data);
 uint8_t gtrom_prgrom_flash_wr(uint16_t addr, uint8_t data);
 void ppu_page_wr_lfsr(uint16_t addr, uint8_t data);
 void cpu_page_wr_lfsr(uint16_t addr, uint8_t data);
-void a53_512k_prgrom_flash_wr(uint16_t addr, uint8_t data);
+uint8_t a53_512k_prgrom_flash_wr(uint16_t addr, uint8_t data);
 uint8_t a53_tssop_prgrom_flash_wr(uint16_t addr, uint8_t data);
 uint8_t a53_prgrom_flash_wr(uint16_t addr, uint8_t data);
 uint8_t tssop_prgrom_flash_wr(uint16_t addr, uint8_t data);
-uint8_t mmc5_prgram_wr(uint16_t addr, uint8_t data);
+// uint8_t mmc5_prgram_wr(uint16_t addr, uint8_t data);
 uint8_t rnbw_prgrom_flash_wr(uint16_t addr, uint8_t data);
 uint8_t rnbw_prgrom_flash_unlock_wr(uint16_t addr, uint8_t data);
 uint8_t rnbw_chrrom_flash_wr(uint16_t addr, uint8_t data);
 uint8_t rnbw_chrrom_flash_unlock_wr(uint16_t addr, uint8_t data);
-void vrc6_prgrom_flash_wr(uint16_t addr, uint8_t data);
+uint8_t vrc6_prgrom_flash_wr(uint16_t addr, uint8_t data);
 
 #define A10_BYTE 0x04
 #define A11_BYTE 0x08

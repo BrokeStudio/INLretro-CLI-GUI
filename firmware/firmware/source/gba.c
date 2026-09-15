@@ -97,7 +97,7 @@ void gba_latch_addr(uint16_t addr_lo, uint8_t addr_hi)
 //ready to read next byte
 uint16_t gba_rd()
 {
-  uint16_t read;
+  uint16_t rv;
 
   if(cur_addr_lo == 0xFFFF) {
     //going to have a roll over when incrementing
@@ -107,13 +107,13 @@ uint16_t gba_rd()
 
   CSRD_LO();
   cur_addr_lo++; //increment to next byte that will be read
-  read = ADDR_VAL;
+  rv = ADDR_VAL;
   CSRD_HI();
 
   //if we had a 16bit addr roll over, need to increment A16-23
   DATA_SET(cur_addr_hi);
 
-  return read;
+  return rv;
 }
 
 //can only read 255 bytes, len can't be 255 else it would create infinite loop
@@ -121,23 +121,23 @@ uint16_t gba_rd()
 uint8_t gba_page_rd(uint16_t* data, uint8_t len)
 {
   uint8_t i;
-  uint16_t read;
+  uint16_t rv;
 
   for(i = 0; i <= len; i++) {
     //usbPoll();	//Call usbdrv.h usb polling while waiting for data
 
     //read 16bits
-    read = gba_rd();
+    rv = gba_rd();
 
     //store lower byte little endian
     //now stores entire 16bit read at once
-    data[i] = read;
+    data[i] = rv;
 
     //upper byte
     //i++;
 
     //store upper byte
-    //data[i] = read>>8;
+    //data[i] = rv>>8;
   }
 
   //return index of last byte read

@@ -139,7 +139,7 @@ void n64_latch_addr(uint16_t addr_lo)
 //ready to read next byte
 uint16_t n64_rd()
 {
-  uint16_t read;
+  uint16_t value;
 
   //if( cur_addr_lo == 0xFFFF ) {
   //	//going to have a roll over when incrementing
@@ -159,17 +159,17 @@ uint16_t n64_rd()
   //N64 console appears to have a /RD low time of 300nsec
   //But that seems crazy long... and not necessary
 
-  read = ADDR_VAL;
+  value = ADDR_VAL;
   CSRD_HI();
 
-  return read;
+  return value;
 }
 
 //can only read 255 bytes, len can't be 255 else it would create infinite loop
 // I think the byte read version is actually slightly faster...?
 uint8_t n64_page_rd(uint8_t* data, uint8_t addrH, uint8_t first, uint8_t len)
 {
-  uint16_t read;
+  uint16_t value;
   uint8_t i;
 
   //need to set the addr every 512Bytes, else will wrap around
@@ -195,16 +195,16 @@ uint8_t n64_page_rd(uint8_t* data, uint8_t addrH, uint8_t first, uint8_t len)
     //usbPoll();	//Call usbdrv.h usb polling while waiting for data
 
     //read 16bits
-    read = n64_rd();
+    value = n64_rd();
 
     //store upper byte big endian
-    data[i] = read >> 8;
+    data[i] = value >> 8;
 
     //lower byte
     i++;
 
     //store lower byte
-    data[i] = read;
+    data[i] = value;
   }
 
   //return index of last byte read
