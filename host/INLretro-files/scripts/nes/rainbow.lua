@@ -1360,8 +1360,8 @@ local function process(process_opts, console_opts)
       rv = prg_rom_manf_id()
       if not rv then
         if do_rom_write and prg_size_kb ~= 0 then
-        log.error("Couldn't identify flash chip")
-        return false
+          log.error("Couldn't identify flash chip")
+          return false
         else
           log.warning("Couldn't identify flash chip")
         end
@@ -1372,8 +1372,8 @@ local function process(process_opts, console_opts)
       rv = chr_rom_manf_id()
       if not rv then
         if do_rom_write and chr_size_kb ~= 0 then
-        log.error("Couldn't identify flash chip")
-        return false
+          log.error("Couldn't identify flash chip")
+          return false
         else
           log.warning("Couldn't identify flash chip")
         end

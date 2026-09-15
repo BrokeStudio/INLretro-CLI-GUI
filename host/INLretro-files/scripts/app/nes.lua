@@ -353,11 +353,11 @@ local function write_header(file, prg_kb, chr_kb, mapper, mirroring)
   --      ++-++++- Default Expansion Device
 end
 
--- Desc:check if PPU /A13 -> CIRAM /CE jumper present
---    Does NOT check if PPU A13 is inverted and then drives CIRAM /CE
--- Pre: nes_init() been called to setup i/o
--- Post:PPU /A13 left high (disabled), all other ADDRH signals low
--- Rtn: true if jumper is set
+-- Desc: check if PPU /A13 -> CIRAM /CE jumper present
+--       Does NOT check if PPU A13 is inverted and then drives CIRAM /CE
+-- Pre:  nes_init() been called to setup i/o
+-- Post: PPU /A13 left high (disabled), all other ADDRH signals low
+-- Rtn:  true if jumper is set
 local function jumper_ciramce_ppuA13n(debug)
   --check that we can clear CIRAM /CE with PPU /A13
   dict.pinport("ADDR_SET", 0x0000)
@@ -380,12 +380,12 @@ local function jumper_ciramce_ppuA13n(debug)
   return true
 end
 
--- Desc:check if PPU A13 is inverted then drives CIRAM /CE
---  Some mappers may do this including INLXO-ROM boards
---  Does NOT check if PPU /A13 is drives CIRAM /CE
--- Pre: nes_init() been called to setup i/o
--- Post:PPU A13 left disabled (hi)
--- Rtn: true if inverted PPU A13 drives CIRAM /CE
+-- Desc: check if PPU A13 is inverted then drives CIRAM /CE
+--       Some mappers may do this including INLXO-ROM boards
+--       Does NOT check if PPU /A13 is drives CIRAM /CE
+-- Pre:  nes_init() been called to setup i/o
+-- Post: PPU A13 left disabled (hi)
+-- Rtn:  true if inverted PPU A13 drives CIRAM /CE
 local function ciramce_inv_ppuA13(debug)
   --set PPU A13 low
   dict.pinport("ADDR_SET", 0x0000)
@@ -408,22 +408,22 @@ local function ciramce_inv_ppuA13(debug)
   return true
 end
 
--- Desc:check for famicom audio in->out jumper
---  This drives EXP6 (RF out) -> EXP0 (APU in) which is backwards..
---  not much can do about that for old avr kazzo designs
---  There are probably caps/resistors for synth carts anyway
---  but to be safe only apply short pulses.
---  While we typically don't want to apply 5v to EXP port on NES carts,
---  this only does so for EXP6 which is safe on current designs.
---  All other EXP1-8 pins are only driven low.
--- Pre: nes_init() been called to setup i/o
---  which makes EXP0 floating i/p
--- Post:EXP FF left disabled and EXP0 floating
---  AXLOE pin returned to input with pullup
--- Rtn: true if jumper/connection is present
--- Test:Works on non-expansion sound carts obviously
---  Works on VRC6 and VRC7
---  Others untested
+-- Desc: check for famicom audio in->out jumper
+--       This drives EXP6 (RF out) -> EXP0 (APU in) which is backwards..
+--       not much can do about that for old avr kazzo designs
+--       There are probably caps/resistors for synth carts anyway
+--       but to be safe only apply short pulses.
+--       While we typically don't want to apply 5v to EXP port on NES carts,
+--       this only does so for EXP6 which is safe on current designs.
+--       All other EXP1-8 pins are only driven low.
+-- Pre:  nes_init() been called to setup i/o
+--       which makes EXP0 floating i/p
+-- Post: EXP FF left disabled and EXP0 floating
+--       AXLOE pin returned to input with pullup
+-- Rtn:  true if jumper/connection is present
+-- Test: Works on non-expansion sound carts obviously
+--       Works on VRC6 and VRC7
+--       Others untested
 local function jumper_famicom_sound(debug)
   --EXP0 should be floating input
   --AXLOE pin needs to be set as output and
@@ -463,10 +463,10 @@ local function jumper_famicom_sound(debug)
 end
 
 
--- Desc:Run through supported mapper mirroring modes to help detect mapper.
+-- Desc: Run through supported mapper mirroring modes to help detect mapper.
 -- Pre:
--- Post:cart mirroring set to found mirroring
--- Rtn: SUCCESS if nothing bad happened, neg if error with kazzo etc
+-- Post: cart mirroring set to found mirroring
+-- Rtn:  SUCCESS if nothing bad happened, neg if error with kazzo etc
 local function detect_mapper_mirroring(debug)
   local read_0x2000, read_0x2400, read_0x2800, read_0x2C00
 
@@ -540,23 +540,130 @@ local function detect_mapper_mirroring(debug)
   return "UNKNOWN"
 end
 
+local function find_bank_table_in_last_bank(filename, prg_size_kb, bank_size_kb)
+  local last_bank_size_kb = bank_size_kb or 16 -- use 16KB bank by default
+  local banks = math.floor(prg_size_kb / last_bank_size_kb)
+  local bytes_found = 0
+  local bank_table_base = 0
+  local bank_size = last_bank_size_kb * 1024
+  local rom_file = assert(io.open(filename, "rb"))
+  local file_size = rom_file:seek("end")
+  local last_bank_offset = file_size - bank_size
+
+  -- check last bank
+  for i = 0, bank_size - 1, 1 do
+    -- set cursor
+    rom_file:seek("set", last_bank_offset + i)
+
+    -- read one byte
+    local byte = string.unpack("B", rom_file:read(1), 1)
+      -- if it's zero, reset tracking vars and update bank table address
+      if byte == 0 then
+        bank_table_base = 0x10000 - bank_size + i
+        bytes_found = 1
+      elseif byte == bytes_found then
+        -- update tracking vars
+        bytes_found = bytes_found + 1
+
+        -- found all bytes?
+        if bytes_found == banks then
+          break
+        end
+      else
+        -- reset tracking vars
+        bytes_found = 0
+      end
+  end
+
+  assert(rom_file:close())
+
+  if bytes_found == banks then
+    return bank_table_base
+  else
+    return nil
+  end
+end
+
+local function find_bank_table_32(filename, prg_size_kb)
+  local banks = math.floor(prg_size_kb / 32)
+  local bytes_found = 0
+  local bank_table_base = 0
+  local bank_size = 32 * 1024
+  local romfile = assert(io.open(filename, "rb"))
+
+  -- check first bank
+  for i = 0, bank_size - 1, 1 do
+    -- set cursor
+    romfile:seek("set", i)
+
+    -- read one byte
+    local byte = string.unpack("B", romfile:read(1), 1)
+
+    -- do we have a matching byte across banks?
+    local match = true
+    for b = 1, banks - 1, 1 do
+      -- set cursor
+      romfile:seek("set", b * bank_size + i)
+
+      -- read byte
+      local byte2 = string.unpack("B", romfile:read(1), 1)
+
+      -- control byte
+      if byte2 ~= byte then
+        match = false
+        break
+      end
+    end
+
+    -- bytes match?
+    if match then
+      -- if it's zero, reset tracking vars and update bank table address
+      if byte == 0 then
+        bank_table_base = (i & 0xffff) + 0x8000
+        bytes_found = 1
+      elseif byte == bytes_found then
+        -- update tracking vars
+        bytes_found = bytes_found + 1
+
+        -- found all bytes?
+        if bytes_found == banks then
+          break
+        end
+      else
+        -- reset tracking vars
+        bytes_found = 0
+      end
+    else
+      -- reset tracking vars
+      bytes_found = 0
+    end
+  end
+
+  assert(romfile:close())
+
+  if bytes_found == banks then
+    return bank_table_base
+  else
+    return nil
+  end
+end
 
 -- verify the ciccom software mirroring switch is working properly
 local function test_cic_soft_switch(debug)
 end
 
--- Desc:CHR-ROM flash manf/prod ID sense test
---  Only senses SST flash ID's
---  Does not make CHR bank writes so A14-A13 must be made valid outside of this funciton
---  An NROM board does this by tieing A14:13 to A12:11
---  Other mappers will pass this function if PT0 has A14:13=01, PT1 has A14:13=10
---  Assumes that isn't getting tricked by having manf/prodID at $0000/0001
---  could add check and increment read address to ensure doesn't get tricked..
--- Pre: nes_init() been called to setup i/o
--- Post:memory manf/prod ID set to read values if passed
---  memory wr_dict and wr_opcode set if successful
---  Software mode exited if entered successfully
--- Rtn: SUCCESS if flash sensed, GEN_FAIL if not, neg if error
+-- Desc: CHR-ROM flash manf/prod ID sense test
+--       Only senses SST flash ID's
+--       Does not make CHR bank writes so A14-A13 must be made valid outside of this funciton
+--       An NROM board does this by tieing A14:13 to A12:11
+--       Other mappers will pass this function if PT0 has A14:13=01, PT1 has A14:13=10
+--       Assumes that isn't getting tricked by having manf/prodID at $0000/0001
+--       could add check and increment read address to ensure doesn't get tricked..
+-- Pre:  nes_init() been called to setup i/o
+-- Post: memory manf/prod ID set to read values if passed
+--       memory wr_dict and wr_opcode set if successful
+--       Software mode exited if entered successfully
+-- Rtn:  SUCCESS if flash sensed, GEN_FAIL if not, neg if error
 local function read_flashID_chrrom_8K(debug)
   local rv
   --enter software mode
@@ -597,13 +704,13 @@ local function read_flashID_chrrom_8K(debug)
 end
 
 
---/* Desc:Simple CHR-RAM sense test
--- *  A more thourough test should be implemented in firmware
--- *  This one simply tests one address in PPU address space
--- * Pre: nes_init() been called to setup i/o
--- * Post:
--- * Rtn: SUCCESS if ram sensed, GEN_FAIL if not, neg if error
--- */
+-- Desc: Simple CHR-RAM sense test
+--       A more thourough test should be implemented in firmware
+--       This one simply tests one address in PPU address space
+-- Pre:  nes_init() been called to setup i/o
+-- Post:
+-- Rtn:  SUCCESS if ram sensed, GEN_FAIL if not, neg if error
+--
 --int ppu_ram_sense( USBtransfer *transfer, uint16_t addr ) {
 local function ppu_ram_sense(addr, debug)
   local res = true
@@ -637,19 +744,19 @@ local function ppu_ram_sense(addr, debug)
   return res
 end
 
--- Desc:PRG-ROM flash manf/prod ID sense test
---  Using EXP0 /WE writes
---  Only senses SST flash ID's
---  Assumes that isn't getting tricked by having manf/prodID at $8000/8001
---  could add check and increment read address to ensure doesn't get tricked..
--- Pre: nes_init() been called to setup i/o
---  exp0 pullup test must pass
---  if ROM A14 is mapper controlled it must be low when CPU A14 is low
---  controlling A14 outside of this function acts as a means of bank size detection
--- Post:memory manf/prod ID set to read values if passed
---  memory wr_dict and wr_opcode set if successful
---  Software mode exited if entered successfully
--- Rtn: SUCCESS if flash sensed, GEN_FAIL if not, neg if error
+-- Desc: PRG-ROM flash manf/prod ID sense test
+--       Using EXP0 /WE writes
+--       Only senses SST flash ID's
+--       Assumes that isn't getting tricked by having manf/prodID at $8000/8001
+--       could add check and increment read address to ensure doesn't get tricked..
+-- Pre:  nes_init() been called to setup i/o
+--       exp0 pullup test must pass
+--       if ROM A14 is mapper controlled it must be low when CPU A14 is low
+--       controlling A14 outside of this function acts as a means of bank size detection
+-- Post: memory manf/prod ID set to read values if passed
+--       memory wr_dict and wr_opcode set if successful
+--       Software mode exited if entered successfully
+-- Rtn:  SUCCESS if flash sensed, GEN_FAIL if not, neg if error
 local function read_flashID_prgrom_exp0(debug)
   local rv
   --enter software mode
@@ -890,6 +997,8 @@ nes.read_flashID_chrrom_8K = read_flashID_chrrom_8K
 nes.read_flashID_prgrom_exp0 = read_flashID_prgrom_exp0
 nes.write_header = write_header
 nes.parse_header = parse_header
+nes.find_bank_table_32 = find_bank_table_32
+nes.find_bank_table_in_last_bank = find_bank_table_in_last_bank
 nes.header = header
 nes.MIRRORING_TYPE_HORIZONTAL = MIRRORING_TYPE_HORIZONTAL
 nes.MIRRORING_TYPE_VERTICAL = MIRRORING_TYPE_VERTICAL

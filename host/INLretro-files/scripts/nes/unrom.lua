@@ -129,7 +129,7 @@ end
 ---@param value integer 8-bit value to write
 ---@param bank integer Mapper bank value selecting the target flash bank
 ---@param debug? boolean Enable verbose progress logging
-local function wr_prg_flash_byte(addr, value, bank, debug)
+local function prg_rom_flash_byte(addr, value, bank, debug)
   if addr < 0x8000 or addr > 0xFFFF then
     log.error("ERROR! flash write to PRG-ROM", help.hex_0x4(addr), "must be $8000-FFFF")
     return
@@ -242,23 +242,30 @@ local function prg_rom_flash(file, rom_size_kb, debug)
 end
 
 --- Program a bank-selection table using PRG-ROM bank 0.
----@param base integer CPU address of the bank table
+---@param addr_base integer CPU address of the bank table
 ---@param entries integer Number of bank table entries to write
----@param numtables? integer Unused table-count parameter
-local function wr_bank_table(base, entries, numtables)
-  local cur_bank
+---@param debug? boolean Enable verbose progress logging
+local function write_bank_table(addr_base, entries, debug)
+  --UxROM can have a single bank table in $C000-FFFF (assuming this is most likely)
+  --or a bank table in all other banks in $8000-BFFF (unsupported for now)
 
-  --need to have A14 clear when lower bank enabled
   init_mapper()
 
-  --UxROM can have a single bank table in $C000-FFFF (assuming this is most likely)
-  --or a bank table in all other banks in $8000-BFFF
+  log.section("Writing bank table to PRG-ROM")
+  log.info("Bank table address:", help.hex_0x4(addr_base))
 
-  local i = 0
-  while i < entries do
-    wr_prg_flash_byte(base + i, i, 0)
-    i = i + 1;
+  for byte = 0, entries, 1 do
+    if debug then
+      log.point("writing byte", byte, "of", entries - 1)
+    else
+      spinner.update("Writing byte", byte, "/", entries - 1)
+    end
+    prg_rom_flash_byte(addr_base + byte, byte, 0, debug)
+    byte = byte + 1;
   end
+
+  spinner.clear()
+  log.success("Done writing bank table to PRG-ROM")
 
   --[[
   if base >= 0xC000 then
@@ -279,7 +286,7 @@ local function wr_bank_table(base, entries, numtables)
     local i = 0
     while i < entries do
       print("write entry", i, "bank:", cur_bank)
-      wr_prg_flash_byte(base+i, i)
+      prg_rom_flash_byte(base+i, i)
       i = i+1;
     end
 
@@ -439,8 +446,21 @@ local function process(process_opts, console_opts)
     log.section("Testing " .. mapname)
 
     if bank_table_base == nil then
+      if do_rom_write then
+        log.info("Bank table is missing from the command line arguments, trying to automatically find it")
+        bank_table_base = nes.find_bank_table_in_last_bank(rom_write_file.filename, prg_size_kb, 16)
+        if bank_table_base == nil then
+          log.error("Couldn't find bank table, use 'bank_table' additional option to specify it manually")
+          return false
+        else
+          log.success("Bank table found at address:", help.hex_0x4(bank_table_base))
+        end
+      else
         log.error("Bank table is missing from the command line arguments")
-      do return end
+        return false
+      end
+    else
+      log.info("Bank table address provided:", help.hex_0x4(bank_table_base))
     end
 
     log.info("EXP0 pull-up test", dict.io("EXP0_PULLUP_TEST"))
@@ -523,7 +543,6 @@ local function process(process_opts, console_opts)
   if do_erase then
     local i = 0
 
-
     -- erase PRG-ROM only if needed
     if prg_size_kb ~= 0 then
       init_mapper()
@@ -559,18 +578,19 @@ local function process(process_opts, console_opts)
 
   -- program file to the cart
   if do_rom_write then
-    -- open file
-    file = assert(io.open(rom_write_file.filename, "rb"))
+    if prg_size_kb ~= 0 then
+      -- open file
+      file = assert(io.open(rom_write_file.filename, "rb"))
 
-    --find bank table in the rom
-    --write bank table to all banks of cartridge
-    wr_bank_table(bank_table_base, prg_size_kb / 16) --16KB per bank gives number of entries
+      -- flash PRG-ROM
+      time.start()
+      write_bank_table(bank_table_base, math.floor(prg_size_kb / 16), DEBUG)
+      prg_rom_flash(file, prg_size_kb, DEBUG)
+      time.report(prg_size_kb)
 
-    -- flash cart
-    prg_rom_flash(file, prg_size_kb, DEBUG)
-
-    -- close file
-    assert(file:close())
+      -- close file
+      assert(file:close())
+    end
   end
 
   --[[

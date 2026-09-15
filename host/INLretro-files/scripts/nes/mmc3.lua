@@ -1064,13 +1064,14 @@ local function process(process_opts, console_opts)
     -- open file
     file = assert(io.open(rom_write_file.filename, "rb"))
 
-    -- flash cart
+    -- flash PRG-ROM
     if prg_size_kb ~= 0 then
       time.start()
       prg_rom_flash(file, prg_size_kb, DEBUG)
       time.report(prg_size_kb)
     end
 
+    -- flash CHR-ROM
     if chr_size_kb ~= 0 then
       time.start()
       chr_rom_flash(file, chr_size_kb, DEBUG)

@@ -173,29 +173,15 @@ local function prg_rom_flash(file, rom_size_kb, debug)
 end
 
 --- Program a bank-selection table at the same address in every PRG-ROM bank.
----@param base integer CPU address of the bank table
+---@param addr_base integer CPU address of the bank table
 ---@param entries number Number of table entries and banks, rounded down to an integer
 ---@param debug? boolean Enable verbose progress logging
-local function wr_bank_table(base, entries, debug)
-  entries = math.floor(entries)
-
+local function write_bank_table(addr_base, entries, debug)
   -- BNROM needs to have a bank table present in each and every bank
   -- it should also be at the same location in every bank
 
-  -- --first select the last bank as cartridge should be erased (all 0xFF)
-  -- --go ahead and write the value to where it's supposed to be incase rom isn't erased
-  -- dict.nes("NES_CPU_WR", base+entries-1, entries-1)
-  --
-  -- --write bank table to selected bank
-  -- while i < entries do
-  --   prg_rom_flash_byte(base+i, i)
-  --   i = i+1;
-  -- end
-  -- --now we can use that bank table to jump to any other bank
-
-  -- smarter solution is to simply count down so we can use just one loop
-
-  log.section("Writing bank table @ " .. help.hex_0x4(base))
+  log.section("Writing bank table to PRG-ROM")
+  log.info("Bank table address:", help.hex_0x4(addr_base))
 
   local cur_bank = entries - 1 --16 minus 1 is 15 = 0x0F
 
@@ -203,26 +189,26 @@ local function wr_bank_table(base, entries, debug)
     if debug then
       log.point("writing PRG-ROM bank", cur_bank, "of", entries - 1)
     else
-      -- spinner.update()
       spinner.update("Flashing", cur_bank, "/", entries - 1)
     end
 
     --select bank to write to (last bank first)
     --use the bank table to make the switch
-    dict.nes("NES_CPU_WR", base + cur_bank, cur_bank)
+    dict.nes("NES_CPU_WR", addr_base + cur_bank, cur_bank)
 
     --write bank table to selected bank
-    local i = 0
-    while i < entries do
-      prg_rom_flash_byte(base + i, i)
-      i = i + 1;
+    for byte = entries - 1, 0, -1 do
+      if debug then
+        log.point("writing byte", byte, "of", entries - 1)
+      end
+      prg_rom_flash_byte(addr_base + byte, byte)
     end
 
     cur_bank = cur_bank - 1
   end
 
   spinner.clear()
-  log.success("Done writing bank table")
+  log.success("Done writing bank table to PRG-ROM")
 end
 
 --[[
@@ -380,8 +366,21 @@ local function process(process_opts, console_opts)
     log.section("Testing " .. mapname)
 
     if bank_table_base == nil then
+      if do_rom_write then
+        log.info("Bank table is missing from the command line arguments, trying to automatically find it")
+        bank_table_base = nes.find_bank_table_32(rom_write_file.filename, prg_size_kb)
+        if bank_table_base == nil then
+          log.error("Couldn't find bank table, use 'bank_table' additional option to specify it manually")
+          return false
+        else
+          log.success("Bank table found at address:", help.hex_0x4(bank_table_base))
+        end
+      else
         log.error("Bank table is missing from the command line arguments")
-      do return end
+        return false
+      end
+    else
+      log.info("Bank table address provided:", help.hex_0x4(bank_table_base))
     end
 
     log.info("EXP0 pull-up test", dict.io("EXP0_PULLUP_TEST"))
@@ -498,17 +497,19 @@ local function process(process_opts, console_opts)
 
   -- program file to the cart
   if do_rom_write then
-    -- open file
-    file = assert(io.open(rom_write_file.filename, "rb"))
+    if prg_size_kb ~= 0 then
+      -- open file
+      file = assert(io.open(rom_write_file.filename, "rb"))
 
-    -- flash cart
-    time.start()
-    wr_bank_table(bank_table_base, prg_size_kb / 32, DEBUG)
-    prg_rom_flash(file, prg_size_kb, DEBUG)
-    time.report(prg_size_kb)
+      -- flash PRG-ROM
+      time.start()
+      write_bank_table(bank_table_base, math.floor(prg_size_kb / 32), DEBUG)
+      prg_rom_flash(file, prg_size_kb, DEBUG)
+      time.report(prg_size_kb)
 
-    -- close file
-    assert(file:close())
+      -- close file
+      assert(file:close())
+    end
   end
 
   --[[
