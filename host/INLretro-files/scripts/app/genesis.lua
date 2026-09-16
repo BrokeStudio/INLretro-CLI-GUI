@@ -129,9 +129,9 @@ local file_header = help.copy_table(Header)
 local cart_header = help.copy_table(Header)
 
 --- Parse a 256-byte Genesis ROM header into a header table.
----@param byte_str string Raw 256-byte header data, starting at ROM offset 0x100
----@param header table Header table to populate, usually genesis.file_header or genesis.cart_header
----@return boolean is_valid True when the parsed system type starts with "SEGA"
+-- @param byte_str string Raw 256-byte header data, starting at ROM offset 0x100
+-- @param header table Header table to populate, usually genesis.file_header or genesis.cart_header
+-- @return boolean is_valid True when the parsed system type starts with "SEGA"
 local function parse_header(byte_str, header)
   header.bytes = table.pack(string.unpack(string.rep('B', #byte_str), byte_str))
   header.system_type = string.sub(byte_str, 1, 16)
@@ -179,9 +179,9 @@ local function parse_header(byte_str, header)
 end
 
 --- Parse a Genesis ROM header from an already-open file.
---- Leaves the file open after parsing and computes the file checksum.
----@param file file* Open binary ROM file
----@return boolean is_valid True when the parsed system type starts with "SEGA"
+-- Leaves the file open after parsing and computes the file checksum.
+-- @param file file* Open binary ROM file
+-- @return boolean is_valid True when the parsed system type starts with "SEGA"
 local function parse_header_file(file)
   local byte_str
   byte_str = file:read(0x100) -- skip vectors
@@ -204,8 +204,8 @@ local function parse_header_file(file)
 end
 
 --- Parse a Genesis ROM header directly from the cartridge.
---- Reads the first ROM page through the basic Genesis dump path; checksum is not computed.
----@return boolean is_valid True when the parsed system type starts with "SEGA"
+-- Reads the first ROM page through the basic Genesis dump path; checksum is not computed.
+-- @return boolean is_valid True when the parsed system type starts with "SEGA"
 local function parse_header_cart()
   -- initialize device i/o
   dict.io("IO_RESET")
@@ -236,8 +236,8 @@ end
 --]]
 
 --- Read and identify the ROM flash manufacturer/device ID.
----@return boolean success True when the flash chip is recognized
----@return table info Flash chip information
+-- @return boolean success True when the flash chip is recognized
+-- @return table info Flash chip information
 local function rom_manf_id()
   local found
   local manufacturer_id
@@ -281,9 +281,9 @@ local function rom_manf_id()
 end
 
 --- Read an 8-bit value from a Genesis /TIME register.
---- Register offset maps to CPU address 0xA13000 | addr.
----@param addr integer /TIME register offset, 0x00-0xFF
----@return integer|nil value 8-bit value read, or nil if addr is invalid
+-- Register offset maps to CPU address 0xA13000 | addr.
+-- @param addr integer /TIME register offset, 0x00-0xFF
+-- @return integer|nil value 8-bit value read, or nil if addr is invalid
 local function time_rd(addr)
   if (addr > 0xff) then
     log.error("/TIME addresse value too high ($00-$FF)")
@@ -293,9 +293,9 @@ local function time_rd(addr)
 end
 
 --- Read and log an 8-bit value from a Genesis /TIME register.
----@param addr integer /TIME register offset, 0x00-0xFF
----@param label? string Optional text appended to the log line
----@return integer|nil value 8-bit value read, or nil if addr is invalid
+-- @param addr integer /TIME register offset, 0x00-0xFF
+-- @param label? string Optional text appended to the log line
+-- @return integer|nil value 8-bit value read, or nil if addr is invalid
 local function dbg_time_rd(addr, label)
   if not (type(label) == "string") then label = "" end
   local rv = time_rd(addr)
@@ -304,9 +304,9 @@ local function dbg_time_rd(addr, label)
 end
 
 --- Write an 8-bit value to a Genesis /TIME register.
---- Register offset maps to CPU address 0xA13000 | addr.
----@param addr integer /TIME register offset, 0x00-0xFF
----@param value integer 8-bit value to write
+-- Register offset maps to CPU address 0xA13000 | addr.
+-- @param addr integer /TIME register offset, 0x00-0xFF
+-- @param value integer 8-bit value to write
 local function time_wr(addr, value)
   if (addr > 0xff) then
     log.error("/TIME addresse value too high ($00-$FF)")
@@ -316,9 +316,9 @@ local function time_wr(addr, value)
 end
 
 --- Write and log an 8-bit value to a Genesis /TIME register.
----@param addr integer /TIME register offset, 0x00-0xFF
----@param value integer 8-bit value to write
----@param comment? string Optional text appended to the log line
+-- @param addr integer /TIME register offset, 0x00-0xFF
+-- @param value integer 8-bit value to write
+-- @param comment? string Optional text appended to the log line
 local function dbg_time_wr(addr, value, comment)
   if not (type(comment) == "string") then comment = "" end
   time_wr(addr, value)
@@ -326,7 +326,7 @@ local function dbg_time_wr(addr, value, comment)
 end
 
 --- Set the current Genesis bus address from a full 24-bit address.
----@param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
+-- @param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
 local function set_addr(addr)
   local addr_hi = (addr >> 16) & 0xFF
   local addr_lo = addr & 0xFFFF
@@ -338,21 +338,21 @@ local function set_addr(addr)
 end
 
 --- Set the high address latch used by subsequent Genesis bus accesses.
----@param addr_hi integer High address byte, 0x00-0xFF
+-- @param addr_hi integer High address byte, 0x00-0xFF
 local function set_addr_hi(addr_hi)
   dict.sega("GEN_SET_ADDR_HI", addr_hi)
 end
 
 --- Set the low address latch used by subsequent Genesis bus accesses.
----@param addr_lo integer Low address word, 0x0000-0xFFFF
+-- @param addr_lo integer Low address word, 0x0000-0xFFFF
 local function set_addr_lo(addr_lo)
   dict.sega("GEN_SET_ADDR_LO", addr_lo)
 end
 
 --- Read a 16-bit word from the Genesis ROM bus.
---- Sets the full 24-bit address before reading.
----@param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
----@return integer value 16-bit value read from ROM
+-- Sets the full 24-bit address before reading.
+-- @param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
+-- @return integer value 16-bit value read from ROM
 local function rom_rd(addr)
   local addr_lo = addr & 0xFFFF
   set_addr(addr)
@@ -360,9 +360,9 @@ local function rom_rd(addr)
 end
 
 --- Read and log a 16-bit word from the Genesis ROM bus.
----@param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
----@param label? string Optional text appended to the log line
----@return integer value 16-bit value read from ROM
+-- @param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
+-- @param label? string Optional text appended to the log line
+-- @return integer value 16-bit value read from ROM
 local function dbg_rom_rd(addr, label)
   if not (type(label) == "string") then label = "" end
   local rv = rom_rd(addr)
@@ -371,18 +371,18 @@ local function dbg_rom_rd(addr, label)
 end
 
 --- Write a 16-bit word to the Genesis ROM bus.
---- Sets the full 24-bit address before writing.
----@param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
----@param value integer 16-bit value to write
+-- Sets the full 24-bit address before writing.
+-- @param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
+-- @param value integer 16-bit value to write
 local function rom_wr(addr, value)
   set_addr(addr)
   dict.sega("GEN_ROM_WR", value)
 end
 
 --- Write and log a 16-bit word to the Genesis ROM bus.
----@param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
----@param value integer 16-bit value to write
----@param comment? string Optional text appended to the log line
+-- @param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
+-- @param value integer 16-bit value to write
+-- @param comment? string Optional text appended to the log line
 local function dbg_rom_wr(addr, value, comment)
   if not (type(comment) == "string") then comment = "" end
   rom_wr(addr, value)
@@ -390,9 +390,9 @@ local function dbg_rom_wr(addr, value, comment)
 end
 
 --- Read an 8-bit value from the Genesis RAM bus.
---- Sets the full 24-bit address before reading.
----@param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
----@return integer value 8-bit value read from RAM
+-- Sets the full 24-bit address before reading.
+-- @param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
+-- @return integer value 8-bit value read from RAM
 local function ram_rd(addr)
   local addr_lo = addr & 0xFFFF
   set_addr(addr)
@@ -400,9 +400,9 @@ local function ram_rd(addr)
 end
 
 --- Read and log an 8-bit value from the Genesis RAM bus.
----@param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
----@param label? string Optional text appended to the log line
----@return integer value 8-bit value read from RAM
+-- @param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
+-- @param label? string Optional text appended to the log line
+-- @return integer value 8-bit value read from RAM
 local function dbg_ram_rd(addr, label)
   if not (type(label) == "string") then label = "" end
   local rv = ram_rd(addr)
@@ -411,9 +411,9 @@ local function dbg_ram_rd(addr, label)
 end
 
 --- Write an 8-bit value to the Genesis RAM bus.
---- Sets the full 24-bit address before writing.
----@param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
----@param value integer 8-bit value to write
+-- Sets the full 24-bit address before writing.
+-- @param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
+-- @param value integer 8-bit value to write
 local function ram_wr(addr, value)
   set_addr(addr)
   local addr_lo = addr & 0xFFFF
@@ -421,9 +421,9 @@ local function ram_wr(addr, value)
 end
 
 --- Write and log an 8-bit value to the Genesis RAM bus.
----@param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
----@param value integer 8-bit value to write
----@param comment? string Optional text appended to the log line
+-- @param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
+-- @param value integer 8-bit value to write
+-- @param comment? string Optional text appended to the log line
 local function dbg_ram_wr(addr, value, comment)
   if not (type(comment) == "string") then comment = "" end
   ram_wr(addr, value)

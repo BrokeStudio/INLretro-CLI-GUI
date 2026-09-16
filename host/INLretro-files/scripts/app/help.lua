@@ -6,6 +6,8 @@ local help = {}
 -- file constants and global variables
 
 -- local functions
+--- Get the directory containing this helper script.
+-- @return Directory path including its trailing separator, or nil if unavailable.
 local function get_script_path()
   local str = debug.getinfo(1).source:sub(2)
   local sep = package.config:sub(1, 1)
@@ -18,6 +20,9 @@ local function get_script_path()
   return str:match(pattern) --:match("str_match")
 end
 
+--- Check whether a file can be opened for reading.
+-- @param filename Path to the file.
+-- @return True if the file can be opened; false otherwise.
 local function file_exists(filename)
   local f = io.open(filename, "r")
   if f ~= nil then
@@ -28,7 +33,11 @@ local function file_exists(filename)
   end
 end
 
---- Check if a file or directory exists in this path
+--- Check if a file or directory exists in this path.
+-- Uses a self-rename check and treats permission-denied error code 13 as existence.
+-- @param path File or directory path to check.
+-- @return True on success or permission denial; nil on other rename failures.
+-- @return Error message on other rename failures, or nil on success.
 local function exists(path)
   local ok, err, code = os.rename(path, path)
   if not ok then
@@ -40,6 +49,11 @@ local function exists(path)
   return ok, err
 end
 
+--- Copy a file using text-mode streams.
+-- Opens the destination for writing, replacing any existing contents.
+-- @param old_path Source file path.
+-- @param new_path Destination file path.
+-- @return False if either file cannot be opened; true after copying otherwise.
 local function file_copy(old_path, new_path)
   local old_file = io.open(old_path)
   local new_file = io.open(new_path, "w")
@@ -56,6 +70,11 @@ local function file_copy(old_path, new_path)
   return true
 end
 
+--- Join arguments into a string with a separator.
+-- Converts values with tostring and stops at the first nil argument.
+-- @param sep Separator inserted between argument values.
+-- @param ... Values to concatenate.
+-- @return Concatenated string, or an empty string when no values are provided.
 local function parse_str_args(sep, ...)
   local args = { ... }
   local text = ""
@@ -66,6 +85,10 @@ local function parse_str_args(sep, ...)
   return text
 end
 
+--- Extract path and extension information from a filename.
+-- Accepts both slash styles and converts the extension to lowercase.
+-- @param filename Filename to parse; non-string values produce empty fields.
+-- @return Table containing filename, path, name, base, and ext fields.
 local function parse_filename(filename)
   local rv = {
     filename = "",
@@ -85,6 +108,11 @@ local function parse_filename(filename)
   return rv
 end
 
+--- Format an integer as an uppercase hexadecimal string.
+-- @param data Integer to format.
+-- @param digits Optional minimum width, padded with zeros when numeric.
+-- @param prefix Optional prefix prepended to the format string; defaults to empty.
+-- @return Formatted hexadecimal string.
 local function hex(data, digits, prefix)
   --if digits == nil or type(digits) ~= "number"then
   if type(digits) ~= "number" then
@@ -98,31 +126,49 @@ local function hex(data, digits, prefix)
   return string.format(prefix .. digits, data)
 end
 
+--- Format the low 8 bits as two uppercase hexadecimal digits with a 0x prefix.
+-- @param data Integer to mask and format.
+-- @return Prefixed two-digit hexadecimal string.
 local function hex_0x2(data)
   data = data & 0xFF
   return string.format("0x%02X", data)
 end
 
+--- Format the low 16 bits as four uppercase hexadecimal digits with a 0x prefix.
+-- @param data Integer to mask and format.
+-- @return Prefixed four-digit hexadecimal string.
 local function hex_0x4(data)
   data = data & 0xFFFF
   return string.format("0x%04X", data)
 end
 
+--- Format the low 24 bits as six uppercase hexadecimal digits with a 0x prefix.
+-- @param data Integer to mask and format.
+-- @return Prefixed six-digit hexadecimal string.
 local function hex_0x6(data)
   data = data & 0xFFFFFF
   return string.format("0x%06X", data)
 end
 
+--- Format the low 32 bits as eight uppercase hexadecimal digits with a 0x prefix.
+-- @param data Integer to mask and format.
+-- @return Prefixed eight-digit hexadecimal string.
 local function hex_0x8(data)
   data = data & 0xFFFFFFFF
   return string.format("0x%08X", data)
 end
 
--- file must already be open for writing in binary mode
+--- Write one byte to an open binary file.
+-- @param file File handle already opened for writing in binary mode.
+-- @param data Integer byte value from 0 through 255.
 local function file_wr_bin(file, data)
   file:write(string.char(data))
 end
 
+--- Create a shallow copy of a table with the same metatable.
+-- Nested tables and other referenced values remain shared with the original.
+-- @param orig Table to copy; raises an assertion error for other types.
+-- @return New table containing the original entries and metatable.
 local function copy_table(orig)
   assert(type(orig) == "table", "copy_table expects a table")
   local copy = {}
@@ -132,6 +178,11 @@ local function copy_table(orig)
   return setmetatable(copy, getmetatable(orig))
 end
 
+--- Format a value as text, recursively expanding tables.
+-- Indents table entries with two spaces per level; cyclic tables are unsupported.
+-- @param o Value to format.
+-- @param l Optional indentation level; nil or zero defaults to one.
+-- @return Text representation of the value.
 local function dump_table(o, l)
   if l == nil or l == 0 then l = 1 end
   local tab = ""
@@ -152,6 +203,9 @@ local function dump_table(o, l)
   end
 end
 
+--- Wait by repeatedly checking the system time.
+-- Uses a busy loop with the time resolution provided by os.time.
+-- @param seconds Number of seconds to wait.
 local function sleep(seconds)
   -- log.point("Waiting for", seconds, "seconds...")
   local end_time = os.time() + seconds
@@ -159,6 +213,14 @@ local function sleep(seconds)
   end
 end
 
+--- Parse comma-separated cartridge options into a table.
+-- Bare options become true; key=value pairs accept alphanumeric and underscore
+-- tokens. Keys are lowercased and true/false values become booleans.
+-- Known boolean options are normalized, and bank_table must convert to a number.
+-- @param str Option string, or nil to return an empty options table.
+-- @return True on success; false when bank_table is invalid.
+-- @return Parsed options table, potentially partially normalized on failure.
+-- @return Error message on failure, or nil on success.
 local function parse_additional_opts(str)
   local t = {}
   if str == nil then return true, t end

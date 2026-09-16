@@ -42,9 +42,9 @@ local flash_chip
 --]]
 
 --- Read and identify the ROM flash manufacturer/device ID.
----@param debug? boolean Enable verbose progress logging
----@return boolean found True when the flash chip is recognized
----@return table device Flash chip information, or an empty table when unknown
+-- @param debug? boolean Enable verbose progress logging
+-- @return boolean found True when the flash chip is recognized
+-- @return table device Flash chip information, or an empty table when unknown
 local function rom_manf_id(debug)
   local manufacturer_id
   local device_id
@@ -118,9 +118,9 @@ local function rom_erase()
 end
 
 --- Program one byte to ROM flash and poll for completion.
----@param addr integer Address to program
----@param value integer 8-bit value to write
----@param debug? boolean Enable verbose progress logging
+-- @param addr integer Address to program
+-- @param value integer 8-bit value to write
+-- @param debug? boolean Enable verbose progress logging
 local function rom_flash_byte(addr, value, debug)
   if (addr < 0x0000 or addr > 0xFFFF) then
     print("\n  ERROR! flash write to SNES", string.format("$%X", addr), "must be $0000-FFFF \n\n")
@@ -150,9 +150,9 @@ local function rom_flash_byte(addr, value, debug)
 end
 
 --- Dump ROM contents to an already-open output file.
----@param file file* Open binary output file
----@param rom_size_kb integer ROM size in kilobytes
----@param debug? boolean Enable verbose progress logging
+-- @param file file* Open binary output file
+-- @param rom_size_kb integer ROM size in kilobytes
+-- @param debug? boolean Enable verbose progress logging
 local function rom_dump(file, rom_size_kb, debug)
   -- /ROMSEL is always low for this dump
 
@@ -194,9 +194,9 @@ local function rom_dump(file, rom_size_kb, debug)
 end
 
 --- Program ROM contents from an already-open input file, one bank at a time.
----@param file file* Open binary input file
----@param rom_size_kb integer ROM size in kilobytes
----@param debug? boolean Enable verbose progress logging
+-- @param file file* Open binary input file
+-- @param rom_size_kb integer ROM size in kilobytes
+-- @param debug? boolean Enable verbose progress logging
 local function rom_flash(file, rom_size_kb, debug)
   log.section("Programming ROM")
   log.info("ROM size", rom_size_kb .. "KB")
@@ -253,9 +253,9 @@ end
 --]]
 
 --- Process all requested operations for this cartridge board/mapper.
----@param process_opts table Parsed operation options from the main application
----@param console_opts table Console/cartridge size options
----@return false|nil result False on explicitly reported failure; otherwise no value
+-- @param process_opts table Parsed operation options from the main application
+-- @param console_opts table Console/cartridge size options
+-- @return false|nil result False on explicitly reported failure; otherwise no value
 local function process(process_opts, console_opts)
   -- some local variables
   local rv             = nil

@@ -181,8 +181,8 @@ end
 --]]
 
 --- Read and identify the PRG-ROM flash manufacturer/device ID.
----@return boolean found True when the flash chip is recognized
----@return table device Flash chip information, or an empty table when unknown
+-- @return boolean found True when the flash chip is recognized
+-- @return table device Flash chip information, or an empty table when unknown
 local function prg_rom_manf_id()
   local manufacturer_id
   local device_id
@@ -220,9 +220,9 @@ local function prg_rom_manf_id()
 end
 
 --- Dump PRG-ROM contents to an already-open output file.
----@param file file* Open binary output file
----@param rom_size_kb integer PRG-ROM size in kilobytes
----@param debug? boolean Enable verbose progress logging
+-- @param file file* Open binary output file
+-- @param rom_size_kb integer PRG-ROM size in kilobytes
+-- @param debug? boolean Enable verbose progress logging
 local function prg_rom_dump(file, rom_size_kb, debug)
   -- PRG-ROM dump 32KB at a time through $5117 in mode 0
   -- above didn't work, dump 8KB at at time through $5114 in mode 3
@@ -256,9 +256,9 @@ local function prg_rom_dump(file, rom_size_kb, debug)
 end
 
 --- Program PRG-ROM contents from an already-open input file, one bank at a time.
----@param file file* Open binary input file
----@param rom_size_kb integer PRG-ROM size in kilobytes
----@param debug? boolean Enable verbose progress logging
+-- @param file file* Open binary input file
+-- @param rom_size_kb integer PRG-ROM size in kilobytes
+-- @param debug? boolean Enable verbose progress logging
 local function prg_rom_flash(file, rom_size_kb, debug)
   init_mapper()
 
@@ -412,8 +412,8 @@ local function test_chr_banks(retroprog_id, debug)
 end
 
 --- Read and identify the CHR-ROM flash manufacturer/device ID.
----@return boolean found True when the flash chip is recognized
----@return table device Flash chip information, or an empty table when unknown
+-- @return boolean found True when the flash chip is recognized
+-- @return table device Flash chip information, or an empty table when unknown
 local function chr_rom_manf_id()
   local manufacturer_id
   local device_id
@@ -449,9 +449,9 @@ local function chr_rom_manf_id()
 end
 
 --- Dump CHR contents to an already-open output file.
----@param file file* Open binary output file
----@param rom_size_kb integer CHR size in kilobytes
----@param debug? boolean Enable verbose progress logging
+-- @param file file* Open binary output file
+-- @param rom_size_kb integer CHR size in kilobytes
+-- @param debug? boolean Enable verbose progress logging
 local function chr_dump(file, rom_size_kb, debug)
   local kb_per_read = 8
   local num_banks = math.floor(rom_size_kb / kb_per_read)
@@ -483,9 +483,9 @@ local function chr_dump(file, rom_size_kb, debug)
 end
 
 --- Program CHR contents from an already-open input file, one bank at a time.
----@param file file* Open binary input file
----@param rom_size_kb integer CHR size in kilobytes
----@param debug? boolean Enable verbose progress logging
+-- @param file file* Open binary input file
+-- @param rom_size_kb integer CHR size in kilobytes
+-- @param debug? boolean Enable verbose progress logging
 local function chr_rom_flash(file, rom_size_kb, debug)
   init_mapper()
 
@@ -559,9 +559,9 @@ end
 --]]
 
 --- Dump PRG-RAM contents to an already-open output file.
----@param file file* Open binary output file
----@param ram_size_kb integer PRG-RAM size in kilobytes
----@param debug? boolean Enable verbose progress logging
+-- @param file file* Open binary output file
+-- @param ram_size_kb integer PRG-RAM size in kilobytes
+-- @param debug? boolean Enable verbose progress logging
 local function prg_ram_dump(file, ram_size_kb, debug)
   local kb_per_read = 8
   local num_banks = math.floor(ram_size_kb / kb_per_read)
@@ -670,8 +670,8 @@ local function write_ram(file, ram_size_kb, debug)
 end
 
 --- Detect PRG-RAM by writing and reading back a test byte.
----@param debug? boolean Enable verbose progress logging
----@return boolean success True when RAM read/write behavior is detected
+-- @param debug? boolean Enable verbose progress logging
+-- @return boolean success True when RAM read/write behavior is detected
 local function prg_ram_test(debug)
   local test = true
   local read_value
@@ -714,9 +714,9 @@ local function prg_ram_test(debug)
 end
 
 --- Detect PRG-RAM size by writing bank markers and reading them back.
---- Overwrites the test byte in each probed bank.
----@param debug? boolean Enable verbose progress logging
----@return integer size_kb Detected PRG-RAM size in kilobytes, or 0 when detection fails
+-- Overwrites the test byte in each probed bank.
+-- @param debug? boolean Enable verbose progress logging
+-- @return integer size_kb Detected PRG-RAM size in kilobytes, or 0 when detection fails
 local function prg_ram_get_size(debug)
   -- PRG-RAM can be maximum 128KB
   -- so we'll check sixteen (16) 8K banks and see if we can write to each
@@ -768,11 +768,11 @@ local function prg_ram_get_size(debug)
 end
 
 --- Exercise PRG-RAM with an LFSR pattern and compare the dumped result.
---- Overwrites PRG-RAM contents with the test pattern.
----@param wram_size_kb integer PRG-RAM size in kilobytes
----@param retroprog_id string|integer Identifier used in the temporary dump filename
----@param debug? boolean Enable verbose compare/progress logging
----@return boolean success True when the PRG-RAM dump matches the expected LFSR data
+-- Overwrites PRG-RAM contents with the test pattern.
+-- @param wram_size_kb integer PRG-RAM size in kilobytes
+-- @param retroprog_id string|integer Identifier used in the temporary dump filename
+-- @param debug? boolean Enable verbose compare/progress logging
+-- @return boolean success True when the PRG-RAM dump matches the expected LFSR data
 local function prg_ram_exercise(wram_size_kb, retroprog_id, debug)
   if wram_size_kb == 0 or wram_size_kb == nil then
     log.error("PRG-RAM size invalid")
@@ -1139,9 +1139,9 @@ end
 --]]
 
 --- Process all requested operations for this cartridge board/mapper.
----@param process_opts table Parsed operation options from the main application
----@param console_opts table Console/cartridge size options
----@return false|nil result False on explicitly reported failure; otherwise no value
+-- @param process_opts table Parsed operation options from the main application
+-- @param console_opts table Console/cartridge size options
+-- @return false|nil result False on explicitly reported failure; otherwise no value
 local function process(process_opts, console_opts)
   -- some local variables
   local rv               = nil

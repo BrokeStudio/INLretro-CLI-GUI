@@ -28,9 +28,9 @@ local help    = require "scripts.app.help"
 --]]
 
 --- Dump ROM contents to an already-open output file.
----@param file file* Open binary output file
----@param rom_size_kb integer ROM size in kilobytes
----@param debug? boolean Enable verbose progress logging
+-- @param file file* Open binary output file
+-- @param rom_size_kb integer ROM size in kilobytes
+-- @param debug? boolean Enable verbose progress logging
 local function rom_dump(file, rom_size_kb, debug)
   local kb_per_bank = 64   -- AD0-15 = 64K address space, A0 ignored so 1Byte per address!
   local addr_base = 0x0000 -- control signals are manually controlled
@@ -94,8 +94,8 @@ end
 --]]
 
 --- Process all requested operations for this cartridge board/mapper.
----@param process_opts table Parsed operation options from the main application
----@param console_opts table Console/cartridge size options
+-- @param process_opts table Parsed operation options from the main application
+-- @param console_opts table Console/cartridge size options
 local function process(process_opts, console_opts)
   -- some local variables
   local rv             = nil

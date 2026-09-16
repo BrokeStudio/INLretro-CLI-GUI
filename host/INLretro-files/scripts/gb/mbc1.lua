@@ -30,9 +30,9 @@ local flash_chip
 --]]
 
 --- Program one byte to ROM flash and poll for completion.
----@param addr integer Address to program, 0x0000-0x7FFF
----@param value integer 8-bit value to write
----@param debug? boolean Enable verbose progress logging
+-- @param addr integer Address to program, 0x0000-0x7FFF
+-- @param value integer 8-bit value to write
+-- @param debug? boolean Enable verbose progress logging
 local function rom_flash_byte(addr, value, debug)
   if addr < 0x0000 or addr > 0x7FFF then
     log.error("ERROR! flash write to ROM", help.hex_0x4(addr), "must be $0000-$7FFF")
@@ -73,8 +73,8 @@ end
 --]]
 
 --- Read and identify the ROM flash manufacturer/device ID.
----@return boolean found True when the flash chip is recognized
----@return table device Flash chip information, or an empty table when unknown
+-- @return boolean found True when the flash chip is recognized
+-- @return table device Flash chip information, or an empty table when unknown
 local function rom_manf_id()
   local manufacturer_id
   local device_id
@@ -138,9 +138,9 @@ local function rom_erase()
 end
 
 --- Dump ROM contents to an already-open output file.
----@param file file* Open binary output file
----@param rom_size_kb integer ROM size in kilobytes
----@param debug? boolean Enable verbose progress logging
+-- @param file file* Open binary output file
+-- @param rom_size_kb integer ROM size in kilobytes
+-- @param debug? boolean Enable verbose progress logging
 local function rom_dump(file, rom_size_kb, debug)
   -- ROM dump 16KB at a time
   local kb_per_read = 16
@@ -188,9 +188,9 @@ local function rom_dump(file, rom_size_kb, debug)
 end
 
 --- Program ROM contents from an already-open input file, one bank at a time.
----@param file file* Open binary input file
----@param rom_size_kb integer ROM size in kilobytes
----@param debug? boolean Enable verbose progress logging
+-- @param file file* Open binary input file
+-- @param rom_size_kb integer ROM size in kilobytes
+-- @param debug? boolean Enable verbose progress logging
 local function rom_flash(file, rom_size_kb, debug)
   log.section("Programming ROM")
   log.info("ROM size", rom_size_kb .. "KB")
@@ -255,9 +255,9 @@ end
 --]]
 
 --- Dump RAM contents to an already-open output file.
----@param file file* Open binary output file
----@param ram_size_kb integer RAM size in kilobytes
----@param debug? boolean Enable verbose progress logging
+-- @param file file* Open binary output file
+-- @param ram_size_kb integer RAM size in kilobytes
+-- @param debug? boolean Enable verbose progress logging
 local function ram_dump(file, ram_size_kb, debug)
   local kb_per_read = 8
   local num_banks = math.floor(ram_size_kb / kb_per_read)
@@ -286,9 +286,9 @@ local function ram_dump(file, ram_size_kb, debug)
 end
 
 --- Write RAM contents from an already-open input file.
----@param file file* Open binary input file
----@param ram_size_kb integer RAM size in kilobytes
----@param debug? boolean Enable verbose progress logging
+-- @param file file* Open binary input file
+-- @param ram_size_kb integer RAM size in kilobytes
+-- @param debug? boolean Enable verbose progress logging
 local function ram_write(file, ram_size_kb, debug)
   log.section("Programming RAM")
   log.info("RAM size", ram_size_kb .. "KB")
@@ -324,8 +324,8 @@ local function ram_write(file, ram_size_kb, debug)
 end
 
 --- Detect RAM by writing and reading back a test byte.
----@param debug? boolean Enable verbose progress logging
----@return boolean success True when RAM read/write behavior is detected
+-- @param debug? boolean Enable verbose progress logging
+-- @return boolean success True when RAM read/write behavior is detected
 local function ram_detect(debug)
   local test = true
   local read_value
@@ -360,9 +360,9 @@ local function ram_detect(debug)
 end
 
 --- Detect RAM size by writing bank markers and reading them back.
---- Overwrites the test byte in each probed bank.
----@param debug? boolean Enable verbose progress logging
----@return integer size_kb Detected RAM size in kilobytes, or 0 when detection fails
+-- Overwrites the test byte in each probed bank.
+-- @param debug? boolean Enable verbose progress logging
+-- @return integer size_kb Detected RAM size in kilobytes, or 0 when detection fails
 local function ram_get_size(debug)
   -- RAM can be maximum 32KB
   -- so we'll check 8 8K banks and see if we can write to each
@@ -418,11 +418,11 @@ local function ram_get_size(debug)
 end
 
 --- Exercise RAM with an LFSR pattern and compare the dumped result.
---- Overwrites RAM contents with the test pattern.
----@param wram_size_kb integer RAM size in kilobytes
----@param retroprog_id string|integer Identifier used in the temporary dump filename
----@param debug? boolean Enable verbose compare/progress logging
----@return boolean success True when the RAM dump matches the expected LFSR data
+-- Overwrites RAM contents with the test pattern.
+-- @param wram_size_kb integer RAM size in kilobytes
+-- @param retroprog_id string|integer Identifier used in the temporary dump filename
+-- @param debug? boolean Enable verbose compare/progress logging
+-- @return boolean success True when the RAM dump matches the expected LFSR data
 local function ram_exercise(wram_size_kb, retroprog_id, debug)
   dict.stuff("RESET_LFSR") -- sets it to 1
 
@@ -503,9 +503,9 @@ end
 --]]
 
 --- Process all requested operations for this cartridge board/mapper.
----@param process_opts table Parsed operation options from the main application
----@param console_opts table Console/cartridge size options
----@return false|nil result False on explicitly reported failure; otherwise no value
+-- @param process_opts table Parsed operation options from the main application
+-- @param console_opts table Console/cartridge size options
+-- @return false|nil result False on explicitly reported failure; otherwise no value
 local function process(process_opts, console_opts)
   -- some local variables
   local rv             = nil

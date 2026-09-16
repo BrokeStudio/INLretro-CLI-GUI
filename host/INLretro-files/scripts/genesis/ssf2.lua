@@ -29,7 +29,7 @@ local flash_chip
 --]]
 
 --- Erase one flash sector on the 32Mb Genesis cartridge.
----@param addr integer 24-bit sector address, 0x000000-0x3FFFFF
+-- @param addr integer 24-bit sector address, 0x000000-0x3FFFFF
 local function rom_erase_sector(addr)
   genesis.rom_wr(0x000555 << 1, 0x00AA)
   genesis.rom_wr(0x0002AA << 1, 0x0055)
@@ -57,9 +57,9 @@ end
 --]]
 
 --- Program one 16-bit word to ROM flash and poll until it reads back.
----@param addr integer 24-bit ROM address, 0x000000-0x3FFFFF
----@param value integer 16-bit value to write
----@param debug? boolean Enable verbose progress logging
+-- @param addr integer 24-bit ROM address, 0x000000-0x3FFFFF
+-- @param value integer 16-bit value to write
+-- @param debug? boolean Enable verbose progress logging
 local function rom_flash_byte(addr, value, debug)
   if (addr < 0x000000 or addr > 0x3FFFFF) then
     log.error("ERROR! flash write to ROM", help.hex_0x6(addr), "must be $000000-$3FFFFF")
@@ -102,9 +102,9 @@ local function rom_flash_byte(addr, value, debug)
 end
 
 --- Dump SSF2 banked ROM contents to an already-open output file.
----@param file file* Open binary output file
----@param rom_size_kb integer ROM size in kilobytes
----@param debug? boolean Enable verbose progress logging
+-- @param file file* Open binary output file
+-- @param rom_size_kb integer ROM size in kilobytes
+-- @param debug? boolean Enable verbose progress logging
 local function rom_dump(file, rom_size_kb, debug)
   local kb_per_bank = 2 * 64 -- 2 bytes per address, 64K addresses
   local addr_base = 0x0000   -- control signals are manually controlled
@@ -144,9 +144,9 @@ local function rom_dump(file, rom_size_kb, debug)
 end
 
 --- Program SSF2 banked ROM contents from an already-open input file, one bank at a time.
----@param file file* Open binary input file
----@param rom_size_kb integer ROM size in kilobytes
----@param debug? boolean Enable verbose progress logging
+-- @param file file* Open binary input file
+-- @param rom_size_kb integer ROM size in kilobytes
+-- @param debug? boolean Enable verbose progress logging
 local function rom_flash(file, rom_size_kb, debug)
   log.section("Programming ROM")
   log.info("ROM size", rom_size_kb .. "KB")
@@ -197,11 +197,11 @@ end
 --]]
 
 --- Dump SRAM contents to an already-open output file.
---- Assumes SRAM was enabled as desired before calling.
----@param file file* Open binary output file
----@param addr_hi integer High address byte selecting the SRAM window
----@param ram_size_kb integer SRAM size in kilobytes
----@param debug? boolean Enable verbose progress logging
+-- Assumes SRAM was enabled as desired before calling.
+-- @param file file* Open binary output file
+-- @param addr_hi integer High address byte selecting the SRAM window
+-- @param ram_size_kb integer SRAM size in kilobytes
+-- @param debug? boolean Enable verbose progress logging
 local function ram_dump(file, addr_hi, ram_size_kb, debug)
   local kb_per_bank =
       ram_size_kb        -- TODO: FIXME? => -- 128KByte addressable per bank, but only use lower byte of each 16bit word
@@ -232,10 +232,10 @@ local function ram_dump(file, addr_hi, ram_size_kb, debug)
 end
 
 --- Program SRAM contents from an already-open input file.
----@param file file* Open binary input file
----@param addr_hi integer High address byte selecting the SRAM window
----@param ram_size_kb integer SRAM size in kilobytes
----@param debug? boolean Enable verbose progress logging
+-- @param file file* Open binary input file
+-- @param addr_hi integer High address byte selecting the SRAM window
+-- @param ram_size_kb integer SRAM size in kilobytes
+-- @param debug? boolean Enable verbose progress logging
 local function ram_write(file, addr_hi, ram_size_kb, debug)
   local kb_per_bank = 32 -- 128KByte addressable per bank, but only use lower byte of each 16bit word
   local num_banks = math.floor(ram_size_kb / kb_per_bank)
@@ -269,8 +269,8 @@ local function ram_write(file, addr_hi, ram_size_kb, debug)
 end
 
 --- Detect SRAM by preserving, toggling, and restoring one test byte.
----@param debug? boolean Enable verbose progress logging
----@return boolean success True when SRAM read/write behavior is detected
+-- @param debug? boolean Enable verbose progress logging
+-- @return boolean success True when SRAM read/write behavior is detected
 local function ram_test(debug)
   local test = true
   local saved_value
@@ -313,10 +313,10 @@ local function ram_test(debug)
 end
 
 --- Exercise SRAM with an LFSR pattern and compare the dumped result.
----@param ram_size_kb integer SRAM size in kilobytes
----@param retroprog_id string|integer Identifier used in the temporary dump filename
----@param debug? boolean Enable verbose compare/progress logging
----@return boolean success True when the SRAM dump matches the expected LFSR data
+-- @param ram_size_kb integer SRAM size in kilobytes
+-- @param retroprog_id string|integer Identifier used in the temporary dump filename
+-- @param debug? boolean Enable verbose compare/progress logging
+-- @return boolean success True when the SRAM dump matches the expected LFSR data
 local function ram_exercise(ram_size_kb, retroprog_id, debug)
   --[[
   SRAM covers the $200001-$20FFFF address range, and only every other byte is used (i.e. $200001, $200003, $200005, etc.).
@@ -377,9 +377,9 @@ end
 --]]
 
 --- Process all requested operations for the Genesis SSF2 mapper.
---- The cartridge should be in reset state before calling.
----@param process_opts table Parsed operation options from the main application
----@param console_opts table Console/cartridge size options
+-- The cartridge should be in reset state before calling.
+-- @param process_opts table Parsed operation options from the main application
+-- @param console_opts table Console/cartridge size options
 local function process(process_opts, console_opts)
   -- some local variables
   local rv             = nil

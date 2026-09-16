@@ -73,9 +73,9 @@ local devices       = {
 }
 
 --- Look up a flash chip manufacturer by ID.
----@param manufacturer_id integer Flash manufacturer ID
----@return boolean found True when the manufacturer is recognized
----@return table manufacturer Manufacturer name and ID, or an empty table when unknown
+-- @param manufacturer_id integer Flash manufacturer ID
+-- @return boolean found True when the manufacturer is recognized
+-- @return table manufacturer Manufacturer name and ID, or an empty table when unknown
 local function get_manufacturer(manufacturer_id)
   for k, v in ipairs(manufacturers) do
     if v.id == manufacturer_id then
@@ -86,10 +86,10 @@ local function get_manufacturer(manufacturer_id)
 end
 
 --- Look up a flash chip by manufacturer and device IDs.
----@param manufacturer_id integer Flash manufacturer ID
----@param device_id integer Flash device ID
----@return boolean found True when the device is recognized
----@return table device Device IDs, part number, size in KiB, and unlock_bypass/buffer support flags, or an empty table when unknown
+-- @param manufacturer_id integer Flash manufacturer ID
+-- @param device_id integer Flash device ID
+-- @return boolean found True when the device is recognized
+-- @return table device Device IDs, part number, size in KiB, and unlock_bypass/buffer support flags, or an empty table when unknown
 local function get_device(manufacturer_id, device_id)
   for k, v in ipairs(devices) do
     if v.manufacturer_id == manufacturer_id and v.id == device_id then
@@ -100,9 +100,9 @@ local function get_device(manufacturer_id, device_id)
 end
 
 --- Log the flash manufacturer name and ID, or a warning when unknown.
----@param manufacturer_id integer Flash manufacturer ID
----@return boolean found True when the manufacturer is recognized
----@return table manufacturer Manufacturer name and ID, or an empty table when unknown
+-- @param manufacturer_id integer Flash manufacturer ID
+-- @return boolean found True when the manufacturer is recognized
+-- @return table manufacturer Manufacturer name and ID, or an empty table when unknown
 local function display_manufacturer(manufacturer_id)
   local found, manufacturer
   found, manufacturer = chips.get_manufacturer(manufacturer_id)
@@ -115,10 +115,10 @@ local function display_manufacturer(manufacturer_id)
 end
 
 --- Log the flash device ID, part number, and size, or a warning when unknown.
----@param manufacturer_id integer Flash manufacturer ID
----@param device_id integer Flash device ID
----@return boolean found True when the device is recognized
----@return table device Device IDs, part number, size in KiB, and unlock_bypass/buffer support flags, or an empty table when unknown
+-- @param manufacturer_id integer Flash manufacturer ID
+-- @param device_id integer Flash device ID
+-- @return boolean found True when the device is recognized
+-- @return table device Device IDs, part number, size in KiB, and unlock_bypass/buffer support flags, or an empty table when unknown
 local function display_device(manufacturer_id, device_id)
   local found, device
   found, device = chips.get_device(manufacturer_id, device_id)
