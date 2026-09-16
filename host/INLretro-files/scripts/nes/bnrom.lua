@@ -110,10 +110,13 @@ local function prg_rom_flash_byte(addr, value, debug)
   end
 end
 
---- Dump PRG-ROM contents to an already-open output file.
+--- Dump PRG-ROM in ascending 32 KiB bank order using the configured bank table.
+-- Requires bank_table_base to reference a valid bank-selection table at the same
+-- CPU address in every bank. Writes at the output file's current position.
 -- @param file file* Open binary output file
 -- @param rom_size_kb integer PRG-ROM size in kilobytes
 -- @param debug? boolean Enable verbose progress logging
+-- @return boolean success True after all banks have been dumped
 local function prg_rom_dump(file, rom_size_kb, debug)
   local kb_per_read = 32
   local num_banks = math.floor(rom_size_kb / kb_per_read)
@@ -138,6 +141,168 @@ local function prg_rom_dump(file, rom_size_kb, debug)
   end
 
   spinner.clear()
+
+  return true
+end
+
+--- Dump PRG-ROM without a known bank table, then search for a shared table.
+-- Reads the initially visible bank to locate a byte equal to zero, then selects
+-- each bank by writing its number to a matching byte in the currently visible
+-- bank. Writes all 32 KiB banks in ascending order, excluding the initial read.
+-- Searches the dumped banks for the sequence 0..num_banks-1 at a common offset
+-- and sets bank_table_base to the first matching CPU address, if any.
+-- A missing shared table only emits a warning; a missing bank-selection byte
+-- aborts the dump and may leave a partial output file.
+-- @param file file* Empty binary file opened for reading and writing, without a header
+-- @param rom_size_kb integer PRG-ROM size in kilobytes
+-- @param debug? boolean Enable verbose progress logging
+-- @return boolean success True after all banks are dumped, even if no shared table is found; false if a required bank-selection byte is absent
+local function prg_rom_dump_no_bank_table(file, rom_size_kb, debug)
+  local kb_per_read = 32
+  local num_banks = math.floor(rom_size_kb / kb_per_read)
+  local cur_bank = 0
+  local addr_base = 0x80 -- $8000
+  local bank_size_kb = kb_per_read * 1024
+
+  local search_pos
+  local found
+  local rv
+
+  log.info("PRG-ROM size", rom_size_kb .. "KB")
+
+  -- get the current bank content
+  local search_data = ""
+  dump.dumptocallback(
+    function(data)
+      search_data = search_data .. data
+    end,
+    kb_per_read, { addr_base = addr_base, mem_type = "NESCPU_PAGE" }, false
+  )
+
+  -- search for 0x00 in this bank
+  search_pos = string.find(search_data, string.char(0x00), 1, true)
+  if search_pos == nil then
+    return false
+  else
+    search_pos = search_pos - 1
+  end
+
+  -- main loop
+  while 1 do
+    if debug then
+      log.point("dumping PRG bank", cur_bank, "of", num_banks - 1)
+    else
+      spinner.update("Dumping", cur_bank, "/", num_banks - 1)
+    end
+
+    -- set bank
+    dict.nes("NES_CPU_WR", 0x8000 + search_pos, cur_bank)
+
+    -- dump bank
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESCPU_PAGE" }, false)
+
+    -- search for 0x0f in the dumped bank
+    file:seek("set", cur_bank * bank_size_kb)
+    found = false
+    cur_bank = cur_bank + 1
+
+    -- are we done?
+    if cur_bank == num_banks then
+      break
+    end
+
+    -- search for a byte maching next bank to bankswitch
+    for i = 0, bank_size_kb - 1, 1 do
+      rv = string.unpack("B", file:read(1), 1)
+      if rv == cur_bank then
+        search_pos = i & 0x7fff
+        found = true
+        file:seek("end")
+        break
+      end
+    end
+
+    if not found then
+      spinner.clear()
+      log.error("Couldn't find next bank value (" .. cur_bank .. ") in last dumped bank")
+      return false
+    end
+  end
+
+  spinner.clear()
+
+  -- now let's find bank_table accross banks
+  local banks = {}
+
+  -- construct the byte sequence that we're looking for
+  local searched_sequence = ""
+  while searched_sequence:len() < num_banks do
+    searched_sequence = searched_sequence .. string.char(searched_sequence:len())
+  end
+
+  cur_bank = 0
+  while cur_bank < num_banks do
+    banks[cur_bank + 1] = {}
+    file:seek("set", cur_bank * bank_size_kb)
+    search_data = file:read(bank_size_kb)
+
+    -- search for the banktable in the bank content
+    local offset = 1
+    while offset < bank_size_kb do
+      local position_in_fixed_bank = string.find(search_data, searched_sequence, offset, true)
+      if position_in_fixed_bank == nil then
+        break
+      else
+        offset = position_in_fixed_bank + #searched_sequence
+        banks[cur_bank + 1][#banks[cur_bank + 1] + 1] = position_in_fixed_bank - 1
+      end
+    end
+
+    if debug then
+      log.point("searching in PRG bank", cur_bank, "of", num_banks - 1)
+    else
+      spinner.update("Searching", cur_bank, "/", num_banks - 1)
+    end
+
+    cur_bank = cur_bank + 1
+  end
+
+  spinner.clear()
+
+  -- find intersection
+  local addr
+  for i = 1, #banks[1], 1 do
+    addr = banks[1][i]
+    found = true
+
+    for j = 2, #banks, 1 do
+      found = false
+
+      for k = 1, #banks[j], 1 do
+        if banks[j][k] == addr then
+          found = true
+          break
+        end
+      end
+
+      if not found then
+        break
+      end
+    end
+
+    if found then
+      break
+    end
+  end
+
+  if found then
+    bank_table_base = addr + 0x8000
+    log.info("Bank table found at address", help.hex_0x4(bank_table_base))
+  else
+    log.warning("Couldn't find bank table...")
+  end
+
+  return true
 end
 
 --- Program PRG-ROM contents from an already-open input file, one bank at a time.
@@ -376,8 +541,10 @@ local function process(process_opts, console_opts)
           log.success("Bank table found at address:", help.hex_0x4(bank_table_base))
         end
       else
-        log.error("Bank table is missing from the command line arguments")
-        return false
+        if not do_rom_dump then
+          log.error("Bank table is missing from the command line arguments")
+          return false
+        end
       end
     else
       log.info("Bank table address provided:", help.hex_0x4(bank_table_base))
@@ -433,8 +600,10 @@ local function process(process_opts, console_opts)
 
   -- dump cart ROM to file
   if do_rom_dump then
+    local result
+
     -- open file
-    file = assert(io.open(rom_dump_file.filename, "wb"))
+    file = assert(io.open(rom_dump_file.filename, "w+b"))
 
     -- create header: pass open & empty file & rom sizes
     if rom_dump_file.ext == "nes" then
@@ -444,9 +613,17 @@ local function process(process_opts, console_opts)
     -- dump cart to file
     log.section("Dumping PRG-ROM")
     time.start()
-    prg_rom_dump(file, prg_size_kb, DEBUG)
+    if bank_table_base ~= nil then
+      result = prg_rom_dump(file, prg_size_kb, DEBUG)
+    else
+      result = prg_rom_dump_no_bank_table(file, prg_size_kb, DEBUG)
+    end
     time.report(prg_size_kb)
-    log.success("PRG-ROM dumping done")
+    if result then
+      log.success("PRG-ROM dumping done")
+    else
+      log.error("PRG-ROM dumping failed")
+    end
 
     -- close file
     assert(file:close())
