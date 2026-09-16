@@ -1,2 +1,2 @@
-commandline\bootloadHID.exe -r ..\firmware\build_avr\avr_kazzo.hex
+commandline\bootloadHID.exe -r ..\build_avr\avr_kazzo.hex
 pause

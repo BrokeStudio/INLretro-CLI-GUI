@@ -8,7 +8,7 @@ permissions:
 
 defaults:
   run:
-    working-directory: firmware/firmware
+    working-directory: firmware
 
 jobs:
   build:
@@ -50,5 +50,5 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: INLretro-firmware-AV04
-          path: firmware/firmware/release
+          path: firmware/release
           if-no-files-found: error

@@ -1,7 +1,7 @@
 firmware/avr_bootloader/**
-firmware/firmware/build_*/**
-firmware/firmware/usbdrv_Vusb/**
-firmware/firmware/include_stm/**
+firmware/build_*/**
+firmware/usbdrv_Vusb/**
+firmware/include_stm/**
 
 host/.vs
 host/Binaries

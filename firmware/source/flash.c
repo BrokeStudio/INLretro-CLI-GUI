@@ -72,18 +72,19 @@ static uint8_t write_page_verify_8(uint8_t addrH, buffer* buff, write_rv_funcptr
 uint8_t buffer_write_page(uint8_t addrH, buffer* buff, write_funcptr wr_func, read_funcptr rd_func)
 {
   uint16_t cur = buff->cur_byte;
+  const uint16_t last = buff->last_idx;
+  const uint16_t byte_count = (last + 1 - cur);
   uint16_t addr;
   uint16_t base_addr = (uint16_t)addrH << 8;
   uint8_t value;
   uint8_t readback;
-  uint16_t byte_count = (buff->last_idx + 1 - buff->cur_byte);
   uint16_t timeout = 0xFFFF;
 
   uint16_t unlock_base = base_addr & 0xF000;
   uint16_t unlock_addr1 = unlock_base | 0xAAA;
   uint16_t unlock_addr2 = unlock_base | 0x555;
 
-  if(cur > buff->last_idx) {
+  if(cur > last) {
     return SUCCESS;
   }
 
@@ -93,7 +94,7 @@ uint8_t buffer_write_page(uint8_t addrH, buffer* buff, write_funcptr wr_func, re
   wr_func(base_addr, 0x25);
   wr_func(base_addr, byte_count - 1);
 
-  while(cur <= buff->last_idx) {
+  while(cur <= last) {
     addr = base_addr | cur;
     value = buff->data[cur + 0];
 
@@ -138,7 +139,6 @@ uint8_t buffer_verify_page(uint8_t addrH, buffer* buff, read_funcptr rd_func)
   uint16_t addr;
   uint8_t value;
   uint8_t readback;
-  uint16_t byte_count = (buff->last_idx + 1 - buff->cur_byte);
 
   cur = buff->cur_byte;
   while(cur <= buff->last_idx) {

@@ -11,21 +11,21 @@ clang-format.exe
 
 ##### FIRMWARE
 
-*.o
-*.d
-*.swp
-*.swo
-#*.bin
-*.bak
-*.smc
+firmware/**/*.o
+firmware/**/*.d
+firmware/**/*.swp
+firmware/**/*.swo
+# firmware/**/*.bin
+firmware/**/*.bak
+firmware/**/*.smc
 
 # firmware output files
-firmware/firmware/build_*
-firmware/firmware/DFU_release
-firmware/firmware/release
+firmware/build_*
+firmware/DFU_release
+firmware/release
 
 # ignore shared files that have been copied to host-firmware dirs
-firmware/firmware/source/shared_*.h
+firmware/source/shared_*.h
 
 ##### HOST
 
@@ -33,13 +33,13 @@ host/.vs/
 host/Binaries/
 
 # Files
-*.vcxproj
-*.vcxproj.user
-*.vcxproj.filters
-*.sln
-*.slnx
-*.log
-Makefile
+host/**/*.vcxproj
+host/**/*.vcxproj.user
+host/**/*.vcxproj.filters
+host/**/*.sln
+host/**/*.slnx
+host/**/*.log
+host/**/Makefile
 
 # Exclude
 !host/Vendor/Binaries/

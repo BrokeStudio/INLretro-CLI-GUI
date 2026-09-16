@@ -76,4 +76,4 @@ cpp:
 
 #copy shared .h files which are used in host and firmware
 shared:
-	cp -r ../../shared/* source/
+	cp -r ../shared/* source/

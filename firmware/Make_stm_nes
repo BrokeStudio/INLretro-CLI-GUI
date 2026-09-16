@@ -23,7 +23,6 @@ BASE=.
 
 # Compiler & Linker
 CC=arm-none-eabi-gcc
-ASM=arm-none-eabi-as
 CXX=arm-none-eabi-g++
 OBJCOPY=arm-none-eabi-objcopy
 SIZE=arm-none-eabi-size
@@ -36,8 +35,6 @@ STARTUP=$(BASE)/include_stm/startup_ARM$(CORE).S
 
 # -Os -flto -ffunction-sections -fdata-sections to compile for code size
 CFLAGS=$(ARCH_FLAGS) $(STARTUP_DEFS) -Os -flto -ffunction-sections -fdata-sections -g
-#CFLAGS=$(ARCH_FLAGS) $(STARTUP_DEFS) -Os -flto -ffunction-sections -fdata-sections -g -fno-exceptions -fno-unwind-tables
-#CFLAGS=$(ARCH_FLAGS) $(STARTUP_DEFS) -flto -ffunction-sections -fdata-sections -g
 CXXFLAGS=$(CFLAGS)
 
 # Link for code size
@@ -51,18 +48,18 @@ STARTUP_DEFS=-D__STARTUP_CLEAR_BSS -D__START=main -D__NO_SYSTEM_INIT
 LDSCRIPTS=-L. -L$(BASE)/include_stm -T nokeep.ld
 LFLAGS=$(USE_NANO) $(USE_NOHOST) $(LDSCRIPTS) $(GC) $(MAP)
 
-#TODO fix DF_CPU, now runs at 48Mhz
 DEFINE+=\
-	-DSTM32F070xB \
-	-DF_CPU=48000000 \
+	-DSTM32F070x6 \
+	-DF_CPU=4800000 \
 	-DSTM_CORE \
-	-DSTM_INL6 	#inlretro 6connector
+	-DSTM_NES 	#stm32 with NES connector only v2.0N (070C6T6)
 #	-DSTM32F070x6 \ #32KB version of both packages (TSSOP-20,LQFP-48)
 #	-DSTM32F072x8 \ #64KB version of all packages (LQFP-48,64,100)
 #	-DSTM32F070xB \ #128KB version of both packages (LQFP-48,64)
 INCLUDE=-I ./include_stm
 CFLAGS+= $(DEFINE) $(INCLUDE)
 
+#SOURCES=$(wildcard source/**/*.c source/*.c)
 SOURCES=$(wildcard source/*.c source_stm_only/*.c)
 OBJECTS=$(patsubst %.c,%.o,$(SOURCES))
 
@@ -74,7 +71,6 @@ all: dir shared $(BUILD)/$(PROJ).axf $(BUILD)/$(PROJ).elf $(BUILD)/$(PROJ).hex $
 #build axf file output (basically elf with DWARF debug info)
 # $@ is shortcut for the target, $^ is shortcut for prereqs
 #             TARGET: PREREQS
-
 $(BUILD)/$(PROJ).axf: $(STARTUP) $(OBJECTS)
 	$(CC) $^ $(ASM_SRC) $(CFLAGS) $(LFLAGS) -o $@
 
@@ -92,7 +88,7 @@ dir:
 
 #copy shared .h files which are used in host and firmware
 shared:
-	cp -r ../../shared/* source/
+	cp -r ../shared/* source/
 
 size:	$(BUILD)/$(PROJ).elf
 	$(SIZE) -t $^
