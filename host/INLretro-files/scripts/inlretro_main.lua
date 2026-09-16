@@ -167,7 +167,7 @@ local function snes_exec(process_opts, console_opts)
   }
 
   local mappers = {
-    auto = require "scripts.snes.auto",
+    auto = require "scripts.snes.auto"
   }
 
   -- if no mapper provided, use default one (LoRom / HiRom auto detection)
@@ -375,6 +375,7 @@ local function nes_exec(process_opts, console_opts)
     local nesfile = assert(io.open(process_opts.nes_file.filename, "rb"))
     if not nes.parse_header(nesfile) then
       log.error("Failed to parse NES flash file header")
+      return false
     else
       log.success("NES flash file header parsed successfully")
 
@@ -496,8 +497,8 @@ local function nes_exec(process_opts, console_opts)
     gtrom          = require "scripts.nes.gtrom",
     -- vrc2a             = require "scripts.nes.vrc2a",
     vrc6a          = require "scripts.nes.vrc6a",
+    vrc6b          = require "scripts.nes.vrc6b",
     -- rnbw_vrc6a        = require "scripts.nes.rnbw_vrc6a",
-    -- vrc6b             = require "scripts.nes.vrc6b",
   }
 
   local m = mappers[console_opts.mapper]
@@ -642,6 +643,7 @@ local function main()
     -- Nintendo Game Boy
     dmg       = gb_exec,
     gb        = gb_exec,
+    gbc       = gb_exec,
     gba       = default_exec,
 
     -- SEGA MegaDrive / SEGA Genesis

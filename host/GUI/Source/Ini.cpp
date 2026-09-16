@@ -179,7 +179,8 @@ namespace Ini
             property.second = std::to_string(Settings::settings.font);
           } else if(property.first == "save_on_exit") {
             property.second = Settings::settings.save_on_exit ? "true" : "false";
-          else if (property.first == "firmware_update_script")
+          } else if(property.first == "main_script") {
+            property.second = Settings::settings.main_script;
           } else if(property.first == "firmware_update_script") {
             property.second = Settings::settings.firmware_update_script;
           }

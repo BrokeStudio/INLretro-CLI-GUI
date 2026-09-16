@@ -9,6 +9,7 @@
 #include "Console.h"
 #include "Dialog.h"
 #include "Flasher.h"
+#include "Settings.h"
 #include "trim.h"
 
 #define IM_MAX(A, B) (((A) >= (B)) ? (A) : (B))
@@ -261,7 +262,7 @@ void Console::render_rom_dump(std::string droppedFilename)
   ImGui::BeginDisabled(Flasher::count_flashing() == Flasher::list.size());
   if(ImGui::Button(ICON_FA_DOWNLOAD " Dump", ImVec2(-FLT_MIN, 50))) {
     trim(rom_dump_INLOptions.additional_opts);
-    Flasher::exec_all(rom_dump_INLOptions);
+    Flasher::exec_all(rom_dump_INLOptions, Settings::settings.main_script);
   }
   ImGui::EndDisabled();
 
@@ -414,8 +415,7 @@ void Console::render_rom_write(std::string droppedFilename)
 
         snprintf(this->buf, sizeof(this->buf), ICON_FA_UPLOAD " Write (%s)##write_btn_%s", flasher->id.c_str(), flasher->id.c_str());
         if(ImGui::Button(buf, ImVec2(-FLT_MIN, 50))) {
-        {
-          flasher->exec(rom_write_INLOptions);
+          flasher->exec(rom_write_INLOptions, Settings::settings.main_script);
         }
 
         ImGui::EndDisabled();
@@ -523,7 +523,7 @@ void Console::render_ram_dump(std::string droppedFilename)
   ImGui::BeginDisabled(Flasher::count_flashing() == Flasher::list.size());
   if(ImGui::Button(ICON_FA_DOWNLOAD " Dump", ImVec2(-FLT_MIN, 50))) {
     trim(ram_dump_INLOptions.additional_opts);
-    Flasher::exec_all(ram_dump_INLOptions);
+    Flasher::exec_all(ram_dump_INLOptions, Settings::settings.main_script);
   }
 
   ImGui::EndDisabled();
@@ -627,7 +627,7 @@ void Console::render_ram_write(std::string droppedFilename)
   snprintf(this->buf, sizeof(this->buf), ICON_FA_UPLOAD " Write");
   if(ImGui::Button(buf, ImVec2(-FLT_MIN, 50))) {
     trim(ram_write_INLOptions.additional_opts);
-    Flasher::exec_all(ram_write_INLOptions);
+    Flasher::exec_all(ram_write_INLOptions, Settings::settings.main_script);
   }
   ImGui::EndDisabled();
 

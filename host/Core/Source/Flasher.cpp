@@ -69,11 +69,11 @@ int Flasher::count_flashing()
   return count;
 }
 
-void Flasher::exec_all(t_INLoptions_std opts)
+void Flasher::exec_all(t_INLoptions_std opts, const std::string& main_script)
 {
   for(auto& flasher : list) {
     if(flasher->isActive && !flasher->isFlashing) {
-      flasher->exec(opts);
+      flasher->exec(opts, main_script);
     }
   }
 }
@@ -174,7 +174,7 @@ bool Flasher::detect(const char* retroprog_id)
  *
  * @param opts
  */
-bool Flasher::exec(t_INLoptions_std opts)
+bool Flasher::exec(t_INLoptions_std opts, const std::string& main_script)
 {
   // clear log
   log.clear();
@@ -186,6 +186,8 @@ bool Flasher::exec(t_INLoptions_std opts)
   if(opts.write_path.empty()) {
     opts.write_path = opts.lua_path;
   }
+
+  opts.lua_file = main_script;
 
   // start script in a separate thread
   isFlashing = true;
@@ -203,13 +205,13 @@ bool Flasher::exec(t_INLoptions_std opts)
   return true;
 }
 
-void Flasher::update_firmware(const std::string& firmware_file)
+void Flasher::update_firmware(const std::string& firmware_file, const std::string& firmware_update_script)
 {
   t_INLoptions_std firmware_INLOptions;
   firmware_INLOptions.gui = true;
   firmware_INLOptions.retroprog_id = this->id;
   firmware_INLOptions.rom_write_file = firmware_file;
-  this->exec(firmware_INLOptions);
+  this->exec(firmware_INLOptions, firmware_update_script);
 }
 
 /**

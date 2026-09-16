@@ -1,11 +1,11 @@
 #pragma once
 #ifndef SETTINGS_H
-#define SETTINGS_H
+  #define SETTINGS_H
 
-#include <string>
+  #include <string>
 
-#include "imgui.h"
-#include "imgui_stdlib.h"
+  #include "imgui.h"
+  #include "imgui_stdlib.h"
 
 namespace Settings
 {
@@ -13,6 +13,7 @@ namespace Settings
   struct t_Settings
   {
     std::string theme;
+    std::string main_script;
     std::string firmware_update_script;
     int font;
     bool save_on_exit;

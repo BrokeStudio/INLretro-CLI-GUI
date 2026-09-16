@@ -10,9 +10,9 @@
 
 #include "SDL_version.h"
 #if defined(_WIN32) || defined(__APPLE__)
-#include "libusb.h"
+  #include "libusb.h"
 #else
-#include <libusb-1.0/libusb.h>
+  #include <libusb-1.0/libusb.h>
 #endif
 
 #define STM6_FIRMWARE "firmware/inlretro_stm6.bin"
@@ -24,11 +24,12 @@ namespace Settings
 {
 
   t_Settings settings = {
-      "dark", // theme
-      "",     // firmware_update_script
-      0,      // Roboto Mono Regular as default font
-      true,   // save_on_exit
-      false   // imgui_demo
+    "dark",                          // theme
+    "scripts/inlretro.lua",          // main_script (default)
+    "scripts/inlretro_fwupdate.lua", // firmware_update_script (default)
+    0,                               // Roboto Mono Regular as default font
+    true,                            // save_on_exit
+    false                            // imgui_demo
   };
 
   /**
@@ -41,16 +42,16 @@ namespace Settings
     switch(style_idx) {
       case 0:
         settings.theme = "dark";
-      ImGui::StyleColorsDark();
-      break;
-    case 1:
-      settings.theme = "light";
-      ImGui::StyleColorsLight();
-      break;
-    case 2:
-      settings.theme = "classic";
-      ImGui::StyleColorsClassic();
-      break;
+        ImGui::StyleColorsDark();
+        break;
+      case 1:
+        settings.theme = "light";
+        ImGui::StyleColorsLight();
+        break;
+      case 2:
+        settings.theme = "classic";
+        ImGui::StyleColorsClassic();
+        break;
     }
   }
 
@@ -80,7 +81,8 @@ namespace Settings
       settings.font = (font == 0 || font == 1) ? font : 0;
     } else if(key == "save_on_exit") {
       settings.save_on_exit = value == "true" ? true : false;
-    else if (key == "firmware_update_script")
+    } else if(key == "main_script") {
+      settings.main_script = value;
     } else if(key == "firmware_update_script") {
       settings.firmware_update_script = value;
     }
@@ -160,13 +162,13 @@ namespace Settings
             ImGui::Separator();
             if(flasher->hardwareType == HW_UNKW || flasher->hardwareType == HW_STM6) {
               if(ImGui::Selectable("INLretro 6 connectors")) {
-                flasher->update_firmware(STM6_FIRMWARE);
+                flasher->update_firmware(STM6_FIRMWARE, settings.firmware_update_script);
               }
             }
 
             if(flasher->hardwareType == HW_UNKW || flasher->hardwareType == HW_STMN) {
               if(ImGui::Selectable("INLretro NESmaker edition")) {
-                flasher->update_firmware(STMN_FIRMWARE);
+                flasher->update_firmware(STMN_FIRMWARE, settings.firmware_update_script);
               }
             }
 
@@ -177,7 +179,7 @@ namespace Settings
 
             if(ImGui::Selectable("Use custom file...")) {
               Dialog::fileExt = ".bin";
-              Dialog::callback = std::bind(&Flasher::cb_custom_firmware_update, flasher, _1, _2);
+              Dialog::callback = std::bind(&Flasher::cb_custom_firmware_update, flasher, _1, _2, settings.firmware_update_script);
               Dialog::showFileOpen = true;
               Dialog::showFileSave = false;
             }
@@ -248,6 +250,14 @@ namespace Settings
       ImGui::TableSetColumnIndex(1);
       ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
       ImGui::Combo("##settings_font", &settings.font, "Roboto Mono Regular\0Rubik Regular\0");
+
+      // main script
+      ImGui::TableNextRow();
+      ImGui::TableSetColumnIndex(0);
+      ImGui::TextUnformatted("Main script");
+      ImGui::TableSetColumnIndex(1);
+      ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+      ImGui::InputText("##settings_main_script", &settings.main_script);
 
       // firmware update script
       ImGui::TableNextRow();

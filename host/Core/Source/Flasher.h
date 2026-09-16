@@ -39,17 +39,17 @@ class Flasher
   static bool is_flashing();
   static int count_flashing();
   static void clear_list();
-  static void exec_all(t_INLoptions_std opts);
+  static void exec_all(t_INLoptions_std opts, const std::string& main_script);
 
   // public methods
   int t_inlprog_opt(const t_INLoptions_std& opts);
   int inlprog_opt(const t_INLoptions_std& opts);
-  bool exec(t_INLoptions_std opts);
-  void update_firmware(const std::string& firmware_file);
+  bool exec(t_INLoptions_std opts, const std::string& main_script);
+  void update_firmware(const std::string& firmware_file, const std::string& firmware_update_script);
 
-  void cb_custom_firmware_update(const std::string& path, const std::string& filename)
+  void cb_custom_firmware_update(const std::string& path, const std::string& filename, const std::string& firmware_update_script)
   {
-    this->update_firmware(path);
+    this->update_firmware(path, firmware_update_script);
   }
 
   private:
