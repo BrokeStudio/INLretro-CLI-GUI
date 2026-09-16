@@ -16,36 +16,36 @@
 // #define DEBUG 1
 #ifdef DEBUG
 
-#define debug(L, M, ...) (L)->add(LogTypes_Info, "DEBUG %s:%d: " M, \
+  #define debug(L, M, ...) (L)->add(LogTypes_Info, "DEBUG %s:%d: " M, \
                                   __FILE__, __LINE__, ##__VA_ARGS__)
 
 #else
 
-#define debug(L, M, ...)
+  #define debug(L, M, ...)
 
 #endif
 
 #ifdef _DEBUG
 
-#define log_err(L, M, ...) (L)->add(LogTypes_Error,                              \
+  #define log_err(L, M, ...) (L)->add(LogTypes_Error,                              \
                                     "(%s:%d: errno: %s) " M, __FILE__, __LINE__, \
                                     clean_errno(), ##__VA_ARGS__)
 
-#define log_warn(L, M, ...) (L)->add(LogTypes_Warning,        \
+  #define log_warn(L, M, ...) (L)->add(LogTypes_Warning,        \
                                      "(%s:%d: errno: %s) " M, \
                                      __FILE__, __LINE__, clean_errno(), ##__VA_ARGS__)
 
-#define log_info(L, M, ...) (L)->add(LogTypes_Info, \
+  #define log_info(L, M, ...) (L)->add(LogTypes_Info, \
                                      "(%s:%d) " M,  \
                                      __FILE__, __LINE__, ##__VA_ARGS__)
 
 #else
 
-#define log_err(L, M, ...) (L)->add(LogTypes_Error, M, ##__VA_ARGS__)
+  #define log_err(L, M, ...) (L)->add(LogTypes_Error, M, ##__VA_ARGS__)
 
-#define log_warn(L, M, ...) (L)->add(LogTypes_Warning, M, ##__VA_ARGS__)
+  #define log_warn(L, M, ...) (L)->add(LogTypes_Warning, M, ##__VA_ARGS__)
 
-#define log_info(L, M, ...) (L)->add(LogTypes_Info, "(%s:%d) " M, ##__VA_ARGS__)
+  #define log_info(L, M, ...) (L)->add(LogTypes_Info, "(%s:%d) " M, ##__VA_ARGS__)
 
 #endif
 

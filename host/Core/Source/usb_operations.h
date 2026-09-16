@@ -1,57 +1,57 @@
 #pragma once
 #ifndef USB_OPRATIONS_H
-#define USB_OPRATIONS_H
+  #define USB_OPRATIONS_H
 
-// #include <stdio.h>
-// #include <string.h>
-// #include <stdlib.h>
-// #include <assert.h>
-// #include <errno.h>
-#if defined(_WIN32) || defined(__APPLE__)
-#include "libusb.h"
-#else
-#include <libusb-1.0/libusb.h>
-#endif
-#include "lua.hpp"
+  // #include <stdio.h>
+  // #include <string.h>
+  // #include <stdlib.h>
+  // #include <assert.h>
+  // #include <errno.h>
+  #if defined(_WIN32) || defined(__APPLE__)
+    #include "libusb.h"
+  #else
+    #include <libusb-1.0/libusb.h>
+  #endif
+  #include "lua.hpp"
 
-// list of included dictionaries for defining request, wValue, and wIndex fields
-#include "shared_dictionaries.h"
+  // list of included dictionaries for defining request, wValue, and wIndex fields
+  #include "shared_dictionaries.h"
 
-// uncomment to DEBUG this file alone
-// #define DEBUG
-//"make debug" to get DEBUG msgs on entire program
-#include "dbg.h"
+  // uncomment to DEBUG this file alone
+  // #define DEBUG
+  //"make debug" to get DEBUG msgs on entire program
+  #include "dbg.h"
 
-// control transfer request types
-// uint8_t libusb_control_setup::bmRequestType
-// Request type.
-//	Bits 0:4 determine recipient, see libusb_request_recipient. Bits 5:6 determine type, see libusb_request_type. Bit 7 determines data transfer direction, see libusb_endpoint_direction.
-//
-// libusb_request_types:
-// LIBUSB_REQUEST_TYPE_STANDARD	Standard handled by driver during setup/etc
-// LIBUSB_REQUEST_TYPE_CLASS 	Class for use with specific device classes like HID.
-// LIBUSB_REQUEST_TYPE_VENDOR	Vendor application specific as we choose which is what we'll be utilizing for all transfers
-// LIBUSB_REQUEST_TYPE_RESERVED	Reserved.
-//
-// libusb_request_recipients:
-// LIBUSB_RECIPIENT_DEVICE	Device.
-// LIBUSB_RECIPIENT_INTERFACE	Interface.
-// LIBUSB_RECIPIENT_ENDPOINT	Endpoint.
-// LIBUSB_RECIPIENT_OTHER	Other.
-//
-// LIBUSB_ENDPOINT_IN	0x80	In: device-to-host.
-// LIBUSB_ENDPOINT_OUT	0x00	Out: host-to-device.
-#define USB_IN LIBUSB_ENDPOINT_IN
-#define USB_OUT LIBUSB_ENDPOINT_OUT
+  // control transfer request types
+  // uint8_t libusb_control_setup::bmRequestType
+  // Request type.
+  //	Bits 0:4 determine recipient, see libusb_request_recipient. Bits 5:6 determine type, see libusb_request_type. Bit 7 determines data transfer direction, see libusb_endpoint_direction.
+  //
+  // libusb_request_types:
+  // LIBUSB_REQUEST_TYPE_STANDARD	Standard handled by driver during setup/etc
+  // LIBUSB_REQUEST_TYPE_CLASS 	Class for use with specific device classes like HID.
+  // LIBUSB_REQUEST_TYPE_VENDOR	Vendor application specific as we choose which is what we'll be utilizing for all transfers
+  // LIBUSB_REQUEST_TYPE_RESERVED	Reserved.
+  //
+  // libusb_request_recipients:
+  // LIBUSB_RECIPIENT_DEVICE	Device.
+  // LIBUSB_RECIPIENT_INTERFACE	Interface.
+  // LIBUSB_RECIPIENT_ENDPOINT	Endpoint.
+  // LIBUSB_RECIPIENT_OTHER	Other.
+  //
+  // LIBUSB_ENDPOINT_IN	0x80	In: device-to-host.
+  // LIBUSB_ENDPOINT_OUT	0x00	Out: host-to-device.
+  #define USB_IN LIBUSB_ENDPOINT_IN
+  #define USB_OUT LIBUSB_ENDPOINT_OUT
 
-// USB timeout
-#define TIMEOUT_1_SEC 1000
-#define TIMEOUT_5_SEC 5000
+  // USB timeout
+  #define TIMEOUT_1_SEC 1000
+  #define TIMEOUT_5_SEC 5000
 
-// Max transfer length
-#define MAX_VUSB 254           // Max VUSB transfers without long transfers enabled
-#define USB_NO_MSG 255         // designates transfer with no message
-#define MAX_VUSB_LONGXFR 16384 // 16KByte biggest value 16bit wLength can hold
+  // Max transfer length
+  #define MAX_VUSB 254           // Max VUSB transfers without long transfers enabled
+  #define USB_NO_MSG 255         // designates transfer with no message
+  #define MAX_VUSB_LONGXFR 16384 // 16KByte biggest value 16bit wLength can hold
 
 // typedef struct USBtransfer {
 // This is the primary USB request struct used by host app used for all application USB communications.
@@ -93,24 +93,24 @@
 
 typedef struct USBtransfer
 {
-  libusb_device_handle *handle;
+  libusb_device_handle* handle;
   uint8_t endpoint;
   uint8_t request;
   uint16_t wValue;
   uint16_t wIndex;
   uint16_t wLength;
-  unsigned char *data;
+  unsigned char* data;
 } USBtransfer;
 
-bool is_device_flasher(libusb_device *device, char retroprog_id);
+bool is_device_flasher(libusb_device* device, char retroprog_id);
 bool find_device(char retroprog_id);
-libusb_device_handle *usb_open(char retroprog_id);
+libusb_device_handle* usb_open(char retroprog_id);
 // void usb_close(libusb_device_handle *handle);
 uint8_t get_device_hardware_type(char retroprog_id);
 uint8_t get_device_version(char retroprog_id);
-libusb_device_handle *open_usb_device(int log_level, const char *retroprog_id, Log *log);
+libusb_device_handle* open_usb_device(int log_level, const char* retroprog_id, Log* log);
 
-void close_usb(libusb_device_handle *handle);
+void close_usb(libusb_device_handle* handle);
 
 // int libusb_control_transfer (libusb_device_handle *dev_handle, uint8_t bmRequestType, uint8_t bRequest, uint16_t wValue, uint16_t wIndex, unsigned char *data, uint16_t wLength, unsigned int timeout)
 //
@@ -153,7 +153,7 @@ void close_usb(libusb_device_handle *handle);
 //	LIBUSB_ERROR_PIPE if the control request was not supported by the device
 //	LIBUSB_ERROR_NO_DEVICE if the device has been disconnected
 //	another LIBUSB_ERROR code on other failures
-int usb_vendor_transfer(USBtransfer *transfer, Log *log);
+int usb_vendor_transfer(USBtransfer* transfer, Log* log);
 // int lua_usb_vend_xfr(lua_State *L);
 
 #endif

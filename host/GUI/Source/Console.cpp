@@ -15,14 +15,14 @@
 
 using namespace std::placeholders; // for `_1`, `_2`
 
-std::vector<Console *> Console::list;
+std::vector<Console*> Console::list;
 
 /**
  * @brief Add a console to the list
  *
  * @param console
  */
-void Console::add(Console *console)
+void Console::add(Console* console)
 {
   Console::list.push_back(console);
 }
@@ -33,14 +33,13 @@ void Console::add(Console *console)
  */
 void Console::clear_list()
 {
-  for (auto &console : Console::list)
-  {
+  for(auto& console : Console::list) {
     delete console;
   }
   Console::list.clear();
 }
 
-Console::Console(const t_Console &console) : t_Console(console)
+Console::Console(const t_Console& console) : t_Console(console)
 {
   rom_dump_INLOptions.console_name = console.name;
   rom_write_INLOptions.console_name = console.name;
@@ -60,7 +59,9 @@ Console::Console(const t_Console &console) : t_Console(console)
  * @brief Destroy the Console:: Console object
  *
  */
-Console::~Console() {}
+Console::~Console()
+{
+}
 
 /**
  * @brief Get the file name from path string
@@ -68,13 +69,14 @@ Console::~Console() {}
  * @param path file absolute path
  * @return std::string file name
  */
-std::string get_filename_from_path(std::string &path)
+std::string get_filename_from_path(std::string& path)
 {
   std::string filename = "";
   std::replace(path.begin(), path.end(), '\\', '/');
   size_t slashPos = path.find_last_of('/');
-  if (slashPos == std::string::npos)
+  if(slashPos == std::string::npos) {
     return filename; // TODO: not good, need to handle error
+  }
   filename = path.substr(slashPos + 1);
   return filename;
 }
@@ -85,17 +87,16 @@ std::string get_filename_from_path(std::string &path)
  * @param luaPath
  * @param writePath
  */
-void Console::set_paths(const std::string &luaPath, const std::string &writePath)
+void Console::set_paths(const std::string& luaPath, const std::string& writePath)
 {
-  t_INLoptions_std *options[] = {
-      &rom_dump_INLOptions,
-      &rom_write_INLOptions,
-      &ram_dump_INLOptions,
-      &ram_write_INLOptions,
+  t_INLoptions_std* options[] = {
+    &rom_dump_INLOptions,
+    &rom_write_INLOptions,
+    &ram_dump_INLOptions,
+    &ram_write_INLOptions,
   };
 
-  for (t_INLoptions_std *option : options)
-  {
+  for(t_INLoptions_std* option : options) {
     option->lua_path = luaPath;
     option->write_path = writePath;
   }
@@ -106,36 +107,45 @@ void Console::set_paths(const std::string &luaPath, const std::string &writePath
  *
  * @param INLoptions depends on the current view (rom dump, rom write, ram dump, ram write)
  */
-void Console::render_additional_options_popup(t_INLoptions_std *INLoptions, ConsoleActions consoleAction)
+void Console::render_additional_options_popup(t_INLoptions_std* INLoptions, ConsoleActions consoleAction)
 {
   // Additional options
-  if (ImGui::BeginPopupContextItem("additional_options_popup"))
-  {
+  if(ImGui::BeginPopupContextItem("additional_options_popup")) {
     trim(INLoptions->additional_opts);
-    if (consoleAction == ConsoleActions_RomWrite || consoleAction == ConsoleActions_RamWrite)
-      if (ImGui::Selectable("force_wram_test"))
+    if(consoleAction == ConsoleActions_RomWrite || consoleAction == ConsoleActions_RamWrite) {
+      if(ImGui::Selectable("force_wram_test")) {
         INLoptions->additional_opts += ",force_wram_test";
+      }
+    }
 
-    if (consoleAction == ConsoleActions_RomDump)
-      if (ImGui::Selectable("force_flash_test"))
+    if(consoleAction == ConsoleActions_RomDump) {
+      if(ImGui::Selectable("force_flash_test")) {
         INLoptions->additional_opts += ",force_flash_test";
+      }
+    }
 
-    if (consoleAction == ConsoleActions_RomWrite || consoleAction == ConsoleActions_RomDump)
-      if (ImGui::Selectable("bank_table"))
+    if(consoleAction == ConsoleActions_RomWrite || consoleAction == ConsoleActions_RomDump) {
+      if(ImGui::Selectable("bank_table")) {
         INLoptions->additional_opts += ",bank_table=0x0000";
+      }
+    }
 
-    if (INLoptions->console_name == "nes")
-      if (ImGui::Selectable("flash_cic"))
+    if(INLoptions->console_name == "nes") {
+      if(ImGui::Selectable("flash_cic")) {
         INLoptions->additional_opts += ",flash_cic";
+      }
+    }
 
     trim(INLoptions->additional_opts);
-    if (INLoptions->additional_opts != "" && INLoptions->additional_opts.at(0) == ',')
+    if(INLoptions->additional_opts != "" && INLoptions->additional_opts.at(0) == ',') {
       INLoptions->additional_opts.erase(0, 1);
+    }
 
     ImGui::Separator();
 
-    if (ImGui::Selectable("Clear"))
+    if(ImGui::Selectable("Clear")) {
       INLoptions->additional_opts = "";
+    }
 
     ImGui::EndPopup();
   }
@@ -155,8 +165,7 @@ void Console::render_rom_dump(std::string droppedFilename)
 
   ImGui::BeginDisabled(isFlashing);
 
-  if (ImGui::BeginTable("rom_dump_table", 2, ImGuiTableFlags_SizingStretchProp))
-  {
+  if(ImGui::BeginTable("rom_dump_table", 2, ImGuiTableFlags_SizingStretchProp)) {
     // Setup table columns sizes
     ImVec2 text_max_size = ImGui::CalcTextSize("Additional options");
     ImGui::TableSetupColumn("one", ImGuiTableColumnFlags_WidthFixed, text_max_size.x);
@@ -168,45 +177,43 @@ void Console::render_rom_dump(std::string droppedFilename)
     ImGui::TextUnformatted("Destination file");
     ImGui::TableSetColumnIndex(1);
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    if (droppedFilename != "")
+    if(droppedFilename != "") {
       cb_rom_dump_file_dialog(droppedFilename, get_filename_from_path(droppedFilename));
+    }
     Browse("##rom_dump_rom_write_file", rom_dump_INLOptions.rom_dump_file, false, droppedFilename != "", std::bind(&Console::cb_rom_dump_file_dialog, this, _1, _2));
 
     // Mapper
-    if (mappers.size() != 0)
-    {
+    if(mappers.size() != 0) {
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("Mapper");
       ImGui::TableSetColumnIndex(1);
       int mapper_idx = get_mapper_index_by_script_name(rom_dump_INLOptions.mapper_name);
-      if (mapper_idx == -1)
-      {
+      if(mapper_idx == -1) {
         mapper_idx = 0;
         rom_dump_INLOptions.mapper_name = mappers[mapper_idx].script_name;
       }
       snprintf(this->buf, sizeof(this->buf), "%i - %s\n", mappers[mapper_idx].id, mappers[mapper_idx].name.c_str());
       ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-      if (ImGui::BeginCombo("##rom_dump_mapper", this->buf, 0))
-      {
-        for (size_t n = 0; n < mappers.size(); n++)
-        {
+      if(ImGui::BeginCombo("##rom_dump_mapper", this->buf, 0)) {
+        for(size_t n = 0; n < mappers.size(); n++) {
           const bool is_selected = (mapper_idx == n);
           snprintf(this->buf, sizeof(this->buf), "%i - %s\n", mappers[n].id, mappers[n].name.c_str());
-          if (ImGui::Selectable(this->buf, is_selected))
+          if(ImGui::Selectable(this->buf, is_selected)) {
             rom_dump_INLOptions.mapper_name = mappers[n].script_name;
+          }
 
           // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-          if (is_selected)
+          if(is_selected) {
             ImGui::SetItemDefaultFocus();
+          }
         }
         ImGui::EndCombo();
       }
     }
 
     // Sizes
-    if (this->name == "nes" || this->name == "famicom" || this->name == "fc")
-    {
+    if(this->name == "nes" || this->name == "famicom" || this->name == "fc") {
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("PRG-ROM size (KB)");
@@ -220,9 +227,7 @@ void Console::render_rom_dump(std::string droppedFilename)
       ImGui::TableSetColumnIndex(1);
       ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
       ImGui::InputInt("##rom_dump_chr_rom_size_kb", &rom_dump_INLOptions.chr_rom_size_kb);
-    }
-    else
-    {
+    } else {
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("ROM size (KB)");
@@ -254,8 +259,7 @@ void Console::render_rom_dump(std::string droppedFilename)
   ImGui::EndDisabled();
 
   ImGui::BeginDisabled(Flasher::count_flashing() == Flasher::list.size());
-  if (ImGui::Button(ICON_FA_DOWNLOAD " Dump", ImVec2(-FLT_MIN, 50)))
-  {
+  if(ImGui::Button(ICON_FA_DOWNLOAD " Dump", ImVec2(-FLT_MIN, 50))) {
     trim(rom_dump_INLOptions.additional_opts);
     Flasher::exec_all(rom_dump_INLOptions);
   }
@@ -279,8 +283,7 @@ void Console::render_rom_write(std::string droppedFilename)
 
   ImGui::BeginDisabled(isFlashing);
 
-  if (ImGui::BeginTable("rom_write_table", 2, ImGuiTableFlags_SizingStretchProp))
-  {
+  if(ImGui::BeginTable("rom_write_table", 2, ImGuiTableFlags_SizingStretchProp)) {
     // Setup table columns sizes
     ImVec2 text_max_size = ImGui::CalcTextSize("Additional options");
     ImGui::TableSetupColumn("one", ImGuiTableColumnFlags_WidthFixed, text_max_size.x);
@@ -292,57 +295,56 @@ void Console::render_rom_write(std::string droppedFilename)
     ImGui::TextUnformatted("Source file");
     ImGui::TableSetColumnIndex(1);
 
-    ImGuiStyle &style = ImGui::GetStyle();
+    ImGuiStyle& style = ImGui::GetStyle();
 
     const float button_size = ImGui::GetFrameHeight();
     const ImVec2 backup_frame_padding = style.FramePadding;
     style.FramePadding.x = style.FramePadding.y;
-    if (ImGui::Button("i", ImVec2(button_size, button_size)))
+    if(ImGui::Button("i", ImVec2(button_size, button_size))) {
       this->display_header_window = true;
+    }
     ImGui::SetItemTooltip("Display file header details.");
     style.FramePadding = backup_frame_padding;
     ImGui::SameLine(0, style.ItemInnerSpacing.x);
 
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    if (droppedFilename != "")
+    if(droppedFilename != "") {
       cb_rom_write_file_dialog(droppedFilename, get_filename_from_path(droppedFilename));
+    }
     Browse("##rom_write_rom_write_file", rom_write_INLOptions.rom_write_file, true, droppedFilename != "", std::bind(&Console::cb_rom_write_file_dialog, this, _1, _2));
 
     // Mapper
-    if (mappers.size() != 0)
-    {
+    if(mappers.size() != 0) {
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("Mapper");
       ImGui::TableSetColumnIndex(1);
       int mapper_idx = get_mapper_index_by_script_name(rom_write_INLOptions.mapper_name);
-      if (mapper_idx == -1)
-      {
+      if(mapper_idx == -1) {
         mapper_idx = 0;
         rom_write_INLOptions.mapper_name = mappers[mapper_idx].script_name;
       }
       snprintf(this->buf, sizeof(this->buf), "%i - %s\n", mappers[mapper_idx].id, mappers[mapper_idx].name.c_str());
       ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-      if (ImGui::BeginCombo("##rom_write_mapper", buf, 0))
-      {
-        for (size_t n = 0; n < mappers.size(); n++)
-        {
+      if(ImGui::BeginCombo("##rom_write_mapper", buf, 0)) {
+        for(size_t n = 0; n < mappers.size(); n++) {
           const bool is_selected = (mapper_idx == n);
           snprintf(this->buf, sizeof(this->buf), "%i - %s\n", mappers[n].id, mappers[n].name.c_str());
-          if (ImGui::Selectable(buf, is_selected))
+          if(ImGui::Selectable(buf, is_selected)) {
             rom_write_INLOptions.mapper_name = mappers[n].script_name;
+          }
 
           // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-          if (is_selected)
+          if(is_selected) {
             ImGui::SetItemDefaultFocus();
+          }
         }
         ImGui::EndCombo();
       }
     }
 
     // Sizes
-    if (this->name == "nes" || this->name == "famicom" || this->name == "fc")
-    {
+    if(this->name == "nes" || this->name == "famicom" || this->name == "fc") {
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("PRG-ROM size (KB)");
@@ -356,9 +358,7 @@ void Console::render_rom_write(std::string droppedFilename)
       ImGui::TableSetColumnIndex(1);
       ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
       ImGui::InputInt("##rom_write_chr_rom_size_kb", &rom_write_INLOptions.chr_rom_size_kb);
-    }
-    else
-    {
+    } else {
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("ROM size (KB)");
@@ -398,26 +398,22 @@ void Console::render_rom_write(std::string droppedFilename)
 
   ImGui::BeginDisabled(Flasher::count_flashing() == Flasher::list.size());
   snprintf(this->buf, sizeof(this->buf), ICON_FA_UPLOAD " Write");
-  if (ImGui::Button(buf, ImVec2(-FLT_MIN, 50)))
-  {
+  if(ImGui::Button(buf, ImVec2(-FLT_MIN, 50))) {
     trim(rom_write_INLOptions.additional_opts);
-    Flasher::exec_all(rom_write_INLOptions);
+    Flasher::exec_all(rom_write_INLOptions, Settings::settings.main_script);
   }
   ImGui::EndDisabled();
 
-  if (Flasher::list.size() > 1)
-  {
-    if (ImGui::BeginTable("rom_dump_table", static_cast<int>(Flasher::list.size()), ImGuiTableFlags_SizingStretchSame))
-    {
+  if(Flasher::list.size() > 1) {
+    if(ImGui::BeginTable("rom_dump_table", static_cast<int>(Flasher::list.size()), ImGuiTableFlags_SizingStretchSame)) {
       ImGui::TableNextRow();
       int i = 0;
-      for (auto &flasher : Flasher::list)
-      {
+      for(auto& flasher : Flasher::list) {
         ImGui::TableSetColumnIndex(i);
         ImGui::BeginDisabled(flasher->isFlashing);
 
         snprintf(this->buf, sizeof(this->buf), ICON_FA_UPLOAD " Write (%s)##write_btn_%s", flasher->id.c_str(), flasher->id.c_str());
-        if (ImGui::Button(buf, ImVec2(-FLT_MIN, 50)))
+        if(ImGui::Button(buf, ImVec2(-FLT_MIN, 50))) {
         {
           flasher->exec(rom_write_INLOptions);
         }
@@ -447,8 +443,7 @@ void Console::render_ram_dump(std::string droppedFilename)
 
   ImGui::BeginDisabled(isFlashing);
 
-  if (ImGui::BeginTable("ram_dump_table", 2, ImGuiTableFlags_SizingStretchProp))
-  {
+  if(ImGui::BeginTable("ram_dump_table", 2, ImGuiTableFlags_SizingStretchProp)) {
     // Setup table columns sizes
     ImVec2 text_max_size = ImGui::CalcTextSize("Additional options");
     ImGui::TableSetupColumn("one", ImGuiTableColumnFlags_WidthFixed, text_max_size.x);
@@ -460,37 +455,36 @@ void Console::render_ram_dump(std::string droppedFilename)
     ImGui::TextUnformatted("Destination file");
     ImGui::TableSetColumnIndex(1);
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    if (droppedFilename != "")
+    if(droppedFilename != "") {
       cb_ram_dump_file_dialog(droppedFilename, get_filename_from_path(droppedFilename));
+    }
     Browse("##ram_dump_ram_dump_file", ram_dump_INLOptions.ram_dump_file, false, droppedFilename != "", std::bind(&Console::cb_ram_dump_file_dialog, this, _1, _2));
 
     // Mapper
-    if (mappers.size() != 0)
-    {
+    if(mappers.size() != 0) {
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("Mapper");
       ImGui::TableSetColumnIndex(1);
       int mapper_idx = get_mapper_index_by_script_name(ram_dump_INLOptions.mapper_name);
-      if (mapper_idx == -1)
-      {
+      if(mapper_idx == -1) {
         mapper_idx = 0;
         ram_dump_INLOptions.mapper_name = mappers[mapper_idx].script_name;
       }
       snprintf(this->buf, sizeof(this->buf), "%i - %s\n", mappers[mapper_idx].id, mappers[mapper_idx].name.c_str());
       ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-      if (ImGui::BeginCombo("##ram_dump_mapper", buf, 0))
-      {
-        for (size_t n = 0; n < mappers.size(); n++)
-        {
+      if(ImGui::BeginCombo("##ram_dump_mapper", buf, 0)) {
+        for(size_t n = 0; n < mappers.size(); n++) {
           const bool is_selected = (mapper_idx == n);
           snprintf(this->buf, sizeof(this->buf), "%i - %s\n", mappers[n].id, mappers[n].name.c_str());
-          if (ImGui::Selectable(buf, is_selected))
+          if(ImGui::Selectable(buf, is_selected)) {
             ram_dump_INLOptions.mapper_name = mappers[n].script_name;
+          }
 
           // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-          if (is_selected)
+          if(is_selected) {
             ImGui::SetItemDefaultFocus();
+          }
         }
         ImGui::EndCombo();
       }
@@ -527,8 +521,7 @@ void Console::render_ram_dump(std::string droppedFilename)
   ImGui::EndDisabled();
 
   ImGui::BeginDisabled(Flasher::count_flashing() == Flasher::list.size());
-  if (ImGui::Button(ICON_FA_DOWNLOAD " Dump", ImVec2(-FLT_MIN, 50)))
-  {
+  if(ImGui::Button(ICON_FA_DOWNLOAD " Dump", ImVec2(-FLT_MIN, 50))) {
     trim(ram_dump_INLOptions.additional_opts);
     Flasher::exec_all(ram_dump_INLOptions);
   }
@@ -553,8 +546,7 @@ void Console::render_ram_write(std::string droppedFilename)
 
   ImGui::BeginDisabled(isFlashing);
 
-  if (ImGui::BeginTable("ram_write_table", 2, ImGuiTableFlags_SizingStretchProp))
-  {
+  if(ImGui::BeginTable("ram_write_table", 2, ImGuiTableFlags_SizingStretchProp)) {
     // Setup table columns sizes
     ImVec2 text_max_size = ImGui::CalcTextSize("Additional options");
     ImGui::TableSetupColumn("one", ImGuiTableColumnFlags_WidthFixed, text_max_size.x);
@@ -566,37 +558,36 @@ void Console::render_ram_write(std::string droppedFilename)
     ImGui::TextUnformatted("Source file");
     ImGui::TableSetColumnIndex(1);
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-    if (droppedFilename != "")
+    if(droppedFilename != "") {
       cb_ram_write_file_dialog(droppedFilename, get_filename_from_path(droppedFilename));
+    }
     Browse("##ram_write_ram_write_file", ram_write_INLOptions.ram_write_file, true, droppedFilename != "", std::bind(&Console::cb_ram_write_file_dialog, this, _1, _2));
 
     // Mapper
-    if (mappers.size() != 0)
-    {
+    if(mappers.size() != 0) {
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
       ImGui::TextUnformatted("Mapper");
       ImGui::TableSetColumnIndex(1);
       int mapper_idx = get_mapper_index_by_script_name(ram_write_INLOptions.mapper_name);
-      if (mapper_idx == -1)
-      {
+      if(mapper_idx == -1) {
         mapper_idx = 0;
         ram_write_INLOptions.mapper_name = mappers[mapper_idx].script_name;
       }
       snprintf(this->buf, sizeof(this->buf), "%i - %s\n", mappers[mapper_idx].id, mappers[mapper_idx].name.c_str());
       ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-      if (ImGui::BeginCombo("##ram_write_mapper", buf, 0))
-      {
-        for (size_t n = 0; n < mappers.size(); n++)
-        {
+      if(ImGui::BeginCombo("##ram_write_mapper", buf, 0)) {
+        for(size_t n = 0; n < mappers.size(); n++) {
           const bool is_selected = (mapper_idx == n);
           snprintf(this->buf, sizeof(this->buf), "%i - %s\n", mappers[n].id, mappers[n].name.c_str());
-          if (ImGui::Selectable(buf, is_selected))
+          if(ImGui::Selectable(buf, is_selected)) {
             ram_write_INLOptions.mapper_name = mappers[n].script_name;
+          }
 
           // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-          if (is_selected)
+          if(is_selected) {
             ImGui::SetItemDefaultFocus();
+          }
         }
         ImGui::EndCombo();
       }
@@ -634,8 +625,7 @@ void Console::render_ram_write(std::string droppedFilename)
 
   ImGui::BeginDisabled(Flasher::count_flashing() == Flasher::list.size());
   snprintf(this->buf, sizeof(this->buf), ICON_FA_UPLOAD " Write");
-  if (ImGui::Button(buf, ImVec2(-FLT_MIN, 50)))
-  {
+  if(ImGui::Button(buf, ImVec2(-FLT_MIN, 50))) {
     trim(ram_write_INLOptions.additional_opts);
     Flasher::exec_all(ram_write_INLOptions);
   }
@@ -653,10 +643,8 @@ void Console::render_ram_write(std::string droppedFilename)
  */
 int Console::get_mapper_index_by_mapper_id(int mapper_id)
 {
-  for (size_t i = 0; i < this->mappers.size(); i++)
-  {
-    if (this->mappers[i].id == mapper_id)
-    {
+  for(size_t i = 0; i < this->mappers.size(); i++) {
+    if(this->mappers[i].id == mapper_id) {
       return static_cast<int>(i);
     }
   }
@@ -669,12 +657,10 @@ int Console::get_mapper_index_by_mapper_id(int mapper_id)
  * @param mapper_name
  * @return int mapper index, -1 if not found
  */
-int Console::get_mapper_index_by_mapper_name(const std::string &mapper_name)
+int Console::get_mapper_index_by_mapper_name(const std::string& mapper_name)
 {
-  for (size_t i = 0; i < this->mappers.size(); i++)
-  {
-    if (this->mappers[i].name == mapper_name)
-    {
+  for(size_t i = 0; i < this->mappers.size(); i++) {
+    if(this->mappers[i].name == mapper_name) {
       return static_cast<int>(i);
     }
   }
@@ -687,12 +673,10 @@ int Console::get_mapper_index_by_mapper_name(const std::string &mapper_name)
  * @param mapper_name
  * @return int mapper index, -1 if not found
  */
-int Console::get_mapper_index_by_script_name(const std::string &script_name)
+int Console::get_mapper_index_by_script_name(const std::string& script_name)
 {
-  for (size_t i = 0; i < this->mappers.size(); i++)
-  {
-    if (this->mappers[i].script_name == script_name)
-    {
+  for(size_t i = 0; i < this->mappers.size(); i++) {
+    if(this->mappers[i].script_name == script_name) {
       return static_cast<int>(i);
     }
   }
@@ -707,13 +691,13 @@ int Console::get_mapper_index_by_script_name(const std::string &script_name)
  * @param t interpolation factor
  * @return ImVec4
  */
-ImVec4 LerpImVec4(const ImVec4 &a, const ImVec4 &b, float t)
+ImVec4 LerpImVec4(const ImVec4& a, const ImVec4& b, float t)
 {
   return ImVec4(
-      a.x + (b.x - a.x) * t,
-      a.y + (b.y - a.y) * t,
-      a.z + (b.z - a.z) * t,
-      a.w + (b.w - a.w) * t);
+    a.x + (b.x - a.x) * t,
+    a.y + (b.y - a.y) * t,
+    a.z + (b.z - a.z) * t,
+    a.w + (b.w - a.w) * t);
 }
 
 /**
@@ -725,35 +709,34 @@ ImVec4 LerpImVec4(const ImVec4 &a, const ImVec4 &b, float t)
  * @param startFade start a fade on the text input (used when drag & droping file in the app)
  * @param callback callback function called after the file selection
  */
-void Console::Browse(const char *label, std::string &file, bool openFile, bool startFade, std::function<void(const std::string &path, const std::string &filename)> callback)
+void Console::Browse(const char* label, std::string& file, bool openFile, bool startFade, std::function<void(const std::string& path, const std::string& filename)> callback)
 {
 #define BROWSE_TEXT "Browse..."
 
-  static ImVec4 fadeColor = {1.0f, 1.0f, 1.0f, 1.0f};
+  static ImVec4 fadeColor = { 1.0f, 1.0f, 1.0f, 1.0f };
   static float t = 0.0f; // interpolation factor
   static bool fade = false;
 
-  ImGuiStyle &style = ImGui::GetStyle();
+  ImGuiStyle& style = ImGui::GetStyle();
 
   const float browse_text_size = ImGui::CalcTextSize(BROWSE_TEXT).x;
 
   ImGui::PushID(label);
   ImGui::SetNextItemWidth(IM_MAX(1.0f, ImGui::CalcItemWidth() - browse_text_size - style.FramePadding.x * 2.0f));
 
-  if (startFade)
-  {
+  if(startFade) {
     t = 0.0f;
     fade = true;
   }
 
-  if (fade)
-  {
+  if(fade) {
     ImVec4 color;
     float speed = 1.0f; // fade duration (1 second)
     float dt = ImGui::GetIO().DeltaTime;
     t += dt / speed;
-    if (t >= 1.0f)
+    if(t >= 1.0f) {
       t = 1.0f;
+    }
     color = LerpImVec4(fadeColor, ImGui::GetStyleColorVec4(ImGuiCol_FrameBg), t);
     ImGui::PushStyleColor(ImGuiCol_FrameBg, color);
     color = LerpImVec4(fadeColor, ImGui::GetStyleColorVec4(ImGuiCol_Text), t);
@@ -762,18 +745,17 @@ void Console::Browse(const char *label, std::string &file, bool openFile, bool s
 
   ImGui::InputText(label, &file);
 
-  if (fade)
-  {
+  if(fade) {
     ImGui::PopStyleColor(2);
-    if (t == 1.0f)
+    if(t == 1.0f) {
       fade = false;
+    }
   }
 
   const ImVec2 backup_frame_padding = style.FramePadding;
   style.FramePadding.x = style.FramePadding.y;
   ImGui::SameLine(0, style.ItemInnerSpacing.x);
-  if (ImGui::Button(BROWSE_TEXT))
-  {
+  if(ImGui::Button(BROWSE_TEXT)) {
     Dialog::fileExt = this->rom_file_ext;
     Dialog::callback = callback;
     Dialog::showFileOpen = openFile;
@@ -791,9 +773,9 @@ void Console::Browse(const char *label, std::string &file, bool openFile, bool s
  * @param INLoptions INLretro options
  * @param consoleAction console action (rom/ram dump/write) so we can display options depending on the action
  */
-void Console::AdditionalOptions(const char *label, t_INLoptions_std *INLoptions, ConsoleActions consoleAction)
+void Console::AdditionalOptions(const char* label, t_INLoptions_std* INLoptions, ConsoleActions consoleAction)
 {
-  ImGuiStyle &style = ImGui::GetStyle();
+  ImGuiStyle& style = ImGui::GetStyle();
 
   const float button_size = ImGui::GetFrameHeight();
 
@@ -805,8 +787,9 @@ void Console::AdditionalOptions(const char *label, t_INLoptions_std *INLoptions,
   const ImVec2 backup_frame_padding = style.FramePadding;
   style.FramePadding.x = style.FramePadding.y;
   ImGui::SameLine(0, style.ItemInnerSpacing.x);
-  if (ImGui::Button("+", ImVec2(button_size, button_size)))
+  if(ImGui::Button("+", ImVec2(button_size, button_size))) {
     ImGui::OpenPopup("additional_options_popup");
+  }
 
   style.FramePadding = backup_frame_padding;
 
@@ -822,14 +805,12 @@ void Console::AdditionalOptions(const char *label, t_INLoptions_std *INLoptions,
 void Console::render_header_window()
 {
   snprintf(this->buf, sizeof(this->buf), "%s header details##header_window", this->full_name.c_str());
-  if (this->display_header_window)
-  {
+  if(this->display_header_window) {
     ImGui::OpenPopup(this->buf);
     ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
   }
 
-  if (ImGui::BeginPopupModal(this->buf, &this->display_header_window, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove))
-  {
+  if(ImGui::BeginPopupModal(this->buf, &this->display_header_window, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
     this->render_header_content();
     ImGui::EndPopup();
   }

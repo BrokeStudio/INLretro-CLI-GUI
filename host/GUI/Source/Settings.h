@@ -21,7 +21,7 @@ namespace Settings
 
   extern t_Settings settings;
 
-  void set_property(const std::string &key, const std::string &value);
+  void set_property(const std::string& key, const std::string& value);
 
   void render_flashers();
   void render_settings();

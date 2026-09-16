@@ -1,21 +1,21 @@
 #pragma once
 #ifndef LOG_H
-#define LOG_H
-#include <string>
-#include <vector>
-#include <shared_mutex>
+  #define LOG_H
+  #include <string>
+  #include <vector>
+  #include <shared_mutex>
 
-#define LOG_BUF_SIZE 2048
-#define LOG_SPINNER_SIZE 256
+  #define LOG_BUF_SIZE 2048
+  #define LOG_SPINNER_SIZE 256
 
-#define SYMBOL_NONE "  "
-#define SYMBOL_SECTION "─ "
-#define SYMBOL_INFO "i "
-#define SYMBOL_SUCCESS "√ "
-#define SYMBOL_WARNING "‼ "
-#define SYMBOL_ERROR "× "
-#define SYMBOL_POINT "▸ "
-#define SYMBOL_BULLET "• "
+  #define SYMBOL_NONE "  "
+  #define SYMBOL_SECTION "─ "
+  #define SYMBOL_INFO "i "
+  #define SYMBOL_SUCCESS "√ "
+  #define SYMBOL_WARNING "‼ "
+  #define SYMBOL_ERROR "× "
+  #define SYMBOL_POINT "▸ "
+  #define SYMBOL_BULLET "• "
 
 typedef int LogTypes;
 enum LogTypes_ : int
@@ -39,7 +39,7 @@ struct LogMessage
 
 class Log
 {
-private:
+  private:
   std::vector<LogMessage> Items;
   std::shared_mutex itemsMutex;
 
@@ -52,7 +52,7 @@ private:
   bool showSpinner;
   char spinner[LOG_SPINNER_SIZE];
 
-public:
+  public:
   bool cliOutput = false;
 
   Log(void);
@@ -60,10 +60,10 @@ public:
 
   void clear(void);
   void add(const char* fmt, ...);
-  void add(const std::string &message);
-  void add(LogTypes type, const char *fmt, ...);
-  void add(LogTypes type, const std::string &message);
-  void spinner_update(const char *fmt, ...);
+  void add(const std::string& message);
+  void add(LogTypes type, const char* fmt, ...);
+  void add(LogTypes type, const std::string& message);
+  void spinner_update(const char* fmt, ...);
   // void spinner_update(const std::string &message);
   void spinner_clear(void);
   void render();

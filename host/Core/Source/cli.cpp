@@ -3,9 +3,9 @@
 #include <cctype>
 #include <string>
 #ifdef _MSC_VER
-#include "win_getopt.h"
+  #include "win_getopt.h"
 #else
-#include <getopt.h>
+  #include <getopt.h>
 #endif
 #include "trim.h"
 #include "INLOptions.h"
@@ -26,7 +26,7 @@
 //"make debug" to get DEBUG msgs on entire program
 #include "dbg.h"
 
-const char *HELP = "Usage: INLretro [options]\n\n"
+const char* HELP = "Usage: INLretro [options]\n\n"
                    "Options/Flags:\n"
                    "  --help, -h                                   Displays this message\n"
                    "  --retroprog_id=id, -i id                     Retro-Prog ID\n"
@@ -36,7 +36,7 @@ const char *HELP = "Usage: INLretro [options]\n\n"
                    "                                                       easynsf, fme7, mapper30, mmc1, mmc3, mmc4, mmc5,\n"
                    "                                                       nrom, rainbow, unrom\n"
                    "                                               GB:     mbc1, mbc1_discrete, mbc5\n"
-                   //  "                                               SNES:   lorom, hirom\n"
+                   // "                                               SNES:   lorom, hirom\n"
                    "                                               GENESIS:32mb\n" //, ssf2, rainbow\n"
                    "  --rom_dump_file=filename, -d filename        If provided, dump cartridge ROMs to this filename\n"
                    "  --rom_write_file=filename, -p filename       If provided, write this data to cartridge\n"
@@ -74,34 +74,34 @@ const char *HELP = "Usage: INLretro [options]\n\n"
  * @param argv
  * @return bool true if we could parse the options, false if not
  */
-bool parseOptions(int argc, char *argv[], t_INLoptions_std *opts)
+bool parseOptions(int argc, char* argv[], t_INLoptions_std* opts)
 {
   // Declare command line flags/options.
   static struct option longopts[] = {
-      {"ram_dump_file", required_argument, NULL, 'a'},
-      {"ram_write_file", required_argument, NULL, 'b'},
-      {"console", required_argument, NULL, 'c'},
-      {"rom_dump_file", required_argument, NULL, 'd'},
-      {"debug", no_argument, NULL, 'g'},
-      {"help", no_argument, NULL, 'h'},
-      {"retroprog_id", required_argument, NULL, 'i'},
-      {"rom_size_kbyte", required_argument, NULL, 'k'},
-      {"mapper", required_argument, NULL, 'm'},
-      {"additional_opts", required_argument, NULL, 'o'},
-      {"rom_write_file", required_argument, NULL, 'p'},
-      {"lua_file", required_argument, NULL, 's'},
-      {"verify", no_argument, NULL, 'v'}, // optional_argument
-      {"wram_size_kbyte", required_argument, NULL, 'w'},
-      {"nes_prg_rom_size_kbyte", required_argument, NULL, 'x'},
-      {"nes_chr_rom_size_kbyte", required_argument, NULL, 'y'},
-      {"rom_size_mbit", required_argument, NULL, 'z'},
-      {0, 0, 0, 0} // longopts must end in {0, 0, 0, 0}
+    { "ram_dump_file", required_argument, NULL, 'a' },
+    { "ram_write_file", required_argument, NULL, 'b' },
+    { "console", required_argument, NULL, 'c' },
+    { "rom_dump_file", required_argument, NULL, 'd' },
+    { "debug", no_argument, NULL, 'g' },
+    { "help", no_argument, NULL, 'h' },
+    { "retroprog_id", required_argument, NULL, 'i' },
+    { "rom_size_kbyte", required_argument, NULL, 'k' },
+    { "mapper", required_argument, NULL, 'm' },
+    { "additional_opts", required_argument, NULL, 'o' },
+    { "rom_write_file", required_argument, NULL, 'p' },
+    { "lua_file", required_argument, NULL, 's' },
+    { "verify", no_argument, NULL, 'v' }, // optional_argument
+    { "wram_size_kbyte", required_argument, NULL, 'w' },
+    { "nes_prg_rom_size_kbyte", required_argument, NULL, 'x' },
+    { "nes_chr_rom_size_kbyte", required_argument, NULL, 'y' },
+    { "rom_size_mbit", required_argument, NULL, 'z' },
+    { 0, 0, 0, 0 } // longopts must end in {0, 0, 0, 0}
   };
 
   char buf[256];
 
   // FLAG_FORMAT must be kept in sync with any short options used in longopts.
-  const char *FLAG_FORMAT = "a:b:c:d:ghi:k:m:o:p:s:vw:x:y:z:";
+  const char* FLAG_FORMAT = "a:b:c:d:ghi:k:m:o:p:s:vw:x:y:z:";
   int index = 0;
   int rv = 0;
   int kbyte = 0;
@@ -125,150 +125,137 @@ bool parseOptions(int argc, char *argv[], t_INLoptions_std *opts)
   opts->gui = false;
   opts->display_help = false;
 
-  if (argc <= 1)
-  {
+  if(argc <= 1) {
     opts->display_help = true;
   }
 
   // getopt returns args till done then returns -1
   // string of possible args : denotes 1 required additional arg
   //:: denotes optional additional arg follows
-  while ((rv = getopt_long(argc, argv, FLAG_FORMAT, longopts, NULL)) != -1)
-  {
-    switch (rv)
-    {
-    case 'a':
-      opts->ram_dump_file.assign(optarg);
-      break;
+  while((rv = getopt_long(argc, argv, FLAG_FORMAT, longopts, NULL)) != -1) {
+    switch(rv) {
+      case 'a':
+        opts->ram_dump_file.assign(optarg);
+        break;
 
-    case 'b':
-      opts->ram_write_file.assign(optarg);
-      break;
+      case 'b':
+        opts->ram_write_file.assign(optarg);
+        break;
 
-    case 'h':
-      opts->display_help = true;
-      break;
+      case 'h':
+        opts->display_help = true;
+        break;
 
-    case 'c':
-      opts->console_name.assign(optarg);
-      break;
+      case 'c':
+        opts->console_name.assign(optarg);
+        break;
 
-    case 'd':
-      opts->rom_dump_file.assign(optarg);
-      break;
+      case 'd':
+        opts->rom_dump_file.assign(optarg);
+        break;
 
-    case 'g':
-      opts->debug = true;
-      break;
+      case 'g':
+        opts->debug = true;
+        break;
 
-    case 'i':
-      opts->retroprog_id.assign(optarg);
-      break;
+      case 'i':
+        opts->retroprog_id.assign(optarg);
+        break;
 
-    case 'k':
-      opts->rom_size_kb = atoi(optarg);
-      break;
+      case 'k':
+        opts->rom_size_kb = atoi(optarg);
+        break;
 
-    case 'm':
-      opts->mapper_name.assign(optarg);
-      break;
+      case 'm':
+        opts->mapper_name.assign(optarg);
+        break;
 
-    case 'o':
-      opts->additional_opts.assign(optarg);
-      break;
+      case 'o':
+        opts->additional_opts.assign(optarg);
+        break;
 
-    case 'p':
-      opts->rom_write_file.assign(optarg);
-      break;
+      case 'p':
+        opts->rom_write_file.assign(optarg);
+        break;
 
-    case 's':
-      opts->lua_file.assign(optarg);
-      break;
+      case 's':
+        opts->lua_file.assign(optarg);
+        break;
 
-    case 'v':
-      opts->verify = true;
-      break;
+      case 'v':
+        opts->verify = true;
+        break;
 
-    case 'w':
-      opts->wram_size_kb = atoi(optarg);
-      break;
+      case 'w':
+        opts->wram_size_kb = atoi(optarg);
+        break;
 
-    case 'x':
-      opts->prg_rom_size_kb = atoi(optarg);
-      break;
+      case 'x':
+        opts->prg_rom_size_kb = atoi(optarg);
+        break;
 
-    case 'y':
-      opts->chr_rom_size_kb = atoi(optarg);
-      break;
+      case 'y':
+        opts->chr_rom_size_kb = atoi(optarg);
+        break;
 
-    case 'z':
-      kbyte = atoi(optarg) * 128;
-      if (opts->rom_size_kb && opts->rom_size_kb != kbyte)
-      {
-        printf("rom_size_mbit disagrees with rom_size_kbyte! Using %d Kb as rom size.\n", kbyte);
-      }
-      opts->rom_size_kb = kbyte;
-      break;
+      case 'z':
+        kbyte = atoi(optarg) * 128;
+        if(opts->rom_size_kb && opts->rom_size_kb != kbyte) {
+          printf("rom_size_mbit disagrees with rom_size_kbyte! Using %d Kb as rom size.\n", kbyte);
+        }
+        opts->rom_size_kb = kbyte;
+        break;
 
-    case '?':
-      if ((optopt == 'c') || (optopt == 'd') || (optopt == 'm') || (optopt == 'o') || (optopt == 'p') || (optopt == 's'))
-      {
-        snprintf(buf, sizeof(buf), "Option -%c requires an argument", optopt);
-        std::cout << termcolor::red << SYMBOL_ERROR << buf << termcolor::reset << std::endl;
-        // log_err("Option -%c requires an argument.", optopt);
+      case '?':
+        if((optopt == 'c') || (optopt == 'd') || (optopt == 'm') || (optopt == 'o') || (optopt == 'p') || (optopt == 's')) {
+          snprintf(buf, sizeof(buf), "Option -%c requires an argument", optopt);
+          std::cout << termcolor::red << SYMBOL_ERROR << buf << termcolor::reset << std::endl;
+          // log_err("Option -%c requires an argument.", optopt);
+          // return false;
+          opts->display_help = true;
+        } else if(isprint(optopt)) {
+          snprintf(buf, sizeof(buf), "Unknown option -%c", optopt);
+          std::cout << termcolor::red << SYMBOL_ERROR << buf << termcolor::reset << std::endl;
+          // log_err("Unknown option -%c .", optopt);
+          // return false;
+          opts->display_help = true;
+        } else {
+          snprintf(buf, sizeof(buf), "Unknown option character '\\x%x'", optopt);
+          std::cout << termcolor::red << SYMBOL_ERROR << buf << termcolor::reset << std::endl;
+          // log_err("Unknown option character '\\x%x'", optopt);
+          // return false;
+          opts->display_help = true;
+        }
+        std::cout << termcolor::red << SYMBOL_ERROR << "Improper arguments passed" << termcolor::reset << std::endl;
+        // log_err("Improper arguments passed");
         // return false;
         opts->display_help = true;
-      }
-      else if (isprint(optopt))
-      {
-        snprintf(buf, sizeof(buf), "Unknown option -%c", optopt);
-        std::cout << termcolor::red << SYMBOL_ERROR << buf << termcolor::reset << std::endl;
-        // log_err("Unknown option -%c .", optopt);
-        // return false;
-        opts->display_help = true;
-      }
-      else
-      {
-        snprintf(buf, sizeof(buf), "Unknown option character '\\x%x'", optopt);
-        std::cout << termcolor::red << SYMBOL_ERROR << buf << termcolor::reset << std::endl;
-        // log_err("Unknown option character '\\x%x'", optopt);
-        // return false;
-        opts->display_help = true;
-      }
-      std::cout << termcolor::red << SYMBOL_ERROR << "Improper arguments passed" << termcolor::reset << std::endl;
-      // log_err("Improper arguments passed");
-      // return false;
-      opts->display_help = true;
-      break;
+        break;
 
-    default:
-      std::cout << termcolor::red << SYMBOL_ERROR << "getopt failed to catch all arg cases" << termcolor::reset << std::endl;
-      // printf("getopt failed to catch all arg cases");
-      // return 0;
-      // return false;
-      opts->display_help = true;
+      default:
+        std::cout << termcolor::red << SYMBOL_ERROR << "getopt failed to catch all arg cases" << termcolor::reset << std::endl;
+        // printf("getopt failed to catch all arg cases");
+        // return 0;
+        // return false;
+        opts->display_help = true;
     }
   }
 
-  for (index = optind; index < argc; index++)
-  {
+  for(index = optind; index < argc; index++) {
     snprintf(buf, sizeof(buf), "Non-option argument: %s \n", argv[index]);
     std::cout << termcolor::red << SYMBOL_ERROR << buf << termcolor::reset << std::endl;
     // log_err("Non-option argument: %s \n", argv[index]);
   }
 
-  if (opts->display_help)
-  {
+  if(opts->display_help) {
     std::cout << HELP << std::endl;
     // printf("%s", HELP);
     return false;
   }
 
   // Handle console, mapper as case-insensitive configuration.
-  std::transform(opts->console_name.begin(), opts->console_name.end(), opts->console_name.begin(), [](unsigned char c)
-                 { return std::tolower(c); });
-  std::transform(opts->mapper_name.begin(), opts->mapper_name.end(), opts->mapper_name.begin(), [](unsigned char c)
-                 { return std::tolower(c); });
+  std::transform(opts->console_name.begin(), opts->console_name.end(), opts->console_name.begin(), [](unsigned char c) { return std::tolower(c); });
+  std::transform(opts->mapper_name.begin(), opts->mapper_name.end(), opts->mapper_name.begin(), [](unsigned char c) { return std::tolower(c); });
 
   return true;
 }
@@ -310,65 +297,53 @@ std::string get_cli(t_INLoptions_std INLoptions)
   cli += " -c " + INLoptions.console_name;
 
   // mapper
-  if (INLoptions.mapper_name != "")
-  {
+  if(INLoptions.mapper_name != "") {
     cli += " -m " + INLoptions.mapper_name;
   }
 
   // rom size
-  if (INLoptions.rom_write_file != "" || INLoptions.rom_dump_file != "")
-  {
-    if (INLoptions.console_name == "nes" || INLoptions.console_name == "famicom" || INLoptions.console_name == "fc")
-    {
+  if(INLoptions.rom_write_file != "" || INLoptions.rom_dump_file != "") {
+    if(INLoptions.console_name == "nes" || INLoptions.console_name == "famicom" || INLoptions.console_name == "fc") {
       cli += " -x " + std::to_string(INLoptions.prg_rom_size_kb);
       cli += " -y " + std::to_string(INLoptions.chr_rom_size_kb);
-    }
-    else
-    {
+    } else {
       cli += " -k " + std::to_string(INLoptions.rom_size_kb);
     }
   }
 
   // rom dump file?
-  if (INLoptions.rom_dump_file != "")
-  {
+  if(INLoptions.rom_dump_file != "") {
     cli += " -d \"" + INLoptions.rom_dump_file + "\"";
   }
 
   // rom write file?
-  if (INLoptions.rom_write_file != "")
-  {
+  if(INLoptions.rom_write_file != "") {
     cli += " -p \"" + INLoptions.rom_write_file + "\"";
   }
 
   // verify?
-  if (INLoptions.verify)
-  {
+  if(INLoptions.verify) {
     cli += " -v";
   }
 
   // ram size?
-  if (INLoptions.wram_size_kb != 0)
-  {
+  if(INLoptions.wram_size_kb != 0) {
     cli += " -w " + std::to_string(INLoptions.wram_size_kb);
   }
 
   // ram dump file?
-  if (INLoptions.ram_dump_file != "")
-  {
+  if(INLoptions.ram_dump_file != "") {
     cli += " -a \"" + INLoptions.ram_dump_file + "\"";
   }
 
   // ram write file?
-  if (INLoptions.ram_write_file != "")
-  {
+  if(INLoptions.ram_write_file != "") {
     cli += " -b \"" + INLoptions.ram_write_file + "\"";
   }
 
   // additional options?
   trim(INLoptions.additional_opts);
-  if (INLoptions.additional_opts != "")
-  {
+  if(INLoptions.additional_opts != "") {
     cli += " -o \"" + INLoptions.additional_opts + "\"";
   }
 

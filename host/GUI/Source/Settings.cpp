@@ -38,10 +38,9 @@ namespace Settings
    */
   void set_theme(int style_idx)
   {
-    switch (style_idx)
-    {
-    case 0:
-      settings.theme = "dark";
+    switch(style_idx) {
+      case 0:
+        settings.theme = "dark";
       ImGui::StyleColorsDark();
       break;
     case 1:
@@ -61,40 +60,36 @@ namespace Settings
    * @param key
    * @param value
    */
-  void set_property(const std::string &key, const std::string &value)
+  void set_property(const std::string& key, const std::string& value)
   {
-    if (key == "theme")
-    {
-      if (value == "dark")
+    if(key == "theme") {
+      if(value == "dark") {
         set_theme(0);
-      else if (value == "light")
+      } else if(value == "light") {
         set_theme(1);
-      else if (value == "classic")
+      } else if(value == "classic") {
         set_theme(2);
-    }
-    else if (key == "font")
-    {
-      int font;
-      try
-      {
-        font = std::stoi(value);
       }
-      catch (const std::exception &e)
-      {
+    } else if(key == "font") {
+      int font;
+      try {
+        font = std::stoi(value);
+      } catch(const std::exception& e) {
         font = 0;
       }
       settings.font = (font == 0 || font == 1) ? font : 0;
-    }
-    else if (key == "save_on_exit")
+    } else if(key == "save_on_exit") {
       settings.save_on_exit = value == "true" ? true : false;
     else if (key == "firmware_update_script")
+    } else if(key == "firmware_update_script") {
       settings.firmware_update_script = value;
+    }
 #if defined(_DEBUG)
-    else if (key == "imgui_demo")
+    else if(key == "imgui_demo") {
       settings.imgui_demo = value == "true" ? true : false;
+    }
 #endif
-    else
-    {
+    else {
       APP_LOG(LogTypes_Warning, "[SETTINGS] Don't know what to do with: " + key + "=" + value);
     }
   }
@@ -114,15 +109,10 @@ namespace Settings
     ImGui::Separator();
 
     // flasher tab/list
-    if (Flasher::list.size() == 0)
-    {
+    if(Flasher::list.size() == 0) {
       ImGui::Text("No flasher found...");
-    }
-    else
-    {
-
-      if (ImGui::BeginTable("flashers_table", 5, ImGuiTableFlags_SizingStretchProp))
-      {
+    } else {
+      if(ImGui::BeginTable("flashers_table", 5, ImGuiTableFlags_SizingStretchProp)) {
         // Header
         ImGui::TableSetupColumn("Name");
         ImGui::TableSetupColumn("Active");
@@ -132,61 +122,60 @@ namespace Settings
         ImGui::TableHeadersRow();
 
         // Flashers
-        for (auto &flasher : Flasher::list)
-        {
+        for(auto& flasher : Flasher::list) {
           ImGui::BeginDisabled(flasher->isFlashing);
 
           ImGui::TableNextRow();
           ImGui::TableSetColumnIndex(0);
           char label[32];
           snprintf(label, sizeof(label), "INL Retro-Pro%s", flasher->id.c_str());
-          if (flasher->hardwareType == HW_UNKW)
-          {
+          if(flasher->hardwareType == HW_UNKW) {
             ImGui::BeginGroup();
             ImGui::TextColored(ImVec4(1.0f, 0.734f, 0.189f, 1.0f), ICON_FA_TRIANGLE_EXCLAMATION);
             ImGui::SameLine();
             ImGui::TextUnformatted(label);
             ImGui::EndGroup();
             ImGui::SetItemTooltip("The firmware is outdated and needs to be updated to be compatible.");
-          }
-          else
-          {
+          } else {
             ImGui::TextUnformatted(label);
           }
           ImGui::TableSetColumnIndex(1);
           snprintf(label, sizeof(label), "##flasher_is_active%s", flasher->id.c_str());
           ImGui::Checkbox(label, &flasher->isActive);
           ImGui::TableSetColumnIndex(2);
-          const char *models[] = {"UNKNOWN", "HW_STM6", "HW_STMN", "HW_STM6P", "HW_AVR"};
+          const char* models[] = { "UNKNOWN", "HW_STM6", "HW_STMN", "HW_STM6P", "HW_AVR" };
           ImGui::Text("%s", models[flasher->hardwareType]);
           ImGui::TableSetColumnIndex(3);
           ImGui::Text("v2.%d", flasher->firmwareVersion);
           // ImGui::Text("v%d.%d", (flasher->firmwareVersion & 0xff00) >> 8, flasher->firmwareVersion & 0xff);
           ImGui::TableSetColumnIndex(4);
-          if (!flasher->isActive)
+          if(!flasher->isActive) {
             ImGui::BeginDisabled();
+          }
 
           snprintf(label, sizeof(label), "Update firmware...##inlretropro%s", flasher->id.c_str());
 
-          if (ImGui::BeginPopupContextItem("custom update firmware"))
-          {
+          if(ImGui::BeginPopupContextItem("custom update firmware")) {
             ImGui::Text("Select your flasher model:");
             ImGui::Separator();
-            if (flasher->hardwareType == HW_UNKW || flasher->hardwareType == HW_STM6)
-              if (ImGui::Selectable("INLretro 6 connectors"))
+            if(flasher->hardwareType == HW_UNKW || flasher->hardwareType == HW_STM6) {
+              if(ImGui::Selectable("INLretro 6 connectors")) {
                 flasher->update_firmware(STM6_FIRMWARE);
+              }
+            }
 
-            if (flasher->hardwareType == HW_UNKW || flasher->hardwareType == HW_STMN)
-              if (ImGui::Selectable("INLretro NESmaker edition"))
+            if(flasher->hardwareType == HW_UNKW || flasher->hardwareType == HW_STMN) {
+              if(ImGui::Selectable("INLretro NESmaker edition")) {
                 flasher->update_firmware(STMN_FIRMWARE);
+              }
+            }
 
             // ImGui::BeginDisabled(true);
             // ImGui::Selectable("INL Kazzo");
             // ImGui::EndDisabled();
             ImGui::Separator();
 
-            if (ImGui::Selectable("Use custom file..."))
-            {
+            if(ImGui::Selectable("Use custom file...")) {
               Dialog::fileExt = ".bin";
               Dialog::callback = std::bind(&Flasher::cb_custom_firmware_update, flasher, _1, _2);
               Dialog::showFileOpen = true;
@@ -196,11 +185,13 @@ namespace Settings
             ImGui::EndPopup();
           }
 
-          if (ImGui::Button(label))
+          if(ImGui::Button(label)) {
             ImGui::OpenPopup("custom update firmware");
+          }
 
-          if (!flasher->isActive)
+          if(!flasher->isActive) {
             ImGui::EndDisabled();
+          }
 
           ImGui::EndDisabled();
         }
@@ -212,7 +203,7 @@ namespace Settings
     // ImGui::Checkbox("Debug", &INLoptions.debug); // FIXME
     ImGui::Separator();
     ImGui::BeginDisabled(Flasher::is_flashing());
-    if (ImGui::Button("Refresh flasher list")) //, ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+    if(ImGui::Button("Refresh flasher list")) //, ImVec2(ImGui::GetContentRegionAvail().x, 0)))
     {
       Flasher::detect_all();
     }
@@ -233,8 +224,7 @@ namespace Settings
     ImGui::SeparatorText("Settings");
     ImGui::BeginChild("Settings");
 
-    if (ImGui::BeginTable("rom_dump_table", 2, ImGuiTableFlags_SizingStretchProp))
-    {
+    if(ImGui::BeginTable("rom_dump_table", 2, ImGuiTableFlags_SizingStretchProp)) {
       // Setup table columns sizes
       ImVec2 text_max_size = ImGui::CalcTextSize("Firmware update script");
       ImGui::TableSetupColumn("one", ImGuiTableColumnFlags_WidthFixed, text_max_size.x);
@@ -247,8 +237,7 @@ namespace Settings
       ImGui::TableSetColumnIndex(1);
       ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
       static int style_idx = 0;
-      if (ImGui::Combo("##settings_theme", &style_idx, "Dark\0Light\0Classic\0"))
-      {
+      if(ImGui::Combo("##settings_theme", &style_idx, "Dark\0Light\0Classic\0")) {
         set_theme(style_idx);
       }
 
@@ -288,8 +277,7 @@ namespace Settings
     }
 
     ImGui::NewLine();
-    if (ImGui::Button("Save settings"))
-    {
+    if(ImGui::Button("Save settings")) {
       Ini::save();
     }
 
@@ -326,7 +314,7 @@ namespace Settings
     ImGui::Text("by Omar Cornut");
     ImGui::Separator();
     ImGui::Text("SDL2 v%d.%d.%d", SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL);
-    const libusb_version *libusbVersion = libusb_get_version();
+    const libusb_version* libusbVersion = libusb_get_version();
     ImGui::Text("libusb v%d.%d.%d", libusbVersion->major, libusbVersion->minor, libusbVersion->micro);
 
     ImGui::EndChild();

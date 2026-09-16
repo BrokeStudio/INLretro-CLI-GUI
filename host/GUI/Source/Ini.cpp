@@ -17,16 +17,14 @@
 #include "Snes.h"
 
 #ifdef __APPLE__
-#include "macos.h"
+  #include "macos.h"
 #endif
 
 #define INI_FILENAME "INLretro.ini"
 
-std::string &trim(std::string &s, char c, bool reverse = false)
+std::string& trim(std::string& s, char c, bool reverse = false)
 {
-  return reverse
-             ? s.erase(s.find_last_not_of(c) + 1)
-             : s.erase(0, s.find_first_not_of(c));
+  return reverse ? s.erase(s.find_last_not_of(c) + 1) : s.erase(0, s.find_first_not_of(c));
 }
 
 namespace Ini
@@ -41,7 +39,6 @@ namespace Ini
    */
   bool load()
   {
-
 #define LINE_SIZE 256
 
     bool inSection = false;
@@ -55,19 +52,17 @@ namespace Ini
 
 #ifdef __APPLE__
 
-#ifdef _DIST
-    if (getResourcesPath(iniFilePath) == -1)
-    {
+  #ifdef _DIST
+    if(getResourcesPath(iniFilePath) == -1) {
       APP_LOG(LogTypes_Error, L_INI "Couldn't get resources path");
       return false;
     }
-#else
-    if (getExecutablePath(iniFilePath) == -1)
-    {
+  #else
+    if(getExecutablePath(iniFilePath) == -1) {
       APP_LOG(LogTypes_Error, L_INI "Couldn't get executable path");
       return false;
     }
-#endif
+  #endif
 
     iniFilePath += INI_FILENAME;
 #else
@@ -75,8 +70,7 @@ namespace Ini
 #endif
 
     std::ifstream file(iniFilePath.c_str(), std::ifstream::in);
-    if (!file)
-    {
+    if(!file) {
       APP_LOG(LogTypes_Error, L_INI "Couldn't open file: " INI_FILENAME);
       return false;
     }
@@ -84,9 +78,7 @@ namespace Ini
     // parsing INI file content
     APP_LOG(LogTypes_Point, L_INI "Parsing file: " INI_FILENAME);
 
-    while (!file.eof())
-    {
-
+    while(!file.eof()) {
       // Windows: CRLF (\r\n)
       // Linux: LF
       // Mac OS X >= 10.0: LF
@@ -94,41 +86,31 @@ namespace Ini
 
       file.getline(line, LINE_SIZE);
 
-      if (strlen(line) == 0)
-      {
+      if(strlen(line) == 0) {
         continue;
       }
 
-      if (line[strlen(line) - 1] == '\r')
-      {
+      if(line[strlen(line) - 1] == '\r') {
         line[strlen(line) - 1] = 0;
       }
 
       sLine = std::string(line);
       trim(sLine, ' ', false);
-      if (sLine == "")
-      {
+      if(sLine == "") {
         // ignore empty lines
         continue;
-      }
-      else if (sLine.front() == '#')
-      {
+      } else if(sLine.front() == '#') {
         // ignore comments
         continue;
-      }
-      else if (sLine.front() == '[' && sLine.back() == ']')
-      {
+      } else if(sLine.front() == '[' && sLine.back() == ']') {
         // section
-        if (inSection)
-        {
+        if(inSection) {
           sections.push_back(section);
           section.clear();
         }
         section.name = sLine;
         inSection = true;
-      }
-      else if (sLine.find("=") != std::string::npos)
-      {
+      } else if(sLine.find("=") != std::string::npos) {
         // property key=value
         std::string key = sLine.substr(0, sLine.find("="));
         std::string value = sLine.substr(sLine.find("=") + 1);
@@ -137,8 +119,7 @@ namespace Ini
     }
 
     // TODO: a bit hacky ...
-    if (section.name != "")
-    {
+    if(section.name != "") {
       sections.push_back(section);
       section.clear();
     }
@@ -161,19 +142,17 @@ namespace Ini
     std::string iniFilePath;
 
 #ifdef __APPLE__
-#ifdef _DIST
-    if (getResourcesPath(iniFilePath) == -1)
-    {
+  #ifdef _DIST
+    if(getResourcesPath(iniFilePath) == -1) {
       APP_LOG(LogTypes_Error, L_INI "Couldn't get resources path");
       return false;
     }
-#else
-    if (getExecutablePath(iniFilePath) == -1)
-    {
+  #else
+    if(getExecutablePath(iniFilePath) == -1) {
       APP_LOG(LogTypes_Error, L_INI "Couldn't get executable path");
       return false;
     }
-#endif
+  #endif
 
     iniFilePath += INI_FILENAME;
 #else
@@ -181,8 +160,7 @@ namespace Ini
 #endif
 
     std::ofstream file(iniFilePath.c_str(), std::ifstream::trunc);
-    if (!file)
-    {
+    if(!file) {
       APP_LOG(LogTypes_Error, L_INI "Couldn't open file: " INI_FILENAME);
       return false;
     }
@@ -190,25 +168,25 @@ namespace Ini
     // saving INI file
     APP_LOG(LogTypes_Point, L_INI "Saving file: " INI_FILENAME);
 
-    for (auto &section : Ini::sections)
-    {
+    for(auto& section : Ini::sections) {
       file << section.name << std::endl;
-      for (auto &property : section.properties)
-      {
+      for(auto& property : section.properties) {
         // update INI config from settings
-        if (section.name == "[Settings]")
-        {
-          if (property.first == "theme")
+        if(section.name == "[Settings]") {
+          if(property.first == "theme") {
             property.second = Settings::settings.theme;
-          else if (property.first == "font")
+          } else if(property.first == "font") {
             property.second = std::to_string(Settings::settings.font);
-          else if (property.first == "save_on_exit")
+          } else if(property.first == "save_on_exit") {
             property.second = Settings::settings.save_on_exit ? "true" : "false";
           else if (property.first == "firmware_update_script")
+          } else if(property.first == "firmware_update_script") {
             property.second = Settings::settings.firmware_update_script;
+          }
 #if defined(_DEBUG)
-          else if (property.first == "imgui_demo")
+          else if(property.first == "imgui_demo") {
             property.second = Settings::settings.imgui_demo ? "true" : "false";
+          }
 #endif
         }
         file << property.first << "=" << property.second << std::endl;
@@ -228,63 +206,54 @@ namespace Ini
    */
   void parse()
   {
-    for (auto &section : Ini::sections)
-    {
-      if (section.name.substr(0, 9) == "[Console]")
-      {
+    for(auto& section : Ini::sections) {
+      if(section.name.substr(0, 9) == "[Console]") {
         t_Console console;
 
         size_t first_bracket_end = section.name.find(']');
-        if (first_bracket_end == std::string::npos)
-        {
+        if(first_bracket_end == std::string::npos) {
           APP_LOG(LogTypes_Error, L_INI "Malformed section name: " + section.name);
           continue;
         }
 
         size_t second_bracket_start = section.name.find('[', first_bracket_end);
-        if (second_bracket_start == std::string::npos)
-        {
+        if(second_bracket_start == std::string::npos) {
           APP_LOG(LogTypes_Error, L_INI "Malformed section name: " + section.name);
           continue;
         }
 
         size_t second_bracket_end = section.name.find(']', second_bracket_start);
-        if (second_bracket_end == std::string::npos)
-        {
+        if(second_bracket_end == std::string::npos) {
           APP_LOG(LogTypes_Error, L_INI "Malformed section name: " + section.name);
           continue;
         }
 
         console.name = section.name.substr(second_bracket_start + 1, second_bracket_end - (second_bracket_start + 1));
 
-        for (auto &property : section.properties)
-        {
-          if (property.first == "short_name")
+        for(auto& property : section.properties) {
+          if(property.first == "short_name") {
             console.short_name = property.second;
-          else if (property.first == "full_name")
+          } else if(property.first == "full_name") {
             console.full_name = property.second;
-          else if (property.first == "actions")
-          {
+          } else if(property.first == "actions") {
             std::stringstream ss(property.second);
             std::string str;
-            while (std::getline(ss, str, ','))
-            {
-              if (str == "rom_dump")
+            while(std::getline(ss, str, ',')) {
+              if(str == "rom_dump") {
                 console.actions |= ConsoleActions_RomDump;
-              else if (str == "rom_write")
+              } else if(str == "rom_write") {
                 console.actions |= ConsoleActions_RomWrite;
-              else if (str == "ram_dump")
+              } else if(str == "ram_dump") {
                 console.actions |= ConsoleActions_RamDump;
-              else if (str == "ram_write")
+              } else if(str == "ram_write") {
                 console.actions |= ConsoleActions_RamWrite;
+              }
             }
-          }
-          else if (property.first == "rom_file_ext")
+          } else if(property.first == "rom_file_ext") {
             console.rom_file_ext = property.second;
-          else if (property.first == "ram_file_ext")
+          } else if(property.first == "ram_file_ext") {
             console.ram_file_ext = property.second;
-          else if (property.first == "mapper")
-          {
+          } else if(property.first == "mapper") {
             Mapper mapper;
             std::stringstream ss(property.second);
             std::string str;
@@ -297,41 +266,27 @@ namespace Ini
             console.mappers.push_back(mapper);
           }
         }
-        if (console.name == "nes" || console.name == "famicom" || console.name == "fc")
-        {
+        if(console.name == "nes" || console.name == "famicom" || console.name == "fc") {
           Console::add(new Nes(console));
           APP_LOG(LogTypes_Point, L_INI "Console '" + console.name + "' added");
-        }
-        else if (console.name == "snes" || console.name == "sfc")
-        {
+        } else if(console.name == "snes" || console.name == "sfc") {
           Console::add(new Snes(console));
           APP_LOG(LogTypes_Point, L_INI "Console '" + console.name + "' added");
-        }
-        else if (console.name == "dmg" || console.name == "gb" || console.name == "gbc")
-        {
+        } else if(console.name == "dmg" || console.name == "gb" || console.name == "gbc") {
           Console::add(new GameBoy(console));
           APP_LOG(LogTypes_Point, L_INI "Console '" + console.name + "' added");
-        }
-        else if (console.name == "genesis" || console.name == "gen" || console.name == "megadrive" || console.name == "md")
-        {
+        } else if(console.name == "genesis" || console.name == "gen" || console.name == "megadrive" || console.name == "md") {
           Console::add(new MegaDrive(console));
           APP_LOG(LogTypes_Point, L_INI "Console '" + console.name + "' added");
-        }
-        else
-        {
+        } else {
           Console::add(new Console(console));
           APP_LOG(LogTypes_Warning, L_INI "Console '" + console.name + "' added with basic support only");
         }
-      }
-      else if (section.name == "[Settings]")
-      {
-        for (auto &property : section.properties)
-        {
+      } else if(section.name == "[Settings]") {
+        for(auto& property : section.properties) {
           Settings::set_property(property.first, property.second);
         }
-      }
-      else
-      {
+      } else {
         APP_LOG(LogTypes_Warning, L_INI "Don't know what to do with: " + section.name);
       }
     }

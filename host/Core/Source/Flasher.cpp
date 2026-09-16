@@ -9,16 +9,15 @@
 #include "Lua.h"
 
 #ifdef __APPLE__
-#include "macos.h"
+  #include "macos.h"
 // #include <SDL.h>
 #endif
 
-std::vector<Flasher *> Flasher::list;
+std::vector<Flasher*> Flasher::list;
 
 void Flasher::clear_list()
 {
-  for (auto &flasher : list)
-  {
+  for(auto& flasher : list) {
     delete flasher;
   }
 
@@ -31,20 +30,17 @@ void Flasher::detect_all()
   clear_list();
 
   // try to detect INL Retro-Prog flasher
-  if (detect("g"))
-  {
+  if(detect("g")) {
     list.push_back(new Flasher("g", true));
     APP_LOG(LogTypes_Success, L_SYS "Flasher 'INLretroprog' detected");
   }
 
   // try to detect INL Retro-Pro[0-9] flashers
-  for (size_t i = 0; i <= 9; i++)
-  {
+  for(size_t i = 0; i <= 9; i++) {
     char id[2];
     id[0] = '0' + (char)i;
     id[1] = 0;
-    if (detect(id))
-    {
+    if(detect(id)) {
       list.push_back(new Flasher(id, true));
       APP_LOG(LogTypes_Success, L_SYS "Flasher 'INLretropro%c' detected", id[0]);
     }
@@ -53,10 +49,8 @@ void Flasher::detect_all()
 
 bool Flasher::is_flashing()
 {
-  for (auto &flasher : list)
-  {
-    if (flasher->isFlashing)
-    {
+  for(auto& flasher : list) {
+    if(flasher->isFlashing) {
       return true;
       break;
     }
@@ -67,10 +61,8 @@ bool Flasher::is_flashing()
 int Flasher::count_flashing()
 {
   int count = 0;
-  for (auto &flasher : list)
-  {
-    if (flasher->isFlashing)
-    {
+  for(auto& flasher : list) {
+    if(flasher->isFlashing) {
       count++;
     }
   }
@@ -79,10 +71,8 @@ int Flasher::count_flashing()
 
 void Flasher::exec_all(t_INLoptions_std opts)
 {
-  for (auto &flasher : list)
-  {
-    if (flasher->isActive && !flasher->isFlashing)
-    {
+  for(auto& flasher : list) {
+    if(flasher->isActive && !flasher->isFlashing) {
       flasher->exec(opts);
     }
   }
@@ -94,7 +84,7 @@ void Flasher::exec_all(t_INLoptions_std opts)
  * @param id Flasher ID, last character of the USB device name (INL Retro-Pro_)
  * @param isActive Flasher to be used or not
  */
-Flasher::Flasher(const std::string &id, bool isActive)
+Flasher::Flasher(const std::string& id, bool isActive)
 {
   this->id = id;
   this->isActive = isActive;
@@ -111,8 +101,9 @@ Flasher::Flasher(const std::string &id, bool isActive)
  */
 Flasher::~Flasher()
 {
-  if (this->flashThread.joinable())
+  if(this->flashThread.joinable()) {
     this->flashThread.join();
+  }
 }
 
 /**
@@ -122,10 +113,10 @@ Flasher::~Flasher()
  * @param retroprog_id
  * @return USBtransfer*
  */
-USBtransfer *Flasher::usb_inldevice_open(int libusb_log, const char *retroprog_id, Log *log)
+USBtransfer* Flasher::usb_inldevice_open(int libusb_log, const char* retroprog_id, Log* log)
 {
   // Create USBtransfer struct to hold all transfer info
-  USBtransfer *transfer = (USBtransfer *)calloc(1, sizeof(USBtransfer));
+  USBtransfer* transfer = (USBtransfer*)calloc(1, sizeof(USBtransfer));
 
   // Create USB device handle pointer to interact with retro-prog.
   transfer->handle = open_usb_device(libusb_log, retroprog_id, log);
@@ -138,15 +129,13 @@ USBtransfer *Flasher::usb_inldevice_open(int libusb_log, const char *retroprog_i
  *
  * @param transfer
  */
-void Flasher::usb_inldevice_close(USBtransfer *transfer)
+void Flasher::usb_inldevice_close(USBtransfer* transfer)
 {
-  if (transfer && transfer->handle)
-  {
+  if(transfer && transfer->handle) {
     close_usb(transfer->handle);
   }
 
-  if (transfer)
-  {
+  if(transfer) {
     free(transfer);
   }
 }
@@ -158,20 +147,19 @@ void Flasher::usb_inldevice_close(USBtransfer *transfer)
  * @return true if USB device has been detected
  * @return false if USB device has NOT been detected
  */
-bool Flasher::detect(const char *retroprog_id)
+bool Flasher::detect(const char* retroprog_id)
 {
   bool result = true;
 
   // USB variables
-  USBtransfer *transfer = nullptr;
+  USBtransfer* transfer = nullptr;
 
   // Default to no libusb logging.
   int libusb_log = LIBUSB_LOG_LEVEL_NONE;
 
   transfer = usb_inldevice_open(libusb_log, retroprog_id, &AppLog::log);
 
-  if (!transfer || transfer->handle == nullptr)
-  {
+  if(!transfer || transfer->handle == nullptr) {
     result = false;
   }
 
@@ -191,27 +179,23 @@ bool Flasher::exec(t_INLoptions_std opts)
   // clear log
   log.clear();
 
-  if (opts.lua_path.empty())
-  {
+  if(opts.lua_path.empty()) {
     opts.lua_path = "./";
   }
 
-  if (opts.write_path.empty())
-  {
+  if(opts.write_path.empty()) {
     opts.write_path = opts.lua_path;
   }
 
   // start script in a separate thread
   isFlashing = true;
   opts.retroprog_id = id;
-  if (opts.gui)
-  {
-    if (this->flashThread.joinable())
+  if(opts.gui) {
+    if(this->flashThread.joinable()) {
       this->flashThread.join();
+    }
     this->flashThread = std::thread(&Flasher::t_inlprog_opt, this, opts);
-  }
-  else
-  {
+  } else {
     inlprog_opt(opts);
     isFlashing = false;
   }
@@ -219,13 +203,12 @@ bool Flasher::exec(t_INLoptions_std opts)
   return true;
 }
 
-void Flasher::update_firmware(std::string firmware_file)
+void Flasher::update_firmware(const std::string& firmware_file)
 {
   t_INLoptions_std firmware_INLOptions;
   firmware_INLOptions.gui = true;
   firmware_INLOptions.retroprog_id = this->id;
   firmware_INLOptions.rom_write_file = firmware_file;
-  firmware_INLOptions.lua_file = "scripts/inlretro_fwupdate.lua";
   this->exec(firmware_INLOptions);
 }
 
@@ -235,7 +218,7 @@ void Flasher::update_firmware(std::string firmware_file)
  * @param opts
  * @return int
  */
-int Flasher::t_inlprog_opt(const t_INLoptions_std &opts)
+int Flasher::t_inlprog_opt(const t_INLoptions_std& opts)
 {
   int r = inlprog_opt(opts);
   isFlashing = false;
@@ -248,16 +231,16 @@ int Flasher::t_inlprog_opt(const t_INLoptions_std &opts)
  * @param opts
  * @return int
  */
-int Flasher::inlprog_opt(const t_INLoptions_std &opts)
+int Flasher::inlprog_opt(const t_INLoptions_std& opts)
 {
   // USB variables
-  USBtransfer *transfer = nullptr;
+  USBtransfer* transfer = nullptr;
 
   // Default to no libusb logging.
   int libusb_log = LIBUSB_LOG_LEVEL_NONE;
 
   // Lua variables.
-  lua_State *L = nullptr;
+  lua_State* L = nullptr;
 
   // Default script
   std::string luaScript = "";
@@ -292,17 +275,15 @@ int Flasher::inlprog_opt(const t_INLoptions_std &opts)
   // TODO get usb device settings from usb_device.lua
 
   // Lua script arg to set different libusb debugging options.
-  check(&log, !(luaL_loadfile(L, luaUsbScript.c_str()) || lua_pcall(L, 0, 0, 0)),
-        "Cannot run config. file: %s", lua_tostring(L, -1));
+  check(&log, !(luaL_loadfile(L, luaUsbScript.c_str()) || lua_pcall(L, 0, 0, 0)), "Cannot run config. file: %s", lua_tostring(L, -1));
 
   // Any value > 0 for libusb_log also prints debug statements in open_usb_device function.
   // libusb_log = 0; // getglobint(L, "libusb_log");
-  check(&log, ((libusb_log >= LIBUSB_LOG_LEVEL_NONE) && (libusb_log <= LIBUSB_LOG_LEVEL_DEBUG)),
-        "Invalid LIBUSB_LOG_LEVEL: %d, must be from 0 to 4", libusb_log);
+  check(&log, ((libusb_log >= LIBUSB_LOG_LEVEL_NONE) && (libusb_log <= LIBUSB_LOG_LEVEL_DEBUG)), "Invalid LIBUSB_LOG_LEVEL: %d, must be from 0 to 4", libusb_log);
 
   // USBtransfer *transfer = (USBtransfer *)calloc(1, sizeof(USBtransfer));
 
-  transfer = usb_inldevice_open(libusb_log, (char *)opts.retroprog_id.c_str(), &log);
+  transfer = usb_inldevice_open(libusb_log, (char*)opts.retroprog_id.c_str(), &log);
 
   // transfer->handle = usb_open(opts.retroprog_id.c_str()[0]);
 
@@ -311,8 +292,7 @@ int Flasher::inlprog_opt(const t_INLoptions_std &opts)
     printf("oops");
   }*/
 
-  if (transfer->handle == nullptr)
-  {
+  if(transfer->handle == nullptr) {
     // std::cout << "Unable to open INL retro-prog usb device handle" << std::endl;
     goto error;
   }
@@ -323,17 +303,13 @@ int Flasher::inlprog_opt(const t_INLoptions_std &opts)
 
   // USB device is open, pass args and control over to Lua.
   // If lua_filename isn't set from args, use default script.
-  if (strlen(opts.lua_file.c_str()))
-  {
+  if(strlen(opts.lua_file.c_str())) {
     luaScript += opts.lua_file;
-  }
-  else
-  {
+  } else {
     luaScript += "scripts/inlretro2.lua";
   }
 
-  check(&log, !(luaL_loadfile(L, luaScript.c_str()) || lua_pcall(L, 0, 0, 0)),
-        "cannot run config. file: %s", lua_tostring(L, -1));
+  check(&log, !(luaL_loadfile(L, luaScript.c_str()) || lua_pcall(L, 0, 0, 0)), "cannot run config. file: %s", lua_tostring(L, -1));
   // if (!(!(luaL_loadfile(L, script) || lua_pcall(L, 0, 0, 0))))
   // {
   //   std::string luaErr = std::string(lua_tostring(L, -1));
@@ -360,7 +336,7 @@ error:
  * @param transfer
  * @param L
  */
-void Flasher::cleanup(USBtransfer *transfer)
+void Flasher::cleanup(USBtransfer* transfer)
 {
   usb_inldevice_close(transfer);
   lua.close();

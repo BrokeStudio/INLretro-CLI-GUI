@@ -6,25 +6,25 @@
 #include "Log.h"
 
 ImColor LogColors[LogTypes_Count] = {
-    ImColor(229, 229, 229, 255), // none / white
-    ImColor(214, 112, 214, 255), // section / magenta
-    ImColor(17, 168, 205, 255),  // info / blue
-    ImColor(13, 188, 121, 255),  // success / green
-    ImColor(229, 229, 16, 255),  // warning / yellow
-    ImColor(205, 49, 49, 255),   // error / red
-    ImColor(17, 168, 205, 255),  // point / blue
-    ImColor(17, 168, 205, 255),  // bullet / blue
+  ImColor(229, 229, 229, 255), // none / white
+  ImColor(214, 112, 214, 255), // section / magenta
+  ImColor(17, 168, 205, 255),  // info / blue
+  ImColor(13, 188, 121, 255),  // success / green
+  ImColor(229, 229, 16, 255),  // warning / yellow
+  ImColor(205, 49, 49, 255),   // error / red
+  ImColor(17, 168, 205, 255),  // point / blue
+  ImColor(17, 168, 205, 255),  // bullet / blue
 };
 
-const char *LogSymbols[LogTypes_Count] = {
-    "  ",                         // none
-    ICON_FA_MINUS,                // section
-    ICON_FA_INFO,                 // info
-    ICON_FA_CHECK,                // success
-    ICON_FA_TRIANGLE_EXCLAMATION, // warning
-    ICON_FA_XMARK,                // error
-    ICON_FA_CARET_RIGHT,          // point
-    ICON_FA_CIRCLE,               // bullet
+const char* LogSymbols[LogTypes_Count] = {
+  "  ",                         // none
+  ICON_FA_MINUS,                // section
+  ICON_FA_INFO,                 // info
+  ICON_FA_CHECK,                // success
+  ICON_FA_TRIANGLE_EXCLAMATION, // warning
+  ICON_FA_XMARK,                // error
+  ICON_FA_CARET_RIGHT,          // point
+  ICON_FA_CIRCLE,               // bullet
 };
 
 void Log::render()
@@ -36,14 +36,14 @@ void Log::render()
   // Reserve enough left-over height for 1 separator + 1 input text
   // const float footer_height_to_reserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
   // const float footer_height_to_reserve = ImGui::GetFrameHeightWithSpacing();
-  if (ImGui::BeginChild("Log", ImVec2(-1, -1), false, ImGuiWindowFlags_HorizontalScrollbar))
-  {
-    if (ImGui::BeginPopupContextWindow())
-    {
-      if (ImGui::Selectable("Copy"))
+  if(ImGui::BeginChild("Log", ImVec2(-1, -1), false, ImGuiWindowFlags_HorizontalScrollbar)) {
+    if(ImGui::BeginPopupContextWindow()) {
+      if(ImGui::Selectable("Copy")) {
         copyToClipboard = true;
-      if (ImGui::Selectable("Clear"))
+      }
+      if(ImGui::Selectable("Clear")) {
         Items.clear();
+      }
       ImGui::EndPopup();
     }
 
@@ -73,14 +73,14 @@ void Log::render()
     // - Consider using manual call to IsRectVisible() and skipping extraneous decoration from your items.
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1)); // Tighten spacing
 
-    if (copyToClipboard)
+    if(copyToClipboard) {
       ImGui::LogToClipboard();
+    }
 
     // make a safe copy of Items
     std::vector<LogMessage> ItemsCopy = getCopy();
 
-    for (const LogMessage item : ItemsCopy)
-    {
+    for(const LogMessage item : ItemsCopy) {
       ImVec4 color = LogColors[item.type];
       ImGui::PushStyleColor(ImGuiCol_Text, color);
       ImGui::TextUnformatted(LogSymbols[item.type]);
@@ -89,14 +89,14 @@ void Log::render()
       ImGui::PopStyleColor();
     }
 
-    if (copyToClipboard)
+    if(copyToClipboard) {
       ImGui::LogFinish();
+    }
 
-    if (showSpinner)
-    {
-      ImDrawList *draw_list = ImGui::GetWindowDrawList();
+    if(showSpinner) {
+      ImDrawList* draw_list = ImGui::GetWindowDrawList();
       ImVec2 pos = ImGui::GetCursorScreenPos();
-      ImGuiStyle &style = ImGui::GetStyle();
+      ImGuiStyle& style = ImGui::GetStyle();
 
       ImVec2 start_pos = ImVec2(pos.x, pos.y);
       ImVec2 end_pos = ImVec2(pos.x + ImGui::GetWindowWidth(), pos.y + ImGui::GetTextLineHeight() + style.FramePadding.y);
@@ -113,8 +113,9 @@ void Log::render()
 
     // Keep up at the bottom of the scroll region if we were already at the bottom at the beginning of the frame.
     // Using a scrollbar or mouse-wheel will take away from the bottom edge.
-    if (scrollToBottom || (autoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY()))
+    if(scrollToBottom || (autoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY())) {
       ImGui::SetScrollHereY(1.0f);
+    }
     scrollToBottom = false;
 
     ImGui::PopStyleVar();

@@ -1,11 +1,11 @@
 #pragma once
 #ifndef INI_H
-#define INI_H
+  #define INI_H
 
-#include <list>
-#include <string>
+  #include <list>
+  #include <string>
 
-#include "Console.h"
+  #include "Console.h"
 
 namespace Ini
 {

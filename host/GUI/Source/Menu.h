@@ -1,10 +1,10 @@
 #pragma once
 #ifndef MENU_H
-#define MENU_H
+  #define MENU_H
 
-#include <functional>
-#include <string>
-#include <unordered_map>
+  #include <functional>
+  #include <string>
+  #include <unordered_map>
 
 namespace Menu
 {
@@ -28,8 +28,8 @@ namespace Menu
   void render_tree(bool disabled);
   void render_content(std::string droppedFilename);
 
-  void set_menu_active(const std::string &menu_name, bool value);
-  void set_sub_menu_active(const std::string &menu_name, const std::string &sub_menu_name);
+  void set_menu_active(const std::string& menu_name, bool value);
+  void set_sub_menu_active(const std::string& menu_name, const std::string& sub_menu_name);
 }
 
 #endif

@@ -5,13 +5,13 @@
 // #include "Log.h"
 #include "Lua.h"
 
-typedef int (Lua::*mem_func)(lua_State *L);
+typedef int (Lua::*mem_func)(lua_State* L);
 
 // This template wraps a member function into a C-style "free" function compatible with lua.
-template <mem_func func>
-int dispatch(lua_State *L)
+template<mem_func func>
+int dispatch(lua_State* L)
 {
-  Lua *ptr = *static_cast<Lua **>(lua_getextraspace(L));
+  Lua* ptr = *static_cast<Lua**>(lua_getextraspace(L));
   return ((*ptr).*func)(L);
 }
 
@@ -28,7 +28,7 @@ Lua::Lua()
  *
  * @param _log
  */
-void Lua::setLog(Log *_log)
+void Lua::setLog(Log* _log)
 {
   this->log = _log;
 }
@@ -40,13 +40,13 @@ void Lua::setLog(Log *_log)
  * @return lua_State*
  */
 // lua_State *Lua::init(t_INLoptions *opts)
-lua_State *Lua::init(const t_INLoptions_std &opts)
+lua_State* Lua::init(const t_INLoptions_std& opts)
 {
   this->L = luaL_newstate(); // opens Lua
   luaL_openlibs(this->L);    // opens the standard libraries
 
   // register log function
-  *static_cast<Lua **>(lua_getextraspace(this->L)) = this;
+  *static_cast<Lua**>(lua_getextraspace(this->L)) = this;
 
   // const luaL_Reg regs[] = {
   // { "callback_1", &dispatch<&my_class::callback_1> },
@@ -54,8 +54,7 @@ lua_State *Lua::init(const t_INLoptions_std &opts)
   // };
   // luaL_register(this->L, regs);
   // lua_register(this->L, "print", &dispatch<&Lua::l_log_add>);
-  if (opts.gui)
-  {
+  if(opts.gui) {
     lua_register(this->L, "gui_log_add", &dispatch<&Lua::l_log_add>);
     lua_register(this->L, "gui_spinner_update", &dispatch<&Lua::l_log_spinner_update>);
     lua_register(this->L, "gui_spinner_clear", &dispatch<&Lua::l_log_spinner_clear>);
@@ -132,8 +131,7 @@ lua_State *Lua::init(const t_INLoptions_std &opts)
  */
 void Lua::close()
 {
-  if (this->L)
-  {
+  if(this->L) {
     lua_close(this->L);
   }
 }
@@ -151,7 +149,7 @@ void load(lua_State *L, const char *fname, int *w, int *h)
 // private
 
 // void Lua::error(lua_State *L, const char *fmt, ...)
-void Lua::error(const char *fmt, ...)
+void Lua::error(const char* fmt, ...)
 {
   char errmsg[1024];
   va_list argp;
@@ -165,13 +163,14 @@ void Lua::error(const char *fmt, ...)
 }
 
 // int Lua::getglobint(lua_State *L, const char *var)
-int Lua::getglobint(const char *var)
+int Lua::getglobint(const char* var)
 {
   int isnum, result;
   lua_getglobal(this->L, var);
   result = (int)lua_tointegerx(this->L, -1, &isnum);
-  if (!isnum)
+  if(!isnum) {
     this->error("'%s' should be a number", var);
+  }
   lua_pop(this->L, 1); /* remove result from the stack */
   return result;
 }
@@ -182,31 +181,25 @@ int Lua::getglobint(const char *var)
  * @param L lua state
  * @return int
  */
-int Lua::l_log_add(lua_State *LL)
+int Lua::l_log_add(lua_State* LL)
 {
-  if (this->log == NULL)
-  {
+  if(this->log == NULL) {
     return 0;
   }
 
   std::string logMessage = "";
   int logType = 0;
   int nArgs = lua_gettop(LL);
-  for (int i = 1; i <= nArgs; i++)
-  {
+  for(int i = 1; i <= nArgs; i++) {
     // if (lua_isinteger(LL, i))
-    if (lua_type(LL, i) == LUA_TNUMBER)
-    {
+    if(lua_type(LL, i) == LUA_TNUMBER) {
       logType = static_cast<int>(lua_tointeger(LL, i));
     }
     // else if (lua_isstring(LL, i))
-    else if (lua_type(LL, i) == LUA_TSTRING)
-    {
+    else if(lua_type(LL, i) == LUA_TSTRING) {
       // Pop the next arg using lua_tostring(L, i) and do your print
       logMessage = lua_tostring(LL, i);
-    }
-    else
-    {
+    } else {
       // Do something with non-strings if you like
       this->log->add(LogTypes_Warning, "unsupported type");
       return 0;
@@ -223,24 +216,19 @@ int Lua::l_log_add(lua_State *LL)
  * @param LL lua state
  * @return int
  */
-int Lua::l_log_spinner_update(lua_State *LL)
+int Lua::l_log_spinner_update(lua_State* LL)
 {
-  if (this->log == NULL)
-  {
+  if(this->log == NULL) {
     return 0;
   }
 
   int nArgs = lua_gettop(LL);
-  for (int i = 1; i <= nArgs; i++)
-  {
+  for(int i = 1; i <= nArgs; i++) {
     // if (lua_isstring(LL, i))
-    if (lua_type(LL, i) == LUA_TSTRING)
-    {
+    if(lua_type(LL, i) == LUA_TSTRING) {
       // Pop the next arg using lua_tostring(L, i)
       this->log->spinner_update(lua_tostring(LL, i));
-    }
-    else
-    {
+    } else {
       // Do something with non-strings if you like
       char tmp[] = "unsupported type";
       this->log->add(LogTypes_Warning, tmp);
@@ -255,10 +243,9 @@ int Lua::l_log_spinner_update(lua_State *LL)
  * @param LL lua state
  * @return int
  */
-int Lua::l_log_spinner_clear(lua_State *LL)
+int Lua::l_log_spinner_clear(lua_State* LL)
 {
-  if (this->log == NULL)
-  {
+  if(this->log == NULL) {
     return 0;
   }
 
@@ -273,7 +260,7 @@ int Lua::l_log_spinner_clear(lua_State *LL)
  * @param L lua state
  * @return int
  */
-int Lua::usb_vend_xfr(lua_State *L)
+int Lua::usb_vend_xfr(lua_State* L)
 {
   /*
   typedef struct USBtransfer {
@@ -287,9 +274,9 @@ int Lua::usb_vend_xfr(lua_State *L)
   } USBtransfer;
   */
 
-  uint8_t data_buff[MAX_VUSB] = {0};
+  uint8_t data_buff[MAX_VUSB] = { 0 };
   size_t i;
-  const char *lua_out_string;
+  const char* lua_out_string;
   int xfr_count = 0; // return count
   int rv = 0;        // number of return values
 
@@ -301,19 +288,18 @@ int Lua::usb_vend_xfr(lua_State *L)
   usb_xfr.wIndex = static_cast<uint16_t>(luaL_checkinteger(L, 4));  // luaL_checknumber(L, 4);   /* get wIndex argument */
   usb_xfr.wLength = static_cast<uint16_t>(luaL_checkinteger(L, 5)); // luaL_checknumber(L, 5);  /* get wLength argument */
   check(this->log, (usb_xfr.wLength <= MAX_VUSB), "Can't transfer more than %d bytes!", MAX_VUSB);
-  if (usb_xfr.endpoint == LIBUSB_ENDPOINT_OUT)
-  {
+  if(usb_xfr.endpoint == LIBUSB_ENDPOINT_OUT) {
     // OUT transfer sending data to device
     size_t len = 0;
     lua_out_string = luaL_checklstring(L, 6, &len); /* get data argument */
 
-    if (len < usb_xfr.wLength)
+    if(len < usb_xfr.wLength) {
       goto error;
+    }
 
     // 2 rules for lua strings in C: don't pop it, and don't modify it!!!
     // copy lua string over to data buffer
-    for (i = 0; i < usb_xfr.wLength; i++)
-    {
+    for(i = 0; i < usb_xfr.wLength; i++) {
       data_buff[i] = lua_out_string[i];
     }
   }
@@ -329,8 +315,9 @@ int Lua::usb_vend_xfr(lua_State *L)
 
   xfr_count = usb_vendor_transfer(&usb_xfr, this->log);
 
-  if (xfr_count < 0)
+  if(xfr_count < 0) {
     goto error;
+  }
 
   // printf("postdata: %d, %d, %d, %d, %d, %d, %d, %d \n",  usb_xfr.data[0], usb_xfr.data[1],usb_xfr.data[2],usb_xfr.data[3],usb_xfr.data[4],usb_xfr.data[5], usb_xfr.data[6], usb_xfr.data[7]);
   // printf("bytes xfrd: %d\n", xfr_count);
@@ -338,10 +325,9 @@ int Lua::usb_vend_xfr(lua_State *L)
   lua_pushnumber(L, xfr_count); /* push first result */
   rv++;
 
-  if (usb_xfr.endpoint == LIBUSB_ENDPOINT_IN)
-  {
+  if(usb_xfr.endpoint == LIBUSB_ENDPOINT_IN) {
     // push second result if data was read from device
-    lua_pushlstring(L, (const char *)data_buff, xfr_count);
+    lua_pushlstring(L, (const char*)data_buff, xfr_count);
     rv++;
   }
 

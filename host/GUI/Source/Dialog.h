@@ -1,10 +1,10 @@
 #pragma once
 #ifndef DIALOG_H
-#define DIALOG_H
+  #define DIALOG_H
 
-#include <functional>
-#include "ImGuiFileBrowser.h"
-#include <string.h>
+  #include <functional>
+  #include "ImGuiFileBrowser.h"
+  #include <string.h>
 
 namespace Dialog
 {
@@ -12,7 +12,7 @@ namespace Dialog
   extern bool showFileSave;
   extern std::string fileExt;
   extern imgui_addons::ImGuiFileBrowser file_dialog;
-  extern std::function<void(const std::string &path, const std::string &filename)> callback;
+  extern std::function<void(const std::string& path, const std::string& filename)> callback;
 
   void render(float scale);
 }

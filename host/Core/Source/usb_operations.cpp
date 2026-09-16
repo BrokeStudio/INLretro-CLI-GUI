@@ -15,41 +15,50 @@
 // If such effect is desireable, please consider using #define NOMINMAX before #include <termcolor.hpp>
 #include "termcolor.hpp"
 
-bool is_device_flasher(libusb_device *device, char retroprog_id)
+bool is_device_flasher(libusb_device* device, char retroprog_id)
 {
-  libusb_device_handle *handle = NULL;
+  libusb_device_handle* handle = NULL;
   char buffer[256];
   char prod_str[sizeof(PROD_STR)] = PROD_STR; // last character used to support multiple flashers
   prod_str[sizeof(PROD_STR) - 2] = retroprog_id;
 
   // get device description
   struct libusb_device_descriptor desc;
-  if (libusb_get_device_descriptor(device, &desc) != LIBUSB_SUCCESS)
+  if(libusb_get_device_descriptor(device, &desc) != LIBUSB_SUCCESS) {
     return false;
+  }
 
   // check vendor id and product id
-  if (desc.idVendor != ID_VENDOR || desc.idProduct != ID_PRODUCT)
+  if(desc.idVendor != ID_VENDOR || desc.idProduct != ID_PRODUCT) {
     return false;
+  }
 
   // open device
-  if (libusb_open(device, &handle) != LIBUSB_SUCCESS)
+  if(libusb_open(device, &handle) != LIBUSB_SUCCESS) {
     goto error;
+  }
 
   // check manufacturer name
-  if (!desc.iManufacturer)
+  if(!desc.iManufacturer) {
     goto error;
-  if (libusb_get_string_descriptor_ascii(handle, desc.iManufacturer, reinterpret_cast<unsigned char *>(buffer), sizeof(buffer)) == 0)
+  }
+  if(libusb_get_string_descriptor_ascii(handle, desc.iManufacturer, reinterpret_cast<unsigned char*>(buffer), sizeof(buffer)) == 0) {
     goto error;
-  if (strcmp(buffer, MANF_STR) != 0)
+  }
+  if(strcmp(buffer, MANF_STR) != 0) {
     goto error;
+  }
 
   // check product name
-  if (!desc.iProduct)
+  if(!desc.iProduct) {
     goto error;
-  if (libusb_get_string_descriptor_ascii(handle, desc.iProduct, reinterpret_cast<unsigned char *>(buffer), sizeof(buffer)) == 0)
+  }
+  if(libusb_get_string_descriptor_ascii(handle, desc.iProduct, reinterpret_cast<unsigned char*>(buffer), sizeof(buffer)) == 0) {
     goto error;
-  if (strcmp(buffer, prod_str) != 0)
+  }
+  if(strcmp(buffer, prod_str) != 0) {
     goto error;
+  }
 
   libusb_close(handle);
 
@@ -64,17 +73,16 @@ error:
 bool find_device(char retroprog_id)
 {
   bool rv = false;
-  libusb_device **list = NULL;
-  libusb_device *found = NULL;
+  libusb_device** list = NULL;
+  libusb_device* found = NULL;
 
   ssize_t count = libusb_get_device_list(NULL, &list);
-  if (count < 0)
+  if(count < 0) {
     return false;
+  }
 
-  for (ssize_t i = 0; i < count; ++i)
-  {
-    if (is_device_flasher(list[i], retroprog_id))
-    {
+  for(ssize_t i = 0; i < count; ++i) {
+    if(is_device_flasher(list[i], retroprog_id)) {
       // libusb_free_device_list(list, 1);
       rv = true;
       break;
@@ -86,20 +94,19 @@ bool find_device(char retroprog_id)
   return rv;
 }
 
-libusb_device_handle *usb_open(char retroprog_id)
+libusb_device_handle* usb_open(char retroprog_id)
 {
-  libusb_device_handle *handle = NULL;
-  libusb_device **list = NULL;
-  libusb_device *found = NULL;
+  libusb_device_handle* handle = NULL;
+  libusb_device** list = NULL;
+  libusb_device* found = NULL;
 
   ssize_t count = libusb_get_device_list(NULL, &list); // TODO: add check
-  if (count < 0)
+  if(count < 0) {
     return NULL;
+  }
 
-  for (ssize_t i = 0; i < count; ++i)
-  {
-    if (is_device_flasher(list[i], retroprog_id))
-    {
+  for(ssize_t i = 0; i < count; ++i) {
+    if(is_device_flasher(list[i], retroprog_id)) {
       libusb_open(list[i], &handle); // TODO: add check
       break;
     }
@@ -121,14 +128,15 @@ libusb_device_handle *usb_open(char retroprog_id)
 
 uint8_t get_device_hardware_type(char retroprog_id)
 {
-  uint8_t data_buff[MAX_VUSB] = {0};
+  uint8_t data_buff[MAX_VUSB] = { 0 };
   int count = 0;
   uint8_t rv = 0;
   USBtransfer transfer;
 
   transfer.handle = usb_open(retroprog_id);
-  if (!transfer.handle)
+  if(!transfer.handle) {
     return 0xff; // TODO: add log
+  }
 
   transfer.endpoint = LIBUSB_ENDPOINT_IN;
   transfer.request = 10; // DICT_BOOTLOAD
@@ -140,11 +148,13 @@ uint8_t get_device_hardware_type(char retroprog_id)
   // TODO: add check
   count = usb_vendor_transfer(&transfer, &AppLog::log); // NULL); // this->log);
 
-  if (transfer.data[0] != 0x8A) // ERR_UNKN_BOOTLOAD_OPCODE
+  if(transfer.data[0] != 0x8A) { // ERR_UNKN_BOOTLOAD_OPCODE
     rv = transfer.data[2];
+  }
 
-  if (transfer.handle)
+  if(transfer.handle) {
     libusb_close(transfer.handle);
+  }
   transfer.handle = NULL;
 
   return rv;
@@ -152,14 +162,15 @@ uint8_t get_device_hardware_type(char retroprog_id)
 
 uint8_t get_device_version(char retroprog_id)
 {
-  uint8_t data_buff[MAX_VUSB] = {0};
+  uint8_t data_buff[MAX_VUSB] = { 0 };
   int count = 0;
   uint8_t rv = 0;
   USBtransfer transfer;
 
   transfer.handle = usb_open(retroprog_id);
-  if (!transfer.handle)
+  if(!transfer.handle) {
     return 0xff; // TODO: add log
+  }
 
   transfer.endpoint = LIBUSB_ENDPOINT_IN;
   transfer.request = 10; // DICT_BOOTLOAD
@@ -171,11 +182,13 @@ uint8_t get_device_version(char retroprog_id)
   // TODO: add check
   count = usb_vendor_transfer(&transfer, &AppLog::log); // NULL); // this->log);
 
-  if (transfer.data[0] != 0x8A) // ERR_UNKN_BOOTLOAD_OPCODE
+  if(transfer.data[0] != 0x8A) { // ERR_UNKN_BOOTLOAD_OPCODE
     rv = transfer.data[2];
+  }
 
-  if (transfer.handle)
+  if(transfer.handle) {
     libusb_close(transfer.handle);
+  }
   transfer.handle = NULL;
 
   return rv;
@@ -188,24 +201,25 @@ uint8_t get_device_version(char retroprog_id)
 //   if (!handle)
 //     return -1;
 
-//   libusb_device *device = libusb_get_device(handle);
-//   if (!device)
-//     return -1;
+// libusb_device *device = libusb_get_device(handle);
+// if (!device)
+//   return -1;
 
-//   struct libusb_device_descriptor desc;
-//   if (libusb_get_device_descriptor(device, &desc) == LIBUSB_SUCCESS)
-//     version = desc.bcdDevice;
+// struct libusb_device_descriptor desc;
+// if (libusb_get_device_descriptor(device, &desc) == LIBUSB_SUCCESS)
+//   version = desc.bcdDevice;
 
-//   libusb_close(handle);
-//   handle = NULL;
+// libusb_close(handle);
+// handle = NULL;
 
-//   return version;
-// }
+// return version;
+//}
 
-bool get_string_descriptor(libusb_device_handle *handle, uint8_t desc_index, unsigned char *buffer)
+bool get_string_descriptor(libusb_device_handle* handle, uint8_t desc_index, unsigned char* buffer)
 {
-  if (desc_index == 0)
+  if(desc_index == 0) {
     return false;
+  }
   return libusb_get_string_descriptor_ascii(handle, desc_index, buffer, 256) == LIBUSB_SUCCESS;
 }
 
@@ -231,24 +245,24 @@ bool get_string_descriptor(libusb_device_handle *handle, uint8_t desc_index, uns
 // LIBUSB_ENDPOINT_IN		In: device-to-host.
 // LIBUSB_ENDPOINT_OUT		Out: host-to-device.
 
-libusb_device_handle *open_usb_device(int log_level, const char *retroprog_id, Log *log)
+libusb_device_handle* open_usb_device(int log_level, const char* retroprog_id, Log* log)
 {
   int rv = 0;
-  libusb_device_handle *handle = NULL;
-  libusb_device **device_list = NULL;
+  libusb_device_handle* handle = NULL;
+  libusb_device** device_list = NULL;
   int i = 0;
 
-  libusb_device *retroprog = NULL;
-  libusb_device *device = NULL;
+  libusb_device* retroprog = NULL;
+  libusb_device* device = NULL;
   struct libusb_device_descriptor desc;
-  char manf_str[256] = {0}; // used to hold manf/prod strings
-  char prod_str[256] = {0}; // used to hold manf/prod strings
-                            // Original kazzo
-                            //  manf_ascii: obdev.at prod_ascii: kazzo bcd Device: 100
-                            // INL Retro-Prog v1.0
-                            //  manf_ascii: InfiniteNesLives.com prod_ascii: INL Retro-Prog bcd Device: 100
-                            // INL Retro-Prog v2.0 v2.0 released late 2016 (only ver supported by this app
-                            //  manf_ascii: InfiniteNesLives.com prod_ascii: INL Retro-Prog bcd Device: 200
+  char manf_str[256] = { 0 }; // used to hold manf/prod strings
+  char prod_str[256] = { 0 }; // used to hold manf/prod strings
+                              // Original kazzo
+                              //  manf_ascii: obdev.at prod_ascii: kazzo bcd Device: 100
+                              // INL Retro-Prog v1.0
+                              //  manf_ascii: InfiniteNesLives.com prod_ascii: INL Retro-Prog bcd Device: 100
+                              // INL Retro-Prog v2.0 v2.0 released late 2016 (only ver supported by this app
+                              //  manf_ascii: InfiniteNesLives.com prod_ascii: INL Retro-Prog bcd Device: 200
   // const char *kazzo_manf = "obdev.at";
   // const char *kazzo_prod = "kazzo";
   const char inl_manf_str[] = "InfiniteNesLives.com";
@@ -270,28 +284,26 @@ libusb_device_handle *open_usb_device(int log_level, const char *retroprog_id, L
   //   printf("Successfully initalized libusb\n");
 
   // void libusb_set_debug (libusb_context * ctx, int level)
-  if (log_level > 0)
-  {
+  if(log_level > 0) {
     debug(log, "setting LIBUSB_LOG_LEVEL to: %d", log_level);
-    switch (log_level)
-    {
-    case 1:
-      // APP_LOG_SYS(LogTypes_Error, L_SYS "ERROR: error messages are printed");
-      log->add(LogTypes_Error, L_SYS "ERROR: error messages are printed");
-      break;
-    case 2:
-      APP_LOG_SYS(LogTypes_Warning, L_SYS "WARNING: warning and error messages are printed");
-      log->add(LogTypes_Warning, L_SYS "WARNING: warning and error messages are printed");
-      break;
-    case 3:
-      // APP_LOG_SYS(LogTypes_Info, L_SYS "INFO: informational, warning, & error messages are printed");
-      log->add(LogTypes_Info, L_SYS "INFO: informational, warning, & error messages are printed");
-      break;
-    case 4:
-    default:
-      // APP_LOG_SYS(LogTypes_Info, L_SYS "DEBUG: debug, info, warning, & error messages are printed");
-      log->add(LogTypes_Info, L_SYS "DEBUG: debug, info, warning, & error messages are printed");
-      break;
+    switch(log_level) {
+      case 1:
+        // APP_LOG_SYS(LogTypes_Error, L_SYS "ERROR: error messages are printed");
+        log->add(LogTypes_Error, L_SYS "ERROR: error messages are printed");
+        break;
+      case 2:
+        APP_LOG_SYS(LogTypes_Warning, L_SYS "WARNING: warning and error messages are printed");
+        log->add(LogTypes_Warning, L_SYS "WARNING: warning and error messages are printed");
+        break;
+      case 3:
+        // APP_LOG_SYS(LogTypes_Info, L_SYS "INFO: informational, warning, & error messages are printed");
+        log->add(LogTypes_Info, L_SYS "INFO: informational, warning, & error messages are printed");
+        break;
+      case 4:
+      default:
+        // APP_LOG_SYS(LogTypes_Info, L_SYS "DEBUG: debug, info, warning, & error messages are printed");
+        log->add(LogTypes_Info, L_SYS "DEBUG: debug, info, warning, & error messages are printed");
+        break;
     }
   }
   // libusb_set_debug(NULL, log_level);
@@ -302,51 +314,41 @@ libusb_device_handle *open_usb_device(int log_level, const char *retroprog_id, L
   //  Returns a list of USB devices currently attached to the system.
   //  return value is number of devices plus one as list is null terminated, or LIBUSB_ERROR if negative.
   //  Must free device list after done with it
-  if (log_level > 0)
-  {
+  if(log_level > 0) {
     debug(log, "Getting USB device list");
   }
 
   dev_count = libusb_get_device_list(NULL, &device_list);
   check(log, dev_count >= 0, "libusb unable to find any devices: %s", libusb_strerror((libusb_error)dev_count));
-  if (log_level > 0)
-  {
+  if(log_level > 0) {
     debug(log, "Successfully retrieved USB device list");
   }
 
-  if (log_level > 0)
-  {
+  if(log_level > 0) {
     debug(log, "Searching %lld total devices", dev_count - 1);
   }
 
-  for (i = 0; i < dev_count; i++)
-  {
+  for(i = 0; i < dev_count; i++) {
     device = device_list[i];
-    if (log_level > 0)
-    {
+    if(log_level > 0) {
       debug(log, "getting dev desc #%d ", i);
     }
     rv = libusb_get_device_descriptor(device, &desc);
     check(log, rv == LIBUSB_SUCCESS, "Unable to get device #%d descriptor: %s", i, libusb_strerror((libusb_error)rv));
 
-    if (log_level > 0)
-    {
+    if(log_level > 0) {
       debug(log, "checking %x vendor ", desc.idVendor);
     }
-    if (log_level > 0)
-    {
+    if(log_level > 0) {
       debug(log, "checking %x product", desc.idProduct);
     }
-    if ((desc.idVendor == ID_VENDOR) && (desc.idProduct == ID_PRODUCT))
-    {
+    if((desc.idVendor == ID_VENDOR) && (desc.idProduct == ID_PRODUCT)) {
       // Found a V-USB device with default VID/PID now see if it's actually a kazzo
       // printf("found matching VID PID pair\n");
-      if (log_level > 0)
-      {
+      if(log_level > 0) {
         debug(log, "found vend ID:%x prod ID:%x ", desc.idVendor, desc.idProduct);
       }
-      if (log_level > 0)
-      {
+      if(log_level > 0) {
         debug(log, "manf: %d prod: %d", desc.iManufacturer, desc.iProduct);
       }
 
@@ -354,37 +356,26 @@ libusb_device_handle *open_usb_device(int log_level, const char *retroprog_id, L
       rv = libusb_open(device, &handle);
       check(log, rv == LIBUSB_SUCCESS, "Unable to open USB device: %s., DEVICE FOUND, BUT CAN'T OPEN DEVICE, VERIFY DRIVERS ARE INSTALLED!!!", libusb_strerror((libusb_error)rv));
       check(log, handle, "Unable to open USB device: %s., DEVICE FOUND, BUT CAN'T OPEN DEVICE, VERIFY DRIVERS ARE INSTALLED!!!", libusb_strerror((libusb_error)rv));
-      if (log_level > 0)
-      {
+      if(log_level > 0) {
         debug(log, "device opened successfully");
       }
 
-      if (desc.iManufacturer)
-      {
-        if (libusb_get_string_descriptor_ascii(handle, desc.iManufacturer, (unsigned char *)manf_str, sizeof(manf_str)) > LIBUSB_SUCCESS)
-        {
-          if (log_level > 0)
-          {
+      if(desc.iManufacturer) {
+        if(libusb_get_string_descriptor_ascii(handle, desc.iManufacturer, (unsigned char*)manf_str, sizeof(manf_str)) > LIBUSB_SUCCESS) {
+          if(log_level > 0) {
             debug(log, "manf_ascii: %s", manf_str);
           }
-        }
-        else
-        {
+        } else {
           // APP_LOG_SYS(LogTypes_Warning, L_SYS "Matching PID/VID found and opened, but unable to communicate to device, verify drivers installed!!!");
           log->add(LogTypes_Warning, L_SYS "Matching PID/VID found and opened, but unable to communicate to device, verify drivers installed!!!");
         }
       }
-      if (desc.iProduct)
-      {
-        if (libusb_get_string_descriptor_ascii(handle, desc.iProduct, (unsigned char *)prod_str, sizeof(prod_str)) > LIBUSB_SUCCESS)
-        {
-          if (log_level > 0)
-          {
+      if(desc.iProduct) {
+        if(libusb_get_string_descriptor_ascii(handle, desc.iProduct, (unsigned char*)prod_str, sizeof(prod_str)) > LIBUSB_SUCCESS) {
+          if(log_level > 0) {
             debug(log, "prod_ascii: %s", prod_str);
           }
-        }
-        else
-        {
+        } else {
           // APP_LOG_SYS(LogTypes_Warning, L_SYS "Matching PID/VID found and opened, but unable to communicate to device, verify drivers installed!!!");
           log->add(LogTypes_Warning, L_SYS "Matching PID/VID found and opened, but unable to communicate to device, verify drivers installed!!!");
         }
@@ -400,30 +391,22 @@ libusb_device_handle *open_usb_device(int log_level, const char *retroprog_id, L
       // }
 
       // check if it's a retroprog
-      if (strcmp(manf_str, inl_manf_str) == 0)
-      {
-        if (log_level > 0)
-        {
+      if(strcmp(manf_str, inl_manf_str) == 0) {
+        if(log_level > 0) {
           debug(log, "INL manufactured device found");
         }
         inl_prod_str[13] = *retroprog_id;
-        if (strcmp(prod_str, inl_prod_str) == 0)
-        {
-          if (log_level > 0)
-          {
+        if(strcmp(prod_str, inl_prod_str) == 0) {
+          if(log_level > 0) {
             debug(log, "INL Retro-Prog found (%s)", inl_prod_str);
           }
-          if (log_level > 0)
-          {
+          if(log_level > 0) {
             debug(log, "bcd Device fw version: %x required: %x", desc.bcdDevice, min_fw_ver);
           }
-          if (desc.bcdDevice < min_fw_ver)
-          {
+          if(desc.bcdDevice < min_fw_ver) {
             // close device since can't use it
             log_warn(log, "INL Retro-Prog found, but firmware is too old, see Readme for instructions to update firmware.");
-          }
-          else
-          {
+          } else {
             // Finally found the supported device!!!
             retroprog = device;
             break;
@@ -433,13 +416,11 @@ libusb_device_handle *open_usb_device(int log_level, const char *retroprog_id, L
       // Getting here means the device was opened because it matched V-USB
       // VID/PID, but it wasn't a compatible device.
       // Can't use this device, so close it
-      if (log_level > 0)
-      {
+      if(log_level > 0) {
         debug(log, "VID/PID matched, but manf/prod didn't match, closing device.");
         debug(log, "It's likely that the drivers haven't been installed...");
       }
-      if (handle)
-      {
+      if(handle) {
         libusb_close(handle);
       }
       handle = NULL; // Don't want to try and reclose
@@ -455,21 +436,18 @@ libusb_device_handle *open_usb_device(int log_level, const char *retroprog_id, L
 
 #ifndef _DIST
   check(log, retroprog != NULL, "Could not find INL retro-prog USB device (%s)", inl_prod_str);
-  if (log_level > 0)
-  {
+  if(log_level > 0) {
     debug(log, "INL retro-prog USB device successfully found");
   }
 #else
-  if (retroprog == NULL)
-  {
+  if(retroprog == NULL) {
     goto error;
   }
 #endif
 
   // free device list now that INL retro-prog was found and opened
   // void libusb_free_device_list (libusb_device ** list, int unref_devices)
-  if (log_level > 0)
-  {
+  if(log_level > 0) {
     debug(log, "Freeing USB device list");
   }
   libusb_free_device_list(device_list, 1); // don't completely understand the unref_devices = 1...
@@ -506,8 +484,7 @@ libusb_device_handle *open_usb_device(int log_level, const char *retroprog_id, L
   //   libusb_free_device_list(device_list, 1);
   // }
 
-  if (log_level > 0)
-  {
+  if(log_level > 0) {
     debug(log, "Returning device handle to main");
   }
 
@@ -519,14 +496,12 @@ libusb_device_handle *open_usb_device(int log_level, const char *retroprog_id, L
 error:
   // printf("open_usb_device went to error\n");
 
-  if (device_list)
-  {
+  if(device_list) {
     // printf("freeing device list\n");
     libusb_free_device_list(device_list, 1);
   }
 
-  if (handle)
-  {
+  if(handle) {
     // printf("closing usb device\n");
     libusb_close(handle);
   }
@@ -537,8 +512,7 @@ error:
   //   libusb_exit(context);
   // }
 
-  if (rv == LIBUSB_ERROR_ACCESS)
-  {
+  if(rv == LIBUSB_ERROR_ACCESS) {
     // APP_LOG_SYS(LogTypes_Error, L_SYS "-------------------------------------------------------\n");
     // APP_LOG_SYS(LogTypes_Error, L_SYS "Denied Permission is expected for initial use on Linux.\n");
     // APP_LOG_SYS(LogTypes_Error, L_SYS "See udev-rule-help/Readme.txt in host dir for help gaining permission.\n");
@@ -552,7 +526,7 @@ error:
   return NULL; // Return NULL pointer if couldn't find INL Retro-Prog
 }
 
-void close_usb(libusb_device_handle *handle)
+void close_usb(libusb_device_handle* handle)
 {
   // must close device before exiting
   libusb_close(handle);
@@ -586,7 +560,7 @@ void close_usb(libusb_device_handle *handle)
  *	ERROR if unable to transfer USBtransfer's wLength number of bytes
  *	prints libusb_error if there was usb problem
  */
-int usb_vendor_transfer(USBtransfer *transfer, Log *log)
+int usb_vendor_transfer(USBtransfer* transfer, Log* log)
 {
   int xfr_cnt;
   uint16_t wValue, wIndex;
@@ -594,12 +568,9 @@ int usb_vendor_transfer(USBtransfer *transfer, Log *log)
   check(log, transfer->wLength <= MAX_VUSB, "Can't transfer more than %d bytes!", MAX_VUSB);
   // check(transfer->wLength <= MAX_VUSB_LONGXFR, "Can't transfer more than %d bytes!", MAX_VUSB_LONGXFR);
 
-  if (transfer->wLength != 0)
-  {
+  if(transfer->wLength != 0) {
     check(log, transfer->data != NULL, "data buffer isn't initialized it's: %s", transfer->data);
-  }
-  else
-  {
+  } else {
     debug(log, "USB transfer with no data payload.");
   }
   // TODO create a check to verify dictionary is defined, and opcode/operands are valid
@@ -641,21 +612,21 @@ int usb_vendor_transfer(USBtransfer *transfer, Log *log)
   // );
 
   xfr_cnt = libusb_control_transfer(
-      transfer->handle,
-      // Request type: vendor (as we define),  recip: device, out: host->device
-      // LIBUSB_REQUEST_TYPE_VENDOR | LIBUSB_RECIPIENT_DEVICE | LIBUSB_ENDPOINT_OUT,
-      LIBUSB_REQUEST_TYPE_VENDOR | LIBUSB_RECIPIENT_DEVICE | transfer->endpoint,
-      // request, wValue, wIndex, data, len, SEC_5);
-      transfer->request,
-      wValue, wIndex,
-      transfer->data,
-      transfer->wLength,
-      TIMEOUT_1_SEC);
+    transfer->handle,
+    // Request type: vendor (as we define),  recip: device, out: host->device
+    // LIBUSB_REQUEST_TYPE_VENDOR | LIBUSB_RECIPIENT_DEVICE | LIBUSB_ENDPOINT_OUT,
+    LIBUSB_REQUEST_TYPE_VENDOR | LIBUSB_RECIPIENT_DEVICE | transfer->endpoint,
+    // request, wValue, wIndex, data, len, SEC_5);
+    transfer->request,
+    wValue,
+    wIndex,
+    transfer->data,
+    transfer->wLength,
+    TIMEOUT_1_SEC);
 
   debug(log, "%d bytes transfered", xfr_cnt);
   check(log, xfr_cnt >= 0, "Write xfr failed with libusb error: %s", libusb_strerror((libusb_error)xfr_cnt));
-  check(log, xfr_cnt == transfer->wLength, "Write transfer failed only %d Bytes sent expected %dBytes",
-        xfr_cnt, transfer->wLength);
+  check(log, xfr_cnt == transfer->wLength, "Write transfer failed only %d Bytes sent expected %dBytes", xfr_cnt, transfer->wLength);
 
   return xfr_cnt;
 

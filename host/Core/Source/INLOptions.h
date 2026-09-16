@@ -1,8 +1,8 @@
 #pragma once
 #ifndef INLOPTIONS_H
-#define INLOPTIONS_H
+  #define INLOPTIONS_H
 
-#include <string>
+  #include <string>
 
 // Struct used to control functionality.
 struct t_INLoptions_std

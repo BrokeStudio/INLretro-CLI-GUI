@@ -1,92 +1,84 @@
 #pragma once
 #ifndef MD_H
-#define MD_H
+  #define MD_H
 
-#include <algorithm>
-#include <cctype>
-#include <map>
-#include <string>
+  #include <algorithm>
+  #include <cctype>
+  #include <map>
+  #include <string>
 
-#include "AppLog.h"
-#include "Console.h"
-#include "IconsFontAwesome6.h"
-#include "imgui.h"
+  #include "AppLog.h"
+  #include "Console.h"
+  #include "IconsFontAwesome6.h"
+  #include "imgui.h"
 
 class MegaDrive : public Console
 {
-
-public:
+  public:
   using Console::Console;
 
-protected:
-  void cb_rom_write_file_dialog(const std::string &path, const std::string &filename) override
+  protected:
+  void cb_rom_write_file_dialog(const std::string& path, const std::string& filename) override
   {
     rom_write_INLOptions.rom_write_file = path;
 
     APP_LOG(LogTypes_Point, "[%s] Opening: %s", this->short_name.c_str(), filename.c_str());
 
     // parse rom file header
-    if (parse_header(rom_write_INLOptions.rom_write_file))
-    {
-
+    if(parse_header(rom_write_INLOptions.rom_write_file)) {
       // set default values
-      if (!header.check_rom_size())
+      if(!header.check_rom_size()) {
         rom_write_INLOptions.rom_size_kb = static_cast<int>(header.fileSize >> 10);
-      else
+      } else {
         rom_write_INLOptions.rom_size_kb = header.get_rom_size();
+      }
 
-      if (mappers.size() != 0)
-      {
+      if(mappers.size() != 0) {
         int mapperIndex = get_mapper_index_by_mapper_name(header.get_mapper_name());
-        if (mapperIndex == -1)
-        {
+        if(mapperIndex == -1) {
           APP_LOG(LogTypes_Warning, "[%s] Mapper unknown: %s", this->short_name.c_str(), header.get_mapper_name().c_str());
-        }
-        else
-        {
+        } else {
           rom_write_INLOptions.mapper_name = mappers[mapperIndex].script_name;
         }
       }
-    }
-    else
-    {
+    } else {
       rom_write_INLOptions.rom_size_kb = static_cast<int>(header.fileSize >> 10);
     }
   }
 
-private:
+  private:
   // Mega Drive/Genesis header specific stuff
-  inline static const std::map<std::string, std::string> softwareTypes{
-      {"GM", "Game"},
-      {"AI", "Aid"},
-      {"OS", "Boot ROM (TMSS)"},
-      {"BR", "Boot ROM (Sega CD)"},
+  inline static const std::map<std::string, std::string> softwareTypes {
+    { "GM", "Game" },
+    { "AI", "Aid" },
+    { "OS", "Boot ROM (TMSS)" },
+    { "BR", "Boot ROM (Sega CD)" },
   };
 
-  inline static const std::map<std::string, std::string> deviceTypes{
-      {"J", "3-button controller"},
-      {"6", "6-button controller"},
-      {"0", "Master System controller"},
-      {"A", "Analog joystick"},
-      {"4", "Multitap"},
-      {"G", "Lightgun"},
-      {"L", "Activator"},
-      {"M", "Mouse"},
-      {"B", "Trackball"},
-      {"T", "Tablet"},
-      {"V", "Paddle"},
-      {"K", "Keyboard or keypad"},
-      {"R", "RS-232"},
-      {"P", "Printer"},
-      {"C", "CD-ROM (Sega CD)"},
-      {"F", "Floppy drive"},
-      {"D", "Download?"},
+  inline static const std::map<std::string, std::string> deviceTypes {
+    { "J", "3-button controller" },
+    { "6", "6-button controller" },
+    { "0", "Master System controller" },
+    { "A", "Analog joystick" },
+    { "4", "Multitap" },
+    { "G", "Lightgun" },
+    { "L", "Activator" },
+    { "M", "Mouse" },
+    { "B", "Trackball" },
+    { "T", "Tablet" },
+    { "V", "Paddle" },
+    { "K", "Keyboard or keypad" },
+    { "R", "RS-232" },
+    { "P", "Printer" },
+    { "C", "CD-ROM (Sega CD)" },
+    { "F", "Floppy drive" },
+    { "D", "Download?" },
   };
 
-  inline static const std::map<std::string, std::string> regionTypes{
-      {"J", "Japan"},
-      {"U", "Americas"},
-      {"E", "Europe"},
+  inline static const std::map<std::string, std::string> regionTypes {
+    { "J", "Japan" },
+    { "U", "Americas" },
+    { "E", "Europe" },
   };
 
   struct HeaderProperties
@@ -136,21 +128,24 @@ private:
     {
       const std::streamoff ROM_MAX_SIZE = 4096 * 1024;
 
-      if (systemType == "SEGA SSF2       ")
+      if(systemType == "SEGA SSF2       ") {
         return "SSF2";
+      }
 
-      if (systemType == "SEGA RAINBOW    " || systemType == "SEGA RAINBOW MD " || systemType == "SEGA RAINBOW GEN")
+      if(systemType == "SEGA RAINBOW    " || systemType == "SEGA RAINBOW MD " || systemType == "SEGA RAINBOW GEN") {
         return "Rainbow";
+      }
 
-      if (this->fileSize > ROM_MAX_SIZE)
+      if(this->fileSize > ROM_MAX_SIZE) {
         return "SSF2";
+      }
 
       std::string gameTitle = this->gameTitleDomestic + this->gameTitleOverseas;
-      std::transform(gameTitle.begin(), gameTitle.end(), gameTitle.begin(), [](unsigned char c)
-                     { return static_cast<char>(std::toupper(c)); });
+      std::transform(gameTitle.begin(), gameTitle.end(), gameTitle.begin(), [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
 
-      if (gameTitle.find("SUPER STREET FIGHTER2") != std::string::npos)
+      if(gameTitle.find("SUPER STREET FIGHTER2") != std::string::npos) {
         return "SSF2";
+      }
 
       return "Basic";
     }
@@ -158,31 +153,32 @@ private:
     std::string get_software_type()
     {
       auto it = softwareTypes.find(this->serialNumber.substr(0, 2));
-      if (it != softwareTypes.end())
+      if(it != softwareTypes.end()) {
         return softwareTypes.at(this->serialNumber.substr(0, 2));
-      else
+      } else {
         return "Unknown software type";
+      }
     }
 
     std::string get_device_type()
     {
       auto it = deviceTypes.find(this->deviceSupport.substr(0, 1));
-      if (it != deviceTypes.end())
+      if(it != deviceTypes.end()) {
         return deviceTypes.at(this->deviceSupport.substr(0, 1));
-      else
+      } else {
         return "Unknown device type";
+      }
     }
 
     std::string get_regions()
     {
       std::string regions = "";
-      for (size_t i = 0; i < 3; i++)
-      {
+      for(size_t i = 0; i < 3; i++) {
         auto it = regionTypes.find(this->regionSupport.substr(i, 1));
-        if (it != regionTypes.end())
-        {
-          if (i)
+        if(it != regionTypes.end()) {
+          if(i) {
             regions += ", ";
+          }
           regions += regionTypes.at(this->regionSupport.substr(i, 1));
         }
       }
@@ -203,28 +199,30 @@ private:
 
     bool has_sram()
     {
-      if (
-          this->extraMemory.ra == "RA" &&
-          this->extraMemory._x20 == 0x20 &&
-          (this->extraMemory.type == 0xA0 || // no save  16-bit
-           this->extraMemory.type == 0xB0 || // no save   8-bit  even addresses
-           this->extraMemory.type == 0xB8 || // no save   8-bit  odd addresses
-           this->extraMemory.type == 0xE0 || // save     16-bit
-           this->extraMemory.type == 0xF0 || // save      8-bit  even addresses
-           this->extraMemory.type == 0xF8    // save      8-bit  odd addresses
-           ))
+      if(
+        this->extraMemory.ra == "RA" &&
+        this->extraMemory._x20 == 0x20 &&
+        (this->extraMemory.type == 0xA0 ||  // no save  16-bit
+          this->extraMemory.type == 0xB0 || // no save   8-bit  even addresses
+          this->extraMemory.type == 0xB8 || // no save   8-bit  odd addresses
+          this->extraMemory.type == 0xE0 || // save     16-bit
+          this->extraMemory.type == 0xF0 || // save      8-bit  even addresses
+          this->extraMemory.type == 0xF8    // save      8-bit  odd addresses
+          )) {
         return true;
-      else
+      } else {
         return false;
+      }
     }
 
     // return true or false
     bool has_battery()
     {
-      if (this->extraMemory.type == 0xE0 || // save     16-bit
-          this->extraMemory.type == 0xF0 || // save      8-bit  even addresses
-          this->extraMemory.type == 0xF8)   // save      8-bit  odd addresses
+      if(this->extraMemory.type == 0xE0 || // save     16-bit
+        this->extraMemory.type == 0xF0 ||  // save      8-bit  even addresses
+        this->extraMemory.type == 0xF8) {  // save      8-bit  odd addresses
         return true;
+      }
 
       return false;
     }
@@ -232,19 +230,21 @@ private:
     // return true or false
     bool check_romChecksum()
     {
-      if (this->romChecksum == this->fileChecksum)
+      if(this->romChecksum == this->fileChecksum) {
         return true;
-      else
+      } else {
         return false;
+      }
     }
 
     // return true or false
     bool check_rom_size()
     {
-      if (this->get_rom_size() == (this->fileSize >> 10))
+      if(this->get_rom_size() == (this->fileSize >> 10)) {
         return true;
-      else
+      } else {
         return false;
+      }
     }
   };
 
@@ -256,7 +256,7 @@ private:
    * @return true if the header is valid
    * @return false if the header is not valid
    */
-  bool parse_header(const std::string &filename)
+  bool parse_header(const std::string& filename)
   {
     // reset header properties
     header = {};
@@ -272,20 +272,19 @@ private:
 
     // skip vectors and copy header bytes
     rom.seekg(0x100, rom.beg);
-    for (size_t i = 0; i < 256; i++)
-    {
+    for(size_t i = 0; i < 256; i++) {
       header.bytes[i] = (uint8_t)rom.get();
     }
 
     // calculate rom file checksum
     uint16_t checksum = 0;
     // rom.seekg(0x200, rom.beg);
-    while (true)
-    {
+    while(true) {
       uint16_t val = (uint8_t)rom.get() << 8;
       val |= (uint8_t)rom.get();
-      if (rom.eof())
+      if(rom.eof()) {
         break;
+      }
       checksum += val;
     }
     header.fileChecksum = checksum;
@@ -294,15 +293,13 @@ private:
 
     // system type
     memset(this->buf, 0, sizeof(this->buf));
-    for (size_t i = 0; i < 16; i++)
-    {
+    for(size_t i = 0; i < 16; i++) {
       this->buf[i] = header.bytes[i];
     }
     header.systemType.assign(this->buf, 16);
 
     // check if header is valid
-    if (header.systemType.substr(0, 4) != "SEGA")
-    {
+    if(header.systemType.substr(0, 4) != "SEGA") {
       APP_LOG(LogTypes_Warning, "ROM Header is not valid (system type doesn't start with SEGA");
       header.isValid = false;
       return false;
@@ -310,32 +307,28 @@ private:
 
     // copyright and release_date
     memset(this->buf, 0, sizeof(this->buf));
-    for (size_t i = 0; i < 16; i++)
-    {
+    for(size_t i = 0; i < 16; i++) {
       this->buf[i] = header.bytes[i + 0x10];
     }
     header.copyrightReleaseDate.assign(this->buf, 16);
 
     // game title (domestic)
     memset(this->buf, 0, sizeof(this->buf));
-    for (size_t i = 0; i < 48; i++)
-    {
+    for(size_t i = 0; i < 48; i++) {
       this->buf[i] = header.bytes[i + 0x20];
     }
     header.gameTitleDomestic.assign(this->buf, 48);
 
     // game title (overseas)
     memset(this->buf, 0, sizeof(this->buf));
-    for (size_t i = 0; i < 48; i++)
-    {
+    for(size_t i = 0; i < 48; i++) {
       this->buf[i] = header.bytes[i + 0x50];
     }
     header.gameTitleOverseas.assign(this->buf, 48);
 
     // serial number
     memset(this->buf, 0, sizeof(this->buf));
-    for (size_t i = 0; i < 14; i++)
-    {
+    for(size_t i = 0; i < 14; i++) {
       this->buf[i] = header.bytes[i + 0x80];
     }
     header.serialNumber.assign(this->buf, 14);
@@ -346,8 +339,7 @@ private:
 
     // device support
     memset(this->buf, 0, sizeof(this->buf));
-    for (size_t i = 0; i < 16; i++)
-    {
+    for(size_t i = 0; i < 16; i++) {
       this->buf[i] = header.bytes[i + 0x90];
     }
     header.deviceSupport.assign(this->buf, 16);
@@ -393,29 +385,25 @@ private:
 
     // modem support
     memset(this->buf, 0, sizeof(this->buf));
-    for (size_t i = 0; i < 12; i++)
-    {
+    for(size_t i = 0; i < 12; i++) {
       this->buf[i] = header.bytes[i + 0xBC];
     }
     header.modemSupport.assign(this->buf, 12);
 
     // region support
     memset(this->buf, 0, sizeof(this->buf));
-    for (size_t i = 0; i < 12; i++)
-    {
+    for(size_t i = 0; i < 12; i++) {
       this->buf[i] = header.bytes[i + 0xF0];
     }
     header.regionSupport = std::string(this->buf);
 
     // check if ROM checksum is valid
-    if (!header.check_romChecksum())
-    {
+    if(!header.check_romChecksum()) {
       APP_LOG(LogTypes_Warning, "Header ROM checksum is not valid");
     }
 
     // check if ROM size is valid
-    if (!header.check_rom_size())
-    {
+    if(!header.check_rom_size()) {
       // APP_LOG(LogTypes_Warning, "Header ROM size is not valid (header says %06X, file is %06X)", header.get_rom_size(), header.fileSize >> 10);
       APP_LOG(LogTypes_Warning, "Header ROM size is not valid (header says %i KiB, file is %i KiB)", header.get_rom_size(), header.fileSize >> 10);
     }
@@ -430,11 +418,11 @@ private:
    */
   void render_header_content() override
   {
-    if (!this->header.isValid)
+    if(!this->header.isValid) {
       return ImGui::Text("The file header is not valid.");
+    }
 
-    if (ImGui::BeginTable("md_header_table", 2, ImGuiTableFlags_Borders))
-    {
+    if(ImGui::BeginTable("md_header_table", 2, ImGuiTableFlags_Borders)) {
       ImGui::TableSetupColumn("Property", ImGuiTableColumnFlags_WidthFixed, 250.0f);
       ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthFixed, 250.0f);
 
