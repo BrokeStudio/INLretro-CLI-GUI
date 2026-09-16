@@ -365,60 +365,60 @@ local function write_header(file, prg_kb, chr_kb, mapper, mirroring)
   --      ++-++++- Default Expansion Device
 end
 
--- Desc: check if PPU /A13 -> CIRAM /CE jumper present
---       Does NOT check if PPU A13 is inverted and then drives CIRAM /CE
--- Pre:  nes_init() been called to setup i/o
--- Post: PPU /A13 left high (disabled), all other ADDRH signals low
--- Rtn:  true if jumper is set
-local function jumper_ciramce_ppuA13n(debug)
-  --check that we can clear CIRAM /CE with PPU /A13
-  dict.pinport("ADDR_SET", 0x0000)
-  --read CIRAM /CE pin
-  if dict.pinport("CTL_RD", "CICE") ~= 0 then
-    if debug then print("CIRAM /CE high when /A13 low ") end
-    return false
-  end
+-- -- Desc: check if PPU /A13 -> CIRAM /CE jumper present
+-- --       Does NOT check if PPU A13 is inverted and then drives CIRAM /CE
+-- -- Pre:  nes_init() been called to setup i/o
+-- -- Post: PPU /A13 left high (disabled), all other ADDRH signals low
+-- -- Rtn:  true if jumper is set
+-- local function jumper_ciramce_ppuA13n(debug)
+--   --check that we can clear CIRAM /CE with PPU /A13
+--   dict.pinport("ADDR_SET", 0x0000)
+--   --read CIRAM /CE pin
+--   if dict.pinport("CTL_RD", "CICE") ~= 0 then
+--     if debug then print("CIRAM /CE high when /A13 low ") end
+--     return false
+--   end
 
-  --set PPU /A13 high
-  dict.pinport("ADDR_SET", PPU_A13N_HI)
-  --read CIRAM /CE pin
-  if dict.pinport("CTL_RD", "CICE") == 0 then
-    if debug then print("CIRAM /CE low when /A13 high") end
-    return false
-  end
+--   --set PPU /A13 high
+--   dict.pinport("ADDR_SET", PPU_A13N_HI)
+--   --read CIRAM /CE pin
+--   if dict.pinport("CTL_RD", "CICE") == 0 then
+--     if debug then print("CIRAM /CE low when /A13 high") end
+--     return false
+--   end
 
-  --CICE low jumper appears to be present
-  if debug then print("CIRAM /CE <- PPU /A13 jumper present") end
-  return true
-end
+--   --CICE low jumper appears to be present
+--   if debug then print("CIRAM /CE <- PPU /A13 jumper present") end
+--   return true
+-- end
 
--- Desc: check if PPU A13 is inverted then drives CIRAM /CE
---       Some mappers may do this including INLXO-ROM boards
---       Does NOT check if PPU /A13 is drives CIRAM /CE
--- Pre:  nes_init() been called to setup i/o
--- Post: PPU A13 left disabled (hi)
--- Rtn:  true if inverted PPU A13 drives CIRAM /CE
-local function ciramce_inv_ppuA13(debug)
-  --set PPU A13 low
-  dict.pinport("ADDR_SET", 0x0000)
-  -- CIRAM /CE should be high if inverted A13 is what drives it
-  if dict.pinport("CTL_RD", "CICE") == 0 then
-    if debug then print("CIRAM /CE low when A13 low") end
-    return false
-  end
+-- -- Desc: check if PPU A13 is inverted then drives CIRAM /CE
+-- --       Some mappers may do this including INLXO-ROM boards
+-- --       Does NOT check if PPU /A13 is drives CIRAM /CE
+-- -- Pre:  nes_init() been called to setup i/o
+-- -- Post: PPU A13 left disabled (hi)
+-- -- Rtn:  true if inverted PPU A13 drives CIRAM /CE
+-- local function ciramce_inv_ppuA13(debug)
+--   --set PPU A13 low
+--   dict.pinport("ADDR_SET", 0x0000)
+--   -- CIRAM /CE should be high if inverted A13 is what drives it
+--   if dict.pinport("CTL_RD", "CICE") == 0 then
+--     if debug then print("CIRAM /CE low when A13 low") end
+--     return false
+--   end
 
-  --check that we can clear CIRAM /CE with PPU A13 high
-  dict.pinport("ADDR_SET", PPU_A13_HI)
-  -- CIRAM /CE should be low if inverted A13 is what drives it
-  if dict.pinport("CTL_RD", "CICE") ~= 0 then
-    if debug then print("CIRAM /CE high when A13 high") end
-    return false
-  end
+--   --check that we can clear CIRAM /CE with PPU A13 high
+--   dict.pinport("ADDR_SET", PPU_A13_HI)
+--   -- CIRAM /CE should be low if inverted A13 is what drives it
+--   if dict.pinport("CTL_RD", "CICE") ~= 0 then
+--     if debug then print("CIRAM /CE high when A13 high") end
+--     return false
+--   end
 
-  --CICE low jumper appears to be present
-  if debug then print("CIRAM /CE <- inverse PPU A13") end
-  return true
-end
+--   --CICE low jumper appears to be present
+--   if debug then print("CIRAM /CE <- inverse PPU A13") end
+--   return true
+-- end
 
 -- Desc: check for famicom audio in->out jumper
 --       This drives EXP6 (RF out) -> EXP0 (APU in) which is backwards..
@@ -675,60 +675,60 @@ local function find_bank_table_32(filename, prg_size_kb)
   end
 end
 
--- verify the ciccom software mirroring switch is working properly
-local function test_cic_soft_switch(debug)
-end
+-- -- verify the ciccom software mirroring switch is working properly
+-- local function test_cic_soft_switch(debug)
+-- end
 
--- Desc: CHR-ROM flash manf/prod ID sense test
---       Only senses SST flash ID's
---       Does not make CHR bank writes so A14-A13 must be made valid outside of this funciton
---       An NROM board does this by tieing A14:13 to A12:11
---       Other mappers will pass this function if PT0 has A14:13=01, PT1 has A14:13=10
---       Assumes that isn't getting tricked by having manf/prodID at $0000/0001
---       could add check and increment read address to ensure doesn't get tricked..
--- Pre:  nes_init() been called to setup i/o
--- Post: memory manf/prod ID set to read values if passed
---       memory wr_dict and wr_opcode set if successful
---       Software mode exited if entered successfully
--- Rtn:  SUCCESS if flash sensed, GEN_FAIL if not, neg if error
-local function read_flashID_chrrom_8K(debug)
-  local rv
-  --enter software mode
-  --NROM has A13 tied to A11, and A14 tied to A12.
-  --So only A0-12 needs to be valid
-  --A13 needs to be low to address CHR-ROM
-  --      15 14 13 12
-  -- 0x5 = 0b  0  1  0  1  -> $1555
-  -- 0x2 = 0b  0  0  1  0  -> $0AAA
-  dict.nes("NES_PPU_WR", 0x1555, 0xAA)
-  dict.nes("NES_PPU_WR", 0x0AAA, 0x55)
-  dict.nes("NES_PPU_WR", 0x1555, 0x90)
-  --read manf ID
-  rv = dict.nes("NES_PPU_RD", 0x0000)
-  if debug then print("attempted read CHR-ROM manf ID:", help.hex(rv)) end
-  --  if ( rv[RV_DATA0_IDX] != SST_MANF_ID ) {
-  --    return GEN_FAIL;
-  --    //no need for software exit since failed to enter
-  --  }
-  --
-  --read prod ID
-  rv = dict.nes("NES_PPU_RD", 0x0001)
-  if debug then print("attempted read CHR-ROM prod ID:", help.hex(rv)) end
-  --  if ( (rv[RV_DATA0_IDX] == SST_PROD_128)
-  --  ||   (rv[RV_DATA0_IDX] == SST_PROD_256)
-  --  ||   (rv[RV_DATA0_IDX] == SST_PROD_512) ) {
-  --    //found expected manf and prod ID
-  --    flash->manf = SST_MANF_ID;
-  --    flash->part = rv[RV_DATA0_IDX];
-  --    flash->wr_dict = DICT_NES;
-  --    flash->wr_opcode = NES_PPU_WR;
-  --  }
-  --
-  -- exit software
-  dict.nes("NES_PPU_WR", 0x0000, 0xF0)
+-- -- Desc: CHR-ROM flash manf/prod ID sense test
+-- --       Only senses SST flash ID's
+-- --       Does not make CHR bank writes so A14-A13 must be made valid outside of this funciton
+-- --       An NROM board does this by tieing A14:13 to A12:11
+-- --       Other mappers will pass this function if PT0 has A14:13=01, PT1 has A14:13=10
+-- --       Assumes that isn't getting tricked by having manf/prodID at $0000/0001
+-- --       could add check and increment read address to ensure doesn't get tricked..
+-- -- Pre:  nes_init() been called to setup i/o
+-- -- Post: memory manf/prod ID set to read values if passed
+-- --       memory wr_dict and wr_opcode set if successful
+-- --       Software mode exited if entered successfully
+-- -- Rtn:  SUCCESS if flash sensed, GEN_FAIL if not, neg if error
+-- local function read_flashID_chrrom_8K(debug)
+--   local rv
+--   --enter software mode
+--   --NROM has A13 tied to A11, and A14 tied to A12.
+--   --So only A0-12 needs to be valid
+--   --A13 needs to be low to address CHR-ROM
+--   --      15 14 13 12
+--   -- 0x5 = 0b  0  1  0  1  -> $1555
+--   -- 0x2 = 0b  0  0  1  0  -> $0AAA
+--   dict.nes("NES_PPU_WR", 0x1555, 0xAA)
+--   dict.nes("NES_PPU_WR", 0x0AAA, 0x55)
+--   dict.nes("NES_PPU_WR", 0x1555, 0x90)
+--   --read manf ID
+--   rv = dict.nes("NES_PPU_RD", 0x0000)
+--   if debug then print("attempted read CHR-ROM manf ID:", help.hex(rv)) end
+--   --  if ( rv[RV_DATA0_IDX] != SST_MANF_ID ) {
+--   --    return GEN_FAIL;
+--   --    //no need for software exit since failed to enter
+--   --  }
+--   --
+--   --read prod ID
+--   rv = dict.nes("NES_PPU_RD", 0x0001)
+--   if debug then print("attempted read CHR-ROM prod ID:", help.hex(rv)) end
+--   --  if ( (rv[RV_DATA0_IDX] == SST_PROD_128)
+--   --  ||   (rv[RV_DATA0_IDX] == SST_PROD_256)
+--   --  ||   (rv[RV_DATA0_IDX] == SST_PROD_512) ) {
+--   --    //found expected manf and prod ID
+--   --    flash->manf = SST_MANF_ID;
+--   --    flash->part = rv[RV_DATA0_IDX];
+--   --    flash->wr_dict = DICT_NES;
+--   --    flash->wr_opcode = NES_PPU_WR;
+--   --  }
+--   --
+--   -- exit software
+--   dict.nes("NES_PPU_WR", 0x0000, 0xF0)
 
-  --return true
-end
+--   --return true
+-- end
 
 
 -- Desc: Simple CHR-RAM sense test
@@ -771,61 +771,61 @@ local function ppu_ram_sense(addr, debug)
   return res
 end
 
--- Desc: PRG-ROM flash manf/prod ID sense test
---       Using EXP0 /WE writes
---       Only senses SST flash ID's
---       Assumes that isn't getting tricked by having manf/prodID at $8000/8001
---       could add check and increment read address to ensure doesn't get tricked..
--- Pre:  nes_init() been called to setup i/o
---       exp0 pullup test must pass
---       if ROM A14 is mapper controlled it must be low when CPU A14 is low
---       controlling A14 outside of this function acts as a means of bank size detection
--- Post: memory manf/prod ID set to read values if passed
---       memory wr_dict and wr_opcode set if successful
---       Software mode exited if entered successfully
--- Rtn:  SUCCESS if flash sensed, GEN_FAIL if not, neg if error
-local function read_flashID_prgrom_exp0(debug)
-  local rv
-  --enter software mode
-  --ROMSEL controls PRG-ROM /OE which needs to be low for flash writes
-  --So unlock commands need to be addressed below $8000
-  --DISCRETE_EXP0_PRGROM_WR doesn't toggle /ROMSEL by definition though, so A15 is unused
-  --      15 14 13 12
-  -- 0x5 = 0b  0  1  0  1  -> $5555
-  -- 0x2 = 0b  0  0  1  0  -> $2AAA
-  dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x5555, 0xAA)
-  dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x2AAA, 0x55)
-  dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x5555, 0x90)
-  --read manf ID
-  rv = dict.nes("NES_CPU_RD", 0x8000)
-  if debug then print("attempted read PRG-ROM manf ID:", help.hex(rv)) end
-  --  debug("manf id: %x", rv[RV_DATA0_IDX]);
-  --  if ( rv[RV_DATA0_IDX] != SST_MANF_ID ) {
-  --    return GEN_FAIL;
-  --    //no need for software exit since failed to enter
-  --  }
-  --
-  --read prod ID
-  rv = dict.nes("NES_CPU_RD", 0x8001)
-  if debug then print("attempted read PRG-ROM prod ID:", help.hex(rv)) end
-  --  if ( (rv[RV_DATA0_IDX] == SST_PROD_128)
-  --  ||   (rv[RV_DATA0_IDX] == SST_PROD_256)
-  --  ||   (rv[RV_DATA0_IDX] == SST_PROD_512) ) {
-  --    //found expected manf and prod ID
-  --    flash->manf = SST_MANF_ID;
-  --    flash->part = rv[RV_DATA0_IDX];
-  --    flash->wr_dict = DICT_NES;
-  --    flash->wr_opcode = DISCRETE_EXP0_PRGROM_WR;
-  --  }
-  --
-  -- exit software
-  dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x8000, 0xF0)
-  --verify exited
-  --  rv = dict.nes("NES_CPU_RD", 0x8001)
-  --  if debug then print("attempted read PRG-ROM prod ID:", help.hex(rv)) end
+-- -- Desc: PRG-ROM flash manf/prod ID sense test
+-- --       Using EXP0 /WE writes
+-- --       Only senses SST flash ID's
+-- --       Assumes that isn't getting tricked by having manf/prodID at $8000/8001
+-- --       could add check and increment read address to ensure doesn't get tricked..
+-- -- Pre:  nes_init() been called to setup i/o
+-- --       exp0 pullup test must pass
+-- --       if ROM A14 is mapper controlled it must be low when CPU A14 is low
+-- --       controlling A14 outside of this function acts as a means of bank size detection
+-- -- Post: memory manf/prod ID set to read values if passed
+-- --       memory wr_dict and wr_opcode set if successful
+-- --       Software mode exited if entered successfully
+-- -- Rtn:  SUCCESS if flash sensed, GEN_FAIL if not, neg if error
+-- local function read_flashID_prgrom_exp0(debug)
+--   local rv
+--   --enter software mode
+--   --ROMSEL controls PRG-ROM /OE which needs to be low for flash writes
+--   --So unlock commands need to be addressed below $8000
+--   --DISCRETE_EXP0_PRGROM_WR doesn't toggle /ROMSEL by definition though, so A15 is unused
+--   --      15 14 13 12
+--   -- 0x5 = 0b  0  1  0  1  -> $5555
+--   -- 0x2 = 0b  0  0  1  0  -> $2AAA
+--   dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x5555, 0xAA)
+--   dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x2AAA, 0x55)
+--   dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x5555, 0x90)
+--   --read manf ID
+--   rv = dict.nes("NES_CPU_RD", 0x8000)
+--   if debug then print("attempted read PRG-ROM manf ID:", help.hex(rv)) end
+--   --  debug("manf id: %x", rv[RV_DATA0_IDX]);
+--   --  if ( rv[RV_DATA0_IDX] != SST_MANF_ID ) {
+--   --    return GEN_FAIL;
+--   --    //no need for software exit since failed to enter
+--   --  }
+--   --
+--   --read prod ID
+--   rv = dict.nes("NES_CPU_RD", 0x8001)
+--   if debug then print("attempted read PRG-ROM prod ID:", help.hex(rv)) end
+--   --  if ( (rv[RV_DATA0_IDX] == SST_PROD_128)
+--   --  ||   (rv[RV_DATA0_IDX] == SST_PROD_256)
+--   --  ||   (rv[RV_DATA0_IDX] == SST_PROD_512) ) {
+--   --    //found expected manf and prod ID
+--   --    flash->manf = SST_MANF_ID;
+--   --    flash->part = rv[RV_DATA0_IDX];
+--   --    flash->wr_dict = DICT_NES;
+--   --    flash->wr_opcode = DISCRETE_EXP0_PRGROM_WR;
+--   --  }
+--   --
+--   -- exit software
+--   dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x8000, 0xF0)
+--   --verify exited
+--   --  rv = dict.nes("NES_CPU_RD", 0x8001)
+--   --  if debug then print("attempted read PRG-ROM prod ID:", help.hex(rv)) end
 
-  return true
-end
+--   return true
+-- end
 
 --[[
  dP""b8 88  dP""b8
@@ -956,13 +956,6 @@ nes.cic = {
 
 }
 
---[[
-8888b.  888888 88""Yb 88   88  dP""b8     888888 88   88 88b 88  dP""b8 .dP"Y8
- 8I  Yb 88__   88__dP 88   88 dP   `"     88__   88   88 88Yb88 dP   `" `Ybo."
- 8I  dY 88""   88""Yb Y8   8P Yb  "88     88""   Y8   8P 88 Y88 Yb      o.`Y8b
-8888Y"  888888 88oodP `YbodP'  YboodP     88     `YbodP' 88  Y8  YboodP 8bodP'
-]]
-
 local function cpu_wr(addr, val, debug, comment)
   if not (type(debug) == "boolean") then debug = true end
   if not (type(comment) == "string") then comment = "" end
@@ -995,18 +988,6 @@ local function ppu_rd(addr, debug, label)
   return rv
 end
 
-nes.cpu_rd = cpu_rd
-nes.cpu_wr = cpu_wr
-nes.ppu_rd = ppu_rd
-nes.ppu_wr = ppu_wr
-
---[[
-8888b.  888888 88""Yb 88   88  dP""b8     888888 88   88 88b 88  dP""b8 .dP"Y8     `Yb.
- 8I  Yb 88__   88__dP 88   88 dP   `"     88__   88   88 88Yb88 dP   `" `Ybo."       `Yb.
- 8I  dY 88""   88""Yb Y8   8P Yb  "88     88""   Y8   8P 88 Y88 Yb      o.`Y8b       .dP'
-8888Y"  888888 88oodP `YbodP'  YboodP     88     `YbodP' 88  Y8  YboodP 8bodP'     .dP'
-]]
-
 -- global variables so other modules can use them
 
 
@@ -1014,18 +995,24 @@ nes.ppu_wr = ppu_wr
 
 
 -- functions other modules are able to call
-nes.jumper_ciramce_ppuA13n = jumper_ciramce_ppuA13n
-nes.ciramce_inv_ppuA13 = ciramce_inv_ppuA13
+-- nes.jumper_ciramce_ppuA13n = jumper_ciramce_ppuA13n
+-- nes.ciramce_inv_ppuA13 = ciramce_inv_ppuA13
 nes.jumper_famicom_sound = jumper_famicom_sound
 nes.detect_mapper_mirroring = detect_mapper_mirroring
-nes.test_cic_soft_switch = test_cic_soft_switch
+-- nes.test_cic_soft_switch = test_cic_soft_switch
 nes.ppu_ram_sense = ppu_ram_sense
-nes.read_flashID_chrrom_8K = read_flashID_chrrom_8K
-nes.read_flashID_prgrom_exp0 = read_flashID_prgrom_exp0
+-- nes.read_flashID_chrrom_8K = read_flashID_chrrom_8K
+-- nes.read_flashID_prgrom_exp0 = read_flashID_prgrom_exp0
 nes.write_header = write_header
 nes.parse_header = parse_header
 nes.find_bank_table_32 = find_bank_table_32
 nes.find_bank_table_in_last_bank = find_bank_table_in_last_bank
+
+nes.cpu_rd = cpu_rd
+nes.cpu_wr = cpu_wr
+nes.ppu_rd = ppu_rd
+nes.ppu_wr = ppu_wr
+
 nes.header = header
 nes.MIRRORING_TYPE_HORIZONTAL = MIRRORING_TYPE_HORIZONTAL
 nes.MIRRORING_TYPE_VERTICAL = MIRRORING_TYPE_VERTICAL

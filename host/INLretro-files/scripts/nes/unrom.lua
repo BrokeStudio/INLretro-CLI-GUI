@@ -48,36 +48,6 @@ local function init_mapper(debug)
   dict.nes("NES_CPU_WR", 0xC000, 0x00)
 end
 
---find a viable banktable location
-local function find_banktable(banktable_size)
-  local search_base = 0x0C -- search in $C000-$F000, the fixed bank
-  local kb_search_space = 16
-
-  --get the fixed bank's content
-  local search_data = ""
-  dump.dumptocallback(
-    function(data)
-      search_data = search_data .. data
-    end,
-    kb_search_space, { mapper = search_base, mem_type = "NESCPU_4KB" }, false
-  )
-
-  --construct the byte sequence that we need
-  local searched_sequence = ""
-  while searched_sequence:len() < banktable_size do
-    searched_sequence = searched_sequence .. string.char(searched_sequence:len())
-  end
-
-  --search for the banktable in the fixed bank
-  position_in_fixed_bank = string.find(search_data, searched_sequence, 1, true)
-  if position_in_fixed_bank == nil then
-    return nil
-  end
-
-  --compute the cpu offset of this data
-  return 0xC000 + position_in_fixed_bank - 1
-end
-
 --[[
 ██████╗ ██████╗  ██████╗       ██████╗  ██████╗ ███╗   ███╗
 ██╔══██╗██╔══██╗██╔════╝       ██╔══██╗██╔═══██╗████╗ ████║
@@ -87,6 +57,42 @@ end
 ╚═╝     ╚═╝  ╚═╝ ╚═════╝       ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝
 
 --]]
+
+--- Find a bank table in the fixed PRG-ROM bank at 0xC000-0xFFFF.
+-- Searches for consecutive bank numbers starting at zero, one per 16 KiB bank.
+-- @param prg_size_kb number Total PRG-ROM size in KiB
+-- @return integer|nil CPU address of the first matching table, or nil if not found
+local function find_bank_table(prg_size_kb)
+  log.section("Searching for bank table in last bank")
+
+  local search_base = 0xC0 -- search in $C000-$FFFF, the fixed bank
+  local kb_search_space = 16
+  local entries = math.floor(prg_size_kb / kb_search_space)
+
+  -- get the fixed bank's content
+  local search_data = ""
+  dump.dumptocallback(
+    function(data)
+      search_data = search_data .. data
+    end,
+    kb_search_space, { mapper = search_base, mem_type = "NESCPU_PAGE" }, false
+  )
+
+  -- construct the byte sequence that we need
+  local searched_sequence = ""
+  while searched_sequence:len() < entries do
+    searched_sequence = searched_sequence .. string.char(searched_sequence:len())
+  end
+
+  -- search for the banktable in the fixed bank
+  local position_in_fixed_bank = string.find(search_data, searched_sequence, 1, true)
+  if position_in_fixed_bank == nil then
+    return nil
+  end
+
+  -- compute the cpu offset of this data
+  return 0xC000 + position_in_fixed_bank - 1
+end
 
 --- Read and identify the PRG-ROM flash manufacturer/device ID.
 -- @return boolean found True when the flash chip is recognized
@@ -455,6 +461,14 @@ local function process(process_opts, console_opts)
         else
           log.success("Bank table found at address:", help.hex_0x4(bank_table_base))
         end
+      elseif do_rom_dump then
+        bank_table_base = find_bank_table(prg_size_kb)
+        if bank_table_base == nil then
+          log.error("Couldn't find bank table, use 'bank_table' additional option to specify it manually")
+          return false
+        else
+          log.success("Bank table found at address:", help.hex_0x4(bank_table_base))
+        end
       else
         log.error("Bank table is missing from the command line arguments")
         return false
@@ -516,7 +530,7 @@ local function process(process_opts, console_opts)
     -- open file
     file = assert(io.open(rom_dump_file.filename, "wb"))
 
-    -- create header: pass open & empty file & rom sizes
+    -- create header
     if rom_dump_file.ext == "nes" then
       create_header(file, prg_size_kb, chr_size_kb)
     end
