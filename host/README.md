@@ -1,124 +1,67 @@
-# INLretro Programmer-Dumper (CLI + GUI)
+﻿# INLretro host software
 
-This project is based on the original [INLretro programmer-dumper](https://gitlab.com/InfiniteNesLives/INL-retro-progdump) by InfiniteNesLives.
+This directory contains the desktop software for the INLretro programmer-dumper: a command-line interface (CLI), a graphical user interface (GUI), and their shared core library.
 
-It provides both a command-line interface (CLI) and a graphical user interface (GUI) for interacting with INLretro hardware programmers/dumpers.
+For supported systems and mappers, screenshots, firmware update instructions, and troubleshooting, see the [main project README](../README.md).
 
-**If you already own an INLretro programmer-dumper and want to switch to this CLI/GUI solution, please read the _IMPORTANT NOTE_ below.**
+## Architecture
 
-[![build](https://github.com/BrokeStudio/INLretro/actions/workflows/build.yml/badge.svg)](https://github.com/BrokeStudio/INLretro/actions/workflows/build.yml)
-![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)
-![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-blue)
+The host software is split into three projects:
 
----
+| Project | Purpose | Output |
+| --- | --- | --- |
+| `Core` | Shared code for communicating with INLretro hardware. | Static library |
+| `CLI` | Command-line interface, linked against `Core`. | `INLretro` executable |
+| `GUI` | Graphical interface, linked against `Core`, using SDL2 and Dear ImGui. | `INLretroGUI` executable |
 
-## Features
+Lua scripts in `INLretro-files/scripts/` implement cartridge operations and firmware updates.
 
-- CLI version: command-line tool.
-- GUI version: user friendly tool.
-- Works on Windows, Linux, and macOS.
-- Build system using Premake for simple multi-platform setup.
-- Supports multiple flashers.
+## Directory layout
 
----
+```text
+host/
+├── Core/                 # Shared host library
+├── CLI/                  # Command-line application
+├── GUI/                  # Graphical application and UI assets
+├── INLretro-files/       # Runtime files copied into build outputs
+│   ├── scripts/          # Lua scripts for systems, mappers, and operations
+│   └── INLretro.ini      # Default application settings
+├── External/             # Third-party dependencies
+├── drivers/              # Device drivers included with host distributions
+├── Scripts/              # Platform-specific project generation scripts
+├── Vendor/               # Build tools, including Premake
+├── Windows/              # Windows-specific files
+├── macOS/                # macOS-specific files and app resources
+├── tests/                # Automated checks
+├── Build.lua             # Premake workspace configuration
+└── COMPILING.md          # Build instructions
+```
 
-## Console/mapper support
+Related directories at the repository root:
 
-| System           | Mapper         | ROM dump | ROM write | RAM dump | RAM write |
-| ---------------- | -------------- | -------- | --------- | -------- | --------- |
-| NES / FC         | 0 - NROM       | ✓        | ✓         | −        | −         |
-|                  | 1 - MMC1       | ✓        | ✓         | ✓        | ✓         |
-|                  | 2 - UxROM      | ✓        | ✓         | −        | −         |
-|                  | 3 - CxROM      | ✓        | ✓         | −        | −         |
-|                  | 4 - MMC3       | ✓        | ✓         | ✓        | ✓         |
-|                  | 10 - MMC4      | ✓        | ✓         | ✓        | ✓         |
-|                  | 18 - SS88006   | ✓        | ✓         | ✓        | ✓         |
-|                  | 24 - VRC6a     | ✓        | ✓         | ✓        | ✓         |
-|                  | 28 - Action 53 | ✓        | ✓         | −        | −         |
-|                  | 30 - UNROM-512 | ✓        | ✓         | −        | −         |
-|                  | 34 - BNROM     | ✓        | ✓         | −        | −         |
-|                  | 111 - GTROM    | ✓        | ✓         | −        | −         |
-|                  | 682 - Rainbow  | ✓        | ✓         | ✓        | ✓         |
-|                  |                |          |           |          |           |
-| Game Boy (Color) | 32KB           | ✓        | ✓         | ✓        | ✓         |
-|                  | MBC1           | ✓        | ✓         | ✓        | ✓         |
-|                  | MBC5           | ✓        | ✓         | ✓        | ✓         |
-|                  |                |          |           |          |           |
-| Genesis / MD     | 32Mb (+SRAM)   | ✓        | ✓         | ✓        | ✓         |
-|                  | SSF2           | ✓        | ✓         | ✓        | ✓         |
-|                  |                |          |           |          |           |
-| SNES / SFC       | LoRom / HiRom  | ✓        | ✓         | ✗        | ✗         |
-|                  |                |          |           |          |           |
-| N64              |                | ✓        | ✗         | ✗        | ✗         |
+- [`firmware/`](../firmware/README.md): firmware source and Makefiles, built directly from that directory; see the [firmware build guide](../firmware/COMPILING.md).
+- [`shared/`](../shared/): protocol definitions shared by the host software and firmware.
 
-I'll try to add support to more mapper in the future but feel free to let me know if you have specific needs.
+## Building
 
----
+See [COMPILING.md](COMPILING.md) for platform-specific prerequisites and build instructions.
 
-## Screenshots
+[Build.lua](Build.lua) defines the Premake workspace and includes the build configuration for each project. Available configurations are `Debug`, `Release`, and `Dist`. Generated binaries are placed under `Binaries/`.
 
-![INLretroGUI - screenshot 1](Images/INLretroGUI-screenshot-1.png)
+The CI workflows also document the automated build and packaging process:
 
-![INLretroGUI - screenshot 2](Images/INLretroGUI-screenshot-2.png)
+- [Host build](../.github/workflows/build-host.yml)
+- [Firmware build](../.github/workflows/build-firmware.yml)
+- [Build and release pipeline](../.github/workflows/pipeline.yml)
 
-![INLretroGUI - screenshot 3](Images/INLretroGUI-screenshot-3.png)
+## Runtime files
 
-![INLretroGUI - screenshot 4](Images/INLretroGUI-screenshot-4.png)
+The applications use the Lua scripts and settings from `INLretro-files/`, together with the shared protocol definitions. Keep the runtime files supplied with a build alongside the executables, or inside the application bundle on macOS.
 
----
+The CI pipeline builds the firmware before the host software and includes the resulting firmware binaries in the host packages. For updating a connected programmer, see the [firmware update instructions](../README.md#important-note).
 
-## Important note
+## Support and license
 
-If you own an INLretro programmer-dumper and want to use this CLI/GUI solution, please follow these steps:
+See [Support & feedback](../README.md#support--feedback) for bug reports and feature requests.
 
-- If you're on Windows you need to install the new driver:
-  - Go to the `DriverPackages/` folder
-  - Execute `InstallDriver.exe`
-- You need to update the flasher's firmware so it's compatible with the CLI/GUI
-  - Using the CLI: run one of these commands:
-    - 6-connector flasher: `INLretro -s scripts/inlretro_fwupdate.lua -p firmware/inlretro_stm6.bin`
-    - NESmaker flasher: `INLretro -s scripts/inlretro_fwupdate.lua -p firmware/inlretro_stmn.bin`
-  - Using the GUI:
-    - Go to the `Flashers` menu
-    - Make sure your flasher is plugged in
-    - Refresh the list if you can't find your flasher in the list
-    - Click on `Update firmware` and select your flasher model
-
----
-
-## Credits
-
-Developed by Antoine GOHIN / Broke Studio.
-
-This project is based on:
-
-- [INLretro prog-dump](https://gitlab.com/InfiniteNesLives/INL-retro-progdump) by InfiniteNesLives
-
-This project uses:
-
-- [libusb](https://libusb.info/)
-- [SDL2](https://www.libsdl.org/)
-- [Dear ImGui](https://github.com/ocornut/imgui)
-- [Premake](https://premake.github.io/)
-
----
-
-## Compiling
-
-See [COMPILING.md](COMPILING.md)
-
-## License
-
-INLretro CLI/GUI is available under the GPL V3 license. Full text here: http://www.gnu.org/licenses/gpl-3.0.en.html
-
-Copyright (C) 2024-2026 Broke Studio
-
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License along with this program. If not, see http://www.gnu.org/licenses/.
-
-## Contact
-
-You can join Broke Studio's Discord server https://discord.gg/FffVMAuhTX.
+INLretro CLI/GUI is licensed under the [GNU General Public License, version 3 or later](../LICENSE).
