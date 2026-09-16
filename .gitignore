@@ -45,7 +45,6 @@ Makefile
 !host/Vendor/Binaries/
 host/Roms/
 
-
 # Windows
 host/Windows/Resources/resources.aps
-drivers/Windows/USB
+host/drivers/Windows/USB

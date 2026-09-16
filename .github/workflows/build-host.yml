@@ -62,7 +62,7 @@ jobs:
         shell: pwsh
         run: |
           Copy-Item `
-            -Path "../drivers/Windows/DriverPackages" `
+            -Path "drivers/Windows/DriverPackages" `
             -Destination "Binaries/windows-${{ matrix.platform.binPath }}/Dist/INLretro/DriverPackages" `
             -Recurse
 
