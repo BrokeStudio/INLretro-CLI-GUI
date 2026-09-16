@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y gcc-avr avr-libc wget tar
+        run: sudo apt-get update && sudo apt-get install -y gcc-avr avr-libc wget tar python3
       - name: Install arm-none-eabi-gcc 7.3.1
         run: |
           GCC_VERSION="7-2018q2"
@@ -45,6 +45,11 @@ jobs:
           echo -n "AV04" | dd of=build_stmn/inlretro_stm.bin bs=1 seek=$((0x800)) conv=notrunc
           cp build_stmn/inlretro_stm.bin release/inlretro_stmn_AV04.bin
           cp build_avr/*.hex release/
+
+      - name: Create STM32 DfuSe files
+        run: |
+          python3 dfuse-pack.py -b 0x08000000:release/inlretro_stm6_AV04.bin -D 0x0483:0xdf11 release/inlretro_stm6_AV04.dfu
+          python3 dfuse-pack.py -b 0x08000000:release/inlretro_stmn_AV04.bin -D 0x0483:0xdf11 release/inlretro_stmn_AV04.dfu
 
       - name: Upload INLretro firmware
         uses: actions/upload-artifact@v7

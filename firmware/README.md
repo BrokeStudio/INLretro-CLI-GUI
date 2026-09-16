@@ -41,6 +41,18 @@ Protocol definitions shared with the host software live in [`../shared/`](../sha
 
 See [COMPILING.md](COMPILING.md) for prerequisites, toolchain installation, build commands, release packaging, and integration with the host applications.
 
+## DFU release files
+
+The firmware CI includes `.bin` and `.dfu` files for both STM32 programmer models, and `.hex` for AVR Kazzo. The STM32 `.dfu` files use the DfuSe format, target flash address `0x08000000`, alternate interface 0, and USB device ID `0483:df11`. They contain the same version-marked firmware as the release `.bin` files.
+
+See [Create DfuSe files](COMPILING.md#create-dfuse-files) for Linux and Windows conversion commands. The host CLI/GUI updater continues to use `.bin` files.
+
+### Bundled conversion tool
+
+[`dfuse-pack.py`](dfuse-pack.py) comes from the [dfu-util project](https://dfu-util.sourceforge.net/dfuse.html). Its header credits Antonio Galea (2010-11-18) and specifies GNU LGPL 3.0. The bundled script is kept unchanged; CI uses this repository copy without downloading another version. The upstream release number is not recorded in the script.
+
+Its license is included in [dfuse-pack.LICENSE.txt](dfuse-pack.LICENSE.txt), together with the GNU GPL v3 text at the [repository root](../LICENSE). Keep the original attribution and license when redistributing the script, and document any future modifications.
+
 ## Support and licenses
 
 See [Support & feedback](../README.md#support--feedback) for bug reports and feature requests. Include the programmer model and firmware version when reporting a firmware issue.
