@@ -36,7 +36,7 @@ end
 -- disables PRG-RAM, selects Vertical mirroring
 -- sets up CHR-ROM flash PT0 for DATA, Commands: $5555->$1555  $2AAA->$1AAA
 -- sets up PRG-ROM flash DATA: $8000-9FFF, Commands: $5555->D555  $2AAA->$AAAA
--- leaves $8000 control reg selected to IRQ value selected so $A000 writes don't affect banking
+-- leaves $8000 control reg selected to CHR value selected so $A000 writes don't affect banking
 local function init_mapper()
   -- for save data safety start by disable PRG-RAM, and map PRG-ROM to $6000
   dict.nes("NES_CPU_WR", 0x8000, 0x08)
@@ -114,8 +114,8 @@ local function init_mapper()
   -- dict.nes("NES_CPU_WR", 0x8000, 0x08)
   -- dict.nes("NES_CPU_WR", 0xA000, 0x00)  --8KB @ CPU $6000
 
-  -- set $8000 bank select register to IRQ ctl reg so $A000 writes don't change banking
-  dict.nes("NES_CPU_WR", 0x8000, 0x0E)
+  -- set $8000 bank select register to CHR ctl reg so $A000 writes don't change banking
+  dict.nes("NES_CPU_WR", 0x8000, 0x02)
 end
 
 -- test the mapper's mirroring modes to verify working properly
@@ -225,8 +225,8 @@ local function prg_rom_flash_byte(addr, value, debug)
   dict.nes("NES_CPU_WR", 0xD555, 0xA0)
   dict.nes("NES_CPU_WR", addr, value)
 
-  -- recover by setting $8000 reg select back to a IRQ reg
-  dict.nes("NES_CPU_WR", 0x8000, 0x0E)
+  -- recover by setting $8000 reg select back to a CHR reg
+  dict.nes("NES_CPU_WR", 0x8000, 0x02)
 
   local rv = dict.nes("NES_CPU_RD", addr)
 
@@ -310,9 +310,9 @@ local function prg_rom_flash(file, rom_size_kb, debug)
     dict.nes("NES_CPU_WR", 0x8000, 0x09)
     dict.nes("NES_CPU_WR", 0xA000, cur_bank) -- 8KB @ CPU $8000
 
-    --set $8000 bank select back to a IRQ register
+    --set $8000 bank select back to a CHR register
     --keeps from having the PRG bank changing when writing data
-    dict.nes("NES_CPU_WR", 0x8000, 0x0E)
+    dict.nes("NES_CPU_WR", 0x8000, 0x02)
 
     --have the device write a bank worth of data
     --MMC3 functions work perfectly for FME7

@@ -11,9 +11,9 @@ local time                        = require "scripts.app.time"
 local files                       = require "scripts.app.files"
 
 -- file constants and global variables
-local PPU_A13N_HI                 = 0x8000 --PPU /A13 is connected to mcu A15
-local PPU_A13_HI                  = 0x2000 --PPU /A13 is connected to mcu A15
-local FC_RF_HI                    = 0x20   --FC RF audio pin is EXP6 (bit5)
+local PPU_A13N_HI                 = 0x8000 -- PPU /A13 is connected to mcu A15
+local PPU_A13_HI                  = 0x2000 -- PPU /A13 is connected to mcu A15
+local FC_RF_HI                    = 0x20   -- FC RF audio pin is EXP6 (bit5)
 
 -- local variables
 local HEADER_VERSION_NES2_0       = 0
@@ -56,6 +56,7 @@ local header                      = {
   chr_save_ram_size = 0,
   has_prg_ram = false,
   has_chr_ram = false,
+  rom_file_size = 0,
 }
 
 -- local functions
@@ -63,6 +64,9 @@ local header                      = {
 -- pass a file pointer for a file which is already open
 -- leave file open when done
 local function parse_header(file)
+  header.rom_file_size = file:seek("end") - 16
+
+  file:seek("set", 0)
   local byte_str = file:read(16)
   -- string.rep('B', #byte_str) = 'BBBBBBBBBBBBBBBB' // 16 bytes B
   header.bytes = table.pack(string.unpack(string.rep('B', #byte_str), byte_str))
@@ -116,7 +120,7 @@ local function parse_header(file)
   -- PRG ROM size | byte 9 and 4
   if (header.version == HEADER_VERSION_NES2_0) then
     if ((header.bytes[10] & 0x0F) == 0x0F) then
-      -- TODO...
+      header.prg_rom_size = 2 ^ (header.bytes[5] >> 2) * ((header.bytes[5] & 0x03) * 2 + 1)
     else
       header.prg_rom_size = (((header.bytes[10] & 0x0F) << 8) | header.bytes[5]) * 0x4000
     end
@@ -127,12 +131,20 @@ local function parse_header(file)
   -- CHR ROM size | byte 9 and 5
   if (header.version == HEADER_VERSION_NES2_0) then
     if ((header.bytes[10] & 0xF0) == 0xF0) then
-      -- TODO...
+      header.chr_rom_size = 2 ^ (header.bytes[6] >> 2) * ((header.bytes[6] & 0x03) * 2 + 1)
     else
       header.chr_rom_size = (((header.bytes[10] & 0xF0) << 4) | header.bytes[6]) * 0x2000
     end
   else
     header.chr_rom_size = header.bytes[6] * 0x2000
+  end
+
+  if header.rom_file_size ~= (header.prg_rom_size) + (header.chr_rom_size) then
+    log.error("ROM file size (" ..
+      header.rom_file_size ..
+      ") does not match header PRG-ROM and CHR-ROM sizes (" ..
+      header.chr_rom_size .. " + " .. header.chr_rom_size .. " = " .. header.prg_rom_size + header.chr_rom_size .. ")")
+    return false
   end
 
   -- PRG WORK RAM size | byte 10 (NES2) | byte 8 (iNES)
@@ -171,7 +183,7 @@ local function parse_header(file)
       header.chr_work_ram_size = 64 << header.chr_work_ram_size
     end
   else
-    -- TODO...
+    header.chr_work_ram_size = header.chr_rom_size == 0 and 0x2000 or 0
   end
 
   -- CHR SAVE RAM size | byte 11 (NES2)
@@ -183,7 +195,7 @@ local function parse_header(file)
       header.chr_save_ram_size = 64 << (header.chr_save_ram_size >> 4)
     end
   else
-    -- TODO...
+    header.chr_save_ram_size = 0
   end
 
   -- set has_chr_ram flag
@@ -557,22 +569,22 @@ local function find_bank_table_in_last_bank(filename, prg_size_kb, bank_size_kb)
 
     -- read one byte
     local byte = string.unpack("B", rom_file:read(1), 1)
-      -- if it's zero, reset tracking vars and update bank table address
-      if byte == 0 then
-        bank_table_base = 0x10000 - bank_size + i
-        bytes_found = 1
-      elseif byte == bytes_found then
-        -- update tracking vars
-        bytes_found = bytes_found + 1
+    -- if it's zero, reset tracking vars and update bank table address
+    if byte == 0 then
+      bank_table_base = 0x10000 - bank_size + i
+      bytes_found = 1
+    elseif byte == bytes_found then
+      -- update tracking vars
+      bytes_found = bytes_found + 1
 
-        -- found all bytes?
-        if bytes_found == banks then
-          break
-        end
-      else
-        -- reset tracking vars
-        bytes_found = 0
+      -- found all bytes?
+      if bytes_found == banks then
+        break
       end
+    else
+      -- reset tracking vars
+      bytes_found = 0
+    end
   end
 
   assert(rom_file:close())

@@ -1,5 +1,5 @@
 -- create the module's table
-local vrc6a        = {}
+local vrc6b        = {}
 
 -- import required modules
 local dict         = require "scripts.app.dict"
@@ -14,20 +14,20 @@ local files        = require "scripts.app.files"
 local help         = require "scripts.app.help"
 
 -- file constants and global variables
-local mapname      = "VRC6a"
+local mapname      = "VRC6b"
 
 local PRG_16K      = 0x8000 -- 16k PRG Select ($8000-$8003)
 local PRG_8K       = 0xC000 --	8k PRG Select ($C000)
-local RAM_8K       = 0xC001 -- 8K PRG-RAM select, added for flash purpose
-local FLASH_ENABLE = 0xC002 -- PRG-ROM flash through $6000-$7FFF select, added for flash purpose
+local RAM_8K       = 0xC002 -- 8K PRG-RAM select, added for flash purpose
+local FLASH_ENABLE = 0xC001 -- PRG-ROM flash through $6000-$7FFF select, added for flash purpose
 local PPU_BANKING  = 0xB003 -- PPU Banking Style ($B003)
 local CHR_0        = 0xD000
-local CHR_1        = 0xD001
-local CHR_2        = 0xD002
+local CHR_1        = 0xD002
+local CHR_2        = 0xD001
 local CHR_3        = 0xD003
 local CHR_4        = 0xE000
-local CHR_5        = 0xE001
-local CHR_6        = 0xE002
+local CHR_5        = 0xE002
+local CHR_6        = 0xE001
 local CHR_7        = 0xE003
 
 -- local functions
@@ -1117,7 +1117,7 @@ end
 
 
 -- functions other modules are able to call
-vrc6a.process = process
+vrc6b.process = process
 
 -- return the module's table
-return vrc6a
+return vrc6b
