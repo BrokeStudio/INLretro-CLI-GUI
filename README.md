@@ -54,7 +54,8 @@ See the compatibility table below for supported systems, mappers, and operations
 | Genesis / MD     | 32 Mb (4 MB)         | ✓        | ✓         | ✓        | ✓         |
 |                  | SSF2                 | ✓        | ✓         | ✓        | ✓         |
 |                  |                      |          |           |          |           |
-| SNES / SFC       | LoROM / HiROM        | ✓        | ✓         | ✗        | ✗         |
+| SNES / SFC       | LoROM                | ✓        | ✓         | ✗        | ✗         |
+|                  | HiROM                | ✓        | ✓         | ✗        | ✗         |
 |                  |                      |          |           |          |           |
 | N64              |                      | ✓        | ✗         | ✗        | ✗         |
 
@@ -132,11 +133,11 @@ This project uses:
 This project uses the following fonts:
 
 - **Roboto Mono Regular**
-  Licensed under the [Apache License, Version 2.0](host/GUI/fonts/RobotoMonoRegular-License.txt).
-  Copyright © Google.
+  Licensed under the [SIL Open Font License, Version 1.1](host/GUI/fonts/RobotoMonoRegular-License.txt).  
+  Copyright © The Roboto Mono Project Authors.
 
 - **Rubik Regular**
-  Licensed under the [SIL Open Font License, Version 1.1](host/GUI/fonts/RubikRegular-License.txt).
+  Licensed under the [SIL Open Font License, Version 1.1](host/GUI/fonts/RubikRegular-License.txt).  
   Copyright © The Rubik Project Authors.
 
 ---
