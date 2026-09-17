@@ -536,7 +536,7 @@ local function process(process_opts, console_opts)
     end
 
     if do_rom_write and prg_size_kb ~= 0 then
-      rv, prg_flash_chip = nes.prg_rom_get_chip(DEBUG, { opcode = "DISCRETE_EXP0_PRGROM_WR" })
+      rv, prg_flash_chip = nes.prg_rom_get_chip({ opcode = "DISCRETE_EXP0_PRGROM_WR" })
       if not rv then
         log.error("Couldn't identify flash chip")
         return false

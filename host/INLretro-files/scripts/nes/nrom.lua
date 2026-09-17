@@ -309,7 +309,13 @@ local function process(process_opts, console_opts)
 
     -- attempt to read PRG-ROM flash ID
     if options.force_flash_test or (do_rom_write and prg_size_kb ~= 0) then
-      rv, prg_flash_chip = nes.prg_rom_get_chip(DEBUG, { opcode = "DISCRETE_EXP0_PRGROM_WR" })
+      --ROMSEL controls PRG-ROM /OE which needs to be low for flash writes
+      --So unlock commands need to be addressed below $8000
+      --DISCRETE_EXP0_PRGROM_WR doesn't toggle /ROMSEL by definition though, so A15 is unused
+      --      15 14 13 12
+      -- 0x5 = 0b  0  1  0  1 -> $5555
+      -- 0x2 = 0b  0  0  1  0 -> $2AAA
+      rv, prg_flash_chip = nes.prg_rom_get_chip({ opcode = "DISCRETE_EXP0_PRGROM_WR" })
       if not rv then
         if do_rom_write then
           log.error("Couldn't identify flash chip")
@@ -322,7 +328,13 @@ local function process(process_opts, console_opts)
 
     -- attempt to read CHR-ROM flash ID
     if options.force_flash_test or (do_rom_write and chr_size_kb ~= 0) then
-      rv, chr_flash_chip = nes.chr_rom_get_chip(DEBUG,
+      --NROM has A13 tied to A11, and A14 tied to A12.
+      --So only A0-12 needs to be valid
+      --A13 needs to be low to address CHR-ROM
+      --      15 14 13 12
+      -- 0x5 = 0b  0  1  0  1 -> $1555
+      -- 0x2 = 0b  0  0  1  0 -> $0AAA
+      rv, chr_flash_chip = nes.chr_rom_get_chip(
         {
           unlock_profile_name = "long",
           unlock_addr1 = 0x1555,
