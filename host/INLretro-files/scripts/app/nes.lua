@@ -2,13 +2,15 @@
 local nes                         = {}
 
 -- import required modules
+local chips                       = require "scripts.app.chips"
 local dict                        = require "scripts.app.dict"
-local help                        = require "scripts.app.help"
-local log                         = require "scripts.app.log"
 local dump                        = require "scripts.app.dump"
 local flash                       = require "scripts.app.flash"
-local time                        = require "scripts.app.time"
 local files                       = require "scripts.app.files"
+local help                        = require "scripts.app.help"
+local log                         = require "scripts.app.log"
+local spinner                     = require "scripts.app.spinner"
+local time                        = require "scripts.app.time"
 
 -- file constants and global variables
 local PPU_A13N_HI                 = 0x8000 -- PPU /A13 is connected to mcu A15
@@ -675,6 +677,412 @@ local function find_bank_table_32(filename, prg_size_kb)
   end
 end
 
+--- Probe unlock profiles to identify the PRG-ROM flash manufacturer.
+-- Leaves the flash in software identification mode; the caller must reset it.
+-- Tries only the supplied profile, or long then short when no profile name is supplied.
+-- @param debug? boolean Enable unlock profile logging
+-- @param options table Prepared access options; opcode and addr_base are required
+-- @param options.opcode string NES dictionary opcode used for flash writes
+-- @param options.addr_base integer Mask bitwise-ORed with profile unlock addresses
+-- @param options.unlock_profile_name? string Restrict probing to this unlock profile
+-- @param options.unlock_addr1? integer Override the first unlock address
+-- @param options.unlock_addr2? integer Override the second unlock address
+-- @return boolean found True when the manufacturer is recognized
+-- @return table manufacturer Manufacturer name and ID, or an empty table when unknown
+-- @return string unlock_profile_name Matching profile name, or an empty string when unknown
+local function prg_rom_get_manufacturer(debug, options)
+  local manufacturer
+  local manufacturer_id
+  local found
+
+  local unlock_profile_list = {}
+  if options.unlock_profile_name then
+    table.insert(unlock_profile_list, options.unlock_profile_name)
+  else
+    table.insert(unlock_profile_list, "long")
+    table.insert(unlock_profile_list, "short")
+  end
+  -- loop through unlock profiles
+  for index, unlock_profile_name in ipairs(unlock_profile_list) do
+    local unlock_profile = chips.unlock_profiles[unlock_profile_name]
+    if debug then
+      log.info("Testing", unlock_profile_name, "unlock profile")
+    end
+
+    local addr1 = options.unlock_addr1 or (unlock_profile.addr1 | options.addr_base)
+    local addr2 = options.unlock_addr2 or (unlock_profile.addr2 | options.addr_base)
+
+    -- write sequence
+    dict.nes(options.opcode, addr1, 0xAA)
+    dict.nes(options.opcode, addr2, 0x55)
+    dict.nes(options.opcode, addr1, 0x90)
+
+    manufacturer_id = dict.nes("NES_CPU_RD", 0x8000)
+    found, manufacturer = chips.get_manufacturer(manufacturer_id)
+
+    if (found) then
+      return true, manufacturer, unlock_profile_name
+    end
+  end
+
+  return false, {}, ""
+end
+
+--- Read and identify the PRG-ROM flash device in software identification mode.
+-- The caller must enter identification mode and reset the flash afterward.
+-- The short unlock profile is not implemented and currently returns false, nil.
+-- @param debug? boolean Reserved for debug logging; currently unused
+-- @param options table Detected manufacturer and unlock profile
+-- @param options.manufacturer table Manufacturer information containing its id
+-- @param options.unlock_profile string Unlock profile name; only long is implemented
+-- @return boolean|nil found True when recognized, false when unknown, or nil for the short profile
+-- @return table|nil device Chip information, an empty table when unknown, or nil for the short profile
+local function prg_rom_get_device(debug, options)
+  local device
+  local device_id
+  local found
+
+  if options.unlock_profile == "short" then
+    -- TODO
+    return false, {}
+  elseif options.unlock_profile == "long" then
+    device_id = dict.nes("NES_CPU_RD", 0x8001)
+    found, device = chips.get_device(options.manufacturer.id, device_id)
+  else
+    log.error("Unlock profile unknwown:", options.unlock_profile)
+    return false, {}
+  end
+
+  return found, device
+end
+
+--- Detect and display the PRG-ROM flash manufacturer and device.
+-- Adds defaults and detected manufacturer/unlock_profile fields to the supplied options table.
+-- Address overrides must be supplied together and require unlock_profile_name.
+-- A supplied profile name restricts probing to that profile; otherwise long then short are tried.
+-- Resets the flash before probing and before returning after a detection attempt.
+-- @param debug? boolean Enable unlock profile logging
+-- @param options? table Flash access options
+-- @param options.opcode? string Flash write opcode; defaults to NES_CPU_WR
+-- @param options.addr_base? integer Mask bitwise-ORed with unlock addresses; defaults to 0x0000
+-- @param options.unlock_profile_name? string Restrict probing to this unlock profile
+-- @param options.unlock_addr1? integer Override the first unlock address
+-- @param options.unlock_addr2? integer Override the second unlock address
+-- @return boolean found True when both manufacturer and device are recognized
+-- @return table device Chip information, or an empty table on validation or detection failure
+local function prg_rom_get_chip(debug, options)
+  local manufacturer
+  local device
+  local unlock_profile
+  local found
+
+  options = options or {}
+  options.opcode = options.opcode or "NES_CPU_WR"
+  options.addr_base = options.addr_base or 0x8000
+
+  local has_profile = options.unlock_profile_name ~= nil
+  local has_addr1 = options.unlock_addr1 ~= nil
+  local has_addr2 = options.unlock_addr2 ~= nil
+
+  log.section("Reading PRG-ROM manufacturer/device ID")
+
+  if has_addr1 ~= has_addr2 then
+    log.error("unlock_addr1 and unlock_addr2 must be provided together")
+    return false, {}
+  elseif has_addr1 and not has_profile then
+    log.error("unlock_addr1 and unlock_addr2 require unlock_profile_name")
+    return false, {}
+  end
+
+  -- exit software
+  dict.nes(options.opcode, 0x8000, 0xF0) -- or use addr_base?
+
+  found, manufacturer, unlock_profile = prg_rom_get_manufacturer(debug, options)
+
+  if not found then
+    -- exit software
+    dict.nes(options.opcode, 0x8000, 0xF0) -- or use addr_base?
+    return false, {}
+  end
+
+  chips.display_manufacturer(manufacturer.id)
+
+  options.manufacturer = manufacturer
+  options.unlock_profile = unlock_profile
+  found, device = prg_rom_get_device(debug, options)
+
+  if not found then
+    -- exit software
+    dict.nes(options.opcode, 0x8000, 0xF0) -- or use addr_base?
+    return false, {}
+  end
+
+  chips.display_device(manufacturer.id, device.id)
+
+  -- exit software
+  dict.nes(options.opcode, 0x8000, 0xF0) -- or use addr_base?
+
+  return found, device
+end
+
+--- Erase the entire PRG-ROM flash chip and poll 0x8000 until consecutive reads match.
+-- Only the long unlock profile sends an erase sequence; the short profile is not implemented.
+-- Polling has no timeout and does not verify that the chip is blank.
+-- @param device table Flash chip information containing size in KiB and unlock_profile
+-- @param debug? boolean Reserved for debug logging; currently unused
+-- @param options? table Flash access options
+-- @param options.opcode? string Flash write opcode; defaults to NES_CPU_WR
+-- @param options.addr_base? integer Mask bitwise-ORed with unlock addresses; defaults to 0x8000
+-- @param options.unlock_addr1? integer Override the first unlock address
+-- @param options.unlock_addr2? integer Override the second unlock address
+-- @return boolean|nil result False for an unknown profile; no value on normal completion
+-- @return table|nil details Empty table for an unknown profile; no value on normal completion
+local function prg_rom_erase(device, debug, options)
+  options = options or {}
+  local opcode = options.opcode or "NES_CPU_WR"
+  local addr_base = options.addr_base or 0x8000
+  local unlock_profile = chips.unlock_profiles[device.unlock_profile]
+  local i = 0
+  local rv
+
+  log.section("Erasing PRG-ROM")
+  log.bullet("Chip size", device.size .. "KB")
+
+  if device.unlock_profile == "short" then
+    -- TODO
+    return false
+  elseif device.unlock_profile == "long" then
+    time.start()
+    local addr1 = options.unlock_addr1 or (unlock_profile.addr1 | addr_base)
+    local addr2 = options.unlock_addr2 or (unlock_profile.addr2 | addr_base)
+
+    dict.nes(opcode, addr1, 0xAA)
+    dict.nes(opcode, addr2, 0x55)
+    dict.nes(opcode, addr1, 0x80)
+    dict.nes(opcode, addr1, 0xAA)
+    dict.nes(opcode, addr2, 0x55)
+    dict.nes(opcode, addr1, 0x10)
+  else
+    log.error("Unlock profile unknwown:", device.unlock_profile)
+    return false
+  end
+
+  rv = dict.nes("NES_CPU_RD", 0x8000)
+  while rv ~= dict.nes("NES_CPU_RD", 0x8000) do
+    spinner.update("Erasing")
+    rv = dict.nes("NES_CPU_RD", 0x8000)
+    i = i + 1
+  end
+  spinner.clear()
+  log.success("Done erasing PRG-ROM", i .. " naks")
+  time.report(device.size)
+
+  return true
+end
+
+--- Probe unlock profiles to identify the CHR-ROM flash manufacturer.
+-- Leaves the flash in software identification mode; the caller must reset it.
+-- Tries only the supplied profile, or long then short when no profile name is supplied.
+-- @param debug? boolean Enable unlock profile logging
+-- @param options table Prepared access options; opcode and addr_base are required
+-- @param options.opcode string NES dictionary opcode used for flash writes
+-- @param options.addr_base integer Mask bitwise-ORed with profile unlock addresses
+-- @param options.unlock_profile_name? string Restrict probing to this unlock profile
+-- @param options.unlock_addr1? integer Override the first unlock address
+-- @param options.unlock_addr2? integer Override the second unlock address
+-- @return boolean found True when the manufacturer is recognized
+-- @return table manufacturer Manufacturer name and ID, or an empty table when unknown
+-- @return string unlock_profile_name Matching profile name, or an empty string when unknown
+local function chr_rom_get_manufacturer(debug, options)
+  local manufacturer
+  local manufacturer_id
+  local found
+
+  local unlock_profile_list = {}
+  if options.unlock_profile_name then
+    table.insert(unlock_profile_list, options.unlock_profile_name)
+  else
+    table.insert(unlock_profile_list, "long")
+    table.insert(unlock_profile_list, "short")
+  end
+  -- loop through unlock profiles
+  for index, unlock_profile_name in ipairs(unlock_profile_list) do
+    local unlock_profile = chips.unlock_profiles[unlock_profile_name]
+    if debug then
+      log.info("Testing", unlock_profile_name, "unlock profile")
+    end
+
+    local addr1 = options.unlock_addr1 or (unlock_profile.addr1 | options.addr_base)
+    local addr2 = options.unlock_addr2 or (unlock_profile.addr2 | options.addr_base)
+
+    -- write sequence
+    dict.nes(options.opcode, addr1, 0xAA)
+    dict.nes(options.opcode, addr2, 0x55)
+    dict.nes(options.opcode, addr1, 0x90)
+
+    manufacturer_id = dict.nes("NES_PPU_RD", 0x0000)
+    found, manufacturer = chips.get_manufacturer(manufacturer_id)
+
+    if (found) then
+      return true, manufacturer, unlock_profile_name
+    end
+  end
+
+  return false, {}, ""
+end
+
+--- Read and identify the CHR-ROM flash device in software identification mode.
+-- The caller must enter identification mode and reset the flash afterward.
+-- The short unlock profile is not implemented and currently returns false, nil.
+-- @param debug? boolean Reserved for debug logging; currently unused
+-- @param options table Detected manufacturer and unlock profile
+-- @param options.manufacturer table Manufacturer information containing its id
+-- @param options.unlock_profile string Unlock profile name; only long is implemented
+-- @return boolean|nil found True when recognized, false when unknown, or nil for the short profile
+-- @return table|nil device Chip information, an empty table when unknown, or nil for the short profile
+local function chr_rom_get_device(debug, options)
+  local device
+  local device_id
+  local found
+
+  if options.unlock_profile == "short" then
+    -- TODO
+    return false, {}
+  elseif options.unlock_profile == "long" then
+    device_id = dict.nes("NES_PPU_RD", 0x0001)
+    found, device = chips.get_device(options.manufacturer.id, device_id)
+  else
+    log.error("Unlock profile unknwown:", options.unlock_profile)
+    return false, {}
+  end
+
+  return found, device
+end
+
+--- Detect and display the CHR-ROM flash manufacturer and device.
+-- Adds defaults and detected manufacturer/unlock_profile fields to the supplied options table.
+-- Address overrides must be supplied together and require unlock_profile_name.
+-- A supplied profile name restricts probing to that profile; otherwise long then short are tried.
+-- Resets the flash before probing and before returning after a detection attempt.
+-- @param debug? boolean Enable unlock profile logging
+-- @param options? table Flash access options
+-- @param options.opcode? string Flash write opcode; defaults to NES_PPU_WR
+-- @param options.addr_base? integer Mask bitwise-ORed with unlock addresses; defaults to 0x0000
+-- @param options.unlock_profile_name? string Restrict probing to this unlock profile
+-- @param options.unlock_addr1? integer Override the first unlock address
+-- @param options.unlock_addr2? integer Override the second unlock address
+-- @return boolean found True when both manufacturer and device are recognized
+-- @return table device Chip information, or an empty table on validation or detection failure
+local function chr_rom_get_chip(debug, options)
+  local manufacturer
+  local device
+  local unlock_profile
+  local found
+
+  options = options or {}
+  options.opcode = options.opcode or "NES_PPU_WR"
+  options.addr_base = options.addr_base or 0x0000
+
+  local has_profile = options.unlock_profile_name ~= nil
+  local has_addr1 = options.unlock_addr1 ~= nil
+  local has_addr2 = options.unlock_addr2 ~= nil
+
+  log.section("Reading CHR-ROM manufacturer/device ID")
+
+  if has_addr1 ~= has_addr2 then
+    log.error("unlock_addr1 and unlock_addr2 must be provided together")
+    return false, {}
+  elseif has_addr1 and not has_profile then
+    log.error("unlock_addr1 and unlock_addr2 require unlock_profile_name")
+    return false, {}
+  end
+
+  -- exit software
+  dict.nes(options.opcode, 0x0000, 0xF0) -- or use addr_base?
+
+  found, manufacturer, unlock_profile = chr_rom_get_manufacturer(debug, options)
+
+  if not found then
+    -- exit software
+    dict.nes(options.opcode, 0x0000, 0xF0) -- or use addr_base?
+    return false, {}
+  end
+
+  chips.display_manufacturer(manufacturer.id)
+
+  options.manufacturer = manufacturer
+  options.unlock_profile = unlock_profile
+  found, device = chr_rom_get_device(debug, options)
+
+  if not found then
+    -- exit software
+    dict.nes(options.opcode, 0x0000, 0xF0) -- or use addr_base?
+    return false, {}
+  end
+
+  chips.display_device(manufacturer.id, device.id)
+
+  -- exit software
+  dict.nes(options.opcode, 0x0000, 0xF0) -- or use addr_base?
+
+  return found, device
+end
+
+--- Erase the entire CHR-ROM flash chip and poll 0x0000 until consecutive reads match.
+-- Only the long unlock profile sends an erase sequence; the short profile is not implemented.
+-- Polling has no timeout and does not verify that the chip is blank.
+-- @param device table Flash chip information containing size in KiB and unlock_profile
+-- @param debug? boolean Reserved for debug logging; currently unused
+-- @param options? table Flash access options
+-- @param options.opcode? string Flash write opcode; defaults to NES_PPU_WR
+-- @param options.addr_base? integer Mask bitwise-ORed with unlock addresses; defaults to 0x8000
+-- @param options.unlock_addr1? integer Override the first unlock address
+-- @param options.unlock_addr2? integer Override the second unlock address
+-- @return boolean|nil result False for an unknown profile; no value on normal completion
+-- @return table|nil details Empty table for an unknown profile; no value on normal completion
+local function chr_rom_erase(device, debug, options)
+  options = options or {}
+  local opcode = options.opcode or "NES_PPU_WR"
+  local addr_base = options.addr_base or 0x0000
+  local unlock_profile = chips.unlock_profiles[device.unlock_profile]
+  local i = 0
+  local rv
+
+  log.section("Erasing CHR-ROM")
+  log.bullet("Chip size", device.size .. "KB")
+
+  if device.unlock_profile == "short" then
+    -- TODO
+    return false
+  elseif device.unlock_profile == "long" then
+    time.start()
+    local addr1 = options.unlock_addr1 or (unlock_profile.addr1 | addr_base)
+    local addr2 = options.unlock_addr2 or (unlock_profile.addr2 | addr_base)
+
+    dict.nes(opcode, addr1, 0xAA)
+    dict.nes(opcode, addr2, 0x55)
+    dict.nes(opcode, addr1, 0x80)
+    dict.nes(opcode, addr1, 0xAA)
+    dict.nes(opcode, addr2, 0x55)
+    dict.nes(opcode, addr1, 0x10)
+  else
+    log.error("Unlock profile unknwown:", device.unlock_profile)
+    return false
+  end
+
+  rv = dict.nes("NES_PPU_RD", 0x0000)
+  while rv ~= dict.nes("NES_PPU_RD", 0x0000) do
+    spinner.update("Erasing")
+    rv = dict.nes("NES_PPU_RD", 0x0000)
+    i = i + 1
+  end
+  spinner.clear()
+  log.success("Done erasing CHR-ROM", i .. " naks")
+  time.report(device.size)
+
+  return true
+end
+
 -- -- verify the ciccom software mirroring switch is working properly
 -- local function test_cic_soft_switch(debug)
 -- end
@@ -1007,6 +1415,12 @@ nes.write_header = write_header
 nes.parse_header = parse_header
 nes.find_bank_table_32 = find_bank_table_32
 nes.find_bank_table_in_last_bank = find_bank_table_in_last_bank
+
+nes.prg_rom_get_chip = prg_rom_get_chip
+nes.prg_rom_erase = prg_rom_erase
+
+nes.chr_rom_get_chip = chr_rom_get_chip
+nes.chr_rom_erase = chr_rom_erase
 
 nes.cpu_rd = cpu_rd
 nes.cpu_wr = cpu_wr
