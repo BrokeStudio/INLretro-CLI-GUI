@@ -40,7 +40,7 @@ local function dump_rom(file, rom_size_kb, debug)
   --latch address         AD0-15  A16-23
   dict.gba("LATCH_ADDR", 0x0000, 0x00)
 
-  dump.dumptofile(file, rom_size_kb, { mapper = addr_base, mem_type = "GBA_PAGE" }, false)
+  dump.dumptofile(file, rom_size_kb, { addr_base = addr_base, mem_type = "GBA_PAGE" }, false)
 
   dict.gba("RELEASE_BUS")
   --]]
@@ -57,7 +57,7 @@ local function dump_rom(file, rom_size_kb, debug)
     --latch address         AD0-15  A16-23
     dict.gba("LATCH_ADDR", 0x0000, cur_bank)
 
-    dump.dumptofile(file, kb_per_read, { mapper = addr_base, mem_type = "GBA_ROM_PAGE" }, false)
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "GBA_ROM_PAGE" }, false)
 
     cur_bank = cur_bank + 1
 

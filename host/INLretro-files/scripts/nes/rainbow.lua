@@ -97,7 +97,7 @@ local function nt_dump(file, nt, debug)
   local kb_per_read = 1
   local addr_base = 0x20 + nt * 4
 
-  dump.dumptofile(file, kb_per_read, { mapper = addr_base, mem_type = "NESPPU_1KB_TOGGLE" }, debug)
+  dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESPPU_1KB_TOGGLE" }, debug)
 end
 
 local function _mirror_test(retroprog_id, debug)
@@ -413,8 +413,6 @@ local function prg_rom_manf_id()
     found, device = chips.display_device(manufacturer_id, device_id)
   end
 
-  prg_flash_chip = device
-
   -- exit software
   dict.nes("NES_CPU_WR", 0x8000, 0xF0)
 
@@ -521,7 +519,7 @@ local function prg_rom_dump(file, rom_size_kb, debug)
     dict.nes("NES_CPU_WR", PRG_8_HI, (cur_bank & 0xff00) >> 8) -- 32KB @ CPU $8000
     dict.nes("NES_CPU_WR", PRG_8_LO, (cur_bank & 0x00ff) >> 0) -- 32KB @ CPU $8000
 
-    dump.dumptofile(file, kb_per_read, { mapper = addr_base, mem_type = "NESCPU_PAGE_TOGGLE" }, false)
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESCPU_PAGE_TOGGLE" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -723,7 +721,7 @@ local function chr_dump(file, rom_size_kb, debug)
     dict.nes("NES_CPU_WR", CHR_0_HI, (cur_bank & 0xff00) >> 8) -- 8KB @ PPU $0000
     dict.nes("NES_CPU_WR", CHR_0_LO, cur_bank & 0xff)          -- 8KB @ PPU $0000
 
-    dump.dumptofile(file, kb_per_read, { mapper = addr_base, mem_type = "NESPPU_1KB_TOGGLE" }, false)
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESPPU_1KB_TOGGLE" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -807,7 +805,7 @@ local function prg_ram_dump(file, ram_size_kb, debug)
     -- set bank
     dict.nes("NES_CPU_WR", PRG_6_LO, cur_bank)
 
-    dump.dumptofile(file, kb_per_read, { mapper = addr_base, mem_type = "NESCPU_PAGE_TOGGLE" }, false)
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESCPU_PAGE_TOGGLE" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -1052,7 +1050,7 @@ local function fpga_ram_dump(file, rom_size_kb, debug)
       spinner.update("Dumping", cur_bank, "/", num_banks - 1)
     end
 
-    dump.dumptofile(file, kb_per_read, { mapper = addr_base, mem_type = "NESCPU_PAGE_TOGGLE" }, false)
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESCPU_PAGE_TOGGLE" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -1368,7 +1366,7 @@ local function process(process_opts, console_opts)
     if not rv then return false end
 
     if options.force_flash_test or (do_rom_write and prg_size_kb ~= 0) then
-      rv = prg_rom_manf_id()
+      rv, prg_flash_chip = prg_rom_manf_id()
       if not rv then
         if do_rom_write and prg_size_kb ~= 0 then
           log.error("Couldn't identify flash chip")

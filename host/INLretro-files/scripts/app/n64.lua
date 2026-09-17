@@ -247,7 +247,7 @@ local function parse_header_cart()
 
   dump.dumptocallback(
     function(data) byte_str = byte_str .. data end,
-    1, { mapper = addr_base, mem_type = "N64_ROM_PAGE" }, false
+    1, { addr_base = addr_base, mem_type = "N64_ROM_PAGE" }, false
   )
 
   byte_str = string.sub(byte_str, 0x00 + 1, 0x3F + 1)

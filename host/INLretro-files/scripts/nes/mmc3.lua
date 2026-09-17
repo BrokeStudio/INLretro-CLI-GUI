@@ -259,11 +259,7 @@ local function prg_rom_dump(file, rom_size_kb, debug)
     -- the bank is half the size of KB per read so must multiply by 2 and add 1 for second 8KB
     dict.nes("NES_CPU_WR", 0x8001, cur_bank * 2 + 1) -- 8KB @ CPU $A000
 
-    -- 16 = number of KB to dump per loop
-    -- 0x08 = starting read address A12-15 -> $8000
-    -- NESCPU_4KB designate mapper independent read of NES CPU address space
-    -- mapper must be 0-15 to designate A12-15
-    dump.dumptofile(file, kb_per_read, { mapper = addr_base, mem_type = "NESCPU_PAGE" }, false)
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESCPU_PAGE" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -444,7 +440,7 @@ local function chr_dump(file, rom_size_kb, debug)
     --  bits 7, 6, 1, & 0 CAN NOT BE SET!
     --  0x04 would designate that A10 is set -> $0400 (the second 1KB PT bank)
     --  0x20 would designate that A13 is set -> $2000 (first name table)
-    dump.dumptofile(file, kb_per_read, { mapper = addr_base, mem_type = "NESPPU_1KB_TOGGLE" }, false)
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESPPU_1KB_TOGGLE" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -539,7 +535,7 @@ local function prg_ram_dump(file, ram_size_kb, debug)
   local kb_per_read = 8
   local num_banks = math.floor(ram_size_kb / kb_per_read)
   local cur_bank = 0
-  local addr_base = 0x06 -- $6000
+  local addr_base = 0x60 -- $6000
 
   log.info("PRG-RAM size", ram_size_kb .. "KB")
 
@@ -550,7 +546,7 @@ local function prg_ram_dump(file, ram_size_kb, debug)
       spinner.update("Dumping", cur_bank, "/", num_banks - 1)
     end
 
-    dump.dumptofile(file, kb_per_read, { mapper = addr_base, mem_type = "NESCPU_4KB" }, false)
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESCPU_PAGE" }, false)
 
     cur_bank = cur_bank + 1
   end

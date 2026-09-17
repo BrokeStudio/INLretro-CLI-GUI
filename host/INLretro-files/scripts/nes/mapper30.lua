@@ -144,7 +144,7 @@ local function prg_rom_dump(file, rom_size_kb, debug)
     -- mapper 30 bank register is $C000-FFFF
     dict.nes("NES_CPU_WR", 0xFC80, cur_bank) -- 16KB @ CPU $8000
 
-    dump.dumptofile(file, kb_per_read, { mapper = addr_base, mem_type = "NESCPU_PAGE" }, false)
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESCPU_PAGE" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -220,7 +220,7 @@ local function chr_dump(file, rom_size_kb, debug)
 
     dict.nes("NES_CPU_WR", 0xC000, cur_bank << 5) -- 8KB bank at $0000
 
-    dump.dumptofile(file, kb_per_read, { mapper = addr_base, mem_type = "NESPPU_PAGE" }, false)
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESPPU_PAGE" }, false)
 
     cur_bank = cur_bank + 1
   end

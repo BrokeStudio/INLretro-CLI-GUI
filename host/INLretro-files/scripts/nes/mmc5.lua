@@ -247,7 +247,7 @@ local function prg_rom_dump(file, rom_size_kb, debug)
     -- above didn't work, only saw the last 8KB repeated...
     -- dict.nes("NES_CPU_WR", 0x5114, (cur_bank | 0x80)) -- 8KB & CPU $8000 (bit7 must be set to see ROM)
 
-    dump.dumptofile(file, kb_per_read, { mapper = addr_base, mem_type = "NESCPU_PAGE" }, false)
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESCPU_PAGE" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -474,7 +474,7 @@ local function chr_dump(file, rom_size_kb, debug)
     -- dict.nes("NES_CPU_WR", 0x5121, cur_bank * 2)     -- CHR-ROM bank @ $0000-07FF (mode 2)
     -- dict.nes("NES_CPU_WR", 0x5123, cur_bank * 2 + 1) -- CHR-ROM bank @ $0800-0FFF (mode 2)
 
-    dump.dumptofile(file, kb_per_read, { mapper = addr_base, mem_type = "NESPPU_1KB_TOGGLE" }, false)
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESPPU_1KB_TOGGLE" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -580,7 +580,7 @@ local function prg_ram_dump(file, ram_size_kb, debug)
     -- set bank
     dict.nes("NES_CPU_WR", 0x5113, cur_bank) -- PRG-RAM bank @ $6000-7FFF (regardless of PRG mode)
 
-    dump.dumptofile(file, kb_per_read, { mapper = addr_base, mem_type = "NESCPU_PAGE" }, false)
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESCPU_PAGE" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -861,7 +861,7 @@ local function exram_dump_cpu(file, debug)
     spinner.update("Dumping", 0, "/", 0)
   end
 
-  dump.dumptofile(file, 1, { mapper = addr_base, mem_type = "NESCPU_PAGE" }, debug)
+  dump.dumptofile(file, 1, { addr_base = addr_base, mem_type = "NESCPU_PAGE" }, debug)
 
   spinner.clear()
 end
@@ -880,7 +880,7 @@ local function exram_dump_ppu(file, addr_base, debug)
     spinner.update("Dumping", 0, "/", 0)
   end
 
-  dump.dumptofile(file, 1, { mapper = addr_base, mem_type = "NESPPU_1KB_TOGGLE" }, debug)
+  dump.dumptofile(file, 1, { addr_base = addr_base, mem_type = "NESPPU_1KB_TOGGLE" }, debug)
 
   spinner.clear()
 end

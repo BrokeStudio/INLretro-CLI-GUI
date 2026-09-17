@@ -227,7 +227,7 @@ local function og_prg_rom_dump(file, rom_size_kb, debug)
       --]]
 
     --dump bank's worth of data
-    dump.dumptofile(file, kb_per_read, { mapper = addr_base, mem_type = "NESCPU_PAGE" }, false)
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESCPU_PAGE" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -257,7 +257,7 @@ local function prg_rom_dump(file, rom_size_kb, debug)
     dict.nes("NES_CPU_WR", 0x5000, 0x81)
     dict.nes("NES_CPU_WR", 0x8000, cur_bank)
 
-    dump.dumptofile(file, kb_per_read, { mapper = addr_base, mem_type = "NESCPU_PAGE" }, false)
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESCPU_PAGE" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -556,7 +556,7 @@ local function chr_dump(file, rom_size_kb, debug)
 
     dict.nes("NES_CPU_WR", 0x8000, cur_bank) -- 8KB @ PPU $0000
 
-    dump.dumptofile(file, kb_per_read, { mapper = addr_base, mem_type = "NESPPU_1KB" }, false)
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESPPU_1KB" }, false)
 
     cur_bank = cur_bank + 1
   end

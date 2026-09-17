@@ -157,7 +157,7 @@ local function rom_dump(file, rom_size_kb, debug)
   else
     spinner.update("Dumping", cur_bank, "/", num_banks - 1)
   end
-  dump.dumptofile(file, kb_per_read, { mapper = addr_base, mem_type = "GAMEBOY_PAGE" }, false)
+  dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "GAMEBOY_PAGE" }, false)
   cur_bank = 1
 
   -- remaining banks must be read from $4000-7FFF
@@ -179,7 +179,7 @@ local function rom_dump(file, rom_size_kb, debug)
     dict.gameboy("GAMEBOY_WR", 0x4000, (cur_bank & 0x300) >> 8)
     dict.gameboy("GAMEBOY_WR", 0x2000, cur_bank & 0xff)
 
-    dump.dumptofile(file, kb_per_read, { mapper = addr_base, mem_type = "GAMEBOY_PAGE" }, false)
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "GAMEBOY_PAGE" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -277,7 +277,7 @@ local function ram_dump(file, ram_size_kb, debug)
     dict.gameboy("GAMEBOY_WR", 0x4000, cur_bank)
 
     -- have the device dump a bank worth of data
-    dump.dumptofile(file, kb_per_read, { mapper = addr_base, mem_type = "GAMEBOY_PAGE" }, false)
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "GAMEBOY_PAGE" }, false)
 
     cur_bank = cur_bank + 1
   end

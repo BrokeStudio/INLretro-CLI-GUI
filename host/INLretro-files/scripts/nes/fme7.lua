@@ -276,7 +276,7 @@ local function prg_rom_dump(file, rom_size_kb, debug)
     dict.nes("NES_CPU_WR", 0xA000, cur_bank * 2 + 1) -- 8KB @ CPU $A000
 
     -- have the device dump a bank worth of data
-    dump.dumptofile(file, kb_per_read, { mapper = addr_base, mem_type = "NESCPU_PAGE" }, false)
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESCPU_PAGE" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -426,7 +426,7 @@ local function chr_dump(file, rom_size_kb, debug)
     dict.nes("NES_CPU_WR", 0xA000, cur_bank * 2 + 1) -- 1KB @ PPU $0800
 
     -- have the device dump a bank worth of data
-    dump.dumptofile(file, kb_per_read, { mapper = addr_base, mem_type = "NESPPU_1KB" }, false)
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESPPU_1KB" }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -514,7 +514,7 @@ local function prg_ram_dump(file, ram_size_kb, debug)
     dict.nes("NES_CPU_WR", 0xA000, 0xC0 | cur_bank)
 
     -- have the device dump a bank worth of data
-    dump.dumptofile(file, kb_per_read, { mapper = addr_base, mem_type = "NESCPU_PAGE" }, false)
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESCPU_PAGE" }, false)
 
     cur_bank = cur_bank + 1
   end

@@ -47,13 +47,13 @@ local function rom_dump(file, rom_size_kb, debug)
   print("read: ", help.hex(dict.n64("N64_RD")))
   dict.n64("N64_SET_BANK", bank_base + 0)
   dict.n64("N64_LATCH_ADDR", 0x0000)
-  dump.dumptofile(file, kb_per_bank, { mapper = addr_base, mem_type = "N64_ROM_PAGE" }, false)
+  dump.dumptofile(file, kb_per_bank, { addr_base = addr_base, mem_type = "N64_ROM_PAGE" }, false)
 
   dict.n64("N64_LATCH_ADDR", 0x0000)
   print("read: ", help.hex(dict.n64("N64_RD")))
   print("read: ", help.hex(dict.n64("N64_RD")))
   dict.n64("N64_LATCH_ADDR", 0x0000)
-  dump.dumptofile(file, kb_per_bank, { mapper = addr_base, mem_type = "N64_ROM_PAGE" }, false)
+  dump.dumptofile(file, kb_per_bank, { addr_base = addr_base, mem_type = "N64_ROM_PAGE" }, false)
   --]]
 
   log.info("ROM size", rom_size_kb .. "KB")
@@ -69,7 +69,7 @@ local function rom_dump(file, rom_size_kb, debug)
     dict.n64("N64_SET_BANK", bank_base + cur_bank)
 
     -- dump a 64KByte chunk of rom
-    dump.dumptofile(file, kb_per_bank, { mapper = addr_base, mem_type = "N64_ROM_PAGE" }, debug)
+    dump.dumptofile(file, kb_per_bank, { addr_base = addr_base, mem_type = "N64_ROM_PAGE" }, debug)
 
     -- prob don't need this till done..
     dict.n64("N64_RELEASE_BUS")
