@@ -17,7 +17,13 @@ local function dumptocallback(callback, size_kb, config)
 
   --need to handle raw data, or defines being used for mapper
   --op_buffer[map] will be nil for raw values
-  local mapper = op_buffer[config.mapper]
+  local mapper
+  if config.mapper == nil then
+    mapper = config.addr_base
+  else
+    mapper = op_buffer[config.mapper]
+  end
+
   if not mapper then
     if DEBUG then print("mapper isn't defined, evaluated as raw number") end
     mapper = config.mapper
