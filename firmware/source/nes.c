@@ -1222,129 +1222,142 @@ void cpu_page_wr_lfsr(uint16_t addr, uint8_t data)
   }
 }
 
-/* Desc: NES RNBW PRG-ROM FLASH Write
+/* Desc: Poll a pending PRG-ROM byte program through the NES CPU bus
+ *       call usbPoll before each read; perform at most 0xFFFF reads
  * Pre:  nes_init() setup of I/O pins
- *       mapper and flash configured for this command sequence and target bank
- * Post: Write attempted; polling stops on matching data or timeout
- * Rtn:  Last byte read at addr; compare with data to detect failure
+ *       program command and data already sent; target bank remains selected
+ *       addr is the CPU address to poll and data is the expected byte
+ * Post: Stops when nes_cpu_rd(addr) equals data or the read limit is reached
+ *       no program command, retry or flash reset is issued here
+ * Rtn:  Last CPU byte read at addr; a mismatch indicates polling failure
  */
-uint8_t rnbw_prgrom_flash_wr(uint16_t addr, uint8_t data)
+uint8_t prgrom_wr_polling(uint16_t addr, uint8_t data)
 {
   uint8_t rv;
   uint16_t timeout = 0xffff;
 
+  do {
+    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
+    rv = nes_cpu_rd(addr);
+    if(rv == data) {
+      break;
+    }
+  } while(--timeout);
+
+  return rv;
+}
+
+/* Desc: Poll a pending CHR-ROM byte program through the NES PPU bus
+ *       call usbPoll before each read; perform at most 0xFFFF reads
+ * Pre:  nes_init() setup of I/O pins
+ *       program command and data already sent; target bank remains selected
+ *       addr is the PPU address to poll and data is the expected byte
+ * Post: Stops when nes_ppu_rd(addr) equals data or the read limit is reached
+ *       no program command, retry or flash reset is issued here
+ * Rtn:  Last PPU byte read at addr; a mismatch indicates polling failure
+ */
+uint8_t chrrom_wr_polling(uint16_t addr, uint8_t data)
+{
+  uint8_t rv;
+  uint16_t timeout = 0xffff;
+
+  do {
+    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
+    rv = nes_ppu_rd(addr);
+    if(rv == data) {
+      break;
+    }
+  } while(--timeout);
+
+  return rv;
+}
+
+/* Desc: NES RNBW PRG-ROM FLASH Write
+ * Pre:  nes_init() setup of I/O pins
+ *       mapper and flash configured for this command sequence and target bank
+ * Post: Write attempted; prgrom_wr_polling polls the CPU bus with usbPoll
+ *       polling stops on matching data or after at most 0xFFFF reads
+ * Rtn:  Last CPU byte read at addr by prgrom_wr_polling
+ *       compare with data to detect polling failure
+ */
+uint8_t rnbw_prgrom_flash_wr(uint16_t addr, uint8_t data)
+{
   // write data
   nes_cpu_wr(0x8AAA, 0xAA);
   nes_cpu_wr(0x8555, 0x55);
   nes_cpu_wr(0x8AAA, 0xA0);
   nes_cpu_wr(addr, data);
 
-  do {
-    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-    rv = nes_cpu_rd(addr);
-    if(rv == data) {
-      break;
-    }
-  } while(--timeout);
-
-  return rv;
+  return prgrom_wr_polling(addr, data);
 }
 
-/* Desc: NES RNBW PRG-ROM FLASH Write in unlock bypass mode
+/* Desc: NES PRG-ROM FLASH Write in unlock bypass mode
  * Pre:  nes_init() setup of I/O pins
  *       mapper and flash configured for this command sequence and target bank
  *       Flash must already be in unlock bypass mode
- * Post: Write attempted; polling stops on matching data or timeout
- * Rtn:  Last byte read at addr; compare with data to detect failure
+ * Post: Write attempted; prgrom_wr_polling polls the CPU bus with usbPoll
+ *       polling stops on matching data or after at most 0xFFFF reads
+ * Rtn:  Last CPU byte read at addr by prgrom_wr_polling
+ *       compare with data to detect polling failure
  */
-uint8_t rnbw_prgrom_flash_unlock_wr(uint16_t addr, uint8_t data)
+uint8_t prgrom_flash_unlock_wr(uint16_t addr, uint8_t data)
 {
-  uint8_t rv;
-  uint16_t timeout = 0xffff;
-
   // needs to be in unlock bypass mode
   // write data
   nes_cpu_wr(addr, 0xA0);
   nes_cpu_wr(addr, data);
 
-  do {
-    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-    rv = nes_cpu_rd(addr);
-    if(rv == data) {
-      break;
-    }
-  } while(--timeout);
-
-  return rv;
+  return prgrom_wr_polling(addr, data);
 }
 
 /* Desc: NES RNBW CHR-ROM FLASH Write
  * Pre:  nes_init() setup of I/O pins
  *       mapper and flash configured for this command sequence and target bank
- * Post: Write attempted; polling stops on matching data or timeout
- * Rtn:  Last byte read at addr; compare with data to detect failure
+ * Post: Write attempted; chrrom_wr_polling polls the PPU bus with usbPoll
+ *       polling stops on matching data or after at most 0xFFFF reads
+ * Rtn:  Last PPU byte read at addr by chrrom_wr_polling
+ *       compare with data to detect polling failure
  */
 uint8_t rnbw_chrrom_flash_wr(uint16_t addr, uint8_t data)
 {
-  uint8_t rv;
-  uint16_t timeout = 0xffff;
-
   // send unlock command and write byte
   nes_ppu_wr(0x0AAA, 0xAA);
   nes_ppu_wr(0x0555, 0x55);
   nes_ppu_wr(0x0AAA, 0xA0);
   nes_ppu_wr(addr, data);
 
-  do {
-    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-    rv = nes_ppu_rd(addr);
-    if(rv == data) {
-      break;
-    }
-  } while(--timeout);
-
-  return rv;
+  return chrrom_wr_polling(addr, data);
 }
 
-/* Desc: NES RNBW CHR-ROM FLASH Write in unlock bypass mode
+/* Desc: NES CHR-ROM FLASH Write in unlock bypass mode
  * Pre:  nes_init() setup of I/O pins
  *       mapper and flash configured for this command sequence and target bank
  *       Flash must already be in unlock bypass mode
- * Post: Write attempted; polling stops on matching data or timeout
- * Rtn:  Last byte read at addr; compare with data to detect failure
+ * Post: Write attempted; chrrom_wr_polling polls the PPU bus with usbPoll
+ *       polling stops on matching data or after at most 0xFFFF reads
+ * Rtn:  Last PPU byte read at addr by chrrom_wr_polling
+ *       compare with data to detect polling failure
  */
-uint8_t rnbw_chrrom_flash_unlock_wr(uint16_t addr, uint8_t data)
+uint8_t chrrom_flash_unlock_wr(uint16_t addr, uint8_t data)
 {
-  uint8_t rv;
-  uint16_t timeout = 0xffff;
-
   // needs to be in unlock bypass mode
   // write data
   nes_ppu_wr(addr, 0xA0); // unlock bypass
   nes_ppu_wr(addr, data);
 
-  do {
-    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-    rv = nes_ppu_rd(addr);
-    if(rv == data) {
-      break;
-    }
-  } while(--timeout);
-
-  return rv;
+  return chrrom_wr_polling(addr, data);
 }
 
 /* Desc: NES VRC6 PRG-ROM FLASH Write
  * Pre:  nes_init() setup of I/O pins
  *       mapper and flash configured for this command sequence and target bank
- * Post: Write attempted; polling stops on matching data or timeout
- * Rtn:  Last byte read at addr; compare with data to detect failure
+ * Post: Write attempted; prgrom_wr_polling polls the CPU bus with usbPoll
+ *       polling stops on matching data or after at most 0xFFFF reads
+ * Rtn:  Last CPU byte read at addr by prgrom_wr_polling
+ *       compare with data to detect polling failure
  */
 uint8_t vrc6_prgrom_flash_wr(uint16_t addr, uint8_t data)
 {
-  uint8_t rv;
-  uint16_t timeout = 0xffff;
-
   // unlock the flash
   nes_cpu_wr(0xD555, 0xAA);
   nes_cpu_wr(0xAAAA, 0x55);
@@ -1353,15 +1366,7 @@ uint8_t vrc6_prgrom_flash_wr(uint16_t addr, uint8_t data)
   // write the data
   nes_cpu_wr(addr, data);
 
-  do {
-    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-    rv = nes_cpu_rd(addr);
-    if(rv == data) {
-      break;
-    }
-  } while(--timeout);
-
-  return rv;
+  return prgrom_wr_polling(addr, data);
 }
 
 /* Desc: NES DUALPORT PPU page read with optional USB polling
@@ -1457,58 +1462,38 @@ void mmc1_wr(uint16_t addr, uint8_t data, uint8_t reset)
 /* Desc: NES NROM PRG-ROM FLASH Write
  *       Also used for discrete mappers with 32KB banking (CNROM, BxROM, etc)
  * Pre:  nes_init() setup of I/O pins
- * Post: Byte written and ready for another write
- * Post: Write attempted; polling stops on matching data or timeout
- * Rtn:  Last byte read at addr; compare with data to detect failure
+ * Post: Write attempted; prgrom_wr_polling polls the CPU bus with usbPoll
+ *       polling stops on matching data or after at most 0xFFFF reads
+ * Rtn:  Last CPU byte read at addr by prgrom_wr_polling
+ *       compare with data to detect polling failure
  */
 uint8_t nrom_prgrom_flash_wr(uint16_t addr, uint8_t data)
 {
-  uint8_t rv;
-  uint16_t timeout = 0xffff;
-
   // unlock and write data
   discrete_exp0_prgrom_wr(0x5555, 0xAA);
   discrete_exp0_prgrom_wr(0x2AAA, 0x55);
   discrete_exp0_prgrom_wr(0x5555, 0xA0);
   discrete_exp0_prgrom_wr(addr, data);
 
-  do {
-    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-    rv = nes_cpu_rd(addr);
-    if(rv == data) {
-      break;
-    }
-  } while(--timeout);
-
-  return rv;
+  return prgrom_wr_polling(addr, data);
 }
 
 /* Desc: NES NROM CHR-ROM FLASH Write
  * Pre:  nes_init() setup of I/O pins
- * Post: Byte written and ready for another write
- * Post: Write attempted; polling stops on matching data or timeout
- * Rtn:  Last byte read at addr; compare with data to detect failure
+ * Post: Write attempted; chrrom_wr_polling polls the PPU bus with usbPoll
+ *       polling stops on matching data or after at most 0xFFFF reads
+ * Rtn:  Last PPU byte read at addr by chrrom_wr_polling
+ *       compare with data to detect polling failure
  */
 uint8_t nrom_chrrom_flash_wr(uint16_t addr, uint8_t data)
 {
-  uint8_t rv;
-  uint16_t timeout = 0xffff;
-
   // unlock and write data
   nes_ppu_wr(0x1555, 0xAA);
   nes_ppu_wr(0x0AAA, 0x55);
   nes_ppu_wr(0x1555, 0xA0);
   nes_ppu_wr(addr, data);
 
-  do {
-    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-    rv = nes_ppu_rd(addr);
-    if(rv == data) {
-      break;
-    }
-  } while(--timeout);
-
-  return rv;
+  return chrrom_wr_polling(addr, data);
 }
 
 /* Desc: NES MMC1 PRG-ROM FLASH Write
@@ -1518,14 +1503,13 @@ uint8_t nrom_chrrom_flash_wr(uint16_t addr, uint8_t data)
  *       32KB mode with current bank selected
  *       addr must be between $8000-FFFF as prescribed by init
  *       cur_bank selects the CHR-register bits used for PRG A18
- * Post: Write attempted; polling stops on matching data or timeout
- * Rtn:  Last byte read at addr; compare with data to detect failure
+ * Post: Write attempted; prgrom_wr_polling polls the CPU bus with usbPoll
+ *       polling stops on matching data or after at most 0xFFFF reads
+ * Rtn:  Last CPU byte read at addr by prgrom_wr_polling
+ *       compare with data to detect polling failure
  */
 uint8_t mmc1_prgrom_flash_wr(uint16_t addr, uint8_t data)
 {
-  uint8_t rv;
-  uint16_t timeout = 0xffff;
-
   // make a generic write to mapper reg so the last write will block all subsequent writes
   // mmc1_wr(0xC000, 0x05, 0); //just write to random CHR ROM register
 
@@ -1547,15 +1531,7 @@ uint8_t mmc1_prgrom_flash_wr(uint16_t addr, uint8_t data)
   // write the data
   nes_cpu_wr(addr, data);
 
-  do {
-    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-    rv = nes_cpu_rd(addr);
-    if(rv == data) {
-      break;
-    }
-  } while(--timeout);
-
-  return rv;
+  return prgrom_wr_polling(addr, data);
 }
 
 /* Desc: NES MMC1 CHR-ROM FLASH Write
@@ -1563,15 +1539,14 @@ uint8_t mmc1_prgrom_flash_wr(uint16_t addr, uint8_t data)
  *       mapper and flash configured for this command sequence and target bank
  *       cur_bank global var must be set to desired mapper register value
  *       CHR banking must map the unlock addresses as required by the board
- * Post: Write attempted; polling stops on matching data or timeout
+ * Post: Write attempted; chrrom_wr_polling polls the PPU bus with usbPoll
+ *       polling stops on matching data or after at most 0xFFFF reads
  *       CHR bank register at 0xA000 left at cur_bank
- * Rtn:  Last byte read at addr; compare with data to detect failure
+ * Rtn:  Last PPU byte read at addr by chrrom_wr_polling
+ *       compare with data to detect polling failure
  */
 uint8_t mmc1_chrrom_flash_wr(uint16_t addr, uint8_t data)
 {
-  uint8_t rv;
-  uint16_t timeout = 0xffff;
-
   // set banks for unlock commands
   mmc1_wr(0xA000, 0x02, 0);
   // PT1 always set to 0x05 for $5555 command
@@ -1586,15 +1561,7 @@ uint8_t mmc1_chrrom_flash_wr(uint16_t addr, uint8_t data)
   // write the data
   nes_ppu_wr(addr, data);
 
-  do {
-    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-    rv = nes_ppu_rd(addr);
-    if(rv == data) {
-      break;
-    }
-  } while(--timeout);
-
-  return rv;
+  return chrrom_wr_polling(addr, data);
 }
 
 /* Desc: NES UNROM PRG-ROM FLASH Write
@@ -1602,15 +1569,14 @@ uint8_t mmc1_chrrom_flash_wr(uint16_t addr, uint8_t data)
  *       mapper and flash configured for this command sequence and target bank
  *       cur_bank global var must be set to desired mapper register value
  *       bank_table global var must be set to base address of the bank table
- * Post: Write attempted; polling stops on matching data or timeout
+ * Post: Write attempted; prgrom_wr_polling polls the CPU bus with usbPoll
+ *       polling stops on matching data or after at most 0xFFFF reads
  *       mapper bank register left at cur_bank
- * Rtn:  Last byte read at addr; compare with data to detect failure
+ * Rtn:  Last CPU byte read at addr by prgrom_wr_polling
+ *       compare with data to detect polling failure
  */
 uint8_t unrom_prgrom_flash_wr(uint16_t addr, uint8_t data)
 {
-  uint8_t rv;
-  uint16_t timeout = 0xFFFF;
-
   // set A14 low for lower bank so to satisfy unlock commands
   nes_cpu_wr(bank_table, 0x00);
 
@@ -1623,15 +1589,7 @@ uint8_t unrom_prgrom_flash_wr(uint16_t addr, uint8_t data)
   nes_cpu_wr(bank_table + cur_bank, cur_bank);
   discrete_exp0_prgrom_wr(addr, data);
 
-  do {
-    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-    rv = nes_cpu_rd(addr);
-    if(rv == data) {
-      break;
-    }
-  } while(--timeout);
-
-  return rv;
+  return prgrom_wr_polling(addr, data);
 }
 
 /* Desc: NES CNROM CHR-ROM FLASH Write
@@ -1639,15 +1597,14 @@ uint8_t unrom_prgrom_flash_wr(uint16_t addr, uint8_t data)
  *       mapper and flash configured for this command sequence and target bank
  *       cur_bank global var must be set to desired mapper register value
  *       bank_table global var must be set to base address of the bank table
- * Post: Write attempted; polling stops on matching data or timeout
+ * Post: Write attempted; chrrom_wr_polling polls the PPU bus with usbPoll
+ *       polling stops on matching data or after at most 0xFFFF reads
  *       mapper bank register left at cur_bank
- * Rtn:  Last byte read at addr; compare with data to detect failure
+ * Rtn:  Last PPU byte read at addr by chrrom_wr_polling
+ *       compare with data to detect polling failure
  */
 uint8_t cnrom_chrrom_flash_wr(uint16_t addr, uint8_t data)
 {
-  uint8_t rv;
-  uint16_t timeout = 0xffff;
-
   // unlock the flash
   nes_cpu_wr(bank_table + 2, 0x02);
   nes_ppu_wr(0x1555, 0xAA);
@@ -1663,15 +1620,7 @@ uint8_t cnrom_chrrom_flash_wr(uint16_t addr, uint8_t data)
   // write the byte
   nes_ppu_wr(addr, data);
 
-  do {
-    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-    rv = nes_ppu_rd(addr);
-    if(rv == data) {
-      break;
-    }
-  } while(--timeout);
-
-  return rv;
+  return chrrom_wr_polling(addr, data);
 }
 
 /* Desc: NES MMC3 PRG-ROM FLASH Write
@@ -1679,15 +1628,14 @@ uint8_t cnrom_chrrom_flash_wr(uint16_t addr, uint8_t data)
  *       mapper and flash configured for this command sequence and target bank
  *       MMC3 must be properly initialized for flashing
  *       addr must be between $8000-9FFF as prescribed by init
- * Post: Write attempted; polling stops on matching data or timeout
+ * Post: Write attempted; prgrom_wr_polling polls the CPU bus with usbPoll
+ *       polling stops on matching data or after at most 0xFFFF reads
  *       bank select register at 0x8000 left at 0x02
- * Rtn:  Last byte read at addr; compare with data to detect failure
+ * Rtn:  Last CPU byte read at addr by prgrom_wr_polling
+ *       compare with data to detect polling failure
  */
 uint8_t mmc3_prgrom_flash_wr(uint16_t addr, uint8_t data)
 {
-  uint8_t rv;
-  uint16_t timeout = 0xffff;
-
   // unlock the flash
   nes_cpu_wr(0xD555, 0xAA);
   nes_cpu_wr(0xAAAA, 0x55);
@@ -1699,15 +1647,7 @@ uint8_t mmc3_prgrom_flash_wr(uint16_t addr, uint8_t data)
   // reset $8000 bank select register to a CHR reg
   nes_cpu_wr(0x8000, 0x02); // 0x02 also maintains flash mode for custom
 
-  do {
-    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-    rv = nes_cpu_rd(addr);
-    if(rv == data) {
-      break;
-    }
-  } while(--timeout);
-
-  return rv;
+  return prgrom_wr_polling(addr, data);
 }
 
 /* Desc: NES MMC3 CHR-ROM FLASH Write
@@ -1715,29 +1655,20 @@ uint8_t mmc3_prgrom_flash_wr(uint16_t addr, uint8_t data)
  *       mapper and flash configured for this command sequence and target bank
  *       MMC3 must be properly initialized for flashing
  *       addr must be between $0000-0FFF as prescribed by init
- * Post: Write attempted; polling stops on matching data or timeout
- * Rtn:  Last byte read at addr; compare with data to detect failure
+ * Post: Write attempted; chrrom_wr_polling polls the PPU bus with usbPoll
+ *       polling stops on matching data or after at most 0xFFFF reads
+ * Rtn:  Last PPU byte read at addr by chrrom_wr_polling
+ *       compare with data to detect polling failure
  */
 uint8_t mmc3_chrrom_flash_wr(uint16_t addr, uint8_t data)
 {
-  uint8_t rv;
-  uint16_t timeout = 0xffff;
-
   // unlock and write data
   nes_ppu_wr(0x1555, 0xAA);
   nes_ppu_wr(0x1AAA, 0x55);
   nes_ppu_wr(0x1555, 0xA0);
   nes_ppu_wr(addr, data);
 
-  do {
-    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-    rv = nes_ppu_rd(addr);
-    if(rv == data) {
-      break;
-    }
-  } while(--timeout);
-
-  return rv;
+  return chrrom_wr_polling(addr, data);
 }
 
 /* Desc: NES MMC4 PRG-ROM FLASH Write for standard PLCC SST flash
@@ -1747,15 +1678,14 @@ uint8_t mmc3_chrrom_flash_wr(uint16_t addr, uint8_t data)
  *       addr must be between $8000-BFFF as prescribed by init
  *       desired bank must already be selected
  *       cur_bank must be set to desired bank for recovery
- * Post: Write attempted; polling stops on matching data or timeout
+ * Post: Write attempted; prgrom_wr_polling polls the CPU bus with usbPoll
+ *       polling stops on matching data or after at most 0xFFFF reads
  *       PRG bank register at 0xA000 restored to cur_bank
- * Rtn:  Last byte read at addr; compare with data to detect failure
+ * Rtn:  Last CPU byte read at addr by prgrom_wr_polling
+ *       compare with data to detect polling failure
  */
 uint8_t mmc4_prgrom_flash_wr(uint16_t addr, uint8_t data)
 {
-  uint8_t rv;
-  uint16_t timeout = 0xffff;
-
   // unlock and write data PLCC flash
   nes_cpu_wr(0xD555, 0xAA);
   nes_cpu_wr(0xEAAA, 0x55);
@@ -1765,30 +1695,21 @@ uint8_t mmc4_prgrom_flash_wr(uint16_t addr, uint8_t data)
   // recover bank register as data write would have corrupted
   nes_cpu_wr(0xA000, cur_bank);
 
-  do {
-    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-    rv = nes_cpu_rd(addr);
-    if(rv == data) {
-      break;
-    }
-  } while(--timeout);
-
-  return rv;
+  return prgrom_wr_polling(addr, data);
 }
 
 /* Desc: NES MMC4 CHR-ROM FLASH Write
  * Pre:  nes_init() setup of I/O pins
  *       mapper and flash configured for this command sequence and target bank
  *       cur_bank global var must be set to desired mapper register value
- * Post: Write attempted; polling stops on matching data or timeout
+ * Post: Write attempted; chrrom_wr_polling polls the PPU bus with usbPoll
+ *       polling stops on matching data or after at most 0xFFFF reads
  *       CHR bank registers at 0xB000 and 0xC000 left at cur_bank
- * Rtn:  Last byte read at addr; compare with data to detect failure
+ * Rtn:  Last PPU byte read at addr by chrrom_wr_polling
+ *       compare with data to detect polling failure
  */
 uint8_t mmc4_chrrom_flash_wr(uint16_t addr, uint8_t data)
 {
-  uint8_t rv;
-  uint16_t timeout = 0xffff;
-
   //--set bank for unlock command
   // dict.nes("NES_CPU_WR", 0xB000, 0x0A)    --4KB @ PPU $0000 -> $2AAA cmd & writes
   // dict.nes("NES_CPU_WR", 0xC000, 0x0A)    --4KB @ PPU $0000
@@ -1822,15 +1743,7 @@ uint8_t mmc4_chrrom_flash_wr(uint16_t addr, uint8_t data)
   // write the data
   nes_ppu_wr(addr, data);
 
-  do {
-    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-    rv = nes_ppu_rd(addr);
-    if(rv == data) {
-      break;
-    }
-  } while(--timeout);
-
-  return rv;
+  return chrrom_wr_polling(addr, data);
 }
 
 /* Desc: NES ColorDreams CHR-ROM FLASH Write
@@ -1840,14 +1753,13 @@ uint8_t mmc4_chrrom_flash_wr(uint16_t addr, uint8_t data)
  *       bank_table global var must be set to base address of the bank table
  *       The first PRG-ROM bank must be selected and bank table present
  *       num_prg_banks must match the bank table layout
- * Post: Write attempted; polling stops on matching data or timeout
- * Rtn:  Last byte read at addr; compare with data to detect failure
+ * Post: Write attempted; chrrom_wr_polling polls the PPU bus with usbPoll
+ *       polling stops on matching data or after at most 0xFFFF reads
+ * Rtn:  Last PPU byte read at addr by chrrom_wr_polling
+ *       compare with data to detect polling failure
  */
 uint8_t cdream_chrrom_flash_wr(uint16_t addr, uint8_t data)
 {
-  uint8_t rv;
-  uint16_t timeout = 0xffff;
-
   // uint8_t num_prg_banks = 16; // 4: 128KB, 8: 256KB, 16: 512KB
 
   // select first bank
@@ -1873,30 +1785,21 @@ uint8_t cdream_chrrom_flash_wr(uint16_t addr, uint8_t data)
   // write the byte
   nes_ppu_wr(addr, data);
 
-  do {
-    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-    rv = nes_ppu_rd(addr);
-    if(rv == data) {
-      break;
-    }
-  } while(--timeout);
-
-  return rv;
+  return chrrom_wr_polling(addr, data);
 }
 
 /* Desc: NES MAPPER30 PRG-ROM FLASH Write
  * Pre:  nes_init() setup of I/O pins
  *       mapper and flash configured for this command sequence and target bank
  *       cur_bank global var must be set to desired mapper register value
- * Post: Write attempted; polling stops on matching data or timeout
+ * Post: Write attempted; prgrom_wr_polling polls the CPU bus with usbPoll
+ *       polling stops on matching data or after at most 0xFFFF reads
  *       mapper bank register left at cur_bank
- * Rtn:  Last byte read at addr; compare with data to detect failure
+ * Rtn:  Last CPU byte read at addr by prgrom_wr_polling
+ *       compare with data to detect polling failure
  */
 uint8_t map30_prgrom_flash_wr(uint16_t addr, uint8_t data)
 {
-  uint8_t rv;
-  uint16_t timeout = 0xffff;
-
   // unlock the flash
   nes_cpu_wr(0xC000, 0x01);
   nes_cpu_wr(0x9555, 0xAA);
@@ -1909,30 +1812,21 @@ uint8_t map30_prgrom_flash_wr(uint16_t addr, uint8_t data)
   nes_cpu_wr(0xC000, cur_bank);
   nes_cpu_wr(addr, data);
 
-  do {
-    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-    rv = nes_cpu_rd(addr);
-    if(rv == data) {
-      break;
-    }
-  } while(--timeout);
-
-  return rv;
+  return prgrom_wr_polling(addr, data);
 }
 
 /* Desc: NES GTROM (mapper 111) PRG-ROM FLASH Write
  * Pre:  nes_init() setup of I/O pins
  *       mapper and flash configured for this command sequence and target bank
  *       cur_bank must contain the desired mapper register value
- * Post: Write attempted; polling stops on matching data or timeout
+ * Post: Write attempted; prgrom_wr_polling polls the CPU bus with usbPoll
+ *       polling stops on matching data or after at most 0xFFFF reads
  *       mapper bank register left at cur_bank
- * Rtn:  Last byte read at addr; compare with data to detect failure
+ * Rtn:  Last CPU byte read at addr by prgrom_wr_polling
+ *       compare with data to detect polling failure
  */
 uint8_t gtrom_prgrom_flash_wr(uint16_t addr, uint8_t data)
 {
-  uint8_t rv;
-  uint16_t timeout = 0xffff;
-
   // select bank, don't think needed, but having problems...
   nes_cpu_wr(0x5000, cur_bank);
 
@@ -1946,28 +1840,21 @@ uint8_t gtrom_prgrom_flash_wr(uint16_t addr, uint8_t data)
 
   // nes_cpu_wr(0x5000, cur_bank);
 
-  do {
-    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-    rv = nes_cpu_rd(addr);
-    if(rv == data) {
-      break;
-    }
-  } while(--timeout);
-
-  return rv;
+  return prgrom_wr_polling(addr, data);
 }
 
 /* Desc: NES ACTION53 using SST 512K PRG-ROM FLASH Write
  * Pre:  nes_init() setup of I/O pins
  *       mapper and flash configured for this command sequence and target bank
- * Post: Write attempted; polling stops on matching data or timeout
+ * Post: Write attempted; prgrom_wr_polling polls the CPU bus with usbPoll
+ *       polling stops on matching data or after at most 0xFFFF reads
  *       an extra read at 0x8000 follows a write to 0xFFFC
- * Rtn:  Last byte read at addr; compare with data to detect failure
+ * Rtn:  Last CPU byte read at addr by prgrom_wr_polling
+ *       compare with data to detect polling failure
  */
 uint8_t a53_512k_prgrom_flash_wr(uint16_t addr, uint8_t data)
 {
   uint8_t rv;
-  uint16_t timeout = 0xffff;
 
   // unlock and write data
   nes_m2_high_wr(0xD555, 0xAA);
@@ -1975,13 +1862,7 @@ uint8_t a53_512k_prgrom_flash_wr(uint16_t addr, uint8_t data)
   nes_m2_high_wr(0xD555, 0xA0);
   nes_m2_high_wr(addr, data);
 
-  do {
-    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-    rv = nes_cpu_rd(addr);
-    if(rv == data) {
-      break;
-    }
-  } while(--timeout);
+  rv = prgrom_wr_polling(addr, data);
 
   if(addr == 0xFFFC) {
     nes_cpu_rd(0x8000); // prevent resetting mapper config
@@ -1994,14 +1875,13 @@ uint8_t a53_512k_prgrom_flash_wr(uint16_t addr, uint8_t data)
  * Pre:  nes_init() setup of I/O pins
  *       mapper and flash configured for this command sequence and target bank
  *       Flash must already be in unlock bypass mode
- * Post: Write attempted; polling stops on matching data or timeout
- * Rtn:  Last byte read at addr; compare with data to detect failure
+ * Post: Write attempted; prgrom_wr_polling polls the CPU bus with usbPoll
+ *       polling stops on matching data or after at most 0xFFFF reads
+ * Rtn:  Last CPU byte read at addr by prgrom_wr_polling
+ *       compare with data to detect polling failure
  */
 uint8_t a53_tssop_prgrom_flash_wr(uint16_t addr, uint8_t data)
 {
-  uint8_t rv;
-  uint16_t timeout = 0xffff;
-
   // chr reg select act like CNROM & enable flash writes
   // nes_cpu_wr(0x5000, 0x54);
 
@@ -2010,70 +1890,44 @@ uint8_t a53_tssop_prgrom_flash_wr(uint16_t addr, uint8_t data)
   nes_m2_high_wr(addr, 0xA0);
   nes_m2_high_wr(addr, data);
 
-  do {
-    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-    rv = nes_cpu_rd(addr);
-    if(rv == data) {
-      break;
-    }
-  } while(--timeout);
-
-  return rv;
+  return prgrom_wr_polling(addr, data);
 }
 
 /* Desc: NES ACTION53 TSSOP PRG-ROM FLASH Write
  * Pre:  nes_init() setup of I/O pins
  *       mapper and flash configured for this command sequence and target bank
- * Post: Write attempted; polling stops on matching data or timeout
- * Rtn:  Last byte read at addr; compare with data to detect failure
+ * Post: Write attempted; prgrom_wr_polling polls the CPU bus with usbPoll
+ *       polling stops on matching data or after at most 0xFFFF reads
+ * Rtn:  Last CPU byte read at addr by prgrom_wr_polling
+ *       compare with data to detect polling failure
  */
 uint8_t a53_prgrom_flash_wr(uint16_t addr, uint8_t data)
 {
-  uint8_t rv;
-  uint16_t timeout = 0xffff;
-
   // write data
   nes_cpu_wr(0x8AAA, 0xAA);
   nes_cpu_wr(0x8555, 0x55);
   nes_cpu_wr(0x8AAA, 0xA0);
   nes_cpu_wr(addr, data);
 
-  do {
-    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-    rv = nes_cpu_rd(addr);
-    if(rv == data) {
-      break;
-    }
-  } while(--timeout);
-
-  return rv;
+  return prgrom_wr_polling(addr, data);
 }
 
 /* Desc: NES TSSOP PRG-ROM FLASH Write
  * Pre:  nes_init() setup of I/O pins
  *       mapper and flash configured for this command sequence and target bank
  *       Flash must already be in unlock bypass mode
- * Post: Write attempted; polling stops on matching data or timeout
- * Rtn:  Last byte read at addr; compare with data to detect failure
+ * Post: Write attempted; prgrom_wr_polling polls the CPU bus with usbPoll
+ *       polling stops on matching data or after at most 0xFFFF reads
+ * Rtn:  Last CPU byte read at addr by prgrom_wr_polling
+ *       compare with data to detect polling failure
  */
 uint8_t tssop_prgrom_flash_wr(uint16_t addr, uint8_t data)
 {
-  uint8_t rv;
-  uint16_t timeout = 0xffff;
-
   // unlock and write data
   nes_m2_high_wr(addr, 0xA0);
   nes_m2_high_wr(addr, data);
 
-  do {
-    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-    rv = nes_cpu_rd(addr);
-    if(rv == data) {
-      break;
-    }
-  } while(--timeout);
-
-  return rv;
+  return prgrom_wr_polling(addr, data);
 }
 
 // uint8_t mmc5_prgram_wr(uint16_t addr, uint8_t data)

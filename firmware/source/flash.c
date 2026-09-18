@@ -775,7 +775,7 @@ uint8_t flash_buff(buffer* buff)
           nes_cpu_wr(0x8AAA, 0x20);
 
           // write data
-          result = write_page_verify_8((addrH + 0x80), buff, rnbw_prgrom_flash_unlock_wr);
+          result = write_page_verify_8((addrH + 0x80), buff, prgrom_flash_unlock_wr);
 
           // exit unlock mode bypass
           nes_cpu_wr(0x8000, 0x90);
@@ -803,7 +803,7 @@ uint8_t flash_buff(buffer* buff)
           nes_cpu_wr(0x8AAA, 0x20);
 
           // write data
-          result = write_page_verify_8((addrH + 0x80), buff, rnbw_prgrom_flash_unlock_wr);
+          result = write_page_verify_8((addrH + 0x80), buff, prgrom_flash_unlock_wr);
 
           // exit unlock mode bypass
           nes_cpu_wr(0x8000, 0x90);
@@ -834,7 +834,7 @@ uint8_t flash_buff(buffer* buff)
           nes_cpu_wr(0x8AAA, 0x20);
 
           // write data
-          result = write_page_verify_8((addrH + 0x80), buff, rnbw_prgrom_flash_unlock_wr);
+          result = write_page_verify_8((addrH + 0x80), buff, prgrom_flash_unlock_wr);
 
           // exit unlock mode bypass
           nes_cpu_wr(0x8000, 0x90);
@@ -889,7 +889,7 @@ uint8_t flash_buff(buffer* buff)
           nes_ppu_wr(0x0AAA, 0x20);
 
           // write data
-          result = write_page_verify_8(addrH, buff, rnbw_chrrom_flash_unlock_wr);
+          result = write_page_verify_8(addrH, buff, chrrom_flash_unlock_wr);
 
           // exit unlock mode bypass
           nes_ppu_wr(0x0000, 0x90);
