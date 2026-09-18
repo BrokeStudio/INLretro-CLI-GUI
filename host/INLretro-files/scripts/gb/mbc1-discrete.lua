@@ -198,7 +198,7 @@ local function rom_flash(file, rom_size_kb)
     dict.gameboy("GAMEBOY_SET_CUR_BANK", cur_bank)
     dict.gameboy("GAMEBOY_WR", 0x2000, cur_bank)
 
-    -- have the device write a bank worth of data
+    -- flash data
     flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "GBROM" })
 
     cur_bank = cur_bank + 1
@@ -272,7 +272,7 @@ local function ram_write(file, ram_size_kb)
     -- set bank
     dict.gameboy("GAMEBOY_WR", 0x4000, cur_bank)
 
-    -- have the device write a bank worth of data
+    -- flash data
     flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "GBRAM" })
 
     cur_bank = cur_bank + 1

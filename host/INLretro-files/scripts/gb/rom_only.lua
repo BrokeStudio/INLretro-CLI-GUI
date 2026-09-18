@@ -219,7 +219,7 @@ local function ram_write(file, ram_size_kb)
       spinner.update("Flashing", cur_bank, "/", num_banks - 1)
     end
 
-    -- have the device write a bank worth of data
+    -- flash data
     flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "GBRAM" })
 
     cur_bank = cur_bank + 1

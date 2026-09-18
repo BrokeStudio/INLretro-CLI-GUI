@@ -366,7 +366,7 @@ local function chr_rom_flash(file, rom_size_kb)
     dict.nes("NES_CPU_WR", CHR_2, cur_bank * 4 + 2) -- 1KB @ PPU $0800
     dict.nes("NES_CPU_WR", CHR_3, cur_bank * 4 + 3) -- 1KB @ PPU $0C00
 
-    -- have the device write a bank worth of data
+    -- flash data
     flash.write_file(file, 4, { mapper = mapname, mem_type = "CHRROM" })
 
     cur_bank = cur_bank + 1

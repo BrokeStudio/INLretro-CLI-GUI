@@ -134,7 +134,7 @@ local function prg_rom_flash(file, rom_size_kb)
     --write the current bank to the mapper register
     dict.nes("NES_CPU_WR", 0x5000, cur_bank) --bank at $8000
 
-    -- have the device write a bank worth of data
+    -- flash data
     flash.write_file(file, bank_size_kb, { mapper = "EZNSF", mem_type = "PRGROM", options = options })
 
     cur_bank = cur_bank + 1

@@ -237,34 +237,6 @@ local function prg_rom_dump(file, rom_size_kb)
   spinner.clear()
 end
 
---- Erase the entire PRG-ROM flash chip and poll until consecutive reads match.
-local function prg_rom_erase()
-  local i = 0
-  local rv
-
-  init_mapper()
-
-  log.section("Erasing PRG-ROM")
-
-  dict.nes("NES_CPU_WR", 0xD555, 0xAA)
-  dict.nes("NES_CPU_WR", 0xAAAA, 0x55)
-  dict.nes("NES_CPU_WR", 0xD555, 0x80)
-  dict.nes("NES_CPU_WR", 0xD555, 0xAA)
-  dict.nes("NES_CPU_WR", 0xAAAA, 0x55)
-  dict.nes("NES_CPU_WR", 0xD555, 0x10)
-
-  -- TODO create some function to pass the read value
-  -- that's smart enough to figure out if the board is actually erasing or not
-  rv = dict.nes("NES_CPU_RD", 0x8000)
-  while rv ~= dict.nes("NES_CPU_RD", 0x8000) do
-    spinner.update("Erasing")
-    rv = dict.nes("NES_CPU_RD", 0x8000)
-    i = i + 1
-  end
-  spinner.clear()
-  log.success("Done erasing PRG-ROM", i .. " naks")
-end
-
 --- Program PRG-ROM contents from an already-open input file, one bank at a time.
 -- @param file file* Open binary input file
 -- @param rom_size_kb integer PRG-ROM size in kilobytes
@@ -303,7 +275,7 @@ local function prg_rom_flash(file, rom_size_kb)
     -- keeps from having the PRG bank changing when writing data
     dict.nes("NES_CPU_WR", 0x8000, 0x00)
 
-    -- have the device write a bank worth of data
+    -- flash data
     flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "PRGROM", { options = options } })
 
     cur_bank = cur_bank + 1
@@ -395,34 +367,6 @@ local function chr_dump(file, rom_size_kb)
   spinner.clear()
 end
 
---- Erase the entire CHR-ROM flash chip and poll until consecutive reads match.
-local function chr_rom_erase()
-  local i = 0
-  local rv
-
-  init_mapper()
-
-  log.section("Erasing CHR-ROM")
-  dict.nes("NES_PPU_WR", 0x1555, 0xAA)
-  dict.nes("NES_PPU_WR", 0x1AAA, 0x55)
-  dict.nes("NES_PPU_WR", 0x1555, 0x80)
-  dict.nes("NES_PPU_WR", 0x1555, 0xAA)
-  dict.nes("NES_PPU_WR", 0x1AAA, 0x55)
-  dict.nes("NES_PPU_WR", 0x1555, 0x10)
-
-  -- TODO create some function to pass the read value
-  -- that's smart enough to figure out if the board is actually erasing or not
-  i = 0
-  rv = dict.nes("NES_PPU_RD", 0x0000)
-  while rv ~= dict.nes("NES_PPU_RD", 0x0000) do
-    spinner.update("Erasing")
-    rv = dict.nes("NES_PPU_RD", 0x0000)
-    i = i + 1
-  end
-  spinner.clear()
-  log.success("Done erasing CHR-ROM", i .. " naks")
-end
-
 --- Program CHR contents from an already-open input file, one bank at a time.
 -- @param file file* Open binary input file
 -- @param rom_size_kb integer CHR size in kilobytes
@@ -462,7 +406,7 @@ local function chr_rom_flash(file, rom_size_kb)
     dict.nes("NES_CPU_WR", 0x8000, 0x01)
     dict.nes("NES_CPU_WR", 0x8001, ((cur_bank * 2 + 1) << 1)) -- 2KB @ CPU $0800
 
-    -- have the device write a bank worth of data
+    -- flash data
     flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "CHRROM", options = options })
 
     cur_bank = cur_bank + 1

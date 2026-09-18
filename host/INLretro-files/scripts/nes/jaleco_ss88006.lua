@@ -217,7 +217,7 @@ local function prg_rom_flash(file, rom_size_kb)
     dict.nes("NES_CPU_WR", 0x8001, (cur_bank & 0xF0) >> 4) -- hi 4 bits
     dict.nes("NES_CPU_WR", 0x8000, (cur_bank & 0x0F))      -- lo 4 bits
 
-    -- have the device write a bank worth of data
+    -- flash data
     flash.write_file(file, bank_size_kb, { mapper = "A53_512K", mem_type = "PRGROM" })
     -- TODO: should we keep A53_512K here?
 
@@ -361,7 +361,7 @@ local function chr_rom_flash(file, rom_size_kb)
     dict.nes("NES_CPU_WR", 0xB003, ((bank + 3) & 0xf0) >> 4) -- hi 4 bits
     dict.nes("NES_CPU_WR", 0xB002, ((bank + 3) & 0x0f))      -- lo 4 bits
 
-    -- have the device write a bank worth of data
+    -- flash data
     flash.write_file(file, bank_size_kb, { mapper = "MMC3", mem_type = "CHRROM" })
 
     cur_bank = cur_bank + 1

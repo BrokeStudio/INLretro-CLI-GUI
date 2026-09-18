@@ -190,7 +190,7 @@ local function prg_rom_flash(file, rom_size_kb)
     -- set cur_bank for recovery and subsequent bytes
     dict.nes("SET_CUR_BANK", cur_bank)
 
-    -- have the device write a bank worth of data
+    -- flash data
     flash.write_file(file, bank_size_kb, { mapper = "MMC4", mem_type = "PRGROM" })
 
     cur_bank = cur_bank + 1
@@ -314,7 +314,7 @@ local function chr_rom_flash(file, rom_size_kb)
     -- set cur_bank so firmware can select desired bank during the write
     dict.nes("SET_CUR_BANK", cur_bank)
 
-    -- have the device write a bank worth of data
+    -- flash data
     flash.write_file(file, bank_size_kb, { mapper = "MMC4", mem_type = "CHRROM" })
     -- TODO: check why MMC4 here?
 

@@ -219,7 +219,7 @@ local function prg_rom_flash(file, rom_size_kb)
     dict.nes("NES_CPU_WR", 0x8000, cur_bank)
     dict.nes("NES_CPU_WR", 0x5000, 0x00)
 
-    -- have the device write a bank worth of data
+    -- flash data
     flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "PRGROM", options = options })
 
     cur_bank = cur_bank + 1

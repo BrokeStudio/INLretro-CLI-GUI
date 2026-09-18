@@ -175,7 +175,7 @@ local function prg_rom_flash(file, rom_size_kb)
     --  log.info("get bank\t" .. dict.nes("GET_CUR_BANK"))
     -- end
 
-    -- have the device write a bank worth of data
+    -- flash data
     flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "PRGROM" })
 
     cur_bank = cur_bank + 1
@@ -183,6 +183,39 @@ local function prg_rom_flash(file, rom_size_kb)
 
   spinner.clear()
   log.success("Done programming PRG-ROM")
+end
+
+local function prg_rom_erase(prg_size_kb)
+  local i = 0
+  local rv
+
+  -- erase PRG-ROM only if needed
+  log.section("Erasing PRG-ROM")
+  time.start()
+  nes.cpu_wr(0xC000, 0x01)
+  nes.cpu_wr(0x9555, 0xAA)
+  nes.cpu_wr(0xC000, 0x00)
+  nes.cpu_wr(0xAAAA, 0x55)
+  nes.cpu_wr(0xC000, 0x01)
+  nes.cpu_wr(0x9555, 0x80)
+  nes.cpu_wr(0xC000, 0x01)
+  nes.cpu_wr(0x9555, 0xAA)
+  nes.cpu_wr(0xC000, 0x00)
+  nes.cpu_wr(0xAAAA, 0x55)
+  nes.cpu_wr(0xC000, 0x01)
+  nes.cpu_wr(0x9555, 0x10)
+
+  rv = nes.cpu_rd(0x8000)
+  while rv ~= nes.cpu_rd(0x8000) do
+    spinner.update("Erasing")
+    rv = nes.cpu_rd(0x8000)
+    i = i + 1
+  end
+  spinner.clear()
+  log.success("Done erasing PRG-ROM", i .. " naks")
+  time.report(prg_size_kb)
+
+  return true
 end
 
 --[[
@@ -452,36 +485,13 @@ local function process(process_opts, console_opts)
 
   -- erase the cart
   if do_erase then
-    local i = 0
-
     -- erase PRG-ROM only if needed
     if prg_size_kb ~= 0 then
-      log.section("Erasing PRG-ROM")
-      time.start()
-      dict.nes("NES_CPU_WR", 0xC000, 0x01)
-      dict.nes("NES_CPU_WR", 0x9555, 0xAA)
-      dict.nes("NES_CPU_WR", 0xC000, 0x00)
-      dict.nes("NES_CPU_WR", 0xAAAA, 0x55)
-      dict.nes("NES_CPU_WR", 0xC000, 0x01)
-      dict.nes("NES_CPU_WR", 0x9555, 0x80)
-      dict.nes("NES_CPU_WR", 0xC000, 0x01)
-      dict.nes("NES_CPU_WR", 0x9555, 0xAA)
-      dict.nes("NES_CPU_WR", 0xC000, 0x00)
-      dict.nes("NES_CPU_WR", 0xAAAA, 0x55)
-      dict.nes("NES_CPU_WR", 0xC000, 0x01)
-      dict.nes("NES_CPU_WR", 0x9555, 0x10)
-
-      -- TODO create some function to pass the read value
-      -- that's smart enough to figure out if the board is actually erasing or not
-      rv = dict.nes("NES_CPU_RD", 0x8000)
-      while rv ~= dict.nes("NES_CPU_RD", 0x8000) do
-        spinner.update("Erasing")
-        rv = dict.nes("NES_CPU_RD", 0x8000)
-        i = i + 1
+      rv = prg_rom_erase(prg_size_kb)
+      if not rv then
+        log.error("PRG-ROM couldn't be erased")
+        return false
       end
-      spinner.clear()
-      log.success("Done erasing PRG-ROM", i .. " naks")
-      time.report(prg_size_kb)
     end
   end
 

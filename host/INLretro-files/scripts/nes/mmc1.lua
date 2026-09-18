@@ -251,7 +251,7 @@ local function prg_rom_flash(file, rom_size_kb)
     -- write the current bank to the mapper register
     dict.nes("NES_MMC1_WR", 0xE000, cur_bank << 1) -- LSBit ignored in 32KB mode
 
-    -- have the device write a bank worth of data
+    -- flash data
     flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "PRGROM" })
 
     cur_bank = cur_bank + 1
@@ -366,7 +366,7 @@ local function chr_rom_flash(file, rom_size_kb)
     dict.nes("SET_CUR_BANK", cur_bank)
     if DEBUG then log.point("get bank", dict.nes("GET_CUR_BANK")) end
 
-    -- have the device write a bank worth of data
+    -- flash data
     flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "CHRROM" })
 
     cur_bank = cur_bank + 1

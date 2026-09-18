@@ -282,7 +282,7 @@ local function prg_rom_flash(file, rom_size_kb)
     -- write the current bank to the mapper register
     -- dict.nes("NES_CPU_WR", 0x5114, (cur_bank | 0x80)) -- 8KB @ CPU $8000
 
-    -- have the device write a bank worth of data
+    -- flash data
 
     --[[  This version of the code programs a single byte at a time but doesn't require
     --  MMC3 specific functions in the firmware
@@ -321,7 +321,7 @@ local function prg_rom_flash(file, rom_size_kb)
     end
     --]]
 
-    -- have the device write a bank worth of data
+    -- flash data
     flash.write_file(file, bank_size_kb, { mapper = "RNBW", mem_type = "PRGROM" })
 
     cur_bank = cur_bank + 1
@@ -504,7 +504,7 @@ local function chr_rom_flash(file, rom_size_kb)
     -- dict.nes("NES_CPU_WR", 0x5121, cur_bank * 2)     -- 2KB @ PPU $0000
     -- dict.nes("NES_CPU_WR", 0x5123, cur_bank * 2 + 1) -- 2KB @ PPU $0800
 
-    -- have the device write a bank worth of data
+    -- flash data
     --[[  This version of the code programs a single byte at a time but doesn't require
     --  MMC3 specific functions in the firmware
     print("This is slow as molasses, but gets the job done")
@@ -534,7 +534,7 @@ local function chr_rom_flash(file, rom_size_kb)
     end
     --]]
 
-    -- have the device write a bank worth of data
+    -- flash data
     flash.write_file(file, bank_size_kb, { mapper = "RNBW", mem_type = "CHRROM" })
 
     cur_bank = cur_bank + 1
@@ -620,7 +620,7 @@ local function write_ram(file, ram_size_kb)
     dict.nes("NES_CPU_WR", 0x5113, cur_bank) -- PRG-RAM bank @ $6000-7FFF (regardless of PRG mode)
 
 
-    -- have the device write a bank worth of data
+    -- flash data
 
     -- -[[  This version of the code programs a single byte at a time but doesn't require
     --  MMC3 specific functions in the firmware
@@ -654,7 +654,7 @@ local function write_ram(file, ram_size_kb)
     end
     --]]
 
-    -- have the device write a bank worth of data
+    -- flash data
     -- FAST!  13sec for 512KB = 39KBps
     -- flash.write_file(file, bank_size_kb/1024, { mapper = mapname, mem_type = "PRGROM" })
     -- flash.write_file(file, bank_size_kb/1024, { mapper = "NOVAR", mem_type = "PRGRAM" })
