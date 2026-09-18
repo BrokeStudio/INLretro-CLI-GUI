@@ -13,7 +13,7 @@ local spinner  = require "scripts.app.spinner"
 local files    = require "scripts.app.files"
 local help     = require "scripts.app.help"
 
--- file constants & variables
+-- file constants and global variables
 local mapname  = "MAP30"
 
 -- local functions

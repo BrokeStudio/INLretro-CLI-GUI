@@ -482,7 +482,7 @@ local function nes_exec(process_opts, console_opts)
     -- cnrom             = require "scripts.nes.cnrom",
     -- dualport          = require "scripts.nes.dualport",
     -- easynsf           = require "scripts.nes.easyNSF",
-    nsf_512        = require "scripts.nes.nsf_512",
+    nsf            = require "scripts.nes.nsf",
     fme7           = require "scripts.nes.fme7",
     jaleco_ss88006 = require "scripts.nes.jaleco_ss88006",
     mapper30       = require "scripts.nes.mapper30",

@@ -1,13 +1,11 @@
 -- create the module's table
-local mmc4 = {}
-
+local mmc4    = {}
 
 -- import required modules
 local dict    = require "scripts.app.dict"
 local nes     = require "scripts.app.nes"
 local dump    = require "scripts.app.dump"
 local flash   = require "scripts.app.flash"
-local chips   = require "scripts.app.chips"
 local time    = require "scripts.app.time"
 local log     = require "scripts.app.log"
 local spinner = require "scripts.app.spinner"
@@ -16,9 +14,10 @@ local help    = require "scripts.app.help"
 
 -- file constants and global variables
 local mapname = "MMC4"
+local prg_flash_chip
+local chr_flash_chip
 
 -- local functions
-
 
 --[[
 ███╗   ███╗██╗███████╗ ██████╗    ███████╗██╗   ██╗███╗   ██╗ ██████╗███████╗
@@ -33,7 +32,6 @@ local mapname = "MMC4"
 local function create_header(file, prg_kb, chr_kb)
   nes.write_header(file, prg_kb, chr_kb, op_buffer[mapname], 0)
 end
-
 
 --disables PRG-RAM, selects Vertical mirroring
 --sets up CHR-ROM flash PT0 for DATA, Commands: $5555->$1555  $2AAA->$1AAA
@@ -106,47 +104,6 @@ end
 ╚═╝     ╚═╝  ╚═╝ ╚═════╝       ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝
 
 --]]
-
---- Read and identify the PRG-ROM flash manufacturer/device ID.
--- @return boolean found True when the flash chip is recognized
--- @return table device Flash chip information, or an empty table when unknown
-local function prg_rom_manf_id()
-  local manufacturer_id
-  local device_id
-  local found
-  local device
-
-  init_mapper()
-
-  log.section("Reading PRG-ROM manufacturer/device ID")
-
-  -- SOP
-  -- dict.nes("NES_CPU_WR", 0xFAAA, 0xAA)
-  -- dict.nes("NES_CPU_WR", 0xF555, 0x55)
-  -- dict.nes("NES_CPU_WR", 0xFAAA, 0x90)
-
-  -- PLCC
-  dict.nes("NES_CPU_WR", 0xD555, 0xAA)
-  dict.nes("NES_CPU_WR", 0xEAAA, 0x55)
-  dict.nes("NES_CPU_WR", 0xD555, 0x90)
-
-  manufacturer_id = dict.nes("NES_CPU_RD", 0x8000)
-  chips.display_manufacturer(manufacturer_id)
-
-  device_id = dict.nes("NES_CPU_RD", 0x8001)
-  -- device_id = dict.nes("NES_CPU_RD", 0x8002)
-  found, device = chips.display_device(manufacturer_id, device_id)
-
-  -- SOP 0x23/0xAB 512KB top/bottom
-  -- SOP 0x51/0x57 256KB top/bottom
-  -- SOP 0xD6/0x58 1MB top/bottom
-  -- PLCC 0xB5/B6/B7 128-512KB SST
-
-  -- exit software
-  dict.nes("NES_CPU_WR", 0x8000, 0xF0)
-
-  return found, device
-end
 
 --- Program one byte to PRG-ROM flash and poll for completion.
 -- @param addr integer Address to program
@@ -318,35 +275,6 @@ end
  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝      ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝
 
 --]]
-
---- Read and identify the CHR-ROM flash manufacturer/device ID.
--- @return boolean found True when the flash chip is recognized
--- @return table device Flash chip information, or an empty table when unknown
-local function chr_rom_manf_id()
-  local manufacturer_id
-  local device_id
-  local found
-  local device
-
-  init_mapper()
-
-  log.section("Reading CHR-ROM manufacturer/device ID")
-
-  dict.nes("NES_PPU_WR", 0x1555, 0xAA)
-  dict.nes("NES_PPU_WR", 0x0AAA, 0x55)
-  dict.nes("NES_PPU_WR", 0x1555, 0x90)
-
-  manufacturer_id = dict.nes("NES_PPU_RD", 0x0000)
-  chips.display_manufacturer(manufacturer_id)
-
-  device_id = dict.nes("NES_PPU_RD", 0x0001)
-  found, device = chips.display_device(manufacturer_id, device_id)
-
-  -- exit software
-  dict.nes("NES_PPU_WR", 0x0000, 0xF0)
-
-  return found, device
-end
 
 --- Program one byte to CHR flash and poll for completion.
 -- @param addr integer Address to program, 0x0000-0x0FFF
@@ -730,7 +658,11 @@ local function process(process_opts, console_opts)
 
     -- attempt to read PRG-ROM flash ID
     if options.force_flash_test or (do_rom_write and prg_size_kb ~= 0) then
-      rv = prg_rom_manf_id()
+      init_mapper()
+      rv, prg_flash_chip = nes.prg_rom_get_chip(DEBUG, {
+        unlock_addr1 = 0xD555,
+        unlock_addr2 = 0xEAAA
+      })
       if not rv then
         if do_rom_write then
           log.error("Couldn't identify flash chip")
@@ -743,7 +675,11 @@ local function process(process_opts, console_opts)
 
     -- attempt to read CHR-ROM flash ID
     if options.force_flash_test or (do_rom_write and chr_size_kb ~= 0) then
-      rv = chr_rom_manf_id()
+      init_mapper()
+      rv, chr_flash_chip = nes.chr_rom_get_chip(DEBUG, {
+        unlock_addr1 = 0x1555,
+        unlock_addr2 = 0x0AAA
+      })
       if not rv then
         if do_rom_write then
           log.error("Couldn't identify flash chip")
@@ -910,16 +846,29 @@ local function process(process_opts, console_opts)
   if do_erase then
     -- erase PRG-ROM only if needed
     if prg_size_kb ~= 0 then
-      time.start()
-      prg_rom_erase()
-      time.report(prg_size_kb)
+      rv = nes.prg_rom_erase(prg_flash_chip, DEBUG, {
+        unlock_profile_name = "long",
+        unlock_addr1 = 0xD555,
+        unlock_addr2 = 0xEAAA
+      })
+      if not rv then
+        log.error("PRG-ROM couldn't be erased")
+        return false
+      end
     end
 
     -- erase CHR-ROM only if needed
     if chr_size_kb ~= 0 then
-      time.start()
-      chr_rom_erase()
-      time.report(chr_size_kb)
+      rv = nes.chr_rom_erase(chr_flash_chip, DEBUG,
+        {
+          unlock_profile_name = "long",
+          unlock_addr1 = 0x1555,
+          unlock_addr2 = 0x0AAA
+        })
+      if not rv then
+        log.error("CHR-ROM couldn't be erased")
+        return false
+      end
     end
   end
 

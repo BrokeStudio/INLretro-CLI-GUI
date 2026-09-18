@@ -6,7 +6,6 @@ local dict     = require "scripts.app.dict"
 local nes      = require "scripts.app.nes"
 local dump     = require "scripts.app.dump"
 local flash    = require "scripts.app.flash"
-local chips    = require "scripts.app.chips"
 local time     = require "scripts.app.time"
 local log      = require "scripts.app.log"
 local spinner  = require "scripts.app.spinner"
@@ -15,6 +14,7 @@ local help     = require "scripts.app.help"
 
 -- file constants and global variables
 local mapname  = "A53"
+local prg_flash_chip
 
 -- local functions
 
@@ -71,9 +71,6 @@ local function mirror_test(chr_size_kb, chr_ram_detected, retroprog_id, debug)
   -- put mapper in known state
   init_mapper()
 
-  -- CIRAM
-  log.point("CIRAM")
-
   -- 1 screen A
   dict.nes("NES_CPU_WR", 0x5000, 0x80)
   dict.nes("NES_CPU_WR", 0x8000, 0x00)
@@ -127,45 +124,6 @@ end
 ╚═╝     ╚═╝  ╚═╝ ╚═════╝       ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝
 
   --]]
-
---- Read and identify the PRG-ROM flash manufacturer/device ID.
--- @return boolean found True when the flash chip is recognized
--- @return table device Flash chip information, or an empty table when unknown
-local function prg_rom_manf_id()
-  init_mapper()
-
-  local manufacturer_id
-  local device_id
-  local found
-  local device
-
-  log.section("Reading PRG-ROM manufacturer/device ID")
-
-  -- exit software
-  dict.nes("NES_CPU_WR", 0x8000, 0xF0)
-
-  dict.nes("NES_CPU_WR", 0x8AAA, 0xAA)
-  dict.nes("NES_CPU_WR", 0x8555, 0x55)
-  dict.nes("NES_CPU_WR", 0x8AAA, 0x90)
-
-  manufacturer_id = dict.nes("NES_CPU_RD", 0x8000)
-  chips.display_manufacturer(manufacturer_id)
-
-  device_id = dict.nes("NES_CPU_RD", 0x8001)
-  found, device = chips.display_device(manufacturer_id, device_id)
-
-  if not found then
-    device_id = dict.nes("NES_CPU_RD", 0x8002) << 16
-    device_id = device_id | (dict.nes("NES_CPU_RD", 0x801C) << 8)
-    device_id = device_id | dict.nes("NES_CPU_RD", 0x801E)
-    found, device = chips.display_device(manufacturer_id, device_id)
-  end
-
-  -- exit software
-  dict.nes("NES_CPU_WR", 0x8000, 0xF0)
-
-  return found, device
-end
 
 --- Program one byte to PRG-ROM flash and poll for completion.
 -- @param addr integer Address to program, 0x8000-0xFFFF
@@ -265,99 +223,6 @@ local function prg_rom_dump(file, rom_size_kb, debug)
   spinner.clear()
 end
 
---host flash one bank at a time...
---this is controlled from the host side one bank at a time
---but requires mapper specific firmware flashing functions
---there is super slow version commented out that doesn't require MMC3 specific firmware code
-local function og_prg_rom_flash(file, rom_size_kb, debug)
-  init_mapper()
-
-  --test some bytes
-  --prg_rom_flash_byte(0x0000, 0xA5, true)
-  --prg_rom_flash_byte(0x0FFF, 0x5A, true)
-
-  print("\nProgramming PRG-ROM flash")
-  --initial testing of MMC3 with no specific MMC3 flash firmware functions 6min per 256KByte = 0.7KBps
-
-
-  local base_addr = 0x8000    --writes occur $8000-9FFF
-  local bank_size = 32 * 1024 --in CNROM mode 32KB PRG bank
-  local buff_size = 1         --number of bytes to write at a time
-  local cur_bank = 0
-  local num_banks = rom_size_kb * 1024 / bank_size
-
-  local byte_num --byte number gets reset for each bank
-  local byte_str, data, readdata
-
-
-  while cur_bank < num_banks do
-    if (cur_bank % 4 == 0) then
-      print("writing PRG bank: ", cur_bank, " of ", num_banks - 1)
-    end
-
-    --write the current bank to the mapper register
-    --nes_cpu_wr(0x5000, 0x81); //outer reg select mode
-    dict.nes("NES_CPU_WR", 0x5000, 0x81)
-    --nes_cpu_wr(0x8000, bank);         //outer bank
-    dict.nes("NES_CPU_WR", 0x8000, cur_bank)
-    --nes_cpu_wr(0x5000, 0x54); //
-    --dict.nes("NES_CPU_WR", 0x5000, 0x54)
-
-
-    --have the device write a bank worth of data
-
-    --[[  This version of the code programs a single byte at a time but doesn't require
-    --  MMC3 specific functions in the firmware
-    print("This is slow as molasses, but gets the job done")
-    byte_num = 0  --current byte within the bank
-    dict.nes("FLASH_3V_WR", 0x8AAA, 0xAA)
-    dict.nes("FLASH_3V_WR", 0x8555, 0x55)
-    dict.nes("FLASH_3V_WR", 0x8AAA, 0x20)
-    while byte_num < bank_size do
-
-      --read next byte from the file and convert to binary
-      byte_str = file:read(buff_size)
-      data = string.unpack("B", byte_str, 1)
-
-      --write the data
-      --SLOWEST OPTION: no firmware MMC3 specific functions 100% host flash algo:
-      prg_rom_flash_byte(base_addr+byte_num, data, false)   --0.7KBps
-
-      --EASIEST FIRMWARE SPEEDUP: 5x faster, create MMC3 write byte function:
-      --dict.nes("A53_TSSOP_FLASH_WR", base_addr+byte_num, data)  --3.8KBps (5.5x faster than above)
-      --NEXT STEP: firmware write page/bank function can use function pointer for the function above
-      --  this may cause issues with more complex algos
-      --  sometimes cur bank is needed
-      --  for this to work, need to have function post conditions meet the preconditions
-      --  that way host intervention is only needed for bank controls
-      --  Is there a way to allow for double buffering though..?
-      --  YES!  just think of the bank as a complete memory
-      --  this greatly simplifies things and is exactly where we want to go
-      --  This is completed below outside the byte while loop @ 39KBps
-
-      if (verify) then
-        readdata = dict.nes("NES_CPU_RD", base_addr+byte_num)
-        if readdata ~= data then
-          print("ERROR flashing byte number", byte_num, " in bank",cur_bank, " to flash ", data, readdata)
-        end
-      end
-
-      byte_num = byte_num + 1
-    end
-    dict.nes("FLASH_3V_WR", 0x8000, 0x90)
-    dict.nes("FLASH_3V_WR", 0x8000, 0x00)
-      --]]
-
-    --have the device write a bank worth of data
-    --FAST!  13sec for 512KB = 39KBps
-    flash.write_file(file, bank_size / 1024, { mapper = mapname, mem_type = "PRGROM" }, false)
-
-    cur_bank = cur_bank + 1
-  end
-
-  print("Done Programming PRG-ROM flash")
-end
-
 --- Program PRG-ROM contents from an already-open input file, one bank at a time.
 -- @param file file* Open binary input file
 -- @param rom_size_kb integer PRG-ROM size in kilobytes
@@ -365,11 +230,21 @@ end
 local function prg_rom_flash(file, rom_size_kb, debug)
   init_mapper()
 
+  log.section("Programming PRG-ROM")
   log.info("PRG-ROM size", rom_size_kb .. "KB")
 
   local bank_size = 32 -- 32KByte per PRG bank
   local cur_bank = 0
   local num_banks = math.floor(rom_size_kb / bank_size)
+
+  local options
+  if prg_flash_chip.buffer == true then
+    options = "USE_BUFFER"
+    log.info("Using buffer programming")
+  elseif prg_flash_chip.unlock_bypass == true then
+    options = "USE_UNLOCK_BYPASS"
+    log.info("Using unlock bypass mode")
+  end
 
   while cur_bank < num_banks do
     if debug then
@@ -384,7 +259,7 @@ local function prg_rom_flash(file, rom_size_kb, debug)
     dict.nes("NES_CPU_WR", 0x5000, 0x00)
 
     -- have the device write a bank worth of data
-    flash.write_file(file, bank_size, { mapper = mapname, mem_type = "PRGROM" }, false)
+    flash.write_file(file, bank_size, { mapper = mapname, mem_type = "PRGROM", options = options }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -392,30 +267,6 @@ local function prg_rom_flash(file, rom_size_kb, debug)
   spinner.clear()
   log.success("Done programming PRG-ROM")
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 local function read_gift(base, len)
   local rv
@@ -741,7 +592,8 @@ local function process(process_opts, console_opts)
     if not rv then return false end
 
     if options.force_flash_test or (do_rom_write and prg_size_kb ~= 0) then
-      rv = prg_rom_manf_id()
+      init_mapper()
+      rv, prg_flash_chip = nes.prg_rom_get_chip(DEBUG)
       if not rv then
         log.error("Couldn't identify flash chip")
         return false
@@ -840,30 +692,13 @@ local function process(process_opts, console_opts)
 
   -- erase the cart
   if do_erase then
-    local i = 0
-
     -- erase PRG-ROM only if needed
     if prg_size_kb ~= 0 then
-      log.section("Erasing PRG-ROM")
-      time.start()
-      dict.nes("NES_CPU_WR", 0x8AAA, 0xAA)
-      dict.nes("NES_CPU_WR", 0x8555, 0x55)
-      dict.nes("NES_CPU_WR", 0x8AAA, 0x80)
-      dict.nes("NES_CPU_WR", 0x8AAA, 0xAA)
-      dict.nes("NES_CPU_WR", 0x8555, 0x55)
-      dict.nes("NES_CPU_WR", 0x8AAA, 0x10)
-
-      -- TODO create some function to pass the read value
-      -- that's smart enough to figure out if the board is actually erasing or not
-      rv = dict.nes("NES_CPU_RD", 0x8000)
-      while rv ~= dict.nes("NES_CPU_RD", 0x8000) do
-        spinner.update("Erasing")
-        rv = dict.nes("NES_CPU_RD", 0x8000)
-        i = i + 1
+      rv = nes.prg_rom_erase(prg_flash_chip, DEBUG)
+      if not rv then
+        log.error("PRG-ROM couldn't be erased")
+        return false
       end
-      spinner.clear()
-      log.success("Done erasing PRG-ROM", i .. " naks")
-      time.report(prg_size_kb)
     end
   end
 
@@ -876,51 +711,18 @@ local function process(process_opts, console_opts)
 
   -- program file to the cart
   if do_rom_write then
-    log.section("Programming PRG-ROM")
-
-    -- -- set bank
-    -- dict.nes("NES_CPU_WR", 0x5000, 0x81)
-    -- dict.nes("NES_CPU_WR", 0x8000, cur_bank)
-    -- dict.nes("NES_CPU_WR", 0x5000, 0x00)
-
-    -- dict.nes("NES_CPU_WR", 0x8AAA, 0xAA);
-    -- dict.nes("NES_CPU_WR", 0x8555, 0x55);
-    -- dict.nes("NES_CPU_WR", 0x8AAA, 0xA0);
-    -- dict.nes("NES_CPU_WR", 0x8000, 0xAA);
-
-
-    -- -- -- enter unlock bypass mode
-    -- -- dict.nes("NES_CPU_WR", 0x8AAA, 0xAA);
-    -- -- dict.nes("NES_CPU_WR", 0x8555, 0x55);
-    -- -- dict.nes("NES_CPU_WR", 0x8AAA, 0x20);
-
-    -- -- -- write data
-    -- -- dict.nes("NES_CPU_WR", 0x8000, 0xA0);
-    -- -- dict.nes("NES_CPU_WR", 0x8000, 0xAA);
-
-    -- rv = dict.nes("NES_CPU_WR", 0x8000)
-    -- while rv ~= dict.nes("NES_CPU_WR", 0x8000) do
-    --   rv = dict.nes("NES_CPU_WR", 0x8000)
-    -- end
-
-    -- -- -- exit unlock bypasse mode
-    -- -- dict.nes("NES_CPU_WR", 0x8000, 0x90);
-    -- -- dict.nes("NES_CPU_WR", 0x8000, 0x00);
-
-    -- nes.cpu_rd(0x8000)
-
-    -- open file
-    file = assert(io.open(rom_write_file.filename, "rb"))
-
-    -- flash cart
     if prg_size_kb ~= 0 then
+      -- open file
+      file = assert(io.open(rom_write_file.filename, "rb"))
+
+      -- flash cart
       time.start()
       prg_rom_flash(file, prg_size_kb, DEBUG)
       time.report(prg_size_kb)
-    end
 
-    -- close file
-    assert(file:close())
+      -- close file
+      assert(file:close())
+    end
   end
 
   --[[
@@ -955,191 +757,6 @@ local function process(process_opts, console_opts)
       log.success("Flash successfully verified")
     else
       log.error("Flash verification did not match")
-    end
-  end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  --[[
-    nes.cpu_wr(0x5000, 0x81)
-    nes.cpu_wr(0x8000, 7)
-
-    nes.cpu_rd(0xfef0)
-    nes.cpu_rd(0xfef1)
-    nes.cpu_rd(0xfef2)
-    nes.cpu_rd(0xfef3)
-    nes.cpu_rd(0xfef4)
-    nes.cpu_rd(0xfef5)
-    nes.cpu_rd(0xfef6)
-    nes.cpu_rd(0xfef7)
-    nes.cpu_rd(0xfef8)
-    nes.cpu_rd(0xfef9)
-    nes.cpu_rd(0xfefa)
-    nes.cpu_rd(0xfefb)
-    nes.cpu_rd(0xfefc)
-    nes.cpu_rd(0xfefd)
-    nes.cpu_rd(0xfefe)
-    nes.cpu_rd(0xfeff)
-
-  do return end
-  --]]
-
-  --dump the cart to dumpfile
-  if read then
-    print("\nDumping PRG & CHR ROMs...")
-
-    --initialize the mapper for dumping
-    init_mapper(debug)
-
-    file = assert(io.open(dumpfile, "wb"))
-
-    --create header: pass open & empty file & rom sizes
-    if dump_filetype == "nes" then
-      --create header: pass open & empty file & rom sizes
-      create_header(file, prg_size_kb, chr_size_kb)
-    end
-
-    -- dump cart to file
-    prg_rom_dump(file, prg_size_kb, true) --false)
-    if chr_size_kb ~= 0 then
-      dump_chrrom(file, chr_size_kb, false)
-    end
-
-    -- close file
-    assert(file:close())
-
-    print("DONE Dumping PRG & CHR ROMs")
-  end
-
-  -- erase the cart
-  --  erase = nil
-  if erase then
-    --initialize the mapper for erasing
-    init_mapper(debug)
-
-    print("\nerasing action53 tsop takes ~30sec")
-
-    print("erasing PRG-ROM")
-    --A0-A14 are all directly addressable in CNROM mode
-    --only A0-A11 are required to be valid for tsop-48
-    --and mapper writes don't affect PRG banking
-    dict.nes("FLASH_3V_WR", 0x8AAA, 0xAA)
-    dict.nes("FLASH_3V_WR", 0x8555, 0x55)
-    dict.nes("FLASH_3V_WR", 0x8AAA, 0x80)
-    dict.nes("FLASH_3V_WR", 0x8AAA, 0xAA)
-    dict.nes("FLASH_3V_WR", 0x8555, 0x55)
-    dict.nes("FLASH_3V_WR", 0x8AAA, 0x10)
-    rv = dict.nes("NES_CPU_RD", 0x8000)
-
-    local i = 0
-
-    -- TODO create some function to pass the read value
-    -- that's smart enough to figure out if the board is actually erasing or not
-    while (rv ~= 0xFF) do
-      rv = dict.nes("NES_CPU_RD", 0x8000)
-      i = i + 1
-    end
-    print(i, "naks, done erasing prg.")
-  end
-  --[[
-nes.cpu_wr(0x5000, 0x81)
-nes.cpu_wr(0x8000, 0x00)
-nes.cpu_wr(0x5000, 0x54)
-
-nes.cpu_rd(0xf4f6)
-
-nes.cpu_wr(0x8AAA, 0xAA)
-nes.cpu_wr(0x8555, 0x55)
-nes.cpu_wr(0x8AAA, 0x20)
-
-nes.cpu_wr(0xf4f6, 0xa0)
-nes.cpu_wr(0xf4f6, 0xaa)
-
-nes.cpu_wr(0x8000, 0x90)
-nes.cpu_wr(0x8000, 0x00)
-nes.cpu_wr(0x8000, 0xF0)
-
-nes.cpu_rd(0xf4f6)
-
-  do return end
-  --]]
-  --program flashfile to the cart
-  if program then
-    --initialize the mapper for dumping
-    init_mapper(debug)
-
-    --open file
-    file = assert(io.open(flashfile, "rb"))
-    --determine if auto-doubling, deinterleaving, etc,
-    --needs done to make board compatible with rom
-
-    --not susceptible to bus conflicts
-
-    if flash_filetype == "nes" then
-      --advance past the 16byte header
-      file:read(16)
-    end
-
-    --flash cart
-    time.start()
-    prg_rom_flash(file, prg_size_kb, true)
-    time.report(prg_size_kb)
-
-    -- close file
-    assert(file:close())
-  end
-
-  -- verify flash file is on the cart
-  if verify then
-    --for now let's just dump the file and verify manually
-    print("\nPost dumping PRG & CHR ROMs...")
-
-    --initialize the mapper for dumping
-    init_mapper(debug)
-
-    file = assert(io.open(verifyfile, "wb"))
-
-    if verify_filetype == "nes" then
-      --create header: pass open & empty file & rom sizes
-      create_header(file, prg_size_kb, chr_size_kb)
-    end
-
-    -- dump cart to file
-    time.start()
-    prg_rom_dump(file, prg_size_kb, false)
-    time.report(prg_size_kb)
-    print("DONE post dumping PRG & CHR ROMs")
-
-    -- close file
-    assert(file:close())
-
-    -- compare the flash file vs post dump file
-    local offset
-    if flash_filetype == "nes" then offset = 16 else offset = false end
-    if (files.compare(verifyfile, flashfile, true, false, offset)) then
-      print("\nSUCCESS! Flash verified")
-    else
-      print("\n\n\n FAILURE! Flash verification did not match")
     end
   end
 

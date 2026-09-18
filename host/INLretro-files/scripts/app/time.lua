@@ -4,7 +4,7 @@ local time = {}
 -- import required modules
 local log = require "scripts.app.log"
 
--- file constants & variables
+-- file constants and global variables
 local tstart
 
 -- local functions

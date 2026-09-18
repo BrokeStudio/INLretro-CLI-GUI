@@ -6,7 +6,6 @@ local dict         = require "scripts.app.dict"
 local nes          = require "scripts.app.nes"
 local dump         = require "scripts.app.dump"
 local flash        = require "scripts.app.flash"
-local chips        = require "scripts.app.chips"
 local time         = require "scripts.app.time"
 local log          = require "scripts.app.log"
 local spinner      = require "scripts.app.spinner"
@@ -15,6 +14,8 @@ local help         = require "scripts.app.help"
 
 -- file constants and global variables
 local mapname      = "VRC6b"
+local prg_flash_chip
+local chr_flash_chip
 
 local PRG_16K      = 0x8000 -- 16k PRG Select ($8000-$8003)
 local PRG_8K       = 0xC000 --	8k PRG Select ($C000)
@@ -130,64 +131,6 @@ end
 
 --]]
 
---- Read and identify the PRG-ROM flash manufacturer/device ID.
--- @return boolean found True when the flash chip is recognized
--- @return table device Flash chip information, or an empty table when unknown
-local function prg_rom_manf_id()
-  local manufacturer_id
-  local device_id
-  local found
-  local device
-
-  init_mapper()
-
-  log.section("Reading PRG-ROM manufacturer/device ID")
-
-
-  --       15 14 13 12
-  -- $8000  1  0  0  0 0000 0000 0000
-  -- $C000  1  1  0  0 0000 0000 0000
-
-  --       15 14 13 12
-  -- $D555  1  1  0  1
-  -- $AAAA  1  0  1  0
-
-  --       15 14 13 12
-  -- $5555  0  1  0  1  0101 0101 0101
-  -- $D555  1  1  0  1  0101 0101 0101
-  --        [-----] => bank C = 0x02
-
-  --       15 14 13 12
-  -- $2AAA  0  0  1  0  1010 1010 1010
-  -- $AAAA  1  0  1  0  1010 1010 1010
-  -- $EAAA  1  1  1  0  1010 1010 1010 nope :(
-  --        [--] => bank 8 = 0x00
-
-  --       15 14 13 12
-  -- $8000  1  0  0  0  0000 0000 0000
-
-  -- mapper writes affect PRG banking /!\
-  dict.nes("NES_CPU_WR", 0x8000, 0xF0) -- force exit software
-
-  dict.nes("NES_CPU_WR", 0xD555, 0xAA) --D555 & F003 (mirror) = D001 (CHR bank)
-  dict.nes("NES_CPU_WR", 0xAAAA, 0x55) --AAAA & F003 (mirror) = A002 (no register)
-  dict.nes("NES_CPU_WR", 0xD555, 0x90) --D555
-
-  manufacturer_id = dict.nes("NES_CPU_RD", 0x8000)
-  chips.display_manufacturer(manufacturer_id)
-
-  device_id = dict.nes("NES_CPU_RD", 0x8001)
-  found, device = chips.display_device(manufacturer_id, device_id)
-
-  -- exit software
-  dict.nes("NES_CPU_WR", 0x8000, 0xF0)
-
-  -- reset $8000-$BFFF bank to 0
-  dict.nes("NES_CPU_WR", 0x8000, 0x00)
-
-  return found, device
-end
-
 --- Program one byte to PRG-ROM flash and poll for completion.
 -- @param addr integer Address to program
 -- @param value integer 8-bit value to write
@@ -282,6 +225,15 @@ local function prg_rom_flash(file, rom_size_kb, debug)
   local cur_bank = 0
   local num_banks = math.floor(rom_size_kb / bank_size)
 
+  local options
+  if prg_flash_chip.buffer == true then
+    options = "USE_BUFFER"
+    log.info("Using buffer programming")
+  elseif prg_flash_chip.unlock_bypass == true then
+    options = "USE_UNLOCK_BYPASS"
+    log.info("Using unlock bypass mode")
+  end
+
   -- this is a custom register
   -- that allow flashing data
   -- in the $6000-$7FFF area
@@ -302,7 +254,7 @@ local function prg_rom_flash(file, rom_size_kb, debug)
     -- if debug then print("get bank:", dict.nes("GET_CUR_BANK")) end
 
     --have the device write a bank worth of data
-    flash.write_file(file, bank_size, { mapper = mapname, mem_type = "PRGROM" }, false)
+    flash.write_file(file, bank_size, { mapper = mapname, mem_type = "PRGROM", options = options }, false)
 
     cur_bank = cur_bank + 1
   end
@@ -322,47 +274,6 @@ end
  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝      ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝
 
 --]]
-
---- Read and identify the CHR-ROM flash manufacturer/device ID.
--- @param debug? boolean Enable verbose progress logging
--- @return boolean found True when the flash chip is recognized
--- @return table device Flash chip information, or an empty table when unknown
-local function chr_rom_manf_id(debug)
-  local manufacturer_id
-  local device_id
-  local found
-  local device
-
-  init_mapper()
-
-  log.section("Reading CHR-ROM manufacturer/device ID")
-
-
-  --       17 16 15 14 13 12 11 10
-  -- $0000  0  0  0  0  0  0  0  0 00 0000 0000
-  -- $1000  0  0  0  0  0  1  0  0 00 0000 0000
-
-  -- $1555  0  0  0  0  0  1  0  1 01 0101 0101
-  -- $1AAA  0  0  0  0  0  1  1  0 10 1010 1010
-
-  -- $5555  0  0  0  1  0  1  0  1 01 0101 0101
-  -- $2AAA  0  0  0  0  1  0  1  0 10 1010 1010
-
-  dict.nes("NES_PPU_WR", 0x1555, 0xAA)
-  dict.nes("NES_PPU_WR", 0x1AAA, 0x55)
-  dict.nes("NES_PPU_WR", 0x1555, 0x90)
-
-  manufacturer_id = dict.nes("NES_PPU_RD", 0x0000)
-  chips.display_manufacturer(manufacturer_id)
-
-  device_id = dict.nes("NES_PPU_RD", 0x0001)
-  found, device = chips.display_device(manufacturer_id, device_id)
-
-  -- exit software
-  dict.nes("NES_PPU_WR", 0x0000, 0xF0)
-
-  return found, device
-end
 
 --- Program one byte to CHR flash and poll for completion.
 -- @param addr integer Address to program, 0x0000-0x0FFF
@@ -796,7 +707,8 @@ local function process(process_opts, console_opts)
 
     -- attempt to read PRG-ROM flash ID
     if options.force_flash_test or (do_rom_write and prg_size_kb ~= 0) then
-      rv = prg_rom_manf_id()
+      init_mapper()
+      rv, prg_flash_chip = nes.prg_rom_get_chip(DEBUG)
       if not rv then
         if do_rom_write then
           log.error("Couldn't identify flash chip")
@@ -806,10 +718,10 @@ local function process(process_opts, console_opts)
         end
       end
     end
-
     -- attempt to read CHR-ROM flash ID
     if options.force_flash_test or (do_rom_write and chr_size_kb ~= 0) then
-      rv = chr_rom_manf_id()
+      init_mapper()
+      rv, chr_flash_chip = nes.chr_rom_get_chip(DEBUG)
       if not rv then
         if do_rom_write then
           log.error("Couldn't identify flash chip")
@@ -974,58 +886,22 @@ local function process(process_opts, console_opts)
 
   -- erase the cart
   if do_erase then
-    local i = 0
-
-
     -- erase PRG-ROM only if needed
     if prg_size_kb ~= 0 then
-      init_mapper()
-      log.section("Erasing PRG-ROM")
-      time.start()
-      dict.nes("NES_CPU_WR", 0xD555, 0xAA)
-      dict.nes("NES_CPU_WR", 0xAAAA, 0x55)
-      dict.nes("NES_CPU_WR", 0xD555, 0x80)
-      dict.nes("NES_CPU_WR", 0xD555, 0xAA)
-      dict.nes("NES_CPU_WR", 0xAAAA, 0x55)
-      dict.nes("NES_CPU_WR", 0xD555, 0x10)
-
-      -- TODO create some function to pass the read value
-      -- that's smart enough to figure out if the board is actually erasing or not
-      rv = dict.nes("NES_CPU_RD", 0x8000)
-      while rv ~= dict.nes("NES_CPU_RD", 0x8000) do
-        spinner.update("Erasing")
-        rv = dict.nes("NES_CPU_RD", 0x8000)
-        i = i + 1
+      rv = nes.prg_rom_erase(prg_flash_chip, DEBUG)
+      if not rv then
+        log.error("PRG-ROM couldn't be erased")
+        return false
       end
-      spinner.clear()
-      log.success("Done erasing PRG-ROM", i .. " naks")
-      time.report(prg_size_kb)
     end
 
     -- erase CHR-ROM only if needed
     if chr_size_kb ~= 0 then
-      init_mapper()
-      log.section("Erasing CHR-ROM")
-      time.start()
-      dict.nes("NES_PPU_WR", 0x1555, 0xAA)
-      dict.nes("NES_PPU_WR", 0x1AAA, 0x55)
-      dict.nes("NES_PPU_WR", 0x1555, 0x80)
-      dict.nes("NES_PPU_WR", 0x1555, 0xAA)
-      dict.nes("NES_PPU_WR", 0x1AAA, 0x55)
-      dict.nes("NES_PPU_WR", 0x1555, 0x10)
-
-      -- TODO create some function to pass the read value
-      -- that's smart enough to figure out if the board is actually erasing or not
-      i = 0
-      rv = dict.nes("NES_PPU_RD", 0x0000)
-      while rv ~= dict.nes("NES_PPU_RD", 0x0000) do
-        spinner.update("Erasing")
-        rv = dict.nes("NES_PPU_RD", 0x0000)
-        i = i + 1
+      rv = nes.chr_rom_erase(chr_flash_chip, DEBUG)
+      if not rv then
+        log.error("CHR-ROM couldn't be erased")
+        return false
       end
-      spinner.clear()
-      log.success("Done erasing CHR-ROM", i .. " naks")
-      time.report(chr_size_kb)
     end
   end
 

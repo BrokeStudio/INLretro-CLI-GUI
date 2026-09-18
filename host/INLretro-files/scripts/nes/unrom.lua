@@ -6,7 +6,6 @@ local dict    = require "scripts.app.dict"
 local nes     = require "scripts.app.nes"
 local dump    = require "scripts.app.dump"
 local flash   = require "scripts.app.flash"
-local chips   = require "scripts.app.chips"
 local time    = require "scripts.app.time"
 local log     = require "scripts.app.log"
 local spinner = require "scripts.app.spinner"
@@ -15,6 +14,7 @@ local help    = require "scripts.app.help"
 
 -- file constants and global variables
 local mapname = "UxROM"
+local prg_flash_chip
 local bank_table_base
 
 -- local functions
@@ -92,42 +92,6 @@ local function find_bank_table(prg_size_kb)
 
   -- compute the cpu offset of this data
   return 0xC000 + position_in_fixed_bank - 1
-end
-
---- Read and identify the PRG-ROM flash manufacturer/device ID.
--- @return boolean found True when the flash chip is recognized
--- @return table device Flash chip information, or an empty table when unknown
-local function prg_rom_manf_id()
-  init_mapper()
-
-  local manufacturer_id
-  local device_id
-  local found
-  local device
-
-  log.section("Reading PRG-ROM manufacturer/device ID")
-
-  -- enter software mode
-  -- ROMSEL controls PRG-ROM /OE which needs to be low for flash writes
-  -- So unlock commands need to be addressed below $8000
-  -- DISCRETE_EXP0_PRGROM_WR doesn't toggle /ROMSEL by definition though, so A15 is unused
-  --        15 14 13 12
-  --  0x5 = 0b  0  1  0  1  -> $5555
-  --  0x2 = 0b  0  0  1  0  -> $2AAA
-  dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x5555, 0xAA)
-  dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x2AAA, 0x55)
-  dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x5555, 0x90)
-
-  manufacturer_id = dict.nes("NES_CPU_RD", 0x8000)
-  chips.display_manufacturer(manufacturer_id)
-
-  device_id = dict.nes("NES_CPU_RD", 0x8001)
-  found, device = chips.display_device(manufacturer_id, device_id)
-
-  -- exit software
-  dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x8000, 0xF0)
-
-  return found, device
 end
 
 --- Program one byte to PRG-ROM flash and poll for completion.
@@ -496,7 +460,13 @@ local function process(process_opts, console_opts)
     end
 
     if do_rom_write and prg_size_kb ~= 0 then
-      rv = prg_rom_manf_id()
+      -- ROMSEL controls PRG-ROM /OE which needs to be low for flash writes
+      -- So unlock commands need to be addressed below $8000
+      -- DISCRETE_EXP0_PRGROM_WR doesn't toggle /ROMSEL by definition though, so A15 is unused
+      --        15 14 13 12
+      --  0x5 = 0b  0  1  0  1  -> $5555
+      --  0x2 = 0b  0  0  1  0  -> $2AAA
+      rv, prg_flash_chip = nes.prg_rom_get_chip(DEBUG, { opcode = "DISCRETE_EXP0_PRGROM_WR" })
       if not rv then
         log.error("Couldn't identify flash chip")
         return false
@@ -555,31 +525,14 @@ local function process(process_opts, console_opts)
 
   -- erase the cart
   if do_erase then
-    local i = 0
-
     -- erase PRG-ROM only if needed
     if prg_size_kb ~= 0 then
       init_mapper()
-      log.section("Erasing ROM")
-      time.start()
-      dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x5555, 0xAA)
-      dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x2AAA, 0x55)
-      dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x5555, 0x80)
-      dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x5555, 0xAA)
-      dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x2AAA, 0x55)
-      dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x5555, 0x10)
-
-      -- TODO create some function to pass the read value
-      -- that's smart enough to figure out if the board is actually erasing or not
-      rv = dict.nes("NES_CPU_RD", 0x8000)
-      while rv ~= dict.nes("NES_CPU_RD", 0x8000) do
-        spinner.update("Erasing")
-        rv = dict.nes("NES_CPU_RD", 0x8000)
-        i = i + 1
+      rv = nes.prg_rom_erase(prg_flash_chip, DEBUG, { opcode = "DISCRETE_EXP0_PRGROM_WR" })
+      if not rv then
+        log.error("PRG-ROM couldn't be erased")
+        return false
       end
-      spinner.clear()
-      log.success("Done erasing PRG-ROM", i .. " naks")
-      time.report(prg_size_kb)
     end
   end
 
