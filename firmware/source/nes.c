@@ -1345,10 +1345,12 @@ uint8_t vrc6_prgrom_flash_wr(uint16_t addr, uint8_t data)
   uint8_t rv;
   uint16_t timeout = 0xffff;
 
-  // unlock and write data
+  // unlock the flash
   nes_cpu_wr(0xD555, 0xAA);
   nes_cpu_wr(0xAAAA, 0x55);
   nes_cpu_wr(0xD555, 0xA0);
+
+  // write the data
   nes_cpu_wr(addr, data);
 
   do {
@@ -1536,11 +1538,13 @@ uint8_t mmc1_prgrom_flash_wr(uint16_t addr, uint8_t data)
     mmc1_wr(0xC000, 0x10, 0);
   }
 
-  // unlock and write data
   // all these writes will be blocked by MMC1 mapper register due to valid write above that ends with a write
+  // unlock the flash
   nes_cpu_wr(0xD555, 0xAA);
   nes_cpu_wr(0xAAAA, 0x55);
   nes_cpu_wr(0xD555, 0xA0);
+
+  // write the data
   nes_cpu_wr(addr, data);
 
   do {
@@ -1684,10 +1688,12 @@ uint8_t mmc3_prgrom_flash_wr(uint16_t addr, uint8_t data)
   uint8_t rv;
   uint16_t timeout = 0xffff;
 
-  // unlock and write data
+  // unlock the flash
   nes_cpu_wr(0xD555, 0xAA);
   nes_cpu_wr(0xAAAA, 0x55);
   nes_cpu_wr(0xD555, 0xA0);
+
+  // write the data
   nes_cpu_wr(addr, data);
 
   // reset $8000 bank select register to a CHR reg

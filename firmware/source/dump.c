@@ -43,26 +43,6 @@ uint8_t dump_buff(buffer* buff)
         ~FALSE);
       break;
 
-    case NESPPU_1KB:
-      // mapper bits 2-5 specifies NES PPU A10-13
-      if(buff->mapper & 0xC3) { // make sure bits 7, 6, 1, & 0 aren't set
-        // mapper can only have bits 2-5 set
-        return ERR_BUFF_PART_NUM_RANGE;
-      }
-      addrH |= buff->mapper; // PPU A10-13 get set based on mapper
-      buff->cur_byte = nes_ppu_page_rd_poll(buff->data, addrH, buff->id, buff->last_idx, ~FALSE);
-      break;
-
-    case NESPPU_1KB_TOGGLE:
-      // mapper bits 2-5 specifies NES PPU A10-13
-      if(buff->mapper & 0xC3) { // make sure bits 7, 6, 1, & 0 aren't set
-        // mapper can only have bits 2-5 set
-        return ERR_BUFF_PART_NUM_RANGE;
-      }
-      addrH |= buff->mapper; // PPU A10-13 get set based on mapper
-      buff->cur_byte = nes_ppu_page_rd_toggle(buff->data, addrH, buff->id, buff->last_idx, ~FALSE);
-      break;
-
     case NESCPU_PAGE:
       // mapper byte specifies CPU A15-8
       addrH |= buff->mapper;
@@ -83,6 +63,26 @@ uint8_t dump_buff(buffer* buff)
         // id contains MSb of page when <256B buffer
         buff->last_idx,
         ~FALSE);
+      break;
+
+    case NESPPU_1KB:
+      // mapper bits 2-5 specifies NES PPU A10-13
+      if(buff->mapper & 0xC3) { // make sure bits 7, 6, 1, & 0 aren't set
+        // mapper can only have bits 2-5 set
+        return ERR_BUFF_PART_NUM_RANGE;
+      }
+      addrH |= buff->mapper; // PPU A10-13 get set based on mapper
+      buff->cur_byte = nes_ppu_page_rd_poll(buff->data, addrH, buff->id, buff->last_idx, ~FALSE);
+      break;
+
+    case NESPPU_1KB_TOGGLE:
+      // mapper bits 2-5 specifies NES PPU A10-13
+      if(buff->mapper & 0xC3) { // make sure bits 7, 6, 1, & 0 aren't set
+        // mapper can only have bits 2-5 set
+        return ERR_BUFF_PART_NUM_RANGE;
+      }
+      addrH |= buff->mapper; // PPU A10-13 get set based on mapper
+      buff->cur_byte = nes_ppu_page_rd_toggle(buff->data, addrH, buff->id, buff->last_idx, ~FALSE);
       break;
 
     case NESPPU_PAGE:

@@ -670,17 +670,41 @@ uint8_t flash_buff(buffer* buff)
 
     case PRGROM: //$8000
       if(buff->mapper == NROM) {
-        // used by other 32KB PRG bank discrete mappers like BNROM, CNROM, & color dreams
-        result = write_page_verify_8((addrH + 0x80), buff, nrom_prgrom_flash_wr);
+        if(buff->part_num == USE_BUFFER) {
+          return ERR_BUFF_PART_NUM_RANGE;
+        } else if(buff->part_num == USE_UNLOCK_BYPASS) {
+          return ERR_BUFF_PART_NUM_RANGE;
+        } else {
+          // used by other 32KB PRG bank discrete mappers like BNROM, CNROM, & color dreams
+          result = write_page_verify_8((addrH + 0x80), buff, nrom_prgrom_flash_wr);
+        }
       }
       if(buff->mapper == MMC1) {
-        result = write_page_verify_8((addrH + 0x80), buff, mmc1_prgrom_flash_wr);
+        if(buff->part_num == USE_BUFFER) {
+          return ERR_BUFF_PART_NUM_RANGE;
+        } else if(buff->part_num == USE_UNLOCK_BYPASS) {
+          return ERR_BUFF_PART_NUM_RANGE;
+        } else {
+          result = write_page_verify_8((addrH + 0x80), buff, mmc1_prgrom_flash_wr);
+        }
       }
       if(buff->mapper == UxROM) {
-        result = write_page_verify_8((addrH + 0x80), buff, unrom_prgrom_flash_wr);
+        if(buff->part_num == USE_BUFFER) {
+          return ERR_BUFF_PART_NUM_RANGE;
+        } else if(buff->part_num == USE_UNLOCK_BYPASS) {
+          return ERR_BUFF_PART_NUM_RANGE;
+        } else {
+          result = write_page_verify_8((addrH + 0x80), buff, unrom_prgrom_flash_wr);
+        }
       }
       if(buff->mapper == MMC3) {
-        result = write_page_verify_8((addrH + 0x80), buff, mmc3_prgrom_flash_wr);
+        if(buff->part_num == USE_BUFFER) {
+          return ERR_BUFF_PART_NUM_RANGE;
+        } else if(buff->part_num == USE_UNLOCK_BYPASS) {
+          return ERR_BUFF_PART_NUM_RANGE;
+        } else {
+          result = write_page_verify_8((addrH + 0x80), buff, mmc3_prgrom_flash_wr);
+        }
       }
       // SOP-44
       /*
@@ -691,56 +715,114 @@ uint8_t flash_buff(buffer* buff)
       // TODO use mapper variant to differentiate between the two
       // PLCC-32
       if(buff->mapper == MMC4) {
-        result = write_page_verify_8((addrH + 0x80), buff, mmc4_prgrom_flash_wr);
+        if(buff->part_num == USE_BUFFER) {
+          return ERR_BUFF_PART_NUM_RANGE;
+        } else if(buff->part_num == USE_UNLOCK_BYPASS) {
+          return ERR_BUFF_PART_NUM_RANGE;
+        } else {
+          result = write_page_verify_8((addrH + 0x80), buff, mmc4_prgrom_flash_wr);
+        }
       }
       if(buff->mapper == MM2) {
-        // addrH &= 0b1011 1111 A14 must always be low
-        addrH &= 0x3F;
-        addrH |= 0x80; // A15 doesn't apply to exp0 write, but needed for read back
-        // write bank value
-        // page_num shift by 6 bits A14 >> A8(0)
-        bank = buff->page_num >> 6;
-        // bank gets written inside flash algo
-        write_page_mm2(bank, addrH, 0x5555, 0x2AAA, buff, disc_push_exp0_prgrom_wr, nes_cpu_rd);
+        if(buff->part_num == USE_BUFFER) {
+          return ERR_BUFF_PART_NUM_RANGE;
+        } else if(buff->part_num == USE_UNLOCK_BYPASS) {
+          return ERR_BUFF_PART_NUM_RANGE;
+        } else {
+          // addrH &= 0b1011 1111 A14 must always be low
+          addrH &= 0x3F;
+          addrH |= 0x80; // A15 doesn't apply to exp0 write, but needed for read back
+          // write bank value
+          // page_num shift by 6 bits A14 >> A8(0)
+          bank = buff->page_num >> 6;
+          // bank gets written inside flash algo
+          write_page_mm2(bank, addrH, 0x5555, 0x2AAA, buff, disc_push_exp0_prgrom_wr, nes_cpu_rd);
+        }
       }
       if(buff->mapper == MAP30) {
-        result = write_page_verify_8((addrH + 0x80), buff, map30_prgrom_flash_wr);
+        if(buff->part_num == USE_BUFFER) {
+          return ERR_BUFF_PART_NUM_RANGE;
+        } else if(buff->part_num == USE_UNLOCK_BYPASS) {
+          return ERR_BUFF_PART_NUM_RANGE;
+        } else {
+          result = write_page_verify_8((addrH + 0x80), buff, map30_prgrom_flash_wr);
+        }
       }
       if(buff->mapper == CNINJA) {
-        // addrH &= 0b1001 1111 A14-13 must always be low
-        addrH &= 0x1F;
-        addrH |= 0x80;
-        // write bank value
-        // page_num shift by 5 bits A13 >> A8(0)
-        bank = buff->page_num >> 5;
-        nes_cpu_wr((0x6000), 0xA5); // select desired bank
-        nes_cpu_wr((0xFFFF), bank); // select desired bank
-        write_page_cninja(0, addrH, 0xD555, 0xAAAA, buff, nes_cpu_wr, nes_cpu_rd);
+        if(buff->part_num == USE_BUFFER) {
+          return ERR_BUFF_PART_NUM_RANGE;
+        } else if(buff->part_num == USE_UNLOCK_BYPASS) {
+          return ERR_BUFF_PART_NUM_RANGE;
+        } else {
+          // addrH &= 0b1001 1111 A14-13 must always be low
+          addrH &= 0x1F;
+          addrH |= 0x80;
+          // write bank value
+          // page_num shift by 5 bits A13 >> A8(0)
+          bank = buff->page_num >> 5;
+          nes_cpu_wr((0x6000), 0xA5); // select desired bank
+          nes_cpu_wr((0xFFFF), bank); // select desired bank
+          write_page_cninja(0, addrH, 0xD555, 0xAAAA, buff, nes_cpu_wr, nes_cpu_rd);
+        }
       }
       if(buff->mapper == A53) {
-        result = write_page_verify_8((addrH + 0x80), buff, a53_prgrom_flash_wr);
+        if(buff->part_num == USE_BUFFER) {
+          result = buffer_write_page_verify((addrH + 0x80), buff, nes_cpu_wr, nes_cpu_rd);
+        } else if(buff->part_num == USE_UNLOCK_BYPASS) {
+          // enter unlock mode bypass
+          nes_cpu_wr(0x8AAA, 0xAA);
+          nes_cpu_wr(0x8555, 0x55);
+          nes_cpu_wr(0x8AAA, 0x20);
+
+          // write data
+          result = write_page_verify_8((addrH + 0x80), buff, rnbw_prgrom_flash_unlock_wr);
+
+          // exit unlock mode bypass
+          nes_cpu_wr(0x8000, 0x90);
+          nes_cpu_wr(0x8000, 0x00);
+
+          // reset the flash chip, supposed to exit too
+          nes_cpu_wr(0x8000, 0xF0);
+        } else {
+          result = write_page_verify_8((addrH + 0x80), buff, vrc6_prgrom_flash_wr);
+        }
+
+        // result = write_page_verify_8((addrH + 0x80), buff, a53_prgrom_flash_wr);
       }
       if(buff->mapper == A53_512K) {
         // write_page_verify_8( (0x80+addrH), buff, a53_512k_prgrom_flash_wr);
         result = write_page_verify_8((addrH + 0x80), buff, a53_512k_prgrom_flash_wr);
       }
       if(buff->mapper == EZNSF) {
-        // enter unlock bypass mode
-        nes_m2_high_wr(0x9AAA, 0xAA);
-        nes_m2_high_wr(0x9555, 0x55);
-        nes_m2_high_wr(0x9AAA, 0x20);
+        if(buff->part_num == USE_BUFFER) {
+          result = buffer_write_page_verify((addrH + 0x80), buff, nes_cpu_wr, nes_cpu_rd);
+        } else if(buff->part_num == USE_UNLOCK_BYPASS) {
+          // enter unlock mode bypass
+          nes_cpu_wr(0x8AAA, 0xAA);
+          nes_cpu_wr(0x8555, 0x55);
+          nes_cpu_wr(0x8AAA, 0x20);
 
-        result = write_page_verify_8((addrH + 0x90), buff, tssop_prgrom_flash_wr);
+          // write data
+          result = write_page_verify_8((addrH + 0x80), buff, rnbw_prgrom_flash_unlock_wr);
 
-        // exit unlock bypass mode
-        nes_m2_high_wr(0x9000, 0x90);
-        nes_m2_high_wr(0x9000, 0x00);
+          // exit unlock mode bypass
+          nes_cpu_wr(0x8000, 0x90);
+          nes_cpu_wr(0x8000, 0x00);
 
-        // reset the flash chip, supposed to exit too
-        nes_m2_high_wr(0x9000, 0xF0);
+          // reset the flash chip, supposed to exit too
+          nes_cpu_wr(0x8000, 0xF0);
+        } else {
+          result = write_page_verify_8((addrH + 0x80), buff, vrc6_prgrom_flash_wr);
+        }
       }
       if(buff->mapper == GTROM) {
-        result = write_page_verify_8((addrH + 0x80), buff, gtrom_prgrom_flash_wr);
+        if(buff->part_num == USE_BUFFER) {
+          return ERR_BUFF_PART_NUM_RANGE;
+        } else if(buff->part_num == USE_UNLOCK_BYPASS) {
+          return ERR_BUFF_PART_NUM_RANGE;
+        } else {
+          result = write_page_verify_8((addrH + 0x80), buff, gtrom_prgrom_flash_wr);
+        }
       }
       if(buff->mapper == RNBW) {
         if(buff->part_num == USE_BUFFER) {
@@ -765,7 +847,13 @@ uint8_t flash_buff(buffer* buff)
         }
       }
       if(buff->mapper == VRC6a || buff->mapper == VRC6b) {
-        result = write_page_verify_8((addrH + 0x60), buff, vrc6_prgrom_flash_wr);
+        if(buff->part_num == USE_BUFFER) {
+          return ERR_BUFF_PART_NUM_RANGE;
+        } else if(buff->part_num == USE_UNLOCK_BYPASS) {
+          return ERR_BUFF_PART_NUM_RANGE;
+        } else {
+          result = write_page_verify_8((addrH + 0x60), buff, vrc6_prgrom_flash_wr);
+        }
       }
       break;
 
