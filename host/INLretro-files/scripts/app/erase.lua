@@ -54,7 +54,7 @@ end
 
 
 -- local functions
-local function erase_snes(debug)
+local function erase_snes()
   local rv = nil
 
   print("erasing SNES takes about 30sec")
@@ -85,7 +85,7 @@ local function erase_snes(debug)
   while (rv ~= 0xFF) do
     rv = dict.snes("SNES_ROM_RD", 0x0000)
     i = i + 1
-    if debug then print(" ", i, ":", string.format("%x", rv)) end
+    if DEBUG then print(" ", i, ":", string.format("%x", rv)) end
   end
   print(i, " done erasing snes.\n")
 

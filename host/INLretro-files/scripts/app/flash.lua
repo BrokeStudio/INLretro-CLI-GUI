@@ -1,11 +1,11 @@
 -- create the module's table
-local flash = {}
+local flash   = {}
 
 -- import required modules
 local buffers = require "scripts.app.buffers"
-local dict = require "scripts.app.dict"
+local dict    = require "scripts.app.dict"
 local log     = require "scripts.app.log"
-local snes = require "scripts.app.snes"
+local snes    = require "scripts.app.snes"
 
 -- file constants and global variables
 
@@ -38,7 +38,7 @@ local function check_stopped(buff_nums)
   end
 end
 
-local function write_file(file, size_kb, config, debug)
+local function write_file(file, size_kb, config)
   local buff0 = 0
   local buff1 = 1
   local cur_buff_status = 0
@@ -48,7 +48,7 @@ local function write_file(file, size_kb, config, debug)
   local mem_type = config.mem_type
   local options = config.options or "NOVAR"
 
-  if debug then print("flashing cart") end
+  if DEBUG then print("flashing cart") end
 
   --start operation at reset
   dict.operation("SET_OPERATION", op_buffer["RESET"])
@@ -60,11 +60,11 @@ local function write_file(file, size_kb, config, debug)
   --2x 256Byte buffers
   local num_buffers = 2
   local buff_size = 256
-  if debug then print("allocating buffers") end
+  if DEBUG then print("allocating buffers") end
   assert(buffers.allocate(num_buffers, buff_size), "fail to allocate buffers")
 
   --set mem_type and part_num to designate how to get/write data
-  if debug then print("setting map n part") end
+  if DEBUG then print("setting map n part") end
   dict.buffer("SET_MEM_N_PART", (op_buffer[mem_type] << 8) | op_buffer[options], buff0)
   dict.buffer("SET_MEM_N_PART", (op_buffer[mem_type] << 8) | op_buffer[options], buff1)
   --set multiple and add_mult only when flashing
@@ -72,11 +72,11 @@ local function write_file(file, size_kb, config, debug)
 
   --set mapper, map_var, and function to designate read/write algo
   --just dump visible NROM memory to start
-  if debug then print("setting map n mapvar") end
+  if DEBUG then print("setting map n mapvar") end
   dict.buffer("SET_MAP_N_MAPVAR", (op_buffer[mapper] << 8) | op_buffer["NOVAR"], buff0)
   dict.buffer("SET_MAP_N_MAPVAR", (op_buffer[mapper] << 8) | op_buffer["NOVAR"], buff1)
 
-  if debug then print("\n\nsetting operation STARTFLASH") end
+  if DEBUG then print("\n\nsetting operation STARTFLASH") end
   --inform buffer manager to start flashing operation now that buffers are initialized
   dict.operation("SET_OPERATION", op_buffer["STARTFLASH"])
 
@@ -87,7 +87,7 @@ local function write_file(file, size_kb, config, debug)
   local nak = 0
   --print("file is:", file)
   for bytes in file:lines(buff_size) do
-    --if debug then print("payload out") end
+    --if DEBUG then print("payload out") end
     dict.buffer_payload_out(buff_size, bytes)
 
     cur_buff_status = dict.buffer("GET_CUR_BUFF_STATUS")
@@ -110,11 +110,11 @@ local function write_file(file, size_kb, config, debug)
     --   tlast = os.clock();
     -- end
   end
-  if debug then print("FLASHING DONE") end
-  if debug then print("number of naks", nak) end
+  if DEBUG then print("FLASHING DONE") end
+  if DEBUG then print("number of naks", nak) end
   tstop = os.clock()
   timediff = (tstop - tstart)
-  if debug then print("total time:", timediff, "seconds, average speed:", (size_kb / timediff), "KBps") end
+  if DEBUG then print("total time:", timediff, "seconds, average speed:", (size_kb / timediff), "KBps") end
 
   -- wait till all buffers are done
   --while flashing buffer manager updates from USB_FULL -> FLASHING -> FLASHED
@@ -130,7 +130,7 @@ local function write_file(file, size_kb, config, debug)
 end
 
 --[[
-local function flash_nes( file, debug )
+local function flash_nes(file)
 --{
 -- //make some checks to ensure rom is compatible with cart
 --
@@ -153,7 +153,7 @@ local function flash_nes( file, debug )
   local cur_buff_status = 0
   local data = nil --lua stores data in strings
 
-  if debug then print("flashing cart") end
+  if DEBUG then print("flashing cart") end
 --
 -- //TODO provide user arg to force all these checks passed
 -- //first check if any provided args differ from what was detected
@@ -487,7 +487,7 @@ end
 --]]
 
 
-local function flash_snes(file, debug)
+local function flash_snes(file)
   -- //make some checks to ensure rom is compatible with cart
   --
   -- //first do some checks like ensuring proper areas or sectors are blank
@@ -509,7 +509,7 @@ local function flash_snes(file, debug)
   local cur_buff_status = 0
   local data = nil --lua stores data in strings
 
-  if debug then print("flashing cart") end
+  if DEBUG then print("flashing cart") end
 
   -- //start with reset and init
   -- dict.io("IO_RESET")

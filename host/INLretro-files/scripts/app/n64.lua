@@ -247,7 +247,7 @@ local function parse_header_cart()
 
   dump.dumptocallback(
     function(data) byte_str = byte_str .. data end,
-    1, { addr_base = addr_base, mem_type = "N64_ROM_PAGE" }, false
+    1, { addr_base = addr_base, mem_type = "N64_ROM_PAGE" }
   )
 
   byte_str = string.sub(byte_str, 0x00 + 1, 0x3F + 1)
@@ -306,20 +306,20 @@ end
 
 
 
-local function prgm_mode(debug)
-  if debug then print("going to program mode, swim:", snes_swimcart) end
+local function prgm_mode()
+  if DEBUG then print("going to program mode, swim:", snes_swimcart) end
   if snes_swimcart then
     print("ERROR cart got set to swim mode somehow!!!")
-    --   swim.snes_v3_prgm(debug)
+    --   swim.snes_v3_prgm()
   else
     dict.pinport("CTL_SET_LO", "SNES_RST")
   end
 end
 
-local function play_mode(debug)
-  if debug then print("going to play mode, swim:", snes_swimcart) end
+local function play_mode()
+  if DEBUG then print("going to play mode, swim:", snes_swimcart) end
   if snes_swimcart then
-    --   swim.snes_v3_play(debug)
+    --   swim.snes_v3_play()
     print("ERROR cart got set to swim mode somehow!!!")
   else
     dict.pinport("CTL_SET_HI", "SNES_RST")
@@ -331,7 +331,7 @@ end
 -- Pre:  snes_init() been called to setup i/o
 -- Post: Address left on bus memories disabled
 -- Rtn:  reset vector that was found
-local function read_reset_vector(bank, debug)
+local function read_reset_vector(bank)
   --ensure cart is in play mode
   play_mode()
 
@@ -345,7 +345,7 @@ local function read_reset_vector(bank, debug)
   --read low byte of vector
   vector = vector | dict.snes("SNES_ROM_RD", RESET_VECT_LO)
 
-  if debug then print("SNES bank:", bank, "reset vector", string.format("$%x", vector)) end
+  if DEBUG then print("SNES bank:", bank, "reset vector", string.format("$%x", vector)) end
 
   return vector
 end
@@ -354,7 +354,7 @@ end
 -- Pre:  snes_init() been called to setup i/o
 -- Post: Address left on bus memories disabled
 -- Rtn:  true if flash ID found
-local function read_flashID(debug)
+local function read_flashID()
   local rv
   --enter software mode A11 is highest address bit that needs to be valid
   --datasheet not exactly explicit, A11 might not need to be valid
@@ -375,15 +375,15 @@ local function read_flashID(debug)
 
   --read manf ID
   local manf_id = dict.snes("SNES_ROM_RD", 0x0000)
-  if debug then print("attempted read SNES ROM manf ID:", string.format("%X", manf_id)) end
+  if DEBUG then print("attempted read SNES ROM manf ID:", string.format("%X", manf_id)) end
 
   --read prod ID
   local prod_id = dict.snes("SNES_ROM_RD", 0x0002)
-  if debug then print("attempted read SNES ROM prod ID:", string.format("%X", prod_id)) end
+  if DEBUG then print("attempted read SNES ROM prod ID:", string.format("%X", prod_id)) end
   local density_id = dict.snes("SNES_ROM_RD", 0x001C)
-  if debug then print("attempted read SNES density ID: ", string.format("%X", density_id)) end
+  if DEBUG then print("attempted read SNES density ID: ", string.format("%X", density_id)) end
   local boot_sect = dict.snes("SNES_ROM_RD", 0x001E)
-  if debug then print("attempted read SNES boot sect ID:", string.format("%X", boot_sect)) end
+  if DEBUG then print("attempted read SNES boot sect ID:", string.format("%X", boot_sect)) end
 
   --put cart in program mode
   prgm_mode()

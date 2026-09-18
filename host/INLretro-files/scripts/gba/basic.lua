@@ -15,7 +15,7 @@ local mapname = "BASIC" --IDK what else to call it right now, no real mappers.  
 
 
 --dump the ROM
-local function dump_rom(file, rom_size_kb, debug)
+local function dump_rom(file, rom_size_kb)
   --ROM ONLY dump all 32KB, most of this code is overkill for no MBC.
   -- but follows same format as MBC's
   local kb_per_read = 128 --read 16bit address space 2Bytes per address (2*64K = 128KByte)
@@ -40,7 +40,7 @@ local function dump_rom(file, rom_size_kb, debug)
   --latch address         AD0-15  A16-23
   dict.gba("LATCH_ADDR", 0x0000, 0x00)
 
-  dump.dumptofile(file, rom_size_kb, { addr_base = addr_base, mem_type = "GBA_PAGE" }, false)
+  dump.dumptofile(file, rom_size_kb, { addr_base = addr_base, mem_type = "GBA_PAGE" })
 
   dict.gba("RELEASE_BUS")
   --]]
@@ -57,7 +57,7 @@ local function dump_rom(file, rom_size_kb, debug)
     --latch address         AD0-15  A16-23
     dict.gba("LATCH_ADDR", 0x0000, cur_bank)
 
-    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "GBA_ROM_PAGE" }, false)
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "GBA_ROM_PAGE" })
 
     cur_bank = cur_bank + 1
 
@@ -112,7 +112,7 @@ local function process(process_opts, console_opts)
 
     -- dump cart to file
     time.start()
-    dump_rom(file, rom_size_kb, false)
+    dump_rom(file, rom_size_kb)
     time.report(rom_size_kb)
 
     -- close file
@@ -151,7 +151,7 @@ local function process(process_opts, console_opts)
 
     -- dump cart to file
     time.start()
-    dump_rom(file, rom_size_kb, false)
+    dump_rom(file, rom_size_kb)
     time.report(rom_size_kb)
 
     -- close file

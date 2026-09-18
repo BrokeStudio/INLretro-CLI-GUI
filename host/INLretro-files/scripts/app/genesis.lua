@@ -215,8 +215,7 @@ local function parse_header_cart()
   local byte_str = ""
   dump.dumptocallback(
     function(data) byte_str = byte_str .. data end,
-    1, { mapper = 0x0000, mem_type = "GENESIS_ROM_PAGE0" }, false -- 64
-  )
+    1, { mapper = 0x0000, mem_type = "GENESIS_ROM_PAGE0" }) -- 64
 
   -- reset device i/o
   dict.io("IO_RESET")

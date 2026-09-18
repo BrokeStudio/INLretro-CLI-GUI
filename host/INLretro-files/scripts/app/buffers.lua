@@ -90,11 +90,11 @@ end
 
 -- pass in table buffer numbers would like to wait on
 -- pass in table of status waiting on for all buffers
-local function status_wait(buff_nums, end_status, debug)
+local function status_wait(buff_nums, end_status)
   local rv = nil
   for key_buff, buff in pairs(buff_nums) do
     rv = nil
-    if debug then print("buffer wait:", key_buff, buff) end
+    if DEBUG then print("buffer wait:", key_buff, buff) end
     while rv ~= "EXIT" do
       for key_stat, stat in pairs(end_status) do
         rv = (dict.buffer("GET_PRI_ELEMENTS", nil, buff, nil, true))
@@ -113,11 +113,11 @@ local function status_wait(buff_nums, end_status, debug)
         end
 
         if rv == op_buffer[stat] then
-          if debug then print("buffer", buff, rv, "matched", stat) end
+          if DEBUG then print("buffer", buff, rv, "matched", stat) end
           rv = "EXIT"
           break
         else
-          if debug then print("buffer", buff, "is", rv, "not", stat) end
+          if DEBUG then print("buffer", buff, "is", rv, "not", stat) end
         end
       end
     end

@@ -12,6 +12,10 @@ local n64     = require "scripts.app.n64"
 -- Just to avoid warnings in VS Code
 if opts == nil then opts = {} end
 
+-- Global DEBUG variable so every script can access it,
+-- and we don't have to pass it to each function
+DEBUG = opts and opts.debug or false
+
 -- Helper function that checks if a string is empty or nil.
 local function isempty(s)
   return s == nil or s == ''
@@ -614,7 +618,6 @@ local function main()
   local process_opts = {
     retroprog_id   = opts.retroprog_id,
     -- console_name    = opts.console_name,
-    debug          = opts.debug,
     do_test        = do_test,
     do_erase       = do_erase,
     do_rom_dump    = do_rom_dump,
@@ -636,7 +639,7 @@ local function main()
     log.error(error)
     do return end
   end
-  if options.force_debug then process_opts.debug = true end
+  if options.force_debug then DEBUG = true end
   process_opts.additional_opts = options
 
   local consoles = {

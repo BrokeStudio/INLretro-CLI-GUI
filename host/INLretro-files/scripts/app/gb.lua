@@ -330,10 +330,7 @@ local function parse_header_cart()
 
   -- dump data
   local byte_str = ""
-  dump.dumptocallback(
-    function(data) byte_str = byte_str .. data end,
-    1, { mapper = 0x0000, mem_type = "GAMEBOY_PAGE" }, false
-  )
+  dump.dumptocallback(function(data) byte_str = byte_str .. data end, 1, { mapper = 0x0000, mem_type = "GAMEBOY_PAGE" })
 
   -- reset device i/o
   dict.io("IO_RESET")
@@ -352,26 +349,32 @@ end
 
 --]]
 
-local function wr(addr, val, debug, comment)
-  if not (type(debug) == "boolean") then debug = true end
-  if not (type(comment) == "string") then comment = "" end
-  dict.gameboy("GAMEBOY_WR", addr, val)
-  if (debug) then log.bullet(" W", help.hex_0x4(addr), val, help.hex_0x2(val), comment) end
+local function rom_wr(addr, val, options)
+  options = options or {}
+  local comment = options.comment or ""
+  local opcode = options.opcode or "GAMEBOY_WR"
+
+  dict.gameboy(opcode, addr, val)
+  if DEBUG then log.bullet(" W", help.hex_0x4(addr), val, help.hex_0x2(val), comment) end
 end
 
-local function flash_wr(addr, val, debug, comment)
-  if not (type(debug) == "boolean") then debug = true end
-  if not (type(comment) == "string") then comment = "" end
-  dict.gameboy("GAMEBOY_WR_MCB1", addr, val)
-  if (debug) then log.bullet(" W", help.hex_0x4(addr), val, help.hex_0x2(val), comment) end
+local function flash_wr(addr, val, options)
+  options = options or {}
+  local comment = options.comment or ""
+  local opcode = options.opcode or "GAMEBOY_WR_MCB1"
+
+  dict.gameboy(opcode, addr, val)
+  if DEBUG then log.bullet(" W", help.hex_0x4(addr), val, help.hex_0x2(val), comment) end
 end
 
-local function rd(addr, debug, label)
-  if not (type(debug) == "boolean") then debug = true end
-  if not (type(label) == "string") then label = "" end
+local function rom_rd(addr, options)
+  options = options or {}
+  local label = options.label or ""
+  local opcode = options.opcode or "GAMEBOY_RD"
   local rv
-  rv = dict.gameboy("GAMEBOY_RD", addr)
-  if (debug) then log.bullet("R ", help.hex_0x4(addr), rv, help.hex_0x2(rv), label) end
+
+  rv = dict.gameboy(opcode, addr)
+  if DEBUG then log.bullet("R ", help.hex_0x4(addr), rv, help.hex_0x2(rv), label) end
   return rv
 end
 
@@ -394,8 +397,9 @@ gb.parse_header      = parse_header
 gb.parse_header_file = parse_header_file
 gb.parse_header_cart = parse_header_cart
 
-gb.rd                = rd
-gb.wr                = wr
+gb.rom_wr            = rom_wr
+gb.flash_wr          = flash_wr
+gb.rom_rd            = rom_rd
 
 -- return the module's table
 return gb

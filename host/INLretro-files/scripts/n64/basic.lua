@@ -30,8 +30,7 @@ local help    = require "scripts.app.help"
 --- Dump ROM contents to an already-open output file.
 -- @param file file* Open binary output file
 -- @param rom_size_kb integer ROM size in kilobytes
--- @param debug? boolean Enable verbose progress logging
-local function rom_dump(file, rom_size_kb, debug)
+local function rom_dump(file, rom_size_kb)
   local kb_per_bank = 64   -- AD0-15 = 64K address space, A0 ignored so 1Byte per address!
   local addr_base = 0x0000 -- control signals are manually controlled
   local bank_base = 0x1000 -- N64 roms start at address 0x1000_0000
@@ -47,19 +46,19 @@ local function rom_dump(file, rom_size_kb, debug)
   print("read: ", help.hex(dict.n64("N64_RD")))
   dict.n64("N64_SET_BANK", bank_base + 0)
   dict.n64("N64_LATCH_ADDR", 0x0000)
-  dump.dumptofile(file, kb_per_bank, { addr_base = addr_base, mem_type = "N64_ROM_PAGE" }, false)
+  dump.dumptofile(file, kb_per_bank, { addr_base = addr_base, mem_type = "N64_ROM_PAGE" })
 
   dict.n64("N64_LATCH_ADDR", 0x0000)
   print("read: ", help.hex(dict.n64("N64_RD")))
   print("read: ", help.hex(dict.n64("N64_RD")))
   dict.n64("N64_LATCH_ADDR", 0x0000)
-  dump.dumptofile(file, kb_per_bank, { addr_base = addr_base, mem_type = "N64_ROM_PAGE" }, false)
+  dump.dumptofile(file, kb_per_bank, { addr_base = addr_base, mem_type = "N64_ROM_PAGE" })
   --]]
 
   log.info("ROM size", rom_size_kb .. "KB")
 
   while cur_bank < num_banks do
-    if debug then
+    if DEBUG then
       log.point("dumping bank", cur_bank, "of", num_banks - 1)
     else
       spinner.update("Dumping", cur_bank, "/", num_banks - 1)
@@ -69,7 +68,7 @@ local function rom_dump(file, rom_size_kb, debug)
     dict.n64("N64_SET_BANK", bank_base + cur_bank)
 
     -- dump a 64KByte chunk of rom
-    dump.dumptofile(file, kb_per_bank, { addr_base = addr_base, mem_type = "N64_ROM_PAGE" }, debug)
+    dump.dumptofile(file, kb_per_bank, { addr_base = addr_base, mem_type = "N64_ROM_PAGE" })
 
     -- prob don't need this till done..
     dict.n64("N64_RELEASE_BUS")
@@ -102,7 +101,6 @@ local function process(process_opts, console_opts)
   local file
 
   -- process options
-  local DEBUG          = process_opts.debug
   local retroprog_id   = process_opts.retroprog_id
   local do_test        = process_opts.do_test
   local do_erase       = process_opts.do_erase
@@ -212,7 +210,7 @@ local function process(process_opts, console_opts)
     log.info("Ouput format is Big Endian (.z64 format)")
 
     time.start()
-    rom_dump(file, rom_size_kb, DEBUG)
+    rom_dump(file, rom_size_kb)
     time.report(rom_size_kb)
 
     log.success("ROM dumping done")
@@ -232,8 +230,8 @@ local function process(process_opts, console_opts)
     --
     --    file = assert(io.open(ramwritefile, "rb"))
     --
-    --    --flash.write_file(file, ram_size, { mapper = "NOVAR", mem_type = "PRGRAM" }, false)
-    --    --flash.write_file(file, ram_size, { mapper = "LOROM_3VOLT", mem_type = "SNESROM" }, false)
+    --    --flash.write_file(file, ram_size, { mapper = "NOVAR", mem_type = "PRGRAM" })
+    --    --flash.write_file(file, ram_size, { mapper = "LOROM_3VOLT", mem_type = "SNESROM" })
     --    wr_ram(file, rambank, ram_size, snes_mapping, true)
     --
     --    -- close file

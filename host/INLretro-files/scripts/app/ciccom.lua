@@ -18,7 +18,7 @@ local datapin = "SWC"  --v2.0
 --TODO move clock pin to a define & have the reset/data defines set based on the device
 
 -- local functions
-local function start(debug)
+local function start()
   --need to disable alternate function on SWCLK for STM_NES
   dict.io("IO_RESET", "DISABLE_STM_DEBUG")
 
@@ -73,33 +73,33 @@ local function start(debug)
   return
 end
 
-local function output_bit7(byte, debug)
+local function output_bit7(byte)
   if (byte & 0x80 == 0x80) then --output one/high
-    if debug then print("output 1/HI") end
+    if DEBUG then print("output 1/HI") end
     dict.pinport("CTL_SET_HI", datapin)
     dict.pinport("ADDR_SET", 1)
     dict.pinport("ADDR_SET", 0)
   else --output zero/low
-    if debug then print("output 0/LO") end
+    if DEBUG then print("output 0/LO") end
     dict.pinport("CTL_SET_LO", datapin)
     dict.pinport("ADDR_SET", 1)
     dict.pinport("ADDR_SET", 0)
   end
 end
 
-local function byte_to_ciccom(byte, debug)
+local function byte_to_ciccom(byte)
   local cnt = 8
 
   while cnt > 0 do
-    if debug then print("outputting bit7 of:", help.hex(byte)) end
-    output_bit7(byte, debug)
+    if DEBUG then print("outputting bit7 of:", help.hex(byte)) end
+    output_bit7(byte)
     byte = (byte << 1) & 0xFF
     cnt = cnt - 1
   end
 end
 
-local function char_to_ciccom(char, debug)
-  byte_to_ciccom(string.byte(char), debug)
+local function char_to_ciccom(char)
+  byte_to_ciccom(string.byte(char))
 end
 
 local function set_opcode(opcode)
@@ -115,16 +115,15 @@ local function set_opcode(opcode)
 end
 
 
-local function write(data, debug)
-  --debug = true
+local function write(data)
   --now send operand "V" (0x56) or "H" (0x48)
-  if debug then print("ciccom write is type:", type(data)) end
+  if DEBUG then print("ciccom write is type:", type(data)) end
   if type(data) == 'number' then
-    if debug then print("writing number/byte") end
-    byte_to_ciccom(data, debug)
+    if DEBUG then print("writing number/byte") end
+    byte_to_ciccom(data)
   else
-    if debug then print("writing character") end
-    char_to_ciccom(data, debug)
+    if DEBUG then print("writing character") end
+    char_to_ciccom(data)
   end
 end
 

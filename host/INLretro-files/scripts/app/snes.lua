@@ -273,7 +273,7 @@ local function parse_header_cart()
   -- dict.snes("SNES_SET_BANK", 0) -- not required?
   dump.dumptocallback(
     function(data) byte_str = byte_str .. data end,
-    64, { mapper = "HIROM", mem_type = "SNESROM" }, false
+    64, { mapper = "HIROM", mem_type = "SNESROM" }
   )
 
   byte_str = string.sub(byte_str, 0xFFC0 + 1, 0xFFFF + 1)
@@ -294,7 +294,7 @@ local function parse_header_cart()
   -- dict.snes("SNES_SET_BANK", 0) -- not required?
   dump.dumptocallback(
     function(data) byte_str = byte_str .. data end,
-    32, { mapper = "LOROM", mem_type = "SNESROM" }, false
+    32, { mapper = "LOROM", mem_type = "SNESROM" }
   )
 
   -- reset device i/o
@@ -353,20 +353,20 @@ end
 
 
 
-local function prgm_mode(debug)
-  if debug then print("going to program mode, swim:", snes_swimcart) end
+local function prgm_mode()
+  if DEBUG then print("going to program mode, swim:", snes_swimcart) end
   if snes_swimcart then
     print("ERROR cart got set to swim mode somehow!!!")
-    --   swim.snes_v3_prgm(debug)
+    --   swim.snes_v3_prgm()
   else
     dict.pinport("CTL_SET_LO", "SNES_RST")
   end
 end
 
-local function play_mode(debug)
-  if debug then print("going to play mode, swim:", snes_swimcart) end
+local function play_mode()
+  if DEBUG then print("going to play mode, swim:", snes_swimcart) end
   if snes_swimcart then
-    --   swim.snes_v3_play(debug)
+    --   swim.snes_v3_play()
     print("ERROR cart got set to swim mode somehow!!!")
   else
     dict.pinport("CTL_SET_HI", "SNES_RST")
@@ -378,7 +378,7 @@ end
 -- Pre:  snes_init() been called to setup i/o
 -- Post: Address left on bus memories disabled
 -- Rtn:  reset vector that was found
-local function read_reset_vector(bank, debug)
+local function read_reset_vector(bank)
   --ensure cart is in play mode
   play_mode()
 
@@ -392,7 +392,7 @@ local function read_reset_vector(bank, debug)
   --read low byte of vector
   vector = vector | dict.snes("SNES_ROM_RD", RESET_VECT_LO)
 
-  if debug then print("SNES bank:", bank, "reset vector", string.format("$%x", vector)) end
+  if DEBUG then print("SNES bank:", bank, "reset vector", string.format("$%x", vector)) end
 
   return vector
 end
@@ -401,7 +401,7 @@ end
 -- Pre:  snes_init() been called to setup i/o
 -- Post: Address left on bus memories disabled
 -- Rtn:  true if flash ID found
-local function read_flashID(debug)
+local function read_flashID()
   local rv
   --enter software mode A11 is highest address bit that needs to be valid
   --datasheet not exactly explicit, A11 might not need to be valid
@@ -422,15 +422,15 @@ local function read_flashID(debug)
 
   --read manf ID
   local manf_id = dict.snes("SNES_ROM_RD", 0x0000)
-  if debug then print("attempted read SNES ROM manf ID:", string.format("%X", manf_id)) end
+  if DEBUG then print("attempted read SNES ROM manf ID:", string.format("%X", manf_id)) end
 
   --read prod ID
   local prod_id = dict.snes("SNES_ROM_RD", 0x0002)
-  if debug then print("attempted read SNES ROM prod ID:", string.format("%X", prod_id)) end
+  if DEBUG then print("attempted read SNES ROM prod ID:", string.format("%X", prod_id)) end
   local density_id = dict.snes("SNES_ROM_RD", 0x001C)
-  if debug then print("attempted read SNES density ID: ", string.format("%X", density_id)) end
+  if DEBUG then print("attempted read SNES density ID: ", string.format("%X", density_id)) end
   local boot_sect = dict.snes("SNES_ROM_RD", 0x001E)
-  if debug then print("attempted read SNES boot sect ID:", string.format("%X", boot_sect)) end
+  if DEBUG then print("attempted read SNES boot sect ID:", string.format("%X", boot_sect)) end
 
   --put cart in program mode
   prgm_mode()
@@ -449,38 +449,28 @@ local function read_flashID(debug)
   end
 end
 
---[[
-  .dP'     8888b.  888888 88""Yb 88   88  dP""b8     888888 88   88 88b 88  dP""b8 .dP"Y8
-.dP'        8I  Yb 88__   88__dP 88   88 dP   `"     88__   88   88 88Yb88 dP   `" `Ybo."
-`Yb.        8I  dY 88""   88""Yb Y8   8P Yb  "88     88""   Y8   8P 88 Y88 Yb      o.`Y8b
-  `Yb.     8888Y"  888888 88oodP `YbodP'  YboodP     88     `YbodP' 88  Y8  YboodP 8bodP'
-]]
+local function rom_wr(addr, val, options)
+  options = options or {}
+  local comment = options.comment or ""
+  local opcode = options.opcode or "SNES_ROM_WR"
 
-local function rom_wr(addr, val, debug, comment)
-  if not (type(debug) == "boolean") then debug = true end
-  if not (type(comment) == "string") then comment = "" end
-  dict.snes("SNES_ROM_WR", addr, val)
-  if (debug) then log.point("ROM", " W", help.hex(addr, 4, "0x"), val, help.hex(val, 2, "0x"), comment) end
+  dict.snes(opcode, addr, val)
+  if DEBUG then log.point("ROM", " W", help.hex(addr, 4, "0x"), val, help.hex(val, 2, "0x"), comment) end
 end
 
-local function rom_rd(addr, debug, label)
-  if not (type(debug) == "boolean") then debug = true end
-  if not (type(label) == "string") then label = "" end
+local function rom_rd(addr, options)
+  options = options or {}
+  local label = options.label or ""
+  local opcode = options.opcode or "SNES_ROM_RD"
   local rv
-  rv = dict.snes("SNES_ROM_RD", addr)
-  if (debug) then log.point("ROM", "R ", help.hex(addr, 4, "0x"), rv, help.hex(rv, 2, "0x"), label) end
+
+  rv = dict.snes(opcode, addr)
+  if DEBUG then log.point("ROM", "R ", help.hex(addr, 4, "0x"), rv, help.hex(rv, 2, "0x"), label) end
   return rv
 end
 
 snes.rom_rd = rom_rd
 snes.rom_wr = rom_wr
-
---[[
-8888b.  888888 88""Yb 88   88  dP""b8     888888 88   88 88b 88  dP""b8 .dP"Y8     `Yb.
- 8I  Yb 88__   88__dP 88   88 dP   `"     88__   88   88 88Yb88 dP   `" `Ybo."       `Yb.
- 8I  dY 88""   88""Yb Y8   8P Yb  "88     88""   Y8   8P 88 Y88 Yb      o.`Y8b       .dP'
-8888Y"  888888 88oodP `YbodP'  YboodP     88     `YbodP' 88  Y8  YboodP 8bodP'     .dP'
-]]
 
 -- call functions desired to run when script is called/imported
 

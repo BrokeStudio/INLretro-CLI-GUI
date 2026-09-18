@@ -34,7 +34,7 @@ local function create_header(file, prg_kb, chr_kb)
 end
 
 -- disables PRG-RAM, selects horizontal mirroring
-local function init_mapper(debug)
+local function init_mapper()
   -- flash mode
   dict.nes("NES_CPU_WR", 0x50FF, 0x80) -- enable flash mode + clear in-frame flag
 
@@ -94,14 +94,14 @@ end
 
 -- test the mapper's mirroring modes to verify working properly
 -- can be used to help identify board: returns true if pass, false if failed
-local function mirror_test(debug)
+local function mirror_test()
   -- put mapper in known state (mirror bits cleared)
   init_mapper()
   local res
 
   -- $5105 = 0x44: Horizontal arrangement
   dict.nes("NES_CPU_WR", 0x5105, 0x44)
-  res = nes.detect_mapper_mirroring(debug)
+  res = nes.detect_mapper_mirroring()
   if res ~= "VERT" then
     log.error("Horizontal arrangement test failed")
     return false
@@ -111,7 +111,7 @@ local function mirror_test(debug)
 
   -- $5105 = 0x50: Vertical arrangement
   dict.nes("NES_CPU_WR", 0x5105, 0x50)
-  if nes.detect_mapper_mirroring(debug) ~= "HORZ" then
+  if nes.detect_mapper_mirroring() ~= "HORZ" then
     log.error("Vertical arrangement test failed")
     return false
   else
@@ -120,7 +120,7 @@ local function mirror_test(debug)
 
   -- $5105 = 0x00: single screen 0
   dict.nes("NES_CPU_WR", 0x5105, 0x00)
-  if nes.detect_mapper_mirroring(debug) ~= "1SCRNA" then
+  if nes.detect_mapper_mirroring() ~= "1SCRNA" then
     log.error("One screen A mirror test failed")
     return false
   else
@@ -129,7 +129,7 @@ local function mirror_test(debug)
 
   -- $5105 = 0x55: single screen 1
   dict.nes("NES_CPU_WR", 0x5105, 0x55)
-  if nes.detect_mapper_mirroring(debug) ~= "1SCRNB" then
+  if nes.detect_mapper_mirroring() ~= "1SCRNB" then
     log.error("One screen B mirror test failed")
     return false
   else
@@ -142,7 +142,7 @@ local function mirror_test(debug)
   return true
 end
 
-local function test_multiplication(debug)
+local function test_multiplication()
   local lo, hi
   local result
 
@@ -222,8 +222,7 @@ end
 --- Dump PRG-ROM contents to an already-open output file.
 -- @param file file* Open binary output file
 -- @param rom_size_kb integer PRG-ROM size in kilobytes
--- @param debug? boolean Enable verbose progress logging
-local function prg_rom_dump(file, rom_size_kb, debug)
+local function prg_rom_dump(file, rom_size_kb)
   -- PRG-ROM dump 32KB at a time through $5117 in mode 0
   -- above didn't work, dump 8KB at at time through $5114 in mode 3
   -- PRG-ROM dump 32KB at a time
@@ -236,7 +235,7 @@ local function prg_rom_dump(file, rom_size_kb, debug)
   log.info("PRG-ROM size", rom_size_kb .. "KB")
 
   while cur_bank < num_banks do
-    if debug then
+    if DEBUG then
       log.point("dumping PRG bank", cur_bank, "of", num_banks - 1)
     else
       spinner.update("Dumping", cur_bank, "/", num_banks - 1)
@@ -247,7 +246,7 @@ local function prg_rom_dump(file, rom_size_kb, debug)
     -- above didn't work, only saw the last 8KB repeated...
     -- dict.nes("NES_CPU_WR", 0x5114, (cur_bank | 0x80)) -- 8KB & CPU $8000 (bit7 must be set to see ROM)
 
-    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESCPU_PAGE" }, false)
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESCPU_PAGE" })
 
     cur_bank = cur_bank + 1
   end
@@ -258,8 +257,7 @@ end
 --- Program PRG-ROM contents from an already-open input file, one bank at a time.
 -- @param file file* Open binary input file
 -- @param rom_size_kb integer PRG-ROM size in kilobytes
--- @param debug? boolean Enable verbose progress logging
-local function prg_rom_flash(file, rom_size_kb, debug)
+local function prg_rom_flash(file, rom_size_kb)
   init_mapper()
 
   log.section("Programming PRG-ROM")
@@ -273,7 +271,7 @@ local function prg_rom_flash(file, rom_size_kb, debug)
   -- local byte_str, data, readdata
 
   while cur_bank < num_banks do
-    if debug then
+    if DEBUG then
       log.point("writing PRG-ROM bank", cur_bank, "of", num_banks - 1)
     else
       spinner.update("Flashing", cur_bank, "/", num_banks - 1)
@@ -324,7 +322,7 @@ local function prg_rom_flash(file, rom_size_kb, debug)
     --]]
 
     -- have the device write a bank worth of data
-    flash.write_file(file, bank_size, { mapper = "RNBW", mem_type = "PRGROM" }, false)
+    flash.write_file(file, bank_size, { mapper = "RNBW", mem_type = "PRGROM" })
 
     cur_bank = cur_bank + 1
   end
@@ -347,7 +345,7 @@ end
 
 --]]
 
-local function test_chr_banks(retroprog_id, debug)
+local function test_chr_banks(retroprog_id)
   init_mapper()
 
   local rv
@@ -451,8 +449,7 @@ end
 --- Dump CHR contents to an already-open output file.
 -- @param file file* Open binary output file
 -- @param rom_size_kb integer CHR size in kilobytes
--- @param debug? boolean Enable verbose progress logging
-local function chr_dump(file, rom_size_kb, debug)
+local function chr_dump(file, rom_size_kb)
   local kb_per_read = 8
   local num_banks = math.floor(rom_size_kb / kb_per_read)
   local addr_base = 0x00 -- $0000
@@ -461,7 +458,7 @@ local function chr_dump(file, rom_size_kb, debug)
   log.info("CHR size", rom_size_kb .. "KB")
 
   while cur_bank < num_banks do
-    if debug then
+    if DEBUG then
       log.point("dump CHR bank", cur_bank, "of", num_banks - 1)
     else
       spinner.update("Dumping", cur_bank, "/", num_banks - 1)
@@ -474,7 +471,7 @@ local function chr_dump(file, rom_size_kb, debug)
     -- dict.nes("NES_CPU_WR", 0x5121, cur_bank * 2)     -- CHR-ROM bank @ $0000-07FF (mode 2)
     -- dict.nes("NES_CPU_WR", 0x5123, cur_bank * 2 + 1) -- CHR-ROM bank @ $0800-0FFF (mode 2)
 
-    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESPPU_1KB_TOGGLE" }, false)
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESPPU_1KB_TOGGLE" })
 
     cur_bank = cur_bank + 1
   end
@@ -485,8 +482,7 @@ end
 --- Program CHR contents from an already-open input file, one bank at a time.
 -- @param file file* Open binary input file
 -- @param rom_size_kb integer CHR size in kilobytes
--- @param debug? boolean Enable verbose progress logging
-local function chr_rom_flash(file, rom_size_kb, debug)
+local function chr_rom_flash(file, rom_size_kb)
   init_mapper()
 
   log.section("Programming CHR-ROM")
@@ -497,7 +493,7 @@ local function chr_rom_flash(file, rom_size_kb, debug)
   local num_banks = math.floor(rom_size_kb / bank_size)
 
   while cur_bank < num_banks do
-    if debug then
+    if DEBUG then
       log.point("writing CHR bank", cur_bank, "of", num_banks - 1)
     else
       spinner.update("Flashing", cur_bank, "/", num_banks - 1)
@@ -539,7 +535,7 @@ local function chr_rom_flash(file, rom_size_kb, debug)
     --]]
 
     -- have the device write a bank worth of data
-    flash.write_file(file, bank_size, { mapper = "RNBW", mem_type = "CHRROM" }, false)
+    flash.write_file(file, bank_size, { mapper = "RNBW", mem_type = "CHRROM" })
 
     cur_bank = cur_bank + 1
   end
@@ -561,8 +557,7 @@ end
 --- Dump PRG-RAM contents to an already-open output file.
 -- @param file file* Open binary output file
 -- @param ram_size_kb integer PRG-RAM size in kilobytes
--- @param debug? boolean Enable verbose progress logging
-local function prg_ram_dump(file, ram_size_kb, debug)
+local function prg_ram_dump(file, ram_size_kb)
   local kb_per_read = 8
   local num_banks = math.floor(ram_size_kb / kb_per_read)
   local addr_base = 0x60 -- $6000
@@ -571,7 +566,7 @@ local function prg_ram_dump(file, ram_size_kb, debug)
   log.info("PRG-RAM size", ram_size_kb .. "KB")
 
   while cur_bank < num_banks do
-    if debug then
+    if DEBUG then
       log.point("dumping PRG-RAM bank ", cur_bank, "of", num_banks - 1)
     else
       spinner.update("Dumping", cur_bank, "/", num_banks - 1)
@@ -580,7 +575,7 @@ local function prg_ram_dump(file, ram_size_kb, debug)
     -- set bank
     dict.nes("NES_CPU_WR", 0x5113, cur_bank) -- PRG-RAM bank @ $6000-7FFF (regardless of PRG mode)
 
-    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESCPU_PAGE" }, false)
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESCPU_PAGE" })
 
     cur_bank = cur_bank + 1
   end
@@ -588,7 +583,7 @@ local function prg_ram_dump(file, ram_size_kb, debug)
   spinner.clear()
 end
 
-local function write_ram(file, ram_size_kb, debug)
+local function write_ram(file, ram_size_kb)
   -- TODO
   log.error("TODO: prg_ram_write")
   do return end
@@ -660,8 +655,8 @@ local function write_ram(file, ram_size_kb, debug)
 
     -- have the device write a bank worth of data
     -- FAST!  13sec for 512KB = 39KBps
-    -- flash.write_file(file, bank_size/1024, { mapper = mapname, mem_type = "PRGROM" }, false)
-    -- flash.write_file(file, bank_size/1024, { mapper = "NOVAR", mem_type = "PRGRAM" }, false)
+    -- flash.write_file(file, bank_size/1024, { mapper = mapname, mem_type = "PRGROM" })
+    -- flash.write_file(file, bank_size/1024, { mapper = "NOVAR", mem_type = "PRGRAM" })
 
     cur_bank = cur_bank + 1
   end
@@ -670,9 +665,8 @@ local function write_ram(file, ram_size_kb, debug)
 end
 
 --- Detect PRG-RAM by writing and reading back a test byte.
--- @param debug? boolean Enable verbose progress logging
 -- @return boolean success True when RAM read/write behavior is detected
-local function prg_ram_test(debug)
+local function prg_ram_test()
   local test = true
   local read_value
   local saved_value
@@ -715,9 +709,8 @@ end
 
 --- Detect PRG-RAM size by writing bank markers and reading them back.
 -- Overwrites the test byte in each probed bank.
--- @param debug? boolean Enable verbose progress logging
 -- @return integer size_kb Detected PRG-RAM size in kilobytes, or 0 when detection fails
-local function prg_ram_get_size(debug)
+local function prg_ram_get_size()
   -- PRG-RAM can be maximum 128KB
   -- so we'll check sixteen (16) 8K banks and see if we can write to each
 
@@ -733,7 +726,7 @@ local function prg_ram_get_size(debug)
 
   -- write to banks backwards
   while cur_bank >= 0 do
-    if debug then
+    if DEBUG then
       log.point("trying to write to PRG-RAM bank", cur_bank, "of", num_banks - 1)
     else
       spinner.update("Writing", cur_bank, "/", num_banks - 1)
@@ -771,9 +764,8 @@ end
 -- Overwrites PRG-RAM contents with the test pattern.
 -- @param wram_size_kb integer PRG-RAM size in kilobytes
 -- @param retroprog_id string|integer Identifier used in the temporary dump filename
--- @param debug? boolean Enable verbose compare/progress logging
 -- @return boolean success True when the PRG-RAM dump matches the expected LFSR data
-local function prg_ram_exercise(wram_size_kb, retroprog_id, debug)
+local function prg_ram_exercise(wram_size_kb, retroprog_id)
   if wram_size_kb == 0 or wram_size_kb == nil then
     log.error("PRG-RAM size invalid")
     return false
@@ -794,7 +786,7 @@ local function prg_ram_exercise(wram_size_kb, retroprog_id, debug)
   -- write random data to all banks
   log.point("Writing random data to PRG-RAM")
   while cur_bank < num_banks do
-    if debug then
+    if DEBUG then
       log.point("init PRG-RAM 8K bank", cur_bank, "of", num_banks - 1)
     end
 
@@ -816,7 +808,7 @@ local function prg_ram_exercise(wram_size_kb, retroprog_id, debug)
 
   -- dump PRG-RAM
   log.point("Dumping PRG-RAM")
-  prg_ram_dump(file, wram_size_kb, false)
+  prg_ram_dump(file, wram_size_kb)
 
   -- close file
   assert(file:close())
@@ -850,42 +842,42 @@ end
 --]]
 
 -- dump the EXRAM
-local function exram_dump_cpu(file, debug)
+local function exram_dump_cpu(file)
   local addr_base = 0x5C -- $5C00
 
   log.info("EXRAM size", 1 .. "KB")
 
-  if debug then
+  if DEBUG then
     log.point("dump EXRAM bank ", 0, "of", 0)
   else
     spinner.update("Dumping", 0, "/", 0)
   end
 
-  dump.dumptofile(file, 1, { addr_base = addr_base, mem_type = "NESCPU_PAGE" }, debug)
+  dump.dumptofile(file, 1, { addr_base = addr_base, mem_type = "NESCPU_PAGE" })
 
   spinner.clear()
 end
 
 -- dump the EXRAM
-local function exram_dump_ppu(file, addr_base, debug)
+local function exram_dump_ppu(file, addr_base)
   if addr_base == nil then
     addr_base = 0x20 -- $2000
   end
 
   -- log.info("EXRAM size", 1 .. "KB")
 
-  if debug then
+  if DEBUG then
     log.point("dump EXRAM bank ", 0, "of", 0)
   else
     spinner.update("Dumping", 0, "/", 0)
   end
 
-  dump.dumptofile(file, 1, { addr_base = addr_base, mem_type = "NESPPU_1KB_TOGGLE" }, debug)
+  dump.dumptofile(file, 1, { addr_base = addr_base, mem_type = "NESPPU_1KB_TOGGLE" })
 
   spinner.clear()
 end
 
-local function exram_exercise_mode0_1_cpu_ppu(retroprog_id, mode, debug)
+local function exram_exercise_mode0_1_cpu_ppu(retroprog_id, mode)
   local addr
   local filename, file, goodfile
   local test = true
@@ -921,14 +913,14 @@ local function exram_exercise_mode0_1_cpu_ppu(retroprog_id, mode, debug)
     addr = 0x20 + nt * 4
     log.point("Dumping EXRAM (PPU) @ " .. help.hex_0x2(addr) .. "00")
     file:seek("set")
-    exram_dump_ppu(file, addr, debug)
+    exram_dump_ppu(file, addr)
     file:flush()
 
     -- re-open & compare dump with known lsfr bitstream
     goodfile = opts.lua_path .. "./ignore/lfsr_32KB.bin"
 
     -- compare the flash file vs post dump file
-    if not files.compare(filename, goodfile, false, debug, 0, nt * 0x400) then
+    if not files.compare(filename, goodfile, false, 0, nt * 0x400) then
       test = false
       break
     end
@@ -939,7 +931,7 @@ local function exram_exercise_mode0_1_cpu_ppu(retroprog_id, mode, debug)
   return test
 end
 
-local function exram_exercise_mode0_1_ppu_ppu(retroprog_id, mode, debug)
+local function exram_exercise_mode0_1_ppu_ppu(retroprog_id, mode)
   local addr_start, addr_end
   local filename, file, goodfile
   local test = true
@@ -979,11 +971,11 @@ local function exram_exercise_mode0_1_ppu_ppu(retroprog_id, mode, debug)
     addr_start = 0x20 + nt * 4
     log.point("Dumping EXRAM (PPU) @ " .. help.hex_0x2(addr_start) .. "00")
     file:seek("set")
-    exram_dump_ppu(file, addr_start, debug)
+    exram_dump_ppu(file, addr_start)
     file:flush()
 
     -- compare the flash file vs post dump file
-    if not files.compare(filename, goodfile, false, debug, 0, nt * 0x400) then
+    if not files.compare(filename, goodfile, false, 0, nt * 0x400) then
       test = false
       break
     end
@@ -994,7 +986,7 @@ local function exram_exercise_mode0_1_ppu_ppu(retroprog_id, mode, debug)
   return test
 end
 
-local function exram_exercise_mode2(retroprog_id, debug)
+local function exram_exercise_mode2(retroprog_id)
   local addr
   local filename, file, goodfile
 
@@ -1022,7 +1014,7 @@ local function exram_exercise_mode2(retroprog_id, debug)
 
   -- dump EXRAM
   log.point("Dumping EXRAM")
-  exram_dump_cpu(file, false)
+  exram_dump_cpu(file)
 
   -- close file
   assert(file:close())
@@ -1054,7 +1046,7 @@ local function exram_exercise_mode2(retroprog_id, debug)
 
   -- dump EXRAM
   log.point("Dumping EXRAM")
-  exram_dump_cpu(file, false)
+  exram_dump_cpu(file)
 
   -- close file
   assert(file:close())
@@ -1070,7 +1062,7 @@ local function exram_exercise_mode2(retroprog_id, debug)
   return true
 end
 
-local function exram_exercise(retroprog_id, debug)
+local function exram_exercise(retroprog_id)
   local exram_ram_size = 1
   local cur_bank = 0
   local num_banks = 1
@@ -1078,7 +1070,7 @@ local function exram_exercise(retroprog_id, debug)
   local rv
 
   -- test mode 0 cpu/ppu
-  rv = exram_exercise_mode0_1_cpu_ppu(retroprog_id, 0, debug)
+  rv = exram_exercise_mode0_1_cpu_ppu(retroprog_id, 0)
   if rv then
     log.success("EXRAM test passed")
   else
@@ -1087,7 +1079,7 @@ local function exram_exercise(retroprog_id, debug)
   end
 
   -- test mode 0 ppu/ppu
-  rv = exram_exercise_mode0_1_ppu_ppu(retroprog_id, 0, debug)
+  rv = exram_exercise_mode0_1_ppu_ppu(retroprog_id, 0)
   if rv then
     log.success("EXRAM test passed")
   else
@@ -1098,7 +1090,7 @@ local function exram_exercise(retroprog_id, debug)
   log.warning("MODE 1 test to finish")
 
   -- -- test mode 1 cpu/ppu
-  -- rv = exram_exercise_mode0_1_cpu_ppu(retroprog_id, 1, debug)
+  -- rv = exram_exercise_mode0_1_cpu_ppu(retroprog_id, 1)
   -- if rv then
   --   log.success("EXRAM test passed")
   -- else
@@ -1107,7 +1099,7 @@ local function exram_exercise(retroprog_id, debug)
   -- end
 
   -- -- test mode 1 ppu/ppu
-  -- rv = exram_exercise_mode0_1_ppu_ppu(retroprog_id, 1, debug)
+  -- rv = exram_exercise_mode0_1_ppu_ppu(retroprog_id, 1)
   -- if rv then
   --   log.success("EXRAM test passed")
   -- else
@@ -1116,7 +1108,7 @@ local function exram_exercise(retroprog_id, debug)
   -- end
 
   -- test mode 2
-  rv = exram_exercise_mode2(retroprog_id, debug)
+  rv = exram_exercise_mode2(retroprog_id)
   if rv then
     log.success("EXRAM test passed")
   else
@@ -1150,7 +1142,6 @@ local function process(process_opts, console_opts)
   local chr_ram_size_kb  = 0
 
   -- process options
-  local DEBUG            = process_opts.debug
   local retroprog_id     = process_opts.retroprog_id
   local do_test          = process_opts.do_test
   local do_erase         = process_opts.do_erase
@@ -1190,16 +1181,16 @@ local function process(process_opts, console_opts)
   if do_test then
     log.section("Testing " .. mapname)
 
-    -- test_multiplication(DEBUG)
-    -- test_chr_banks(retroprog_id, DEBUG)
+    -- test_multiplication()
+    -- test_chr_banks(retroprog_id)
 
     -- do return end
 
     -- verify mirroring is behaving as expected
-    rv = mirror_test(DEBUG)
+    rv = mirror_test()
     if not rv then return false end
 
-    chr_ram_detected = nes.ppu_ram_sense(0x1000, DEBUG)
+    chr_ram_detected = nes.ppu_ram_sense(0x1000)
 
     if options.force_flash_test or (do_rom_write and prg_size_kb ~= 0) then
       rv = prg_rom_manf_id()
@@ -1226,12 +1217,12 @@ local function process(process_opts, console_opts)
     end
 
     -- -- EXRAM tests
-    rv = exram_exercise(retroprog_id, DEBUG)
+    rv = exram_exercise(retroprog_id)
     -- exit script if test fails
     if not rv then return end
 
     -- PRG-RAM tests
-    rv = prg_ram_test(DEBUG)
+    rv = prg_ram_test()
     if rv == true then
       if options.force_wram_test then
         log.print()
@@ -1243,10 +1234,10 @@ local function process(process_opts, console_opts)
           log.warning("Can't exercise PRG-RAM because NES ROM has battery backed data")
         else
           if wram_size_kb == 0 then
-            wram_size_kb = prg_ram_get_size(DEBUG)
+            wram_size_kb = prg_ram_get_size()
           end
           if wram_size_kb ~= 0 then
-            rv = prg_ram_exercise(wram_size_kb, retroprog_id, DEBUG)
+            rv = prg_ram_exercise(wram_size_kb, retroprog_id)
             -- exit script if test fails
             if not rv then return end
           end
@@ -1276,7 +1267,7 @@ local function process(process_opts, console_opts)
     -- dump cart to file
     if wram_size_kb ~= 0 then
       time.start()
-      prg_ram_dump(file, wram_size_kb, DEBUG)
+      prg_ram_dump(file, wram_size_kb)
       time.report(wram_size_kb)
       log.success("PRG-RAM dumping done")
     else
@@ -1305,7 +1296,7 @@ local function process(process_opts, console_opts)
     -- flash cart
     if wram_size_kb ~= 0 then
       time.start()
-      -- prg_ram_write(file, wram_size_kb, DEBUG)
+      -- prg_ram_write(file, wram_size_kb)
       log.warning("TODO: ADD RAM WRITE SUPPORT")
       time.report(wram_size_kb)
     else
@@ -1343,9 +1334,9 @@ local function process(process_opts, console_opts)
 
     file = assert(io.open(ramwritefile, "rb"))
 
-    write_ram(file, wram_size_kb, true)
-    -- flash.write_file(file, wram_size_kb, { mapper = "NOVAR", mem_type = "PRGRAM" }, false)
-    -- flash.write_file(file, wram_size_kb, { mapper = "MMC5", mem_type = "PRGRAM" }, false)
+    write_ram(file, wram_size_kb)
+    -- flash.write_file(file, wram_size_kb, { mapper = "NOVAR", mem_type = "PRGRAM" })
+    -- flash.write_file(file, wram_size_kb, { mapper = "MMC5", mem_type = "PRGRAM" })
 
     -- for save data safety disable PRG-RAM writes
     --  dict.nes("NES_CPU_WR", 0x5102, 0x01)  -- bits 1&0 must be '01' (ie 0x02) to allow writes to PRG-RAM
@@ -1380,7 +1371,7 @@ local function process(process_opts, console_opts)
     if prg_size_kb ~= 0 then
       log.section("Dumping PRG-ROM")
       time.start()
-      prg_rom_dump(file, prg_size_kb, DEBUG)
+      prg_rom_dump(file, prg_size_kb)
       time.report(prg_size_kb)
       log.success("PRG-ROM dumping done")
     end
@@ -1388,7 +1379,7 @@ local function process(process_opts, console_opts)
     if chr_size_kb ~= 0 then
       log.section("Dumping CHR-ROM")
       time.start()
-      chr_dump(file, chr_size_kb, DEBUG)
+      chr_dump(file, chr_size_kb)
       time.report(chr_size_kb)
       log.success("CHR-ROM dumping done")
     end
@@ -1475,13 +1466,13 @@ local function process(process_opts, console_opts)
     -- flash cart
     if prg_size_kb ~= 0 then
       time.start()
-      prg_rom_flash(file, prg_size_kb, DEBUG)
+      prg_rom_flash(file, prg_size_kb)
       time.report(prg_size_kb)
     end
 
     if chr_size_kb ~= 0 then
       time.start()
-      chr_rom_flash(file, chr_size_kb, DEBUG)
+      chr_rom_flash(file, chr_size_kb)
       time.report(chr_size_kb)
     end
 
@@ -1507,7 +1498,7 @@ local function process(process_opts, console_opts)
     if prg_size_kb ~= 0 then
       log.section("Dumping PRG-ROM")
       time.start()
-      prg_rom_dump(file, prg_size_kb, DEBUG)
+      prg_rom_dump(file, prg_size_kb)
       time.report(prg_size_kb)
       log.success("PRG-ROM dumping done")
     end
@@ -1515,7 +1506,7 @@ local function process(process_opts, console_opts)
     if chr_size_kb ~= 0 then
       log.section("Dumping CHR-ROM")
       time.start()
-      chr_dump(file, chr_size_kb, DEBUG)
+      chr_dump(file, chr_size_kb)
       time.report(chr_size_kb)
       log.success("CHR-ROM dumping done")
     end
@@ -1525,7 +1516,7 @@ local function process(process_opts, console_opts)
 
     -- compare the flash file vs post dump file
     log.section("Verifying data")
-    if files.compare(verify_file.filename, rom_write_file.filename, true, true) then
+    if files.compare(verify_file.filename, rom_write_file.filename, true) then
       log.success("Flash successfully verified")
     else
       log.error("Flash verification did not match")

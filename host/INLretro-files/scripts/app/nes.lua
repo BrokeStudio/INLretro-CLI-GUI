@@ -371,34 +371,31 @@ end
 -- @param addr integer CPU address
 -- @param val integer Byte to write
 -- @param options? table Write options
--- @param options.debug? boolean Log the address and value; defaults to false
 -- @param options.comment? string Text appended to the debug log; defaults to an empty string
 -- @param options.opcode? string Dictionary opcode; defaults to NES_CPU_WR
 local function cpu_wr(addr, val, options)
   options = options or {}
-  local debug = options.debug or false
   local comment = options.comment or ""
   local opcode = options.opcode or "NES_CPU_WR"
 
   dict.nes(opcode, addr, val)
-  if (debug) then log.point("CPU", " W", help.hex(addr, 4, "0x"), val, help.hex(val, 2, "0x"), comment) end
+  if DEBUG then log.point("CPU", " W", help.hex(addr, 4, "0x"), val, help.hex(val, 2, "0x"), comment) end
 end
 
 --- Read a byte from the NES CPU bus.
 -- @param addr integer CPU address
 -- @param options? table Read options
--- @param options.debug? boolean Log the address and value; defaults to false
 -- @param options.label? string Text appended to the debug log; defaults to an empty string
 -- @param options.opcode? string Dictionary opcode; defaults to NES_CPU_RD
 -- @return integer value Byte read from the CPU bus
 local function cpu_rd(addr, options)
   options = options or {}
-  local debug = options.debug or false
   local label = options.label or ""
   local opcode = options.opcode or "NES_CPU_RD"
   local rv
+
   rv = dict.nes(opcode, addr)
-  if (debug) then log.point("CPU", "R ", help.hex(addr, 4, "0x"), rv, help.hex(rv, 2, "0x"), label) end
+  if DEBUG then log.point("CPU", "R ", help.hex(addr, 4, "0x"), rv, help.hex(rv, 2, "0x"), label) end
   return rv
 end
 
@@ -406,34 +403,30 @@ end
 -- @param addr integer PPU address
 -- @param val integer Byte to write
 -- @param options? table Write options
--- @param options.debug? boolean Log the address and value; defaults to false
 -- @param options.comment? string Text appended to the debug log; defaults to an empty string
 -- @param options.opcode? string Dictionary opcode; defaults to NES_PPU_WR
 local function ppu_wr(addr, val, options)
   options = options or {}
-  local debug = options.debug or false
   local comment = options.comment or ""
   local opcode = options.opcode or "NES_PPU_WR"
 
   dict.nes(opcode, addr, val)
-  if (debug) then log.point("PPU", " W", help.hex(addr, 4, "0x"), val, help.hex(val, 2, "0x"), comment) end
+  if DEBUG then log.point("PPU", " W", help.hex(addr, 4, "0x"), val, help.hex(val, 2, "0x"), comment) end
 end
 
 --- Read a byte from the NES PPU bus.
 -- @param addr integer PPU address
 -- @param options? table Read options
--- @param options.debug? boolean Log the address and value; defaults to false
 -- @param options.label? string Text appended to the debug log; defaults to an empty string
 -- @param options.opcode? string Dictionary opcode; defaults to NES_PPU_RD
 -- @return integer value Byte read from the PPU bus
 local function ppu_rd(addr, options)
   options = options or {}
-  local debug = options.debug or false
   local label = options.label or ""
   local opcode = options.opcode or "NES_PPU_RD"
   local rv
   rv = dict.nes(opcode, addr)
-  if (debug) then log.point("PPU", "R ", help.hex(addr, 4, "0x"), rv, help.hex(rv, 2, "0x"), label) end
+  if DEBUG then log.point("PPU", "R ", help.hex(addr, 4, "0x"), rv, help.hex(rv, 2, "0x"), label) end
   return rv
 end
 
@@ -442,12 +435,12 @@ end
 -- -- Pre:  nes_init() been called to setup i/o
 -- -- Post: PPU /A13 left high (disabled), all other ADDRH signals low
 -- -- Rtn:  true if jumper is set
--- local function jumper_ciramce_ppuA13n(debug)
+-- local function jumper_ciramce_ppuA13n()
 --   --check that we can clear CIRAM /CE with PPU /A13
 --   dict.pinport("ADDR_SET", 0x0000)
 --   --read CIRAM /CE pin
 --   if dict.pinport("CTL_RD", "CICE") ~= 0 then
---     if debug then print("CIRAM /CE high when /A13 low ") end
+--     if DEBUG then print("CIRAM /CE high when /A13 low ") end
 --     return false
 --   end
 
@@ -455,12 +448,12 @@ end
 --   dict.pinport("ADDR_SET", PPU_A13N_HI)
 --   --read CIRAM /CE pin
 --   if dict.pinport("CTL_RD", "CICE") == 0 then
---     if debug then print("CIRAM /CE low when /A13 high") end
+--     if DEBUG then print("CIRAM /CE low when /A13 high") end
 --     return false
 --   end
 
 --   --CICE low jumper appears to be present
---   if debug then print("CIRAM /CE <- PPU /A13 jumper present") end
+--   if DEBUG then print("CIRAM /CE <- PPU /A13 jumper present") end
 --   return true
 -- end
 
@@ -470,12 +463,12 @@ end
 -- -- Pre:  nes_init() been called to setup i/o
 -- -- Post: PPU A13 left disabled (hi)
 -- -- Rtn:  true if inverted PPU A13 drives CIRAM /CE
--- local function ciramce_inv_ppuA13(debug)
+-- local function ciramce_inv_ppuA13()
 --   --set PPU A13 low
 --   dict.pinport("ADDR_SET", 0x0000)
 --   -- CIRAM /CE should be high if inverted A13 is what drives it
 --   if dict.pinport("CTL_RD", "CICE") == 0 then
---     if debug then print("CIRAM /CE low when A13 low") end
+--     if DEBUG then print("CIRAM /CE low when A13 low") end
 --     return false
 --   end
 
@@ -483,12 +476,12 @@ end
 --   dict.pinport("ADDR_SET", PPU_A13_HI)
 --   -- CIRAM /CE should be low if inverted A13 is what drives it
 --   if dict.pinport("CTL_RD", "CICE") ~= 0 then
---     if debug then print("CIRAM /CE high when A13 high") end
+--     if DEBUG then print("CIRAM /CE high when A13 high") end
 --     return false
 --   end
 
 --   --CICE low jumper appears to be present
---   if debug then print("CIRAM /CE <- inverse PPU A13") end
+--   if DEBUG then print("CIRAM /CE <- inverse PPU A13") end
 --   return true
 -- end
 
@@ -508,7 +501,7 @@ end
 -- Test: Works on non-expansion sound carts obviously
 --       Works on VRC6 and VRC7
 --       Others untested
-local function jumper_famicom_sound(debug)
+local function jumper_famicom_sound()
   --EXP0 should be floating input
   --AXLOE pin needs to be set as output and
   --EXP FF needs enabled before we can clock it,
@@ -522,7 +515,7 @@ local function jumper_famicom_sound(debug)
   dict.pinport("CTL_IP_PU", "FCAPU")
   --read EXP0 Famicom APU audio pin
   if dict.pinport("CTL_RD", "FCAPU") ~= 0 then
-    if debug then print("RF audio out (EXP6) didn't drive APU audio in (EXP0) low") end
+    if DEBUG then print("RF audio out (EXP6) didn't drive APU audio in (EXP0) low") end
     dict.pinport("EXP_DISABLE")
     dict.pinport("CTL_IP_FL", "EXP0")
     return false
@@ -532,14 +525,14 @@ local function jumper_famicom_sound(debug)
   dict.pinport("EXP_SET", FC_RF_HI)
   --read Famicom APU audio pin
   if dict.pinport("CTL_RD", "FCAPU") == 0 then
-    if debug then print("RF audio out (EXP6) didn't drive APU audio in (EXP0) high") end
+    if DEBUG then print("RF audio out (EXP6) didn't drive APU audio in (EXP0) high") end
     dict.pinport("EXP_DISABLE")
     dict.pinport("CTL_IP_FL", "EXP0")
     return false
   end
 
   --Famicom audio jumper appears to be present
-  if debug then print("RF audio out (EXP6) is connected to APU audio in") end
+  if DEBUG then print("RF audio out (EXP6) is connected to APU audio in") end
   --disable EXP PORT and return EXP0 to floating if it was used
   dict.pinport("EXP_DISABLE")
   dict.pinport("CTL_IP_FL", "EXP0")
@@ -551,12 +544,12 @@ end
 -- Pre:
 -- Post: cart mirroring set to found mirroring
 -- Rtn:  SUCCESS if nothing bad happened, neg if error with kazzo etc
-local function detect_mapper_mirroring(debug)
+local function detect_mapper_mirroring()
   local read_0x2000, read_0x2400, read_0x2800, read_0x2C00
 
   -- log.section("Testing mirroring")
 
-  -- if(debug) then log.point("attempting to detect NES/FC mapper via mirroring...") end
+  -- if() then log.point("attempting to detect NES/FC mapper via mirroring...") end
   --    //TODO call mmc3 detection function
   --
   --    //TODO call mmc1 detection function
@@ -574,29 +567,29 @@ local function detect_mapper_mirroring(debug)
   dict.pinport("ADDR_SET", 0x2000)
   read_0x2000 = dict.pinport("CTL_RD", "CIA10")
 
-  if debug then
+  if DEBUG then
     print("0x2C00", "0x2800", "0x2400", "0x2000")
     print(read_0x2C00, read_0x2800, read_0x2400, read_0x2000)
   end
 
   ---[[
   if read_0x2000 == 0 and read_0x2400 == 0 and read_0x2800 == 0 and read_0x2C00 == 0 then
-    if debug then
+    if DEBUG then
       log.info("One screen A mirroring sensed")
     end
     return "1SCRNA"
   elseif read_0x2000 ~= 0 and read_0x2400 ~= 0 and read_0x2800 ~= 0 and read_0x2C00 ~= 0 then
-    if debug then
+    if DEBUG then
       log.info("One screen B mirroring sensed")
     end
     return "1SCRNB"
   elseif read_0x2000 == 0 and read_0x2800 == 0 and read_0x2400 ~= 0 and read_0x2C00 ~= 0 then
-    if debug then
+    if DEBUG then
       log.info("Vertical mirroring sensed")
     end
     return "VERT"
   elseif read_0x2000 == 0 and read_0x2400 == 0 and read_0x2800 ~= 0 and read_0x2C00 ~= 0 then
-    if debug then
+    if DEBUG then
       log.info("Horizontal mirroring sensed")
     end
     return "HORZ"
@@ -606,16 +599,16 @@ local function detect_mapper_mirroring(debug)
   --[[
     rv = dict.nes("CIRAM_A10_MIRROR")
     if (rv == op_nes["MIR_VERT"]) then
-      if debug then log.info("Vertical mirroring sensed") end
+      if DEBUG then log.info("Vertical mirroring sensed") end
       return "VERT"
     elseif rv == op_nes["MIR_HORZ"] then
-      if debug then log.info("Horizontal mirroring sensed") end
+      if DEBUG then log.info("Horizontal mirroring sensed") end
       return "HORZ"
     elseif rv == op_nes["MIR_1SCRNA"] then
-      if debug then log.info("One screen A mirroring sensed") end
+      if DEBUG then log.info("One screen A mirroring sensed") end
       return "1SCRNA"
     elseif rv == op_nes["MIR_1SCRNB"] then
-      if debug then log.info("One screen B mirroring sensed") end
+      if DEBUG then log.info("One screen B mirroring sensed") end
       return "1SCRNB"
     end
     --]]
@@ -753,16 +746,15 @@ end
 -- Other profile names, including nil, return false and an empty table without reading the bus.
 -- @param options table Selected unlock profile and read options
 -- @param options.unlock_profile_name string Short or long unlock profile
--- @param options.debug? boolean Log the read attempt and CPU read; defaults to false
 -- @return boolean found True when recognized, false when unknown or the profile is unsupported
 -- @return table manufacturer Manufacturer name and ID, or an empty table when unknown or the profile is unsupported
 local function prg_rom_get_manufacturer(options)
   local manufacturer_id
 
-  if options.debug then log.info("Trying to read manufacturer id") end
+  if DEBUG then log.info("Trying to read manufacturer id") end
 
   if options.unlock_profile_name == "short" or options.unlock_profile_name == "long" then
-    manufacturer_id = cpu_rd(0x8000, { debug = options.debug })
+    manufacturer_id = cpu_rd(0x8000)
     return chips.get_manufacturer(manufacturer_id)
   end
 
@@ -778,7 +770,6 @@ end
 -- @param options table Detected manufacturer, unlock profile, and read options
 -- @param options.manufacturer table Manufacturer information containing its id
 -- @param options.unlock_profile_name string Short or long unlock profile
--- @param options.debug? boolean Log the read attempt and CPU reads; defaults to false
 -- @return boolean|nil found True when the manufacturer/device pair is recognized, false when unknown, or nil for other profiles
 -- @return table|nil device Chip information, an empty table when unknown, or nil for other profiles
 local function prg_rom_get_device(options)
@@ -786,22 +777,22 @@ local function prg_rom_get_device(options)
   local device
   local found
 
-  if options.debug then log.info("Trying to read device id") end
+  if DEBUG then log.info("Trying to read device id") end
 
   if options.unlock_profile_name == "short" then
-    device_id = cpu_rd(0x8001, { debug = options.debug })
+    device_id = cpu_rd(0x8001)
     found, device = chips.get_device(options.manufacturer.id, device_id)
 
     if not found then
-      device_id = cpu_rd(0x8002, { debug = options.debug }) << 16
-      device_id = device_id | (cpu_rd(0x801C, { debug = options.debug }) << 8)
-      device_id = device_id | cpu_rd(0x801E, { debug = options.debug })
+      device_id = cpu_rd(0x8002) << 16
+      device_id = device_id | (cpu_rd(0x801C) << 8)
+      device_id = device_id | cpu_rd(0x801E)
       found, device = chips.get_device(options.manufacturer.id, device_id)
     end
 
     return found, device
   elseif options.unlock_profile_name == "long" then
-    device_id = cpu_rd(0x8001, { debug = options.debug })
+    device_id = cpu_rd(0x8001)
     return chips.get_device(options.manufacturer.id, device_id)
   end
 end
@@ -815,7 +806,6 @@ end
 -- Address overrides must be supplied together.
 -- Validates each profile before hardware access, then resets before and after identification.
 -- Unknown profiles are logged and skipped.
--- @param debug? boolean Log the selected profile, write addresses, and CPU reads and writes
 -- @param options? table Flash access options
 -- @param options.opcode? string Flash write opcode; defaults to NES_CPU_WR
 -- @param options.addr_base? integer Mask bitwise-ORed with profile addresses when no overrides are supplied; defaults to 0x8000
@@ -824,7 +814,7 @@ end
 -- @param options.unlock_addr2? integer Final second unlock address override; bypasses addr_base
 -- @return boolean found True when both manufacturer and device are recognized
 -- @return table device Chip information, or an empty table on validation or detection failure
-local function prg_rom_get_chip(debug, options)
+local function prg_rom_get_chip(options)
   log.section("Reading PRG-ROM manufacturer/device ID")
 
   local manufacturer = {}
@@ -855,7 +845,6 @@ local function prg_rom_get_chip(debug, options)
       log.error("Unknown unlock profile:", unlock_profile_name)
     else
       local test_options = {
-        debug = debug,
         opcode = options.opcode,
         addr_base = options.addr_base,
         unlock_profile_name = unlock_profile_name
@@ -864,19 +853,19 @@ local function prg_rom_get_chip(debug, options)
       local addr1 = options.unlock_addr1 or (unlock_profile.addr1 | options.addr_base)
       local addr2 = options.unlock_addr2 or (unlock_profile.addr2 | options.addr_base)
 
-      if debug then
+      if DEBUG then
         log.point("unlock profile name:", unlock_profile_name)
         log.point("unlock addr1:", help.hex_0x4(addr1))
         log.point("unlock addr2:", help.hex_0x4(addr2))
       end
 
       -- exit software
-      cpu_wr(0xFFFF, 0xF0, { opcode = test_options.opcode, debug = debug })
+      cpu_wr(0xFFFF, 0xF0, { opcode = test_options.opcode })
 
       -- write sequence
-      cpu_wr(addr1, 0xAA, { opcode = test_options.opcode, debug = debug })
-      cpu_wr(addr2, 0x55, { opcode = test_options.opcode, debug = debug })
-      cpu_wr(addr1, 0x90, { opcode = test_options.opcode, debug = debug })
+      cpu_wr(addr1, 0xAA, { opcode = test_options.opcode })
+      cpu_wr(addr2, 0x55, { opcode = test_options.opcode })
+      cpu_wr(addr1, 0x90, { opcode = test_options.opcode })
 
       manufacturer_found, manufacturer = prg_rom_get_manufacturer(test_options)
 
@@ -887,7 +876,7 @@ local function prg_rom_get_chip(debug, options)
       end
 
       -- exit software
-      cpu_wr(0xFFFF, 0xF0, { opcode = test_options.opcode, debug = debug })
+      cpu_wr(0xFFFF, 0xF0, { opcode = test_options.opcode })
 
       if device_found then
         chips.display_device(manufacturer.id, device.id)
@@ -903,14 +892,13 @@ end
 -- Both short and long unlock profiles are supported; other profiles return false.
 -- Polling has no timeout, and a true return value does not verify that the chip is blank.
 -- @param device table Flash chip information containing size in KiB and unlock_profile_name
--- @param debug? boolean Log the selected profile, resolved addresses, and CPU writes; polling reads are not logged
 -- @param options? table Flash access options
 -- @param options.opcode? string Flash write opcode; defaults to NES_CPU_WR
 -- @param options.addr_base? integer Mask bitwise-ORed with profile addresses without overrides; defaults to 0x8000
 -- @param options.unlock_addr1? integer Final first unlock address override, used without applying addr_base
 -- @param options.unlock_addr2? integer Final second unlock address override, used without applying addr_base
 -- @return boolean completed True when polling completes, or false for an unsupported profile
-local function prg_rom_erase(device, debug, options)
+local function prg_rom_erase(device, options)
   options = options or {}
   local opcode = options.opcode or "NES_CPU_WR"
   local addr_base = options.addr_base or 0x8000
@@ -927,18 +915,18 @@ local function prg_rom_erase(device, debug, options)
     local addr1 = options.unlock_addr1 or (unlock_profile.addr1 | addr_base)
     local addr2 = options.unlock_addr2 or (unlock_profile.addr2 | addr_base)
 
-    if debug then
+    if DEBUG then
       log.point("unlock profile name", device.unlock_profile_name)
       log.point("unlock addr1", help.hex_0x4(addr1))
       log.point("unlock addr2", help.hex_0x4(addr2))
     end
 
-    cpu_wr(addr1, 0xAA, { opcode = opcode, debug = debug })
-    cpu_wr(addr2, 0x55, { opcode = opcode, debug = debug })
-    cpu_wr(addr1, 0x80, { opcode = opcode, debug = debug })
-    cpu_wr(addr1, 0xAA, { opcode = opcode, debug = debug })
-    cpu_wr(addr2, 0x55, { opcode = opcode, debug = debug })
-    cpu_wr(addr1, 0x10, { opcode = opcode, debug = debug })
+    cpu_wr(addr1, 0xAA, { opcode = opcode })
+    cpu_wr(addr2, 0x55, { opcode = opcode })
+    cpu_wr(addr1, 0x80, { opcode = opcode })
+    cpu_wr(addr1, 0xAA, { opcode = opcode })
+    cpu_wr(addr2, 0x55, { opcode = opcode })
+    cpu_wr(addr1, 0x10, { opcode = opcode })
   else
     log.error("Unlock profile unknwown:", device.unlock_profile_name)
     return false
@@ -963,14 +951,13 @@ end
 -- Other profile names, including nil, return false and an empty table without reading the bus.
 -- @param options table Selected unlock profile
 -- @param options.unlock_profile_name string Short or long unlock profile
--- @param options.debug? boolean Log the PPU read; defaults to false
 -- @return boolean found True when recognized, false when unknown or the profile is unsupported
 -- @return table manufacturer Manufacturer name and ID, or an empty table when unknown or the profile is unsupported
 local function chr_rom_get_manufacturer(options)
   local manufacturer_id
 
   if options.unlock_profile_name == "short" or options.unlock_profile_name == "long" then
-    manufacturer_id = ppu_rd(0x0000, { debug = options.debug })
+    manufacturer_id = ppu_rd(0x0000)
     return chips.get_manufacturer(manufacturer_id)
   end
 
@@ -986,7 +973,6 @@ end
 -- @param options table Detected manufacturer and selected unlock profile
 -- @param options.manufacturer table Manufacturer information containing its id
 -- @param options.unlock_profile_name string Short or long unlock profile
--- @param options.debug? boolean Log the PPU reads; defaults to false
 -- @return boolean|nil found True when the manufacturer/device pair is recognized, false when unknown, or nil for other profiles
 -- @return table|nil device Chip information, an empty table when unknown, or nil for other profiles
 local function chr_rom_get_device(options)
@@ -995,19 +981,19 @@ local function chr_rom_get_device(options)
   local found
 
   if options.unlock_profile_name == "short" then
-    device_id = ppu_rd(0x8001, { debug = options.debug })
+    device_id = ppu_rd(0x8001)
     found, device = chips.get_device(options.manufacturer.id, device_id)
 
     if not found then
-      device_id = ppu_rd(0x8002, { debug = options.debug }) << 16
-      device_id = device_id | (ppu_rd(0x801C, { debug = options.debug }) << 8)
-      device_id = device_id | ppu_rd(0x801E, { debug = options.debug })
+      device_id = ppu_rd(0x8002) << 16
+      device_id = device_id | (ppu_rd(0x801C) << 8)
+      device_id = device_id | ppu_rd(0x801E)
       found, device = chips.get_device(options.manufacturer.id, device_id)
     end
 
     return found, device
   elseif options.unlock_profile_name == "long" then
-    device_id = ppu_rd(0x0001, { debug = options.debug })
+    device_id = ppu_rd(0x0001)
     return chips.get_device(options.manufacturer.id, device_id)
   end
 end
@@ -1023,7 +1009,6 @@ end
 -- Unknown profiles are logged and skipped.
 -- Profile addresses are mapped to 0x1000-0x1FFF using (addr & 0x0FFF) | 0x1000;
 -- explicit address overrides are written unchanged.
--- @param debug? boolean Log the selected profile, resolved addresses, and PPU writes; identification reads are not logged
 -- @param options? table Flash access options
 -- @param options.opcode? string Flash write opcode; defaults to NES_PPU_WR
 -- @param options.addr_base? integer Mask bitwise-ORed with profile addresses when no overrides are supplied; defaults to 0x0000
@@ -1032,7 +1017,7 @@ end
 -- @param options.unlock_addr2? integer Final second unlock address override; bypasses addr_base and CHR address masking
 -- @return boolean found True when both manufacturer and device are recognized
 -- @return table device Chip information, or an empty table on validation or detection failure
-local function chr_rom_get_chip(debug, options)
+local function chr_rom_get_chip(options)
   log.section("Reading CHR-ROM manufacturer/device ID")
 
   local manufacturer = {}
@@ -1084,19 +1069,19 @@ local function chr_rom_get_chip(debug, options)
         addr2 = (addr2 & 0xfff) | 0x1000
       end
 
-      if debug then
+      if DEBUG then
         log.point("unlock profile name", unlock_profile_name)
         log.point("unlock addr1", help.hex_0x4(addr1))
         log.point("unlock addr2", help.hex_0x4(addr2))
       end
 
       -- exit software
-      ppu_wr(0x0000, 0xF0, { opcode = options.opcode, debug = debug })
+      ppu_wr(0x0000, 0xF0, { opcode = options.opcode })
 
       -- write sequence
-      ppu_wr(addr1, 0xAA, { opcode = test_options.opcode, debug = debug })
-      ppu_wr(addr2, 0x55, { opcode = test_options.opcode, debug = debug })
-      ppu_wr(addr1, 0x90, { opcode = test_options.opcode, debug = debug })
+      ppu_wr(addr1, 0xAA, { opcode = test_options.opcode })
+      ppu_wr(addr2, 0x55, { opcode = test_options.opcode })
+      ppu_wr(addr1, 0x90, { opcode = test_options.opcode })
 
       manufacturer_found, manufacturer = chr_rom_get_manufacturer(test_options)
 
@@ -1107,7 +1092,7 @@ local function chr_rom_get_chip(debug, options)
       end
 
       -- exit software
-      ppu_wr(0x0000, 0xF0, { opcode = options.opcode, debug = debug })
+      ppu_wr(0x0000, 0xF0, { opcode = options.opcode })
 
       if device_found then
         chips.display_device(manufacturer.id, device.id)
@@ -1125,14 +1110,13 @@ end
 -- Profile addresses are mapped to 0x1000-0x1FFF using (addr & 0x0FFF) | 0x1000;
 -- explicit address overrides are written unchanged.
 -- @param device table Flash chip information containing size in KiB and unlock_profile_name
--- @param debug? boolean Log the selected profile, resolved addresses, and PPU writes; polling reads are not logged
 -- @param options? table Flash access options
 -- @param options.opcode? string Flash write opcode; defaults to NES_PPU_WR
 -- @param options.addr_base? integer Mask bitwise-ORed with profile addresses without overrides; defaults to 0x0000
 -- @param options.unlock_addr1? integer Final first unlock address override; bypasses addr_base and CHR address masking
 -- @param options.unlock_addr2? integer Final second unlock address override; bypasses addr_base and CHR address masking
 -- @return boolean completed True when polling completes, or false for an unsupported profile
-local function chr_rom_erase(device, debug, options)
+local function chr_rom_erase(device, options)
   options = options or {}
   local opcode = options.opcode or "NES_PPU_WR"
   local addr_base = options.addr_base or 0x0000
@@ -1162,18 +1146,18 @@ local function chr_rom_erase(device, debug, options)
       addr2 = (addr2 & 0xfff) | 0x1000
     end
 
-    if debug then
+    if DEBUG then
       log.point("unlock profile name", device.unlock_profile_name)
       log.point("unlock addr1", help.hex_0x4(addr1))
       log.point("unlock addr2", help.hex_0x4(addr2))
     end
 
-    ppu_wr(addr1, 0xAA, { opcode = opcode, debug = debug })
-    ppu_wr(addr2, 0x55, { opcode = opcode, debug = debug })
-    ppu_wr(addr1, 0x80, { opcode = opcode, debug = debug })
-    ppu_wr(addr1, 0xAA, { opcode = opcode, debug = debug })
-    ppu_wr(addr2, 0x55, { opcode = opcode, debug = debug })
-    ppu_wr(addr1, 0x10, { opcode = opcode, debug = debug })
+    ppu_wr(addr1, 0xAA, { opcode = opcode })
+    ppu_wr(addr2, 0x55, { opcode = opcode })
+    ppu_wr(addr1, 0x80, { opcode = opcode })
+    ppu_wr(addr1, 0xAA, { opcode = opcode })
+    ppu_wr(addr2, 0x55, { opcode = opcode })
+    ppu_wr(addr1, 0x10, { opcode = opcode })
   else
     log.error("Unlock profile unknwown:", device.unlock_profile_name)
     return false
@@ -1193,7 +1177,7 @@ local function chr_rom_erase(device, debug, options)
 end
 
 -- -- verify the ciccom software mirroring switch is working properly
--- local function test_cic_soft_switch(debug)
+-- local function test_cic_soft_switch()
 -- end
 
 -- -- Desc: CHR-ROM flash manf/prod ID sense test
@@ -1208,7 +1192,7 @@ end
 -- --       memory wr_dict and wr_opcode set if successful
 -- --       Software mode exited if entered successfully
 -- -- Rtn:  SUCCESS if flash sensed, GEN_FAIL if not, neg if error
--- local function read_flashID_chrrom_8K(debug)
+-- local function read_flashID_chrrom_8K()
 --   local rv
 --   --enter software mode
 --   --NROM has A13 tied to A11, and A14 tied to A12.
@@ -1222,7 +1206,7 @@ end
 --   dict.nes("NES_PPU_WR", 0x1555, 0x90)
 --   --read manf ID
 --   rv = dict.nes("NES_PPU_RD", 0x0000)
---   if debug then print("attempted read CHR-ROM manf ID:", help.hex(rv)) end
+--   if DEBUG then print("attempted read CHR-ROM manf ID:", help.hex(rv)) end
 --   --  if ( rv[RV_DATA0_IDX] != SST_MANF_ID ) {
 --   --    return GEN_FAIL;
 --   --    //no need for software exit since failed to enter
@@ -1230,7 +1214,7 @@ end
 --   --
 --   --read prod ID
 --   rv = dict.nes("NES_PPU_RD", 0x0001)
---   if debug then print("attempted read CHR-ROM prod ID:", help.hex(rv)) end
+--   if DEBUG then print("attempted read CHR-ROM prod ID:", help.hex(rv)) end
 --   --  if ( (rv[RV_DATA0_IDX] == SST_PROD_128)
 --   --  ||   (rv[RV_DATA0_IDX] == SST_PROD_256)
 --   --  ||   (rv[RV_DATA0_IDX] == SST_PROD_512) ) {
@@ -1256,7 +1240,7 @@ end
 -- Rtn:  SUCCESS if ram sensed, GEN_FAIL if not, neg if error
 --
 --int ppu_ram_sense( USBtransfer *transfer, uint16_t addr ) {
-local function ppu_ram_sense(addr, debug)
+local function ppu_ram_sense(addr)
   local res = true
 
   log.section("Trying to sense CHR-RAM")
@@ -1266,7 +1250,7 @@ local function ppu_ram_sense(addr, debug)
 
   --try to read it back
   if (dict.nes("NES_PPU_RD", addr) ~= 0xAA) then
-    if debug then log.bullet("could not write 0xAA to PPU " .. help.hex(addr, 4, "$")) end
+    if DEBUG then log.bullet("could not write 0xAA to PPU " .. help.hex(addr, 4, "$")) end
     res = false
   end
 
@@ -1275,7 +1259,7 @@ local function ppu_ram_sense(addr, debug)
 
   --try to read it back
   if (dict.nes("NES_PPU_RD", addr) ~= 0x55) then
-    if debug then log.bullet("could not write 0x55 to PPU " .. help.hex(addr, 4, "$")) end
+    if DEBUG then log.bullet("could not write 0x55 to PPU " .. help.hex(addr, 4, "$")) end
     res = false
   end
 
@@ -1301,7 +1285,7 @@ end
 -- --       memory wr_dict and wr_opcode set if successful
 -- --       Software mode exited if entered successfully
 -- -- Rtn:  SUCCESS if flash sensed, GEN_FAIL if not, neg if error
--- local function read_flashID_prgrom_exp0(debug)
+-- local function read_flashID_prgrom_exp0()
 --   local rv
 --   --enter software mode
 --   --ROMSEL controls PRG-ROM /OE which needs to be low for flash writes
@@ -1315,7 +1299,7 @@ end
 --   dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x5555, 0x90)
 --   --read manf ID
 --   rv = dict.nes("NES_CPU_RD", 0x8000)
---   if debug then print("attempted read PRG-ROM manf ID:", help.hex(rv)) end
+--   if DEBUG then print("attempted read PRG-ROM manf ID:", help.hex(rv)) end
 --   --  debug("manf id: %x", rv[RV_DATA0_IDX]);
 --   --  if ( rv[RV_DATA0_IDX] != SST_MANF_ID ) {
 --   --    return GEN_FAIL;
@@ -1324,7 +1308,7 @@ end
 --   --
 --   --read prod ID
 --   rv = dict.nes("NES_CPU_RD", 0x8001)
---   if debug then print("attempted read PRG-ROM prod ID:", help.hex(rv)) end
+--   if DEBUG then print("attempted read PRG-ROM prod ID:", help.hex(rv)) end
 --   --  if ( (rv[RV_DATA0_IDX] == SST_PROD_128)
 --   --  ||   (rv[RV_DATA0_IDX] == SST_PROD_256)
 --   --  ||   (rv[RV_DATA0_IDX] == SST_PROD_512) ) {
@@ -1339,7 +1323,7 @@ end
 --   dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x8000, 0xF0)
 --   --verify exited
 --   --  rv = dict.nes("NES_CPU_RD", 0x8001)
---   --  if debug then print("attempted read PRG-ROM prod ID:", help.hex(rv)) end
+--   --  if DEBUG then print("attempted read PRG-ROM prod ID:", help.hex(rv)) end
 
 --   return true
 -- end
@@ -1423,7 +1407,7 @@ nes.cic = {
     log.point("Dumping program")
     time.start()
 
-    dump.dumptofile(file, 1, { mapper = 0x80, mem_type = "CIC_READ_BUFFER" }, false)
+    dump.dumptofile(file, 1, { mapper = 0x80, mem_type = "CIC_READ_BUFFER" })
 
     time.report(1)
     log.success("CIC dumping done")
@@ -1451,7 +1435,7 @@ nes.cic = {
     log.point("Flashing program")
     time.start()
 
-    flash.write_file(file, 1, { mapper = "CIC_WRITE_BUFFER", mem_type = "CIC" }, false)
+    flash.write_file(file, 1, { mapper = "CIC_WRITE_BUFFER", mem_type = "CIC" })
 
     time.report(1)
     log.success("CIC program flashed successfully")
@@ -1462,7 +1446,7 @@ nes.cic = {
 
   verify_flash = function(self, verify_file, dump_file)
     log.point("Verifying data")
-    if files.compare(verify_file, dump_file, true, true) then
+    if files.compare(verify_file, dump_file, true) then
       log.success("Flash successfully verified")
       return true
     else

@@ -9,7 +9,7 @@ local buffers = require "scripts.app.buffers"
 -- file constants and global variables
 
 -- local functions
-local function dumptocallback(callback, size_kb, config, debug)
+local function dumptocallback(callback, size_kb, config)
   local buff0 = 0
   local buff1 = 1
   local cur_buff_status = 0
@@ -19,13 +19,13 @@ local function dumptocallback(callback, size_kb, config, debug)
   --op_buffer[map] will be nil for raw values
   local mapper = op_buffer[config.mapper]
   if not mapper then
-    if debug then print("mapper isn't defined, evaluated as raw number") end
+    if DEBUG then print("mapper isn't defined, evaluated as raw number") end
     mapper = config.mapper
   end
   local mem_type = config.mem_type
   local options = config.options or op_buffer["NOVAR"]
 
-  if debug then print("dumping cart") end
+  if DEBUG then print("dumping cart") end
 
   dict.operation("SET_OPERATION", op_buffer["RESET"])
   --reset buffers first
@@ -35,7 +35,7 @@ local function dumptocallback(callback, size_kb, config, debug)
   --2x 128Byte buffers
   local num_buffers = 2
   local buff_size = 128
-  if debug then print("allocating buffers") end
+  if DEBUG then print("allocating buffers") end
   assert(buffers.allocate(num_buffers, buff_size), "fail to allocate buffers")
 
   --set buffer elements as needed
@@ -43,13 +43,13 @@ local function dumptocallback(callback, size_kb, config, debug)
   --set reload to 256 = 1 when translated to page_num (done in allocate buffers funct)
   --set page_num to non-zero if offset arg sent
   --set mem_type and part_num to designate how to get/write data
-  if debug then print("setting map n part") end
+  if DEBUG then print("setting map n part") end
   dict.buffer("SET_MEM_N_PART", (op_buffer[mem_type] << 8) | options, buff0)
   dict.buffer("SET_MEM_N_PART", (op_buffer[mem_type] << 8) | options, buff1)
   --set multiple and add_mult only when flashing
   --set mapper, map_var, and function to designate read/write algo
 
-  if debug then print("setting map n mapvar") end
+  if DEBUG then print("setting map n mapvar") end
   --dict.buffer("SET_MAP_N_MAPVAR", (op_buffer[map]<<8 | op_buffer["NOVAR"]), buff0 )
   --dict.buffer("SET_MAP_N_MAPVAR", (op_buffer[map]<<8 | op_buffer["NOVAR"]), buff1 )
   dict.buffer("SET_MAP_N_MAPVAR", (mapper << 8) | op_buffer["NOVAR"], buff0)
@@ -72,7 +72,7 @@ local function dumptocallback(callback, size_kb, config, debug)
   --dict.buffer("GET_PAGE_NUM", nil, buff0 )
   --dict.buffer("GET_PAGE_NUM", nil, buff1 )
 
-  if debug then print("\n\nsetting operation STARTDUMP") end
+  if DEBUG then print("\n\nsetting operation STARTDUMP") end
   --inform buffer manager to start dumping operation now that buffers are initialized
   dict.operation("SET_OPERATION", op_buffer["STARTDUMP"])
 
@@ -84,7 +84,7 @@ local function dumptocallback(callback, size_kb, config, debug)
   local tstart = os.clock()
   local tlast = tstart
 
-  if debug then print("starting first payload") end
+  if DEBUG then print("starting first payload") end
   --now just need to call series of payload IN transfers to retrieve data
   for i = 1, (size_kb * 1024 / buff_size) do --dump next buff
     --stm adapter had trouble dumping
@@ -113,18 +113,18 @@ local function dumptocallback(callback, size_kb, config, debug)
     --if ( (i % (1024*1024/buff_size/16)) == 0) then
     if ((i % (4 * 2024 * 1024 / buff_size / 16)) == 0) then
       local tdelta = os.clock() - tlast
-      if debug then print("time delta:", tdelta, "seconds, speed:", (1024 / 16 / tdelta), "KBps") end
+      if DEBUG then print("time delta:", tdelta, "seconds, speed:", (1024 / 16 / tdelta), "KBps") end
       --print("dumped part:", i/1024, "of 16 \n")
-      if debug then print("dumped part:", i / (4 * 1024), "of 4 \n") end
+      if DEBUG then print("dumped part:", i / (4 * 1024), "of 4 \n") end
       tlast = os.clock()
     end
   end
 
-  if debug then print("DUMPING DONE") end
+  if DEBUG then print("DUMPING DONE") end
 
   tstop = os.clock()
   timediff = (tstop - tstart)
-  if debug then print("total time:", timediff, "seconds, average speed:", (size_kb / timediff), "KBps") end
+  if DEBUG then print("total time:", timediff, "seconds, average speed:", (size_kb / timediff), "KBps") end
 
   --buffer manager updates from USB_UNLOADING -> DUMPING -> DUMPED
   --while one buffer is unloading, it sends next buffer off to dump
@@ -144,12 +144,12 @@ local function dumptocallback(callback, size_kb, config, debug)
   dict.buffer("RAW_BUFFER_RESET")
 end
 
-local function dumptofile(file, size_kb, config, debug)
+local function dumptofile(file, size_kb, config)
   dumptocallback(
     function(data)
       file:write(data)
     end,
-    size_kb, config, debug
+    size_kb, config
   )
 end
 
@@ -166,7 +166,7 @@ local function dump_nes( file, debug )
 -- uint8_t data[buff_size];
   local data = nil --lua stores data in strings
 
-  if debug then print("dumping cart") end
+  if DEBUG then print("dumping cart") end
 --
 -- //TODO provide user arg to force all these checks passed
 -- //first check if any provided args differ from what was detected
@@ -386,7 +386,7 @@ local function dump_snes( file, mapping, debug )
     print("currently only support LOROM SNES mapping!!!")
   end
 
-  if debug then print("dumping cart") end
+  if DEBUG then print("dumping cart") end
 
   --start with reset and init
   --dict.io("IO_RESET")

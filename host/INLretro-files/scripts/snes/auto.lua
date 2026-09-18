@@ -42,10 +42,9 @@ local flash_chip
 --]]
 
 --- Read and identify the ROM flash manufacturer/device ID.
--- @param debug? boolean Enable verbose progress logging
 -- @return boolean found True when the flash chip is recognized
 -- @return table device Flash chip information, or an empty table when unknown
-local function rom_manf_id(debug)
+local function rom_manf_id()
   local manufacturer_id
   local device_id
   local found
@@ -73,7 +72,7 @@ local function rom_manf_id(debug)
     device_id = dict.snes("SNES_ROM_RD", 0x0002) << 16
     device_id = device_id | (dict.snes("SNES_ROM_RD", 0x001C) << 8)
     device_id = device_id | dict.snes("SNES_ROM_RD", 0x001E)
-  found, device = chips.display_device(manufacturer_id, device_id)
+    found, device = chips.display_device(manufacturer_id, device_id)
   else
     -- fallback (SST)
     device_id = dict.snes("SNES_ROM_RD", 0x0001)
@@ -120,8 +119,7 @@ end
 --- Program one byte to ROM flash and poll for completion.
 -- @param addr integer Address to program
 -- @param value integer 8-bit value to write
--- @param debug? boolean Enable verbose progress logging
-local function rom_flash_byte(addr, value, debug)
+local function rom_flash_byte(addr, value)
   if (addr < 0x0000 or addr > 0xFFFF) then
     print("\n  ERROR! flash write to SNES", string.format("$%X", addr), "must be $0000-FFFF \n\n")
     return
@@ -141,8 +139,8 @@ local function rom_flash_byte(addr, value, debug)
     rv = dict.snes("SNES_ROM_RD", addr)
     i = i + 1
   end
-  if debug then print(i, "naks, done writing byte.") end
-  if debug then print("written value:", string.format("%X", value), "verified value:", string.format("%X", rv)) end
+  if DEBUG then print(i, "naks, done writing byte.") end
+  if DEBUG then print("written value:", string.format("%X", value), "verified value:", string.format("%X", rv)) end
 
   --TODO handle timeout for problems
 
@@ -152,8 +150,7 @@ end
 --- Dump ROM contents to an already-open output file.
 -- @param file file* Open binary output file
 -- @param rom_size_kb integer ROM size in kilobytes
--- @param debug? boolean Enable verbose progress logging
-local function rom_dump(file, rom_size_kb, debug)
+local function rom_dump(file, rom_size_kb)
   -- /ROMSEL is always low for this dump
 
   local kb_per_bank
@@ -176,7 +173,7 @@ local function rom_dump(file, rom_size_kb, debug)
   log.info("ROM size", rom_size_kb .. "KB")
 
   while cur_bank < num_banks do
-    if debug then
+    if DEBUG then
       log.point("dumping bank", cur_bank, "of", num_banks - 1)
     else
       spinner.update("Dumping", cur_bank, "/", num_banks - 1)
@@ -185,7 +182,7 @@ local function rom_dump(file, rom_size_kb, debug)
     --select desired bank
     dict.snes("SNES_SET_BANK", cur_bank) -- start_bank+cur_bank)
 
-    dump.dumptofile(file, kb_per_bank, { addr_base = addr_base, mem_type = "SNESROM_PAGE" }, false)
+    dump.dumptofile(file, kb_per_bank, { addr_base = addr_base, mem_type = "SNESROM_PAGE" })
 
     cur_bank = cur_bank + 1
   end
@@ -196,8 +193,7 @@ end
 --- Program ROM contents from an already-open input file, one bank at a time.
 -- @param file file* Open binary input file
 -- @param rom_size_kb integer ROM size in kilobytes
--- @param debug? boolean Enable verbose progress logging
-local function rom_flash(file, rom_size_kb, debug)
+local function rom_flash(file, rom_size_kb)
   log.section("Programming ROM")
   log.info("ROM size", rom_size_kb .. "KB")
 
@@ -225,7 +221,7 @@ local function rom_flash(file, rom_size_kb, debug)
   end
 
   while cur_bank < num_banks do
-    if debug then
+    if DEBUG then
       log.point("writing bank", cur_bank, "of", num_banks - 1)
     else
       spinner.update("Flashing", cur_bank, "/", num_banks - 1)
@@ -234,7 +230,7 @@ local function rom_flash(file, rom_size_kb, debug)
     --select desired bank
     dict.snes("SNES_SET_BANK", cur_bank)
 
-    flash.write_file(file, kb_per_bank, { mapper = mapname, mem_type = "SNESROM", options = options }, true)
+    flash.write_file(file, kb_per_bank, { mapper = mapname, mem_type = "SNESROM", options = options })
 
     cur_bank = cur_bank + 1
   end
@@ -262,7 +258,6 @@ local function process(process_opts, console_opts)
   local file
 
   -- process options
-  local DEBUG          = process_opts.debug
   local retroprog_id   = process_opts.retroprog_id
   local do_test        = process_opts.do_test
   local do_erase       = process_opts.do_erase
@@ -354,7 +349,7 @@ local function process(process_opts, console_opts)
       log.section("Dumping ROM", cartridge_title)
 
       time.start()
-      rom_dump(file, rom_size_kb, DEBUG)
+      rom_dump(file, rom_size_kb)
       time.report(rom_size_kb)
       log.success("ROM dumping done")
 
@@ -405,7 +400,7 @@ local function process(process_opts, console_opts)
     -- flash cart
     if rom_size_kb ~= 0 then
       time.start()
-      rom_flash(file, rom_size_kb, DEBUG)
+      rom_flash(file, rom_size_kb)
       time.report(rom_size_kb)
     end
 
@@ -429,7 +424,7 @@ local function process(process_opts, console_opts)
       -- dump cart to file
       log.section("Dumping ROM")
       time.start()
-      rom_dump(file, rom_size_kb, DEBUG)
+      rom_dump(file, rom_size_kb)
       time.report(rom_size_kb)
       log.success("ROM dumping done")
 
@@ -438,7 +433,7 @@ local function process(process_opts, console_opts)
 
       -- compare the flash file vs post dump file
       log.section("Verifying data")
-      if files.compare(verify_file.filename, rom_write_file.filename, true, true) then
+      if files.compare(verify_file.filename, rom_write_file.filename, true) then
         log.success("Flash successfully verified")
       else
         log.error("Flash verification did not match")

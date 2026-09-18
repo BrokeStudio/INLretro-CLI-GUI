@@ -135,8 +135,7 @@ end
 
 --- Erase one flash sector on the 32Mb Genesis cartridge.
 -- @param addr integer 24-bit sector address, 0x000000-0x3FFFFF
--- @param debug? boolean Enable verbose progress logging
-local function rom_erase_sector(addr, debug)
+local function rom_erase_sector(addr)
   local cur_bank = addr >> 17       -- 128KB banks
   local local_addr = addr & 0x1FFFF -- offset inside 128KB bank
   local window_addr = 0x080000 | ((cur_bank & 0x03) << 17)
@@ -154,7 +153,7 @@ local function rom_erase_sector(addr, debug)
   genesis.rom_wr(window_addr | (0x0002AA << 1), 0x0055)
   genesis.rom_wr(window_addr | local_addr, 0x0030)
 
-  if debug then
+  if DEBUG then
     log.point("erasing sector @ " .. help.hex_0x6(addr))
   end
 
@@ -186,8 +185,7 @@ end
 --- Program one 16-bit word to ROM flash and poll until it reads back.
 -- @param addr integer 24-bit ROM address, 0x000000-0x3FFFFF
 -- @param value integer 16-bit value to write
--- @param debug? boolean Enable verbose progress logging
-local function rom_flash_byte(addr, value, debug)
+local function rom_flash_byte(addr, value)
   if (addr < 0x000000 or addr > 0x3FFFFF) then
     log.error("ERROR! flash write to ROM", help.hex_0x6(addr), "must be $000000-$3FFFFF")
     return
@@ -196,7 +194,7 @@ local function rom_flash_byte(addr, value, debug)
   local addr_hi = (addr >> 16) & 0xff
   local addr_lo = addr & 0xffff
 
-  if debug then
+  if DEBUG then
     log.info("write a byte", help.hex_0x6(addr), help.hex_0x4(value))
   end
 
@@ -211,7 +209,7 @@ local function rom_flash_byte(addr, value, debug)
 
   while (rv ~= value) do
     rv = genesis.rom_rd(addr_lo)
-    -- if debug then print("post write read:", help.hex(rv)) end
+    -- if DEBUG then print("post write read:", help.hex(rv)) end
     i = i + 1
     if i > 30 then
       log.info("failed write, tried:", help.hex_0x4(value), "read back value:", help.hex_0x4(rv))
@@ -219,7 +217,7 @@ local function rom_flash_byte(addr, value, debug)
     end
   end
 
-  if debug then
+  if DEBUG then
     log.info("Done writing byte,", i .. " naks")
   end
 
@@ -231,8 +229,7 @@ end
 --- Dump SSF2 banked ROM contents to an already-open output file.
 -- @param file file* Open binary output file
 -- @param rom_size_kb integer ROM size in kilobytes
--- @param debug? boolean Enable verbose progress logging
-local function rom_dump(file, rom_size_kb, debug)
+local function rom_dump(file, rom_size_kb)
   local kb_per_bank = 2 * 64 -- 2 bytes per address, 64K addresses
   local addr_base = 0x0000   -- control signals are manually controlled
   local num_banks = math.floor(rom_size_kb / kb_per_bank)
@@ -249,7 +246,7 @@ local function rom_dump(file, rom_size_kb, debug)
     -- TODO: Accessing banks in games that are >4MB require using a mapper.
     -- See: https://plutiedev.com/beyond-4mb
 
-    if debug then
+    if DEBUG then
       log.point("dumping bank", cur_bank, "of", num_banks - 1)
     else
       spinner.update("Dumping", cur_bank, "/", num_banks - 1)
@@ -261,8 +258,8 @@ local function rom_dump(file, rom_size_kb, debug)
     -- set address hi bits (A23-A16)
     genesis.set_addr_hi(0x08 | ((cur_bank & 0x03) << 1)) -- 0x08 controls A19 and selects the $080000-$0FFFFF window
 
-    dump.dumptofile(file, kb_per_bank / 2, { addr_base = addr_base, mem_type = "GENESIS_ROM_PAGE0" }, false)
-    dump.dumptofile(file, kb_per_bank / 2, { addr_base = addr_base, mem_type = "GENESIS_ROM_PAGE1" }, false)
+    dump.dumptofile(file, kb_per_bank / 2, { addr_base = addr_base, mem_type = "GENESIS_ROM_PAGE0" })
+    dump.dumptofile(file, kb_per_bank / 2, { addr_base = addr_base, mem_type = "GENESIS_ROM_PAGE1" })
 
     cur_bank = cur_bank + 1
   end
@@ -273,8 +270,7 @@ end
 --- Program SSF2 banked ROM contents from an already-open input file, one bank at a time.
 -- @param file file* Open binary input file
 -- @param rom_size_kb integer ROM size in kilobytes
--- @param debug? boolean Enable verbose progress logging
-local function rom_flash(file, rom_size_kb, debug)
+local function rom_flash(file, rom_size_kb)
   log.section("Programming ROM")
   log.info("ROM size", rom_size_kb .. "KB")
 
@@ -292,7 +288,7 @@ local function rom_flash(file, rom_size_kb, debug)
   genesis.ram_disable()
 
   while cur_bank < num_banks do
-    if debug then
+    if DEBUG then
       log.point("writing bank", cur_bank, "of", num_banks - 1)
     else
       spinner.update("Flashing", cur_bank, "/", num_banks - 1)
@@ -304,7 +300,7 @@ local function rom_flash(file, rom_size_kb, debug)
     -- set address hi bits (A23-A16)
     genesis.set_addr_hi(0x08 | ((cur_bank & 0x03) << 1)) -- 0x08 controls A19 and selects the $080000-$0FFFFF window
 
-    flash.write_file(file, kb_per_bank, { mapper = mapname, mem_type = "GENESISROM", options = options }, false)
+    flash.write_file(file, kb_per_bank, { mapper = mapname, mem_type = "GENESISROM", options = options })
 
     cur_bank = cur_bank + 1
   end
@@ -328,8 +324,7 @@ end
 -- @param file file* Open binary output file
 -- @param addr_hi integer High address byte selecting the SRAM window
 -- @param ram_size_kb integer SRAM size in kilobytes
--- @param debug? boolean Enable verbose progress logging
-local function ram_dump(file, addr_hi, ram_size_kb, debug)
+local function ram_dump(file, addr_hi, ram_size_kb)
   local kb_per_bank =
       ram_size_kb        -- TODO: FIXME? => -- 128KByte addressable per bank, but only use lower byte of each 16bit word
   local num_banks = math.floor(ram_size_kb / kb_per_bank)
@@ -343,14 +338,14 @@ local function ram_dump(file, addr_hi, ram_size_kb, debug)
   genesis.set_addr_hi(addr_hi)
 
   while cur_bank < num_banks do
-    if debug then
+    if DEBUG then
       log.point("dumping RAM bank", cur_bank, "of", num_banks - 1)
     else
       spinner.update("Dumping", cur_bank, "/", num_banks - 1)
     end
 
     -- currently don't have means of dumping RAM with A16 high
-    dump.dumptofile(file, ram_size_kb, { addr_base = addr_base, mem_type = "GENESIS_RAM_PAGE" }, false) -- A16 low
+    dump.dumptofile(file, ram_size_kb, { addr_base = addr_base, mem_type = "GENESIS_RAM_PAGE" }) -- A16 low
 
     cur_bank = cur_bank + 1
   end
@@ -362,8 +357,7 @@ end
 -- @param file file* Open binary input file
 -- @param addr_hi integer High address byte selecting the SRAM window
 -- @param ram_size_kb integer SRAM size in kilobytes
--- @param debug? boolean Enable verbose progress logging
-local function ram_write(file, addr_hi, ram_size_kb, debug)
+local function ram_write(file, addr_hi, ram_size_kb)
   local kb_per_bank = 32 -- 128KByte addressable per bank, but only use lower byte of each 16bit word
   local num_banks = math.floor(ram_size_kb / kb_per_bank)
   local cur_bank = 0
@@ -375,7 +369,7 @@ local function ram_write(file, addr_hi, ram_size_kb, debug)
   genesis.ram_enable()
 
   while cur_bank < num_banks do
-    if debug then
+    if DEBUG then
       log.point("writing bank", cur_bank, "of", num_banks - 1)
     else
       spinner.update("Writing", cur_bank, "/", num_banks - 1)
@@ -383,7 +377,7 @@ local function ram_write(file, addr_hi, ram_size_kb, debug)
 
     genesis.set_addr_hi(addr_hi + cur_bank)
 
-    flash.write_file(file, ram_size_kb, { mapper = mapname, mem_type = "GENESISRAM" }, false)
+    flash.write_file(file, ram_size_kb, { mapper = mapname, mem_type = "GENESISRAM" })
 
     cur_bank = cur_bank + 1
   end
@@ -396,9 +390,8 @@ local function ram_write(file, addr_hi, ram_size_kb, debug)
 end
 
 --- Detect SRAM by preserving, toggling, and restoring one test byte.
--- @param debug? boolean Enable verbose progress logging
 -- @return boolean success True when SRAM read/write behavior is detected
-local function ram_test(debug)
+local function ram_test()
   local test = true
   local saved_value
   local write_value
@@ -442,9 +435,8 @@ end
 --- Exercise SRAM with an LFSR pattern and compare the dumped result.
 -- @param ram_size_kb integer SRAM size in kilobytes
 -- @param retroprog_id string|integer Identifier used in the temporary dump filename
--- @param debug? boolean Enable verbose compare/progress logging
 -- @return boolean success True when the SRAM dump matches the expected LFSR data
-local function ram_exercise(ram_size_kb, retroprog_id, debug)
+local function ram_exercise(ram_size_kb, retroprog_id)
   --[[
   SRAM covers the $200001-$20FFFF address range, and only every other byte is used (i.e. $200001, $200003, $200005, etc.).
   This gives you a total of 32KB to work with.
@@ -472,7 +464,7 @@ local function ram_exercise(ram_size_kb, retroprog_id, debug)
   local filename = opts.write_path .. "./ignore/gen_sram_dump-" .. retroprog_id .. ".bin"
   local file = assert(io.open(filename, "wb"))
   log.point("Dumping RAM")
-  ram_dump(file, addr_hi, ram_size_kb, debug)
+  ram_dump(file, addr_hi, ram_size_kb)
 
   -- disable SRAM
   genesis.ram_disable()
@@ -484,7 +476,7 @@ local function ram_exercise(ram_size_kb, retroprog_id, debug)
   local goodfile = opts.lua_path .. "./ignore/lfsr_32KB.bin"
 
   -- compare the flash file vs post dump file
-  if files.compare(filename, goodfile, true, debug) then
+  if files.compare(filename, goodfile, true) then
     log.success("SRAM test passed")
     return true
   else
@@ -505,9 +497,8 @@ end
 
 
 --- Detect FPGA-RAM by preserving, toggling, and restoring one test byte.
--- @param debug? boolean Enable verbose progress logging
 -- @return boolean success True when FPGA-RAM read/write behavior is detected
-local function fpga_ram_test(debug)
+local function fpga_ram_test()
   local test = true
   local read_value
   local saved_value
@@ -552,9 +543,8 @@ end
 --- Exercise FPGA-RAM with an LFSR pattern and compare the dumped result.
 -- Overwrites FPGA-RAM contents with the test pattern.
 -- @param retroprog_id string|integer Identifier used in the temporary dump filename
--- @param debug? boolean Enable verbose compare/progress logging
 -- @return boolean success True when the FPGA-RAM dump matches the expected LFSR data
-local function fpga_ram_exercise(retroprog_id, debug)
+local function fpga_ram_exercise(retroprog_id)
   --[[
   SRAM covers the $200001-$20FFFF address range, and only every other byte is used (i.e. $200001, $200003, $200005, etc.).
   This gives you a total of 32KB to work with.
@@ -580,7 +570,7 @@ local function fpga_ram_exercise(retroprog_id, debug)
   local filename = opts.write_path .. "./ignore/gen_fpga_ram_dump-" .. retroprog_id .. ".bin"
   local file = assert(io.open(filename, "wb"))
   log.point("Dumping FPGA-RAM")
-  ram_dump(file, addr_hi, ram_size_kb, debug)
+  ram_dump(file, addr_hi, ram_size_kb)
 
   -- disable SRAM
   genesis.ram_disable()
@@ -592,7 +582,7 @@ local function fpga_ram_exercise(retroprog_id, debug)
   local goodfile = opts.lua_path .. "./ignore/lfsr_32KB.bin"
 
   -- compare the flash file vs post dump file
-  if files.compare(filename, goodfile, false, debug) then
+  if files.compare(filename, goodfile, false) then
     log.success("FPGA-RAM test passed")
     return true
   else
@@ -621,7 +611,6 @@ local function process(process_opts, console_opts)
   local file
 
   -- process options
-  local DEBUG          = process_opts.debug
   local retroprog_id   = process_opts.retroprog_id
   local do_test        = process_opts.do_test
   local do_erase       = process_opts.do_erase
@@ -680,9 +669,9 @@ local function process(process_opts, console_opts)
     -- test_bootrom()
 
     -- FPGA_RAM tests
-    -- rv = fpga_ram_test(DEBUG)
+    -- rv = fpga_ram_test()
     -- if rv == true then
-    --   rv = fpga_ram_exercise(retroprog_id, DEBUG)
+    --   rv = fpga_ram_exercise(retroprog_id)
     --   -- exit script if test fails
     --   if not rv then return end
     -- else
@@ -690,7 +679,7 @@ local function process(process_opts, console_opts)
     -- end
 
     -- RAM tests
-    rv = ram_test(DEBUG)
+    rv = ram_test()
     if rv == true then
       if options.force_wram_test then
         log.print()
@@ -707,7 +696,7 @@ local function process(process_opts, console_opts)
           log.warning("Can't exercise RAM because ROM has battery backed data")
         else
           if ram_size_kb ~= 0 then
-            rv = ram_exercise(ram_size_kb, retroprog_id, DEBUG)
+            rv = ram_exercise(ram_size_kb, retroprog_id)
             -- exit script if test fails
             if not rv then return end
           end
@@ -760,7 +749,7 @@ local function process(process_opts, console_opts)
   -- local count = 128
   -- local base_addr = 0x000100
 
-  -- rom_erase_sector(base_addr, DEBUG)
+  -- rom_erase_sector(base_addr)
 
   -- genesis.dbg_rom_wr(0x000000, 0x00F0);
 
@@ -794,7 +783,7 @@ local function process(process_opts, console_opts)
 
   -----------------------------------------------------
 
-  --  rom_erase_sector(0x000000, DEBUG)
+  --  rom_erase_sector(0x000000)
 
   --  rom_flash_byte(0x000000, 0xDEAD)
 
@@ -824,7 +813,7 @@ local function process(process_opts, console_opts)
     local addr_hi = 0x20
     log.section("Dumping SRAM")
     time.start()
-    ram_dump(file, addr_hi, ram_size_kb, DEBUG)
+    ram_dump(file, addr_hi, ram_size_kb)
     time.report(ram_size_kb)
     log.success("SRAM dumping done")
 
@@ -849,7 +838,7 @@ local function process(process_opts, console_opts)
     -- flash cart SRAM
     local addr_hi = 0x20
     time.start()
-    ram_write(file, addr_hi, ram_size_kb, DEBUG)
+    ram_write(file, addr_hi, ram_size_kb)
     time.report(ram_size_kb)
 
     -- close file
@@ -874,7 +863,7 @@ local function process(process_opts, console_opts)
       -- dump cart to file
       log.section("Dumping ROM")
       time.start()
-      rom_dump(file, rom_size_kb, DEBUG)
+      rom_dump(file, rom_size_kb)
       time.report(rom_size_kb)
       log.success("ROM dumping done")
 
@@ -922,12 +911,12 @@ local function process(process_opts, console_opts)
 
         for i = 0, sectors - 1, 1 do
           addr = (i * 128 * 1024)
-          if (DEBUG) then
+          if DEBUG then
             log.bullet("erasing sector", i, "of", sectors - 1)
           else
             spinner.update("Erasing sector ", i, "/", sectors - 1) --, string.format("(%06X)", addr))
           end
-          temp = rom_erase_sector(addr, DEBUG)
+          temp = rom_erase_sector(addr)
           if temp == false then
             spinner.clear()
             return false
@@ -978,7 +967,7 @@ local function process(process_opts, console_opts)
 
       --flash cart
       time.start()
-      rom_flash(file, rom_size_kb, DEBUG)
+      rom_flash(file, rom_size_kb)
       time.report(rom_size_kb)
 
       -- close file
@@ -1002,7 +991,7 @@ local function process(process_opts, console_opts)
       -- dump cart to file
       log.section("Dumping ROM")
       time.start()
-      rom_dump(file, rom_size_kb, DEBUG)
+      rom_dump(file, rom_size_kb)
       time.report(rom_size_kb)
 
       -- close file
@@ -1020,7 +1009,7 @@ local function process(process_opts, console_opts)
 
       -- compare the flash file vs post dump file
       log.section("Verifying data")
-      if files.compare(verify_file.filename, rom_write_file.filename, true, true) then
+      if files.compare(verify_file.filename, rom_write_file.filename, true) then
         log.success("Flash successfully verified")
       else
         log.error("Flash verification did not match")

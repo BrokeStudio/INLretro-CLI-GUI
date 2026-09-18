@@ -84,8 +84,7 @@ end
 --- Dump ROM contents to an already-open output file.
 -- @param file file* Open binary output file
 -- @param rom_size_kb integer ROM size in kilobytes
--- @param debug? boolean Enable verbose progress logging
-local function rom_dump(file, rom_size_kb, debug)
+local function rom_dump(file, rom_size_kb)
   -- ROM dump 32KB at a time
   local kb_per_read = 32
   local num_banks = math.floor(rom_size_kb / kb_per_read)
@@ -93,13 +92,13 @@ local function rom_dump(file, rom_size_kb, debug)
   local addr_base = 0x00 -- $0000
 
   -- the first bank is fixed and only visible at $0000-3FFF
-  if debug then
+  if DEBUG then
     log.point("dumping bank", cur_bank, "of", num_banks - 1)
   else
     spinner.update("Dumping", cur_bank, "/", num_banks - 1)
   end
 
-  dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "GAMEBOY_PAGE" }, false)
+  dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "GAMEBOY_PAGE" })
 
   spinner.clear()
 end
@@ -107,8 +106,7 @@ end
 --- Program ROM contents from an already-open input file, one bank at a time.
 -- @param file file* Open binary input file
 -- @param rom_size_kb integer ROM size in kilobytes
--- @param debug? boolean Enable verbose progress logging
-local function rom_flash(file, rom_size_kb, debug)
+local function rom_flash(file, rom_size_kb)
   log.section("Programming ROM")
   log.info("ROM size", rom_size_kb .. "KB")
 
@@ -117,7 +115,7 @@ local function rom_flash(file, rom_size_kb, debug)
   local num_banks = math.floor(rom_size_kb / bank_size)
 
   -- flash fixed bank first
-  if debug then
+  if DEBUG then
     log.point("writing bank", cur_bank, "of", num_banks - 1)
   else
     spinner.update("Flashing", cur_bank, "/", num_banks - 1)
@@ -125,7 +123,7 @@ local function rom_flash(file, rom_size_kb, debug)
 
   dict.gameboy("GAMEBOY_SET_CUR_BANK", cur_bank)
 
-  flash.write_file(file, bank_size, { mapper = mapname, mem_type = "GBROM" }, false)
+  flash.write_file(file, bank_size, { mapper = mapname, mem_type = "GBROM" })
 
   spinner.clear()
   log.success("Done programming ROM")
@@ -139,8 +137,7 @@ end
 --- Program one byte to ROM flash and poll for completion.
 -- @param addr integer Address to program
 -- @param value integer 8-bit value to write
--- @param debug? boolean Enable verbose progress logging
-local function wr_rom_flash_byte(addr, value, debug)
+local function wr_rom_flash_byte(addr, value)
   if (addr < 0x0000 or addr > 0x7FFF) then
     print("\n  ERROR! flash write to ROM", string.format("$%X", addr), "must be $0000-7FFF \n\n")
     return
@@ -160,7 +157,7 @@ local function wr_rom_flash_byte(addr, value, debug)
     rv = dict.gameboy("GAMEBOY_RD", addr)
     i = i + 1
   end
-  if debug then print(i, "naks, done writing byte.") end
+  if DEBUG then print(i, "naks, done writing byte.") end
 
   --TODO handle timeout for problems
 
@@ -180,8 +177,7 @@ end
 --- Dump RAM contents to an already-open output file.
 -- @param file file* Open binary output file
 -- @param ram_size_kb integer RAM size in kilobytes
--- @param debug? boolean Enable verbose progress logging
-local function ram_dump(file, ram_size_kb, debug)
+local function ram_dump(file, ram_size_kb)
   local kb_per_read = 8
   local num_banks = math.floor(ram_size_kb / kb_per_read)
   local cur_bank = 0
@@ -190,14 +186,14 @@ local function ram_dump(file, ram_size_kb, debug)
   log.info("RAM size", ram_size_kb .. "KB")
 
   while cur_bank < num_banks do
-    if debug then
+    if DEBUG then
       log.point("dumping RAM bank ", cur_bank, "of", num_banks - 1)
     else
       spinner.update("Dumping", cur_bank, "/", num_banks - 1)
     end
 
     -- have the device dump a bank worth of data
-    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "GAMEBOY_PAGE" }, false)
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "GAMEBOY_PAGE" })
 
     cur_bank = cur_bank + 1
   end
@@ -208,8 +204,7 @@ end
 --- Write RAM contents from an already-open input file.
 -- @param file file* Open binary input file
 -- @param ram_size_kb integer RAM size in kilobytes
--- @param debug? boolean Enable verbose progress logging
-local function ram_write(file, ram_size_kb, debug)
+local function ram_write(file, ram_size_kb)
   log.section("Programming RAM")
   log.info("RAM size", ram_size_kb .. "KB")
 
@@ -218,14 +213,14 @@ local function ram_write(file, ram_size_kb, debug)
   local num_banks = math.floor(ram_size_kb / bank_size)
 
   while cur_bank < num_banks do
-    if debug then
+    if DEBUG then
       log.point("writing bank", cur_bank, "of", num_banks - 1)
     else
       spinner.update("Flashing", cur_bank, "/", num_banks - 1)
     end
 
     -- have the device write a bank worth of data
-    flash.write_file(file, bank_size, { mapper = mapname, mem_type = "GBRAM" }, false)
+    flash.write_file(file, bank_size, { mapper = mapname, mem_type = "GBRAM" })
 
     cur_bank = cur_bank + 1
   end
@@ -235,9 +230,8 @@ local function ram_write(file, ram_size_kb, debug)
 end
 
 --- Detect RAM by writing and reading back a test byte.
--- @param debug? boolean Enable verbose progress logging
 -- @return boolean success True when RAM read/write behavior is detected
-local function ram_test(debug)
+local function ram_test()
   local test = true
   local read_value
   local saved_value
@@ -274,9 +268,8 @@ end
 -- Overwrites RAM contents with the test pattern.
 -- @param ram_size_kb integer RAM size in kilobytes
 -- @param retroprog_id string|integer Identifier used in the temporary dump filename
--- @param debug? boolean Enable verbose compare/progress logging
 -- @return boolean success True when the RAM dump matches the expected LFSR data
-local function ram_exercise(ram_size_kb, retroprog_id, debug)
+local function ram_exercise(ram_size_kb, retroprog_id)
   dict.stuff("RESET_LFSR") -- sets it to 1
 
   local cur_bank = 0
@@ -288,7 +281,7 @@ local function ram_exercise(ram_size_kb, retroprog_id, debug)
   -- write random data to all banks
   log.point("Writing random data to RAM")
   while cur_bank < num_banks do
-    if debug then
+    if DEBUG then
       log.point("init RAM 8K bank", cur_bank, "of", num_banks - 1)
     else
       spinner.update("Initializing", cur_bank, "/", num_banks - 1)
@@ -312,7 +305,7 @@ local function ram_exercise(ram_size_kb, retroprog_id, debug)
 
   -- dump RAM
   log.point("Dumping RAM")
-  ram_dump(file, ram_size_kb, debug)
+  ram_dump(file, ram_size_kb)
 
   -- close file
   assert(file:close())
@@ -321,7 +314,7 @@ local function ram_exercise(ram_size_kb, retroprog_id, debug)
   local goodfile = opts.lua_path .. "./ignore/lfsr_32KB.bin"
 
   -- compare the flash file vs post dump file
-  if files.compare(filename, goodfile, false, debug) then
+  if files.compare(filename, goodfile, false) then
     log.success("RAM test passed")
     return true
   else
@@ -350,7 +343,6 @@ local function process(process_opts, console_opts)
   local file
 
   -- process options
-  local DEBUG          = process_opts.debug
   local retroprog_id   = process_opts.retroprog_id
   local do_test        = process_opts.do_test
   local do_erase       = process_opts.do_erase
@@ -401,7 +393,7 @@ local function process(process_opts, console_opts)
     end
 
     -- RAM tests
-    rv = ram_test(DEBUG)
+    rv = ram_test()
     if rv == true then
       if options.force_wram_test then
         log.print()
@@ -415,10 +407,10 @@ local function process(process_opts, console_opts)
           log.warning("Can't exercise RAM because ROM has battery backed data")
         else
           -- if wram_size_kb == 0 then
-          --   wram_size_kb = ram_get_size(DEBUG)
+          --   wram_size_kb = ram_get_size()
           -- end
           -- if wram_size_kb ~= 0 then
-          rv = ram_exercise(8, retroprog_id, DEBUG)
+          rv = ram_exercise(8, retroprog_id)
           -- exit script if test fails
           if not rv then return end
           -- end
@@ -445,7 +437,7 @@ local function process(process_opts, console_opts)
     if ram_size_kb ~= 0 then
       log.section("Dumping RAM")
       time.start()
-      ram_dump(file, ram_size_kb, DEBUG)
+      ram_dump(file, ram_size_kb)
       time.report(ram_size_kb)
       log.success("RAM dumping done")
     else
@@ -472,7 +464,7 @@ local function process(process_opts, console_opts)
     -- flash cart
     if ram_size_kb ~= 0 then
       time.start()
-      ram_write(file, ram_size_kb, DEBUG)
+      ram_write(file, ram_size_kb)
       time.report(ram_size_kb)
     else
       log.error("RAM size not provided")
@@ -499,7 +491,7 @@ local function process(process_opts, console_opts)
       -- dump cart to file
       log.section("Dumping ROM")
       time.start()
-      rom_dump(file, rom_size_kb, DEBUG)
+      rom_dump(file, rom_size_kb)
       time.report(rom_size_kb)
       log.success("ROM dumping done")
 
@@ -540,7 +532,7 @@ local function process(process_opts, console_opts)
     -- flash cart
     if rom_size_kb ~= 0 then
       time.start()
-      rom_flash(file, rom_size_kb, DEBUG)
+      rom_flash(file, rom_size_kb)
       time.report(rom_size_kb)
     end
 
@@ -565,7 +557,7 @@ local function process(process_opts, console_opts)
       -- dump cart to file
       log.section("Dumping ROM")
       time.start()
-      rom_dump(file, rom_size_kb, DEBUG)
+      rom_dump(file, rom_size_kb)
       time.report(rom_size_kb)
       log.success("ROM dumping done")
 
@@ -574,7 +566,7 @@ local function process(process_opts, console_opts)
 
       -- compare the flash file vs post dump file
       log.section("Verifying data")
-      if files.compare(verify_file.filename, rom_write_file.filename, true, true) then
+      if files.compare(verify_file.filename, rom_write_file.filename, true) then
         log.success("Flash successfully verified")
       else
         log.error("Flash verification did not match")
