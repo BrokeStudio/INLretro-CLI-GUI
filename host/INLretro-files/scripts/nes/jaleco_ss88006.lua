@@ -202,9 +202,9 @@ local function prg_rom_flash(file, rom_size_kb)
   log.section("Programming PRG-ROM")
   log.info("PRG-ROM size", rom_size_kb .. "KB")
 
-  local bank_size = 8 -- MMC3 8KByte per PRG bank
+  local bank_size_kb = 8 -- MMC3 8KByte per PRG bank
   local cur_bank = 0
-  local num_banks = math.floor(rom_size_kb / bank_size)
+  local num_banks = math.floor(rom_size_kb / bank_size_kb)
 
   while cur_bank < num_banks do
     if DEBUG then
@@ -218,7 +218,7 @@ local function prg_rom_flash(file, rom_size_kb)
     dict.nes("NES_CPU_WR", 0x8000, (cur_bank & 0x0F))      -- lo 4 bits
 
     -- have the device write a bank worth of data
-    flash.write_file(file, bank_size, { mapper = "A53_512K", mem_type = "PRGROM" })
+    flash.write_file(file, bank_size_kb, { mapper = "A53_512K", mem_type = "PRGROM" })
     -- TODO: should we keep A53_512K here?
 
     cur_bank = cur_bank + 1
@@ -331,9 +331,9 @@ local function chr_rom_flash(file, rom_size_kb)
   log.section("Programming CHR-ROM")
   log.info("CHR-ROM size", rom_size_kb .. "KB")
 
-  local bank_size = 4 -- MMC3 2KByte per lower CHR bank and we're using 2 of them..
+  local bank_size_kb = 4 -- MMC3 2KByte per lower CHR bank and we're using 2 of them..
   local cur_bank = 0
-  local num_banks = math.floor(rom_size_kb / bank_size)
+  local num_banks = math.floor(rom_size_kb / bank_size_kb)
 
   while cur_bank < num_banks do
     if DEBUG then
@@ -362,7 +362,7 @@ local function chr_rom_flash(file, rom_size_kb)
     dict.nes("NES_CPU_WR", 0xB002, ((bank + 3) & 0x0f))      -- lo 4 bits
 
     -- have the device write a bank worth of data
-    flash.write_file(file, bank_size, { mapper = "MMC3", mem_type = "CHRROM" })
+    flash.write_file(file, bank_size_kb, { mapper = "MMC3", mem_type = "CHRROM" })
 
     cur_bank = cur_bank + 1
   end
@@ -415,9 +415,9 @@ local function prg_ram_write(file, ram_size_kb)
 
   log.info("PRG-RAM size", ram_size_kb .. "KB")
 
-  local bank_size = 8
+  local bank_size_kb = 8
   local cur_bank = 0
-  local num_banks = math.floor(ram_size_kb / bank_size)
+  local num_banks = math.floor(ram_size_kb / bank_size_kb)
 
   -- enable PRG-RAM and allow writes
   dict.nes("NES_CPU_WR", 0x9002, 0x03)
@@ -434,7 +434,7 @@ local function prg_ram_write(file, ram_size_kb)
     dict.nes("NES_MMC1_WR", 0xC000, cur_bank << 2) -- 8KB PRG-RAM bank at $6000
 
     --have the device write a bank worth of data
-    flash.write_file(file, bank_size, { mapper = "NOVAR", mem_type = "PRGRAM" })
+    flash.write_file(file, bank_size_kb, { mapper = "NOVAR", mem_type = "PRGRAM" })
 
     cur_bank = cur_bank + 1
   end

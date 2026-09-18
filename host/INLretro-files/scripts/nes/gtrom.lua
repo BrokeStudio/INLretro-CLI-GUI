@@ -249,9 +249,9 @@ local function prg_rom_flash(file, rom_size_kb)
   log.section("Programming PRG-ROM")
   log.info("PRG-ROM size", rom_size_kb .. "KB")
 
-  local bank_size = 32
+  local bank_size_kb = 32
   local cur_bank = 0
-  local num_banks = math.floor(rom_size_kb / bank_size)
+  local num_banks = math.floor(rom_size_kb / bank_size_kb)
 
   while cur_bank < num_banks do
     -- select bank to flash
@@ -270,7 +270,7 @@ local function prg_rom_flash(file, rom_size_kb)
     -- end
 
     -- have the device write a bank worth of data
-    flash.write_file(file, bank_size, { mapper = mapname, mem_type = "PRGROM" })
+    flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "PRGROM" })
 
     cur_bank = cur_bank + 1
   end

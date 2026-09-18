@@ -173,9 +173,9 @@ local function prg_rom_flash(file, rom_size_kb)
   log.section("Programming PRG-ROM")
   log.info("PRG-ROM size", rom_size_kb .. "KB")
 
-  local bank_size = 8 -- MMC2 8KByte per PRG bank
+  local bank_size_kb = 8 -- MMC2 8KByte per PRG bank
   local cur_bank = 0
-  local num_banks = math.floor(rom_size_kb / bank_size)
+  local num_banks = math.floor(rom_size_kb / bank_size_kb)
 
   while cur_bank < num_banks do
     if DEBUG then
@@ -191,7 +191,7 @@ local function prg_rom_flash(file, rom_size_kb)
     dict.nes("SET_CUR_BANK", cur_bank)
 
     -- have the device write a bank worth of data
-    flash.write_file(file, bank_size, { mapper = "MMC4", mem_type = "PRGROM" })
+    flash.write_file(file, bank_size_kb, { mapper = "MMC4", mem_type = "PRGROM" })
 
     cur_bank = cur_bank + 1
   end
@@ -300,9 +300,9 @@ local function chr_rom_flash(file, rom_size_kb)
   log.section("Programming CHR-ROM")
   log.info("CHR-ROM size", rom_size_kb .. "KB")
 
-  local bank_size = 4 -- MMC2/MMC4 4KByte CHR bank
+  local bank_size_kb = 4 -- MMC2/MMC4 4KByte CHR bank
   local cur_bank = 0
-  local num_banks = math.floor(rom_size_kb / bank_size)
+  local num_banks = math.floor(rom_size_kb / bank_size_kb)
 
   while cur_bank < num_banks do
     if DEBUG then
@@ -315,7 +315,7 @@ local function chr_rom_flash(file, rom_size_kb)
     dict.nes("SET_CUR_BANK", cur_bank)
 
     -- have the device write a bank worth of data
-    flash.write_file(file, bank_size, { mapper = "MMC4", mem_type = "CHRROM" })
+    flash.write_file(file, bank_size_kb, { mapper = "MMC4", mem_type = "CHRROM" })
     -- TODO: check why MMC4 here?
 
     cur_bank = cur_bank + 1
@@ -369,9 +369,9 @@ local function prg_ram_write(file, ram_size_kb)
 
   log.info("PRG-RAM size", ram_size_kb .. "KB")
 
-  local bank_size = 8
+  local bank_size_kb = 8
   local cur_bank = 0
-  local num_banks = math.floor(ram_size_kb / bank_size)
+  local num_banks = math.floor(ram_size_kb / bank_size_kb)
 
   while cur_bank < num_banks do
     if DEBUG then
@@ -381,7 +381,7 @@ local function prg_ram_write(file, ram_size_kb)
     end
 
     --have the device write a bank worth of data
-    flash.write_file(file, bank_size, { mapper = "NOVAR", mem_type = "PRGRAM" })
+    flash.write_file(file, bank_size_kb, { mapper = "NOVAR", mem_type = "PRGRAM" })
 
     cur_bank = cur_bank + 1
   end

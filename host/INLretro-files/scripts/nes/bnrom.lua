@@ -125,7 +125,7 @@ local function prg_rom_dump_no_bank_table(file, rom_size_kb)
   local num_banks = math.floor(rom_size_kb / kb_per_read)
   local cur_bank = 0
   local addr_base = 0x80 -- $8000
-  local bank_size_kb = kb_per_read * 1024
+  local bank_size = kb_per_read * 1024
 
   local search_pos
   local found
@@ -163,7 +163,7 @@ local function prg_rom_dump_no_bank_table(file, rom_size_kb)
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESCPU_PAGE" })
 
     -- search for 0x0f in the dumped bank
-    file:seek("set", cur_bank * bank_size_kb)
+    file:seek("set", cur_bank * bank_size)
     found = false
     cur_bank = cur_bank + 1
 
@@ -273,9 +273,9 @@ local function prg_rom_flash(file, rom_size_kb)
   log.section("Programming PRG-ROM")
   log.info("PRG-ROM size", rom_size_kb .. "KB")
 
-  local bank_size = 32 --BNROM 32KByte per PRG bank
+  local bank_size_kb = 32 --BNROM 32KByte per PRG bank
   local cur_bank = 0
-  local num_banks = math.floor(rom_size_kb / bank_size)
+  local num_banks = math.floor(rom_size_kb / bank_size_kb)
 
   while cur_bank < num_banks do
     if DEBUG then
@@ -288,7 +288,7 @@ local function prg_rom_flash(file, rom_size_kb)
     dict.nes("NES_CPU_WR", bank_table_base + cur_bank, cur_bank) -- 32KB @ CPU $8000
 
     -- have the device write a bank worth of data
-    flash.write_file(file, bank_size, { mapper = "NROM", mem_type = "PRGROM" })
+    flash.write_file(file, bank_size_kb, { mapper = "NROM", mem_type = "PRGROM" })
 
     cur_bank = cur_bank + 1
   end

@@ -263,9 +263,9 @@ local function prg_rom_flash(file, rom_size_kb)
   log.section("Programming PRG-ROM")
   log.info("PRG-ROM size", rom_size_kb .. "KB")
 
-  local bank_size = 32 -- 32KByte per PRG bank
+  local bank_size_kb = 32 -- 32KByte per PRG bank
   local cur_bank = 0
-  local num_banks = math.floor(rom_size_kb / bank_size)
+  local num_banks = math.floor(rom_size_kb / bank_size_kb)
 
   -- local byte_num -- byte number gets reset for each bank
   -- local byte_str, data, readdata
@@ -288,7 +288,7 @@ local function prg_rom_flash(file, rom_size_kb)
     --  MMC3 specific functions in the firmware
     print("This is slow as molasses, but gets the job done")
     byte_num = 0  -- current byte within the bank
-    while byte_num < bank_size do
+    while byte_num < bank_size_kb do
 
       -- read next byte from the file and convert to binary
       byte_str = file:read(buff_size)
@@ -322,7 +322,7 @@ local function prg_rom_flash(file, rom_size_kb)
     --]]
 
     -- have the device write a bank worth of data
-    flash.write_file(file, bank_size, { mapper = "RNBW", mem_type = "PRGROM" })
+    flash.write_file(file, bank_size_kb, { mapper = "RNBW", mem_type = "PRGROM" })
 
     cur_bank = cur_bank + 1
   end
@@ -488,9 +488,9 @@ local function chr_rom_flash(file, rom_size_kb)
   log.section("Programming CHR-ROM")
   log.info("CHR-ROM size", rom_size_kb .. "KB")
 
-  local bank_size = 8 -- 8KByte per CHR bank
+  local bank_size_kb = 8 -- 8KByte per CHR bank
   local cur_bank = 0
-  local num_banks = math.floor(rom_size_kb / bank_size)
+  local num_banks = math.floor(rom_size_kb / bank_size_kb)
 
   while cur_bank < num_banks do
     if DEBUG then
@@ -509,7 +509,7 @@ local function chr_rom_flash(file, rom_size_kb)
     --  MMC3 specific functions in the firmware
     print("This is slow as molasses, but gets the job done")
     byte_num = 0  -- current byte within the bank
-    while byte_num < bank_size do
+    while byte_num < bank_size_kb do
 
       -- read next byte from the file and convert to binary
       byte_str = file:read(buff_size)
@@ -535,7 +535,7 @@ local function chr_rom_flash(file, rom_size_kb)
     --]]
 
     -- have the device write a bank worth of data
-    flash.write_file(file, bank_size, { mapper = "RNBW", mem_type = "CHRROM" })
+    flash.write_file(file, bank_size_kb, { mapper = "RNBW", mem_type = "CHRROM" })
 
     cur_bank = cur_bank + 1
   end
@@ -599,10 +599,11 @@ local function write_ram(file, ram_size_kb)
 
 
   local base_addr = 0x6000   -- writes occur $6000-7FFF
+  local bank_size_kb = 8     -- MMC5 8KByte per RAM bank
   local bank_size = 8 * 1024 -- MMC5 8KByte per RAM bank
   local buff_size = 1        -- number of bytes to write at a time
   local cur_bank = 0
-  local num_banks = math.floor(ram_size_kb * 1024 / bank_size)
+  local num_banks = math.floor(ram_size_kb / bank_size_kb)
 
   local byte_num -- byte number gets reset for each bank
   local byte_str, data, readdata
@@ -655,8 +656,8 @@ local function write_ram(file, ram_size_kb)
 
     -- have the device write a bank worth of data
     -- FAST!  13sec for 512KB = 39KBps
-    -- flash.write_file(file, bank_size/1024, { mapper = mapname, mem_type = "PRGROM" })
-    -- flash.write_file(file, bank_size/1024, { mapper = "NOVAR", mem_type = "PRGRAM" })
+    -- flash.write_file(file, bank_size_kb/1024, { mapper = mapname, mem_type = "PRGROM" })
+    -- flash.write_file(file, bank_size_kb/1024, { mapper = "NOVAR", mem_type = "PRGRAM" })
 
     cur_bank = cur_bank + 1
   end

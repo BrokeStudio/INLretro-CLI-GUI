@@ -173,9 +173,9 @@ local function prg_rom_flash(file, rom_size_kb)
 
   --bank table should already be written
 
-  local bank_size = 16 --UNROM 16KByte per PRG bank
+  local bank_size_kb = 16 --UNROM 16KByte per PRG bank
   local cur_bank = 0
-  local num_banks = math.floor(rom_size_kb / bank_size)
+  local num_banks = math.floor(rom_size_kb / bank_size_kb)
 
   local byte_num --byte number gets reset for each bank
   local byte_str, data, readdata
@@ -197,7 +197,7 @@ local function prg_rom_flash(file, rom_size_kb)
 
 
     -- have the device write a bank worth of data
-    flash.write_file(file, bank_size, { mapper = mapname, mem_type = "PRGROM" })
+    flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "PRGROM" })
 
     cur_bank = cur_bank + 1
   end

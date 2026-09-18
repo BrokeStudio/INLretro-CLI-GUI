@@ -172,9 +172,9 @@ local function rom_flash(file, rom_size_kb)
   log.section("Programming ROM")
   log.info("ROM size", rom_size_kb .. "KB")
 
-  local bank_size = 16
+  local bank_size_kb = 16
   local cur_bank = 0
-  local num_banks = math.floor(rom_size_kb / bank_size)
+  local num_banks = math.floor(rom_size_kb / bank_size_kb)
 
   local options
   if flash_chip.buffer == true then
@@ -198,7 +198,7 @@ local function rom_flash(file, rom_size_kb)
     dict.gameboy("GAMEBOY_WR", 0x2000, cur_bank & 0xff)
 
     -- have the device write a bank worth of data
-    flash.write_file(file, bank_size, { mapper = mapname, mem_type = "GBROM", options = options })
+    flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "GBROM", options = options })
 
     cur_bank = cur_bank + 1
   end
@@ -254,9 +254,9 @@ local function ram_write(file, ram_size_kb)
   log.section("Programming RAM")
   log.info("RAM size", ram_size_kb .. "KB")
 
-  local bank_size = 8
+  local bank_size_kb = 8
   local cur_bank = 0
-  local num_banks = math.floor(ram_size_kb / bank_size)
+  local num_banks = math.floor(ram_size_kb / bank_size_kb)
 
   while cur_bank < num_banks do
     if DEBUG then
@@ -269,7 +269,7 @@ local function ram_write(file, ram_size_kb)
     dict.gameboy("GAMEBOY_WR", 0x4000, cur_bank)
 
     -- have the device write a bank worth of data
-    flash.write_file(file, bank_size, { mapper = mapname, mem_type = "GBRAM" })
+    flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "GBRAM" })
 
     cur_bank = cur_bank + 1
   end
