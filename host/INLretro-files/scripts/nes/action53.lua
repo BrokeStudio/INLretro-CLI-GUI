@@ -129,29 +129,37 @@ end
 -- @param addr integer Address to program, 0x8000-0xFFFF
 -- @param value integer 8-bit value to write
 local function prg_rom_flash_byte(addr, value)
-  --[[
-  if addr < 0x8000 or addr > 0xFFFF then
-    print("\n  ERROR! flash write to PRG-ROM", string.format("$%X", addr), "must be $8000-9FFF \n\n")
-    return
+  local timeout = 0xFFFF
+  local result = false
+
+  if (addr < 0x8000 or addr > 0xFFFF) then
+    log.error("Flash write to PRG-ROM", help.hex_0x4(addr), "must be in the $8000-$FFFF range")
+    return false
   end
-]]
-  --send unlock command and write byte
-  dict.nes("FLASH_3V_WR", addr, 0xA0) -- FLASH_3V_WR = M2_HIGH_WR
-  dict.nes("FLASH_3V_WR", addr, value)
 
-  local rv = dict.nes("NES_CPU_RD", addr)
+  -- send unlock command
+  nes.cpu_wr(0xD555, 0xAA)
+  nes.cpu_wr(0xAAAA, 0x55)
+  nes.cpu_wr(0xD555, 0xA0)
 
-  local i = 0
+  -- write value
+  nes.cpu_wr(addr, value)
 
-  while (rv ~= value) do
-    rv = dict.nes("NES_CPU_RD", addr)
-    i = i + 1
+  -- control the written byte
+  local rv = nes.cpu_rd(addr)
+
+  while timeout > 0 and rv ~= nes.cpu_rd(addr) do
+    rv = nes.cpu_rd(addr)
+    timeout = timeout - 1
   end
-  if DEBUG then print(i, "naks, done writing byte.") end
 
-  --TODO handle timeout for problems
+  if nes.cpu_rd(addr) == value then result = true end
 
-  --TODO return pass/fail/info
+  if DEBUG then
+    log.info("Done writing byte,", 0xFFFF - timeout .. " naks")
+  end
+
+  return result
 end
 
 --- Dump PRG-ROM contents to an already-open output file.
