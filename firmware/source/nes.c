@@ -122,25 +122,25 @@ uint8_t nes_call(uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_t* rd
       cpu_page_wr_lfsr(operand, miscdata);
       break;
     case RNBW_PRG_FLASH_WR:
-      prgrom_flash_wr(operand, miscdata);
+      nes_prgrom_flash_wr_short(operand, miscdata);
       break;
     case RNBW_TSSOP_PRG_FLASH_WR:
-      prgrom_flash_wr(operand, miscdata);
+      nes_prgrom_flash_wr_short(operand, miscdata);
       break;
     case RNBW_CHR_FLASH_WR:
       rnbw_chrrom_flash_wr(operand, miscdata);
       break;
     case VRC6_PRG_FLASH_WR:
-      vrc6_prgrom_flash_wr(operand, miscdata);
+      nes_prgrom_flash_wr_long(operand, miscdata);
       break;
     case VRC6_CHR_FLASH_WR:
       mmc3_chrrom_flash_wr(operand, miscdata);
       break;
     case A53_512K_PRG_FLASH_WR:
-      vrc6_prgrom_flash_wr(operand, miscdata);
+      nes_prgrom_flash_wr_long(operand, miscdata);
       break;
     case A53_TSSOP_FLASH_WR:
-      prgrom_flash_wr_unlock_m2_high(operand, miscdata);
+      nes_prgrom_flash_wr_unlock_m2_high(operand, miscdata);
       break;
 
     // 8bit return values:
@@ -1272,20 +1272,21 @@ static uint8_t chrrom_wr_polling(uint16_t addr, uint8_t data)
   return rv;
 }
 
-/* Desc: Issue a PRG-ROM byte program sequence through nes_cpu_wr
- *       send 0xAA to 0xD555, 0x55 to 0xAAAA and 0xA0 to 0xD555
- *       then write data at the CPU address addr
+/* Desc: Issue a PRG-ROM byte program using the long unlock profile
+ *       target flash addresses 0x5555/0x2AAA through NES CPU addresses
+ *       0xD555/0xAAAA, then write data at the CPU address addr
  * Pre:  nes_init() setup of I/O pins
- *       mapper and flash configured for these unlock addresses and target bank
+ *       mapper maps those CPU addresses to flash addresses 0x5555/0x2AAA
+ *       and the desired target bank is selected
  *       flash ready to accept a normal byte program command
  *       any required mapper preparation must be performed by the caller
  * Post: Program command and data sent; completion is not polled or verified
  *       caller must handle mapper recovery and polling before the next program
  * Rtn:  None
  */
-static void prgrom_wr_byte(uint16_t addr, uint8_t data)
+static void prgrom_wr_byte_long(uint16_t addr, uint8_t data)
 {
-  // send unlock command
+  // write unlock command
   nes_cpu_wr(0xD555, 0xAA);
   nes_cpu_wr(0xAAAA, 0x55);
   nes_cpu_wr(0xD555, 0xA0);
@@ -1294,15 +1295,18 @@ static void prgrom_wr_byte(uint16_t addr, uint8_t data)
   nes_cpu_wr(addr, data);
 }
 
-/* Desc: NES PRG-ROM FLASH Write using unlock addresses 0x8AAA/0x8555
+/* Desc: Program one PRG-ROM byte using the short unlock profile
+ *       target flash addresses 0x0AAA/0x0555 through NES CPU addresses
+ *       0x8AAA/0x8555, then poll the target byte through the CPU bus
  * Pre:  nes_init() setup of I/O pins
- *       mapper and flash configured for this command sequence and target bank
+ *       mapper maps those CPU addresses to flash addresses 0x0AAA/0x0555
+ *       and the desired target bank is selected
  * Post: Write attempted; prgrom_wr_polling polls the CPU bus with usbPoll
  *       polling stops on matching data or after at most 0xFFFF reads
  * Rtn:  Last CPU byte read at addr by prgrom_wr_polling
  *       compare with data to detect polling failure
  */
-uint8_t prgrom_flash_wr(uint16_t addr, uint8_t data)
+uint8_t nes_prgrom_flash_wr_short(uint16_t addr, uint8_t data)
 {
   // write data
   nes_cpu_wr(0x8AAA, 0xAA);
@@ -1322,17 +1326,19 @@ uint8_t prgrom_flash_wr(uint16_t addr, uint8_t data)
  * Rtn:  Last CPU byte read at addr by prgrom_wr_polling
  *       compare with data to detect polling failure
  */
-uint8_t prgrom_flash_wr_unlock(uint16_t addr, uint8_t data)
+uint8_t nes_prgrom_flash_wr_unlock(uint16_t addr, uint8_t data)
 {
   // needs to be in unlock bypass mode
-  // write data
   nes_cpu_wr(addr, 0xA0);
+
+  // write data
   nes_cpu_wr(addr, data);
 
   return prgrom_wr_polling(addr, data);
 }
 
-/* Desc: NES RNBW CHR-ROM FLASH Write
+/* Desc: Program one RNBW CHR-ROM byte using the short unlock profile
+ *       access flash addresses 0x0AAA/0x0555 directly through the PPU bus
  * Pre:  nes_init() setup of I/O pins
  *       mapper and flash configured for this command sequence and target bank
  * Post: Write attempted; chrrom_wr_polling polls the PPU bus with usbPoll
@@ -1342,7 +1348,7 @@ uint8_t prgrom_flash_wr_unlock(uint16_t addr, uint8_t data)
  */
 uint8_t rnbw_chrrom_flash_wr(uint16_t addr, uint8_t data)
 {
-  // send unlock command and write byte
+  // write unlock command and write byte
   nes_ppu_wr(0x0AAA, 0xAA);
   nes_ppu_wr(0x0555, 0x55);
   nes_ppu_wr(0x0AAA, 0xA0);
@@ -1360,7 +1366,7 @@ uint8_t rnbw_chrrom_flash_wr(uint16_t addr, uint8_t data)
  * Rtn:  Last PPU byte read at addr by chrrom_wr_polling
  *       compare with data to detect polling failure
  */
-uint8_t chrrom_flash_wr_unlock(uint16_t addr, uint8_t data)
+uint8_t nes_chrrom_flash_wr_unlock(uint16_t addr, uint8_t data)
 {
   // needs to be in unlock bypass mode
   // write data
@@ -1370,8 +1376,10 @@ uint8_t chrrom_flash_wr_unlock(uint16_t addr, uint8_t data)
   return chrrom_wr_polling(addr, data);
 }
 
-/* Desc: NES VRC6 PRG-ROM FLASH Write
- *       issue the byte program through prgrom_wr_byte, then poll completion
+/* Desc: Program one PRG-ROM byte using the long unlock profile
+ *       issue the command through prgrom_wr_byte_long, which maps flash
+ *       addresses 0x5555/0x2AAA to NES CPU addresses 0xD555/0xAAAA
+ *       then poll the target byte through the CPU bus
  * Pre:  nes_init() setup of I/O pins
  *       mapper and flash configured for this command sequence and target bank
  * Post: Write attempted; prgrom_wr_polling polls the CPU bus with usbPoll
@@ -1379,10 +1387,10 @@ uint8_t chrrom_flash_wr_unlock(uint16_t addr, uint8_t data)
  * Rtn:  Last CPU byte read at addr by prgrom_wr_polling
  *       compare with data to detect polling failure
  */
-uint8_t vrc6_prgrom_flash_wr(uint16_t addr, uint8_t data)
+uint8_t nes_prgrom_flash_wr_long(uint16_t addr, uint8_t data)
 {
   // write data
-  prgrom_wr_byte(addr, data);
+  prgrom_wr_byte_long(addr, data);
 
   return prgrom_wr_polling(addr, data);
 }
@@ -1505,7 +1513,7 @@ uint8_t nrom_prgrom_flash_wr(uint16_t addr, uint8_t data)
  */
 uint8_t nrom_chrrom_flash_wr(uint16_t addr, uint8_t data)
 {
-  // send unlock command
+  // write unlock command
   nes_ppu_wr(0x1555, 0xAA);
   nes_ppu_wr(0x0AAA, 0x55);
   nes_ppu_wr(0x1555, 0xA0);
@@ -1517,7 +1525,7 @@ uint8_t nrom_chrrom_flash_wr(uint16_t addr, uint8_t data)
 }
 
 /* Desc: NES MMC1 PRG-ROM FLASH Write
- *       configure CHR-register bits for PRG A18 before prgrom_wr_byte
+ *       configure CHR-register bits for PRG A18 before prgrom_wr_byte_long
  *       then poll completion through prgrom_wr_polling
  * Pre:  nes_init() setup of I/O pins
  *       mapper and flash configured for this command sequence and target bank
@@ -1546,7 +1554,7 @@ uint8_t mmc1_prgrom_flash_wr(uint16_t addr, uint8_t data)
 
   // all these writes will be blocked by MMC1 mapper register due to valid write above that ends with a write
   // write data
-  prgrom_wr_byte(addr, data);
+  prgrom_wr_byte_long(addr, data);
 
   return prgrom_wr_polling(addr, data);
 }
@@ -1568,7 +1576,7 @@ uint8_t mmc1_chrrom_flash_wr(uint16_t addr, uint8_t data)
   mmc1_wr(0xA000, 0x02, 0);
   // PT1 always set to 0x05 for $5555 command
 
-  // send unlock command
+  // write unlock command
   nes_ppu_wr(0x1555, 0xAA);
   nes_ppu_wr(0x0AAA, 0x55);
   nes_ppu_wr(0x1555, 0xA0);
@@ -1598,7 +1606,7 @@ uint8_t unrom_prgrom_flash_wr(uint16_t addr, uint8_t data)
   // set A14 low for lower bank so to satisfy unlock commands
   nes_cpu_wr(bank_table, 0x00);
 
-  // send unlock command
+  // write unlock command
   discrete_exp0_prgrom_wr(0x5555, 0xAA);
   discrete_exp0_prgrom_wr(0x2AAA, 0x55);
   discrete_exp0_prgrom_wr(0x5555, 0xA0);
@@ -1625,7 +1633,7 @@ uint8_t unrom_prgrom_flash_wr(uint16_t addr, uint8_t data)
  */
 uint8_t cnrom_chrrom_flash_wr(uint16_t addr, uint8_t data)
 {
-  // send unlock command
+  // write unlock command
   nes_cpu_wr(bank_table + 2, 0x02);
   nes_ppu_wr(0x1555, 0xAA);
 
@@ -1645,7 +1653,7 @@ uint8_t cnrom_chrrom_flash_wr(uint16_t addr, uint8_t data)
 }
 
 /* Desc: NES MMC3 PRG-ROM FLASH Write
- *       issue the byte program through prgrom_wr_byte, restore bank select
+ *       issue the byte program through prgrom_wr_byte_long, restore bank select
  *       to 0x02, then poll completion through prgrom_wr_polling
  * Pre:  nes_init() setup of I/O pins
  *       mapper and flash configured for this command sequence and target bank
@@ -1660,7 +1668,7 @@ uint8_t cnrom_chrrom_flash_wr(uint16_t addr, uint8_t data)
 uint8_t mmc3_prgrom_flash_wr(uint16_t addr, uint8_t data)
 {
   // write data
-  prgrom_wr_byte(addr, data);
+  prgrom_wr_byte_long(addr, data);
 
   // reset $8000 bank select register to a CHR reg
   nes_cpu_wr(0x8000, 0x02); // 0x02 also maintains flash mode for custom
@@ -1680,7 +1688,7 @@ uint8_t mmc3_prgrom_flash_wr(uint16_t addr, uint8_t data)
  */
 uint8_t mmc3_chrrom_flash_wr(uint16_t addr, uint8_t data)
 {
-  // send unlock command
+  // write unlock command
   nes_ppu_wr(0x1555, 0xAA);
   nes_ppu_wr(0x1AAA, 0x55);
   nes_ppu_wr(0x1555, 0xA0);
@@ -1706,7 +1714,7 @@ uint8_t mmc3_chrrom_flash_wr(uint16_t addr, uint8_t data)
  */
 uint8_t mmc4_prgrom_flash_wr(uint16_t addr, uint8_t data)
 {
-  // send unlock command
+  // write unlock command
   nes_cpu_wr(0xD555, 0xAA);
   nes_cpu_wr(0xEAAA, 0x55);
   nes_cpu_wr(0xD555, 0xA0);
@@ -1753,7 +1761,7 @@ uint8_t mmc4_chrrom_flash_wr(uint16_t addr, uint8_t data)
 
   // PT1 always set to 0x05 for $5555 command
 
-  // send unlock command
+  // write unlock command
   nes_ppu_wr(0x1555, 0xAA);
   nes_ppu_wr(0x0AAA, 0x55);
   nes_ppu_wr(0x1555, 0xA0);
@@ -1787,7 +1795,7 @@ uint8_t cdream_chrrom_flash_wr(uint16_t addr, uint8_t data)
   // select first bank
   // nes_cpu_wr(0xFF9E, 0);
 
-  // send unlock command
+  // write unlock command
   // nes_cpu_wr(bank_table+0x20, 0x20); //this assumes a 256Byte bank table!
   // nes_cpu_wr(bank_table+0x08, 0x20); //this assumes a 128KB PRG-ROM banktable!
   //  00 01 02 03 - 10 11 12 13 - 20 21 22 23 - ...
@@ -1822,7 +1830,7 @@ uint8_t cdream_chrrom_flash_wr(uint16_t addr, uint8_t data)
  */
 uint8_t map30_prgrom_flash_wr(uint16_t addr, uint8_t data)
 {
-  // send unlock command
+  // write unlock command
   nes_cpu_wr(0xC000, 0x01);
   nes_cpu_wr(0x9555, 0xAA);
   nes_cpu_wr(0xC000, 0x00);
@@ -1840,7 +1848,7 @@ uint8_t map30_prgrom_flash_wr(uint16_t addr, uint8_t data)
 }
 
 /* Desc: NES GTROM (mapper 111) PRG-ROM FLASH Write
- *       select cur_bank at 0x5000 before prgrom_wr_byte, then poll completion
+ *       select cur_bank at 0x5000 before prgrom_wr_byte_long, then poll completion
  * Pre:  nes_init() setup of I/O pins
  *       mapper and flash configured for this command sequence and target bank
  *       cur_bank must contain the desired mapper register value
@@ -1856,7 +1864,7 @@ uint8_t gtrom_prgrom_flash_wr(uint16_t addr, uint8_t data)
   nes_cpu_wr(0x5000, cur_bank);
 
   // write data
-  prgrom_wr_byte(addr, data);
+  prgrom_wr_byte_long(addr, data);
 
   // nes_cpu_wr(0x5000, cur_bank);
 
@@ -1876,7 +1884,7 @@ uint8_t a53_512k_prgrom_flash_wr(uint16_t addr, uint8_t data)
 {
   uint8_t rv;
 
-  // send unlock command
+  // write unlock command
   nes_m2_high_wr(0xD555, 0xAA);
   nes_m2_high_wr(0xAAAA, 0x55);
   nes_m2_high_wr(0xD555, 0xA0);
@@ -1902,7 +1910,7 @@ uint8_t a53_512k_prgrom_flash_wr(uint16_t addr, uint8_t data)
  * Rtn:  Last CPU byte read at addr by prgrom_wr_polling
  *       compare with data to detect polling failure
  */
-uint8_t prgrom_flash_wr_unlock_m2_high(uint16_t addr, uint8_t data)
+uint8_t nes_prgrom_flash_wr_unlock_m2_high(uint16_t addr, uint8_t data)
 {
   // unlock and write data
   nes_m2_high_wr(addr, 0xA0);

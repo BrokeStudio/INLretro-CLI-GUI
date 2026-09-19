@@ -50,13 +50,13 @@ uint8_t gtrom_prgrom_flash_wr(uint16_t addr, uint8_t data);
 void ppu_page_wr_lfsr(uint16_t addr, uint8_t data);
 void cpu_page_wr_lfsr(uint16_t addr, uint8_t data);
 uint8_t a53_512k_prgrom_flash_wr(uint16_t addr, uint8_t data);
-uint8_t prgrom_flash_wr_unlock_m2_high(uint16_t addr, uint8_t data);
+uint8_t nes_prgrom_flash_wr_unlock_m2_high(uint16_t addr, uint8_t data);
 // uint8_t mmc5_prgram_wr(uint16_t addr, uint8_t data);
-uint8_t prgrom_flash_wr(uint16_t addr, uint8_t data);
+uint8_t nes_prgrom_flash_wr_short(uint16_t addr, uint8_t data);
 uint8_t rnbw_chrrom_flash_wr(uint16_t addr, uint8_t data);
-uint8_t prgrom_flash_wr_unlock(uint16_t addr, uint8_t data);
-uint8_t chrrom_flash_wr_unlock(uint16_t addr, uint8_t data);
-uint8_t vrc6_prgrom_flash_wr(uint16_t addr, uint8_t data);
+uint8_t nes_prgrom_flash_wr_unlock(uint16_t addr, uint8_t data);
+uint8_t nes_chrrom_flash_wr_unlock(uint16_t addr, uint8_t data);
+uint8_t nes_prgrom_flash_wr_long(uint16_t addr, uint8_t data);
 
 #define A10_BYTE 0x04
 #define A11_BYTE 0x08

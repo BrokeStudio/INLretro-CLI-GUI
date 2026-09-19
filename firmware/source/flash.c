@@ -440,7 +440,7 @@ uint8_t flash_buff(buffer* buff)
           nes_cpu_wr(0x8AAA, 0x20);
 
           // write data
-          result = write_page_verify_8((addrH + 0x80), buff, prgrom_flash_wr_unlock);
+          result = write_page_verify_8((addrH + 0x80), buff, nes_prgrom_flash_wr_unlock);
 
           // exit unlock mode bypass
           nes_cpu_wr(0x8000, 0x90);
@@ -485,17 +485,17 @@ uint8_t flash_buff(buffer* buff)
           nes_cpu_wr((0xFFFF), bank); // select desired bank
           write_page_cninja(0, addrH, 0xD555, 0xAAAA, buff, nes_cpu_wr, nes_cpu_rd);
         } else if(buff->mapper == A53 || buff->mapper == EZNSF) {
-          result = write_page_verify_8((addrH + 0x80), buff, vrc6_prgrom_flash_wr);
+          result = write_page_verify_8((addrH + 0x80), buff, nes_prgrom_flash_wr_long);
         } else if(buff->mapper == A53_512K) {
-          // TODO: can we use vrc6_prgrom_flash_wr instead?
+          // TODO: can we use nes_prgrom_flash_wr_long instead?
           result = write_page_verify_8((addrH + 0x80), buff, a53_512k_prgrom_flash_wr);
         } else if(buff->mapper == GTROM) {
           result = write_page_verify_8((addrH + 0x80), buff, gtrom_prgrom_flash_wr);
         } else if(buff->mapper == RNBW) {
-          // TODO: we should be able to use vrc6_prgrom_flash_wr instead
-          result = write_page_verify_8((addrH + 0x80), buff, prgrom_flash_wr);
+          // TODO: we should be able to use nes_prgrom_flash_wr_long instead
+          result = write_page_verify_8((addrH + 0x80), buff, nes_prgrom_flash_wr_short);
         } else if(buff->mapper == VRC6a || buff->mapper == VRC6b) {
-          result = write_page_verify_8((addrH + 0x60), buff, vrc6_prgrom_flash_wr);
+          result = write_page_verify_8((addrH + 0x60), buff, nes_prgrom_flash_wr_long);
         } else {
           return ERR_BUFF_PART_NUM_RANGE;
         }
@@ -518,7 +518,7 @@ uint8_t flash_buff(buffer* buff)
         nes_ppu_wr(0x0AAA, 0x20);
 
         // write data
-        result = write_page_verify_8(addrH, buff, chrrom_flash_wr_unlock);
+        result = write_page_verify_8(addrH, buff, nes_chrrom_flash_wr_unlock);
 
         // exit unlock mode bypass
         nes_ppu_wr(0x0000, 0x90);
