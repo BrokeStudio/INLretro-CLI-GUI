@@ -357,7 +357,7 @@ uint8_t snes_flash_wr(uint16_t addr, uint8_t data)
  *       data bus left in input mode; /RD, /WR and /ROMSEL high
  * Rtn:  Last byte read at addr; compare with data to detect failure
  */
-uint8_t snes_flash_unlock_wr(uint16_t addr, uint8_t data)
+uint8_t snes_flash_wr_unlock(uint16_t addr, uint8_t data)
 {
   uint8_t rv;
   uint8_t romsel = 0;

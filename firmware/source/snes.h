@@ -15,6 +15,6 @@ void snes_wr_cur_addr(uint8_t data, uint8_t romsel);
 uint8_t snes_page_rd_poll(uint8_t* data, uint8_t addrH, uint8_t romsel, uint8_t first, uint8_t len, uint8_t poll);
 
 uint8_t snes_flash_wr(uint16_t addr, uint8_t data);
-uint8_t snes_flash_unlock_wr(uint16_t addr, uint8_t data);
+uint8_t snes_flash_wr_unlock(uint16_t addr, uint8_t data);
 
 #endif
