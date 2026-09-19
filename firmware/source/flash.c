@@ -267,8 +267,8 @@ static uint8_t write_page_mm2(uint8_t bank, uint8_t addrH, uint16_t unlock1, uin
 
 static uint8_t gb_ram_wr_verify(uint16_t addr, uint8_t data)
 {
-  gameboy_wr(addr, data);
-  return gameboy_rd(addr);
+  gb_wr(addr, data);
+  return gb_rd(addr);
 }
 
 #endif
@@ -613,34 +613,34 @@ uint8_t flash_buff(buffer* buff)
 #ifdef GB_CONN
     case GBROM:
       if(buff->mapper == ROMONLY) {
-        result = write_page_verify_8(addrH, buff, gameboy_flash_wr);
+        result = write_page_verify_8(addrH, buff, gb_flash_wr_long);
       }
 
       if(buff->mapper == MBC1_DISCRETE) {
-        // bank 0 address cleanup is handled in the gameboy_flash_pin31_wr function
-        result = write_page_verify_8(addrH + 0x40, buff, gameboy_flash_pin31_wr);
+        // bank 0 address cleanup is handled in the gb_flash_wr_pin31_long function
+        result = write_page_verify_8(addrH + 0x40, buff, gb_flash_wr_pin31_long);
       }
 
       if(buff->mapper == MBC1 || buff->mapper == MBC5) {
         if(buff->part_num == USE_BUFFER) {
-          result = buffer_write_page_verify(addrH + 0x40, buff, gameboy_pin31_wr, gameboy_rd);
+          result = buffer_write_page_verify(addrH + 0x40, buff, gb_wr_pin31, gb_rd);
         } else if(buff->part_num == USE_UNLOCK_BYPASS) {
           // enter unlock bypass mode
-          gameboy_pin31_wr(0x0AAA, 0xAA);
-          gameboy_pin31_wr(0x0555, 0x55);
-          gameboy_pin31_wr(0x0AAA, 0x20);
+          gb_wr_pin31(0x0AAA, 0xAA);
+          gb_wr_pin31(0x0555, 0x55);
+          gb_wr_pin31(0x0AAA, 0x20);
 
           // write data
-          result = write_page_verify_8(addrH + 0x40, buff, gameboy_unlock_3v_flash_pin31_wr);
+          result = write_page_verify_8(addrH + 0x40, buff, gb_flash_wr_pin31_unlock);
 
           // unlock bypass reset
-          gameboy_pin31_wr(0x0000, 0x90);
-          gameboy_pin31_wr(0x0000, 0x00);
+          gb_wr_pin31(0x0000, 0x90);
+          gb_wr_pin31(0x0000, 0x00);
 
           // reset the flash chip, supposed to exit too
-          gameboy_pin31_wr(0x0000, 0xF0);
+          gb_wr_pin31(0x0000, 0xF0);
         } else {
-          result = write_page_verify_8(addrH + 0x40, buff, gameboy_3v_flash_pin31_wr);
+          result = write_page_verify_8(addrH + 0x40, buff, gb_flash_wr_pin31_short);
         }
       }
 

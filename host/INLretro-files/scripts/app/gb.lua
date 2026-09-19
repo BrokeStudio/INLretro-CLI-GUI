@@ -325,12 +325,12 @@ end
 local function parse_header_cart()
   -- initialize device i/o
   dict.io("IO_RESET")
-  dict.io("GAMEBOY_INIT")
+  dict.io("GB_INIT")
   dict.io("GB_POWER_5V")
 
   -- dump data
   local byte_str = ""
-  dump.dumptocallback(function(data) byte_str = byte_str .. data end, 1, { mapper = 0x0000, mem_type = "GAMEBOY_PAGE" })
+  dump.dumptocallback(function(data) byte_str = byte_str .. data end, 1, { mapper = 0x0000, mem_type = "GB_PAGE" })
 
   -- reset device i/o
   dict.io("IO_RESET")
@@ -352,16 +352,7 @@ end
 local function rom_wr(addr, val, options)
   options = options or {}
   local comment = options.comment or ""
-  local opcode = options.opcode or "GAMEBOY_WR"
-
-  dict.gameboy(opcode, addr, val)
-  if DEBUG then log.bullet(" W", help.hex_0x4(addr), val, help.hex_0x2(val), comment) end
-end
-
-local function flash_wr(addr, val, options)
-  options = options or {}
-  local comment = options.comment or ""
-  local opcode = options.opcode or "GAMEBOY_WR_MCB1"
+  local opcode = options.opcode or "GB_WR"
 
   dict.gameboy(opcode, addr, val)
   if DEBUG then log.bullet(" W", help.hex_0x4(addr), val, help.hex_0x2(val), comment) end
@@ -370,7 +361,7 @@ end
 local function rom_rd(addr, options)
   options = options or {}
   local label = options.label or ""
-  local opcode = options.opcode or "GAMEBOY_RD"
+  local opcode = options.opcode or "GB_RD"
   local rv
 
   rv = dict.gameboy(opcode, addr)
@@ -398,7 +389,6 @@ gb.parse_header_file = parse_header_file
 gb.parse_header_cart = parse_header_cart
 
 gb.rom_wr            = rom_wr
-gb.flash_wr          = flash_wr
 gb.rom_rd            = rom_rd
 
 -- return the module's table

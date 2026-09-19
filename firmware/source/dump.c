@@ -233,10 +233,10 @@ uint8_t dump_buff(buffer* buff)
 #endif
 
 #ifdef GB_CONN
-    case GAMEBOY_PAGE:
+    case GB_PAGE:
       // mapper byte specifies CPU A15-8
       addrH |= buff->mapper;
-      buff->cur_byte = gameboy_page_rd_poll(buff->data,
+      buff->cur_byte = gb_page_rd_poll(buff->data,
         addrH,
         buff->id,
         // id contains MSb of page when <256B buffer

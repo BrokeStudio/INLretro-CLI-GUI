@@ -56,8 +56,8 @@ uint8_t io_call(uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_t* rda
       GBP_OP();
       GBP_5V();
       break;
-    case GAMEBOY_INIT:
-      gameboy_init();
+    case GB_INIT:
+      gb_init();
       break;
     case GBA_INIT:
       gba_init();
@@ -276,7 +276,7 @@ void snes_init()
 // latch address of $0000
 // disable cart memories
 #ifdef GB_CONN
-void gameboy_init()
+void gb_init()
 {
   // start with a reset
   // expecting user to do this but just to be sure

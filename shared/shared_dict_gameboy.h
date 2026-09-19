@@ -15,15 +15,15 @@
 //=============================================================================================
 //=============================================================================================
 
-#define GAMEBOY_RD 0 // RL=3  return error code, data len = 1, 1 byte of data
-#define GAMEBOY_WR 1
-#define GAMEBOY_FLASH_WR 2
-#define GAMEBOY_PIN31_WR 3
-#define GAMEBOY_FLASH_PIN31_WR 4
-#define GAMEBOY_UNLOCK_3V_FLASH_PIN31_WR 5
-#define GAMEBOY_3V_FLASH_PIN31_WR 6
-#define GAMEBOY_PAGE_WR_LFSR 7
+#define GB_RD 0 // RL=3  return error code, data len = 1, 1 byte of data
+#define GB_WR 1
+#define GB_FLASH_WR 2
+#define GB_PIN31_WR 3
+#define GB_FLASH_WR_PIN31 4
+#define GB_FLASH_WR_PIN31_UNLOCK 5
+#define GB_FLASH_WR_PIN31_SHORT 6
+#define GB_PAGE_WR_LFSR 7
 
-#define GAMEBOY_SET_CUR_BANK 0x20
+#define GB_SET_CUR_BANK 0x20
 
 #endif

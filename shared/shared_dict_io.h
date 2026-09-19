@@ -62,7 +62,7 @@
 #define JTAG_ON_EXP0_3 0x01 //Most NES carts with CPLDs EXP0-TDO, EXP1-TDI, EXP2-TMS, EXP3-TCK
 #define JTAG_ON_SNES_CTL 0x02 //SNES v2.0proto2 SYSCLK-TCK, RESET/EXP0-TMS, WR-TDI, RD-TDO
 
-#define GAMEBOY_INIT 5
+#define GB_INIT 5
 #define GBA_INIT 6
 #define SEGA_INIT 7
 #define N64_INIT 8

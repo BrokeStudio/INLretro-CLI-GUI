@@ -131,7 +131,7 @@ uint8_t rlen = (uint8_t)spacket->wLength;
 #ifdef GB_CONN
       case DICT_GAMEBOY:
         rv[RETURN_ERR_IDX] =
-          gameboy_call(spacket->opcode, spacket->miscdata, spacket->operand, &rv[RETURN_LEN_IDX]);
+          gb_call(spacket->opcode, spacket->miscdata, spacket->operand, &rv[RETURN_LEN_IDX]);
         break;
 
       case DICT_GBA:

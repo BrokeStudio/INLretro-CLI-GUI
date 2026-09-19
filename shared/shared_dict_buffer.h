@@ -121,7 +121,7 @@
 #define NESPPU_PAGE 0x23       // mapper byte specifies A13-8  bits 6 & 7 can't be set
 #define SNESROM_PAGE 0x24      // mapper byte specifies A15-8 ROMSEL low
 #define SNESSYS_PAGE 0x25      // mapper byte specifies A15-8 ROMSEL high
-#define GAMEBOY_PAGE 0x26      // mapper byte specifies A15-8
+#define GB_PAGE 0x26      // mapper byte specifies A15-8
 #define GBA_ROM_PAGE 0x27      // address must have already been latched with gba dictionary
 #define GENESIS_ROM_PAGE0 0x28 // bank address A17-23 must have been latched already
 // TODO come up with better way to handle genesis address complications

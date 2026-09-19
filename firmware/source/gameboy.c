@@ -19,13 +19,13 @@ uint8_t cur_bank; // used by some flash algos, must be initialized prior to depe
  *       shared_dict_gameboy.h defines opcodes shared by host and firmware
  * Pre:  I/O and mapper state satisfy the selected operation requirements
  *       rdata has room for the response length and one data byte
- * Post: GAMEBOY_RD sets rdata[0] to 1 and rdata[1] to the byte read
- *       GAMEBOY_SET_CUR_BANK updates cur_bank, not the hardware bank register
+ * Post: GB_RD sets rdata[0] to 1 and rdata[1] to the byte read
+ *       GB_SET_CUR_BANK updates cur_bank, not the hardware bank register
  *       write operations leave rdata unchanged; flash readbacks are ignored
  * Rtn:  SUCCESS for a recognized opcode, not a guarantee of flash success
- *       ERR_UNKN_GAMEBOY_OPCODE for an unsupported opcode
+ *       ERR_UNKN_GB_OPCODE for an unsupported opcode
  */
-uint8_t gameboy_call(uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_t* rdata)
+uint8_t gb_call(uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_t* rdata)
 {
   #define RD_LEN 0
   #define RD0 1
@@ -36,47 +36,47 @@ uint8_t gameboy_call(uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_t
 
   switch(opcode) {
       // no return value:
-    case GAMEBOY_WR:
-      gameboy_wr(operand, miscdata);
+    case GB_WR:
+      gb_wr(operand, miscdata);
       break;
 
-    case GAMEBOY_FLASH_WR:
-      gameboy_flash_wr(operand, miscdata);
+    case GB_PIN31_WR:
+      gb_wr_pin31(operand, miscdata);
       break;
 
-    case GAMEBOY_PIN31_WR:
-      gameboy_pin31_wr(operand, miscdata);
+    case GB_FLASH_WR:
+      gb_flash_wr_long(operand, miscdata);
       break;
 
-    case GAMEBOY_FLASH_PIN31_WR:
-      gameboy_flash_pin31_wr(operand, miscdata);
+    case GB_FLASH_WR_PIN31:
+      gb_flash_wr_pin31_long(operand, miscdata);
       break;
 
-    case GAMEBOY_UNLOCK_3V_FLASH_PIN31_WR:
-      gameboy_unlock_3v_flash_pin31_wr(operand, miscdata);
+    case GB_FLASH_WR_PIN31_UNLOCK:
+      gb_flash_wr_pin31_unlock(operand, miscdata);
       break;
 
-    case GAMEBOY_3V_FLASH_PIN31_WR:
-      gameboy_3v_flash_pin31_wr(operand, miscdata);
+    case GB_FLASH_WR_PIN31_SHORT:
+      gb_flash_wr_pin31_short(operand, miscdata);
       break;
 
-    case GAMEBOY_PAGE_WR_LFSR:
-      gameboy_page_wr_lfsr(operand, miscdata);
+    case GB_PAGE_WR_LFSR:
+      gb_page_wr_lfsr(operand, miscdata);
       break;
 
     // 8bit return values:
-    case GAMEBOY_RD:
+    case GB_RD:
       rdata[RD_LEN] = BYTE_LEN;
-      rdata[RD0] = gameboy_rd(operand);
+      rdata[RD0] = gb_rd(operand);
       break;
 
-    case GAMEBOY_SET_CUR_BANK:
+    case GB_SET_CUR_BANK:
       cur_bank = operand;
       break;
 
     default:
       // macro doesn't exist
-      return ERR_UNKN_GAMEBOY_OPCODE;
+      return ERR_UNKN_GB_OPCODE;
   }
 
   return SUCCESS;
@@ -86,13 +86,13 @@ uint8_t gameboy_call(uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_t
  *       assert SRAM /CS for addresses 0xA000-0xBFFF; clock pin is not toggled
  *       timing reference:
  *       https://dhole.github.io/media/gameboy_stm32f4/cpu_manual_timing_small.png
- * Pre:  gameboy_init() setup of I/O pins and desired bank selected
+ * Pre:  gb_init() setup of I/O pins and desired bank selected
  *       RAM enabled by the mapper when reading cartridge RAM
  * Post: Address left on bus; data bus left in input mode
  *       /RD and SRAM /CS high
  * Rtn:  Byte read from the cartridge at addr
  */
-uint8_t gameboy_rd(uint16_t addr)
+uint8_t gb_rd(uint16_t addr)
 {
   uint8_t rv;
 
@@ -135,14 +135,14 @@ uint8_t gameboy_rd(uint16_t addr)
 
 /* Desc: Write a byte to the Game Boy cartridge using /WR
  *       assert SRAM /CS for addresses 0xA000-0xBFFF; clock pin is not toggled
- * Pre:  gameboy_init() setup of I/O pins and desired bank selected
+ * Pre:  gb_init() setup of I/O pins and desired bank selected
  *       RAM enabled by the mapper when writing cartridge RAM
  * Post: Write cycle issued without readback verification; address left on bus
  *       /WR and SRAM /CS high
  *       data bus returned to input (AVR pull-ups enabled on bits written as 1)
  * Rtn:  None
  */
-void gameboy_wr(uint16_t addr, uint8_t data)
+void gb_wr(uint16_t addr, uint8_t data)
 {
   // cycle would start with clock rise
 
@@ -176,40 +176,10 @@ void gameboy_wr(uint16_t addr, uint8_t data)
   DATA_IP();
 }
 
-/* Desc: Program one Game Boy flash byte using normal /WR
- *       send 0xAA/0x55/0xA0 at 0x5555/0x2AAA/0x5555
- *       call usbPoll while waiting for readback to match data
- * Pre:  gameboy_init() setup of I/O pins and desired bank selected
- *       board and flash support this command sequence
- * Post: Write attempted; polling stops on matching data or timeout
- *       data bus left in input mode; /RD, /WR and SRAM /CS high
- * Rtn:  Last byte read at the effective target address; compare with data for success
- */
-uint8_t gameboy_flash_wr(uint16_t addr, uint8_t data)
-{
-  uint8_t rv;
-  uint16_t timeout = 0xffff;
-
-  gameboy_wr(0x5555, 0xAA);
-  gameboy_wr(0x2AAA, 0x55);
-  gameboy_wr(0x5555, 0xA0);
-  gameboy_wr(addr, data);
-
-  do {
-    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-    rv = gameboy_rd(addr);
-    if(rv == data) {
-      break;
-    }
-  } while(--timeout);
-
-  return rv;
-}
-
 /* Desc: Write a byte using cartridge pin 31 (AUDIO IN) as flash /WE
  *       keep normal /WR high; assert SRAM /CS for addresses 0xA000-0xBFFF
  *       clock pin is not toggled
- * Pre:  gameboy_init() setup of I/O pins and desired bank selected
+ * Pre:  gb_init() setup of I/O pins and desired bank selected
  *       board must route pin 31 to flash /WE and permit active high drive
  * Post: Write pulse issued without readback verification; address left on bus
  *       pin 31 driven high then returned to floating input
@@ -217,7 +187,7 @@ uint8_t gameboy_flash_wr(uint16_t addr, uint8_t data)
  *       data bus returned to input (AVR pull-ups enabled on bits written as 1)
  * Rtn:  None
  */
-void gameboy_pin31_wr(uint16_t addr, uint8_t data)
+void gb_wr_pin31(uint16_t addr, uint8_t data)
 {
   // cycle would start with clock rise
 
@@ -258,144 +228,167 @@ void gameboy_pin31_wr(uint16_t addr, uint8_t data)
   DATA_IP();
 }
 
-/* Desc: Program one Game Boy flash byte using pin 31 as /WE
- *       send 0xAA/0x55/0xA0 at 0x5555/0x2AAA/0x5555
- *       mask addr to 0x0000-0x3FFF when cur_bank is zero
- *       call usbPoll while waiting for readback to match data
- * Pre:  gameboy_init() setup of I/O pins and desired bank selected
- *       board routes pin 31 to flash /WE; cur_bank identifies the target bank
- *       mapper must provide the expected mapping for the unlock sequence
- * Post: Write attempted; polling stops on matching data or timeout
- *       0x2000 bank register written with 0, then cur_bank if nonzero
- *       data bus left in input mode; /RD, /WR and SRAM /CS high
- * Rtn:  Last byte read at the effective target address; compare with data for success
+/* Desc: Poll a pending ROM byte program through the Game Boy cartridge bus
+ *       perform at most 0xFFFF reads through gb_rd
+ * Pre:  gb_init() setup of I/O pins
+ *       program command and data already sent; target bank remains selected
+ *       addr is the cartridge address to poll and data is the expected byte
+ * Post: Stops when gb_rd(addr) equals data or the read limit is reached
+ *       no program command, retry or flash reset is issued here
+ * Rtn:  Last cartridge byte read at addr; a mismatch indicates polling failure
  */
-uint8_t gameboy_flash_pin31_wr(uint16_t addr, uint8_t data)
+static uint8_t rom_wr_polling(uint16_t addr, uint8_t data)
 {
   uint8_t rv;
   uint16_t timeout = 0xffff;
 
+  do {
+    rv = gb_rd(addr);
+    if(rv == data) {
+      break;
+    }
+  } while(--timeout);
+
+  return rv;
+}
+
+/* Desc: Program one Game Boy ROM byte using normal /WR and the long unlock profile
+ *       send 0xAA/0x55/0xA0 at flash addresses 0x5555/0x2AAA/0x5555
+ *       then poll the target byte through rom_wr_polling
+ * Pre:  gb_init() setup of I/O pins and desired bank selected
+ *       board and flash support this command sequence
+ * Post: Write attempted; polling stops on matching data or after at most
+ *       0xFFFF reads through rom_wr_polling
+ *       data bus left in input mode; /RD, /WR and SRAM /CS high
+ * Rtn:  Last byte read at the effective target address; compare with data for success
+ */
+uint8_t gb_flash_wr_long(uint16_t addr, uint8_t data)
+{
+  // write unlock command
+  gb_wr(0x5555, 0xAA);
+  gb_wr(0x2AAA, 0x55);
+  gb_wr(0x5555, 0xA0);
+
+  // write data
+  gb_wr(addr, data);
+
+  return rom_wr_polling(addr, data);
+}
+
+/* Desc: Program one Game Boy ROM byte through pin 31 using the long unlock profile
+ *       send 0xAA/0x55/0xA0 at flash addresses 0x5555/0x2AAA/0x5555
+ *       mask addr to 0x0000-0x3FFF when cur_bank is zero
+ *       then poll the effective target address through rom_wr_polling
+ * Pre:  gb_init() setup of I/O pins and desired bank selected
+ *       board routes pin 31 to flash /WE; cur_bank identifies the target bank
+ *       mapper must provide the expected mapping for the unlock sequence
+ * Post: Write attempted; polling stops on matching data or after at most
+ *       0xFFFF reads through rom_wr_polling
+ *       0x2000 bank register written with 0, then cur_bank if nonzero
+ *       data bus left in input mode; /RD, /WR and SRAM /CS high
+ * Rtn:  Last byte read at the effective target address; compare with data for success
+ */
+uint8_t gb_flash_wr_pin31_long(uint16_t addr, uint8_t data)
+{
   // clean up address if we're flashing bank 0
   if(cur_bank == 0x00) {
     addr = addr & 0x3fff;
   }
 
-  // program byte sequence
-  gameboy_wr(0x2000, 0x00); // TODO: should be 0x01 instead since MBC1 can't map bank 0?
-  gameboy_pin31_wr(0x5555, 0xAA);
-  gameboy_pin31_wr(0x2AAA, 0x55);
-  gameboy_pin31_wr(0x5555, 0xA0);
+  gb_wr(0x2000, 0x00); // TODO: should be 0x01 instead since MBC1 can't map bank 0?
+
+  // write unlock command
+  gb_wr_pin31(0x5555, 0xAA);
+  gb_wr_pin31(0x2AAA, 0x55);
+  gb_wr_pin31(0x5555, 0xA0);
 
   // set bank if needed
   if(cur_bank != 0x00) {
-    gameboy_wr(0x2000, cur_bank);
+    gb_wr(0x2000, cur_bank);
   }
 
-  // write the actual data
-  gameboy_pin31_wr(addr, data);
+  // write data
+  gb_wr_pin31(addr, data);
 
-  do {
-    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-    rv = gameboy_rd(addr);
-    if(rv == data) {
-      break;
-    }
-  } while(--timeout);
-
-  return rv;
+  return rom_wr_polling(addr, data);
 }
 
-/* Desc: Program one 3V Game Boy flash byte in unlock bypass mode via pin 31
+/* Desc: Program one Game Boy ROM byte in unlock bypass mode through pin 31
  *       mask addr to 0x0000-0x3FFF when cur_bank is zero
- *       call usbPoll while waiting for readback to match data
- * Pre:  gameboy_init() setup of I/O pins and desired bank selected
+ *       send 0xA0 and data at the target, then poll through rom_wr_polling
+ * Pre:  gb_init() setup of I/O pins and desired bank selected
  *       board routes pin 31 to flash /WE; flash already in unlock bypass mode
  *       cur_bank must agree with the selected hardware bank
- * Post: Write attempted; polling stops on matching data or timeout
+ * Post: Write attempted; polling stops on matching data or after at most
+ *       0xFFFF reads through rom_wr_polling
  *       unlock bypass mode remains active; bank registers unchanged
  *       data bus left in input mode; /RD, /WR and SRAM /CS high
  * Rtn:  Last byte read at the effective target address; compare with data for success
  */
-uint8_t gameboy_unlock_3v_flash_pin31_wr(uint16_t addr, uint8_t data)
+uint8_t gb_flash_wr_pin31_unlock(uint16_t addr, uint8_t data)
 {
-  uint8_t rv;
-  uint16_t timeout = 0xffff;
-
   if(cur_bank == 0x00) {
     addr = addr & 0x3fff;
   }
 
-  gameboy_pin31_wr(addr, 0xA0); // unlock bypass command
-  gameboy_pin31_wr(addr, data);
+  // needs to be in unlock bypass mode
+  gb_wr_pin31(addr, 0xA0);
 
-  do {
-    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-    rv = gameboy_rd(addr);
-    if(rv == data) {
-      break;
-    }
-  } while(--timeout);
+  // write data
+  gb_wr_pin31(addr, data);
 
-  return rv;
+  return rom_wr_polling(addr, data);
 }
 
-/* Desc: Program one 3V Game Boy flash byte using pin 31 as /WE
- *       send 0xAA/0x55/0xA0 at 0x0AAA/0x0555/0x0AAA
+/* Desc: Program one Game Boy ROM byte through pin 31 using the short unlock profile
+ *       send 0xAA/0x55/0xA0 at flash addresses 0x0AAA/0x0555/0x0AAA
  *       mask addr to 0x0000-0x3FFF when cur_bank is zero
- *       call usbPoll while waiting for readback to match data
- * Pre:  gameboy_init() setup of I/O pins and desired bank selected
+ *       then poll the effective target address through rom_wr_polling
+ * Pre:  gb_init() setup of I/O pins and desired bank selected
  *       board routes pin 31 to flash /WE and supports this command sequence
  *       cur_bank must agree with the selected hardware bank
- * Post: Write attempted; polling stops on matching data or timeout
+ * Post: Write attempted; polling stops on matching data or after at most
+ *       0xFFFF reads through rom_wr_polling
  *       bank registers unchanged
  *       data bus left in input mode; /RD, /WR and SRAM /CS high
  * Rtn:  Last byte read at the effective target address; compare with data for success
  */
-uint8_t gameboy_3v_flash_pin31_wr(uint16_t addr, uint8_t data)
+uint8_t gb_flash_wr_pin31_short(uint16_t addr, uint8_t data)
 {
-  uint8_t rv;
-  uint16_t timeout = 0xffff;
-
   if(cur_bank == 0x00) {
     addr = addr & 0x3fff;
   }
 
-  gameboy_pin31_wr(0x0AAA, 0xAA);
-  gameboy_pin31_wr(0x0555, 0x55);
-  gameboy_pin31_wr(0x0AAA, 0xA0);
-  // if(addr >= 0x4000) gameboy_wr(0x2000, cur_bank);
+  // write unlock sequence
+  gb_wr_pin31(0x0AAA, 0xAA);
+  gb_wr_pin31(0x0555, 0x55);
+  gb_wr_pin31(0x0AAA, 0xA0);
+  // if(addr >= 0x4000) gb_wr(0x2000, cur_bank);
 
-  gameboy_pin31_wr(addr, data);
+  // write data
+  gb_wr_pin31(addr, data);
 
-  do {
-    usbPoll(); // orignal kazzo needs this frequently to slurp up incoming data
-    rv = gameboy_rd(addr);
-    if(rv == data) {
-      break;
-    }
-  } while(--timeout);
-
-  return rv;
+  return rom_wr_polling(addr, data);
 }
 
 /* Desc: Write 256 successive LFSR-generated bytes starting at addr
  *       the supplied data argument is overwritten
- *       gameboy_wr pulses /WR and asserts SRAM /CS for 0xA000-0xBFFF
- * Pre:  gameboy_init() setup of I/O pins and desired bank selected
+ *       gb_wr pulses /WR and asserts SRAM /CS for 0xA000-0xBFFF
+ * Pre:  gb_init() setup of I/O pins and desired bank selected
  *       LFSR initialized; target range writable and RAM enabled when needed
  * Post: LFSR advanced 256 times; writes issued without readback verification
  *       last written address left on bus; /WR and SRAM /CS high
  *       data bus returned to input (AVR pull-ups enabled on bits written as 1)
  * Rtn:  None
  */
-void gameboy_page_wr_lfsr(uint16_t addr, uint8_t data)
+void gb_page_wr_lfsr(uint16_t addr, uint8_t data)
 {
   // TODO give other data sources
   uint16_t i;
 
   for(i = 0; i < 256; i++) {
     data = lfsr_32();
-    gameboy_wr(addr, data);
+    gb_wr(addr, data);
     addr++;
   }
 }
@@ -403,8 +396,8 @@ void gameboy_page_wr_lfsr(uint16_t addr, uint8_t data)
 /* Desc: Read len + 1 Game Boy bytes from page offset first into data[0..len]
  *       hold /RD low; toggle SRAM /CS for each RAM read for FRAM compatibility
  *       RAM range is 0xA000-0xBFFF; clock pin is not toggled
- *       poll argument is currently unused: USB polling is commented out
- * Pre:  gameboy_init() setup of I/O pins and desired bank selected
+ *       poll argument is reserved and currently unused
+ * Pre:  gb_init() setup of I/O pins and desired bank selected
  *       RAM enabled when reading cartridge RAM; data has room for len + 1 bytes
  *       len must be below 255 or the 8-bit counter loops indefinitely
  *       first + len must be at most 255 to stay within the page
@@ -413,7 +406,7 @@ void gameboy_page_wr_lfsr(uint16_t addr, uint8_t data)
  *       data bus left in input mode
  * Rtn:  Number of bytes read (len + 1)
  */
-uint8_t gameboy_page_rd_poll(uint8_t* data, uint8_t addrH, uint8_t first, uint8_t len, uint8_t poll)
+uint8_t gb_page_rd_poll(uint8_t* data, uint8_t addrH, uint8_t first, uint8_t len, uint8_t poll)
 {
   uint8_t i;
 
@@ -437,17 +430,6 @@ uint8_t gameboy_page_rd_poll(uint8_t* data, uint8_t addrH, uint8_t first, uint8_
       GB_RAM_CS_LO();
     }
 
-    // // testing shows that having this if statement doesn't affect overall dumping speed
-    // if (poll)
-    // {
-    //   usbPoll(); // Call usbdrv.h usb polling while waiting for data
-    // }
-    // else
-    // {
-    //   NOP(); // couple more NOP's waiting for data
-    //   NOP(); // one prob good enough considering the if/else
-    // }
-
     // gameboy needed some extra NOPS
     // NOP();
     // NOP();
@@ -455,8 +437,8 @@ uint8_t gameboy_page_rd_poll(uint8_t* data, uint8_t addrH, uint8_t first, uint8_
     // NOP();
     // NOP();
     // NOP();
-    NOP(); // original
-    NOP(); // original
+    NOP();
+    NOP();
 
     // latch data
     DATA_RD(data[i]);

@@ -38,17 +38,17 @@ local function rom_flash_byte(addr, value)
     return
   end
 
-  dict.gameboy("GAMEBOY_WR", 0x5555, 0xAA)
-  dict.gameboy("GAMEBOY_WR", 0x2AAA, 0x55)
-  dict.gameboy("GAMEBOY_WR", 0x5555, 0xA0)
-  dict.gameboy("GAMEBOY_WR", addr, value)
+  dict.gameboy("GB_WR", 0x5555, 0xAA)
+  dict.gameboy("GB_WR", 0x2AAA, 0x55)
+  dict.gameboy("GB_WR", 0x5555, 0xA0)
+  dict.gameboy("GB_WR", addr, value)
 
-  local rv = dict.gameboy("GAMEBOY_RD", addr)
+  local rv = dict.gameboy("GB_RD", addr)
 
   local i = 0
 
-  while rv ~= dict.gameboy("GAMEBOY_RD", addr) do
-    rv = dict.gameboy("GAMEBOY_RD", addr)
+  while rv ~= dict.gameboy("GB_RD", addr) do
+    rv = dict.gameboy("GB_RD", addr)
     i = i + 1
   end
 
@@ -82,31 +82,31 @@ local function rom_manf_id()
 
   log.section("Reading ROM manufacturer/device ID")
 
-  dict.gameboy("GAMEBOY_PIN31_WR", 0x0AAA, 0xAA)
-  dict.gameboy("GAMEBOY_PIN31_WR", 0x0555, 0x55)
-  dict.gameboy("GAMEBOY_PIN31_WR", 0x0AAA, 0x90)
+  dict.gameboy("GB_PIN31_WR", 0x0AAA, 0xAA)
+  dict.gameboy("GB_PIN31_WR", 0x0555, 0x55)
+  dict.gameboy("GB_PIN31_WR", 0x0AAA, 0x90)
 
-  manufacturer_id = dict.gameboy("GAMEBOY_RD", 0x0000)
+  manufacturer_id = dict.gameboy("GB_RD", 0x0000)
   chips.display_manufacturer(manufacturer_id)
 
   if manufacturer_id == 0xC2 then
     -- MX chips
-    device_id = dict.gameboy("GAMEBOY_RD", 0x0002)
+    device_id = dict.gameboy("GB_RD", 0x0002)
     found, device = chips.display_device(manufacturer_id, device_id)
   elseif manufacturer_id == 0x01 then
     -- Cypress / Spansion
-    device_id = dict.gameboy("GAMEBOY_RD", 0x0002) << 16
-    device_id = device_id | (dict.gameboy("GAMEBOY_RD", 0x001C) << 8)
-    device_id = device_id | dict.gameboy("GAMEBOY_RD", 0x001E)
+    device_id = dict.gameboy("GB_RD", 0x0002) << 16
+    device_id = device_id | (dict.gameboy("GB_RD", 0x001C) << 8)
+    device_id = device_id | dict.gameboy("GB_RD", 0x001E)
     found, device = chips.display_device(manufacturer_id, device_id)
   else
     -- fallback (SST)
-    device_id = dict.gameboy("GAMEBOY_RD", 0x0001)
+    device_id = dict.gameboy("GB_RD", 0x0001)
     found, device = chips.display_device(manufacturer_id, device_id)
   end
 
   -- exit software
-  dict.gameboy("GAMEBOY_PIN31_WR", 0x0000, 0xF0)
+  dict.gameboy("GB_PIN31_WR", 0x0000, 0xF0)
 
   return found, device
 end
@@ -117,19 +117,19 @@ local function rom_erase()
   local rv
 
   log.section("Erasing ROM")
-  dict.gameboy("GAMEBOY_PIN31_WR", 0x0AAA, 0xAA)
-  dict.gameboy("GAMEBOY_PIN31_WR", 0x0555, 0x55)
-  dict.gameboy("GAMEBOY_PIN31_WR", 0x0AAA, 0x80)
-  dict.gameboy("GAMEBOY_PIN31_WR", 0x0AAA, 0xAA)
-  dict.gameboy("GAMEBOY_PIN31_WR", 0x0555, 0x55)
-  dict.gameboy("GAMEBOY_PIN31_WR", 0x0AAA, 0x10)
+  dict.gameboy("GB_PIN31_WR", 0x0AAA, 0xAA)
+  dict.gameboy("GB_PIN31_WR", 0x0555, 0x55)
+  dict.gameboy("GB_PIN31_WR", 0x0AAA, 0x80)
+  dict.gameboy("GB_PIN31_WR", 0x0AAA, 0xAA)
+  dict.gameboy("GB_PIN31_WR", 0x0555, 0x55)
+  dict.gameboy("GB_PIN31_WR", 0x0AAA, 0x10)
 
   -- TODO create some function to pass the read value
   -- that's smart enough to figure out if the board is actually erasing or not
-  rv = dict.gameboy("GAMEBOY_RD", 0x0000)
-  while rv ~= dict.gameboy("GAMEBOY_RD", 0x0000) do
+  rv = dict.gameboy("GB_RD", 0x0000)
+  while rv ~= dict.gameboy("GB_RD", 0x0000) do
     spinner.update("Erasing")
-    rv = dict.gameboy("GAMEBOY_RD", 0x0000)
+    rv = dict.gameboy("GB_RD", 0x0000)
     i = i + 1
   end
   spinner.clear()
@@ -154,10 +154,10 @@ local function rom_dump(file, rom_size_kb)
     end
 
     -- set bank
-    dict.gameboy("GAMEBOY_WR", 0x3000, (cur_bank & 0x100) >> 8)
-    dict.gameboy("GAMEBOY_WR", 0x2000, cur_bank & 0xff)
+    dict.gameboy("GB_WR", 0x3000, (cur_bank & 0x100) >> 8)
+    dict.gameboy("GB_WR", 0x2000, cur_bank & 0xff)
 
-    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "GAMEBOY_PAGE" })
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "GB_PAGE" })
 
     cur_bank = cur_bank + 1
   end
@@ -193,9 +193,9 @@ local function rom_flash(file, rom_size_kb)
     end
 
     -- set bank
-    dict.gameboy("GAMEBOY_SET_CUR_BANK", cur_bank) -- FIXME (?)
-    dict.gameboy("GAMEBOY_WR", 0x3000, (cur_bank & 0x100) >> 8)
-    dict.gameboy("GAMEBOY_WR", 0x2000, cur_bank & 0xff)
+    dict.gameboy("GB_SET_CUR_BANK", cur_bank) -- FIXME (?)
+    dict.gameboy("GB_WR", 0x3000, (cur_bank & 0x100) >> 8)
+    dict.gameboy("GB_WR", 0x2000, cur_bank & 0xff)
 
     -- flash data
     flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "GBROM", options = options })
@@ -236,10 +236,10 @@ local function ram_dump(file, ram_size_kb)
     end
 
     -- set bank
-    dict.gameboy("GAMEBOY_WR", 0x4000, cur_bank)
+    dict.gameboy("GB_WR", 0x4000, cur_bank)
 
     -- have the device dump a bank worth of data
-    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "GAMEBOY_PAGE" })
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "GB_PAGE" })
 
     cur_bank = cur_bank + 1
   end
@@ -266,7 +266,7 @@ local function ram_write(file, ram_size_kb)
     end
 
     -- set bank
-    dict.gameboy("GAMEBOY_WR", 0x4000, cur_bank)
+    dict.gameboy("GB_WR", 0x4000, cur_bank)
 
     -- flash data
     flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "GBRAM" })
@@ -288,27 +288,27 @@ local function ram_detect()
   log.section("Detecting RAM")
 
   -- enable RAM
-  dict.gameboy("GAMEBOY_WR", 0x0000, 0x0A)
+  dict.gameboy("GB_WR", 0x0000, 0x0A)
 
   -- save potential battery backed data first
-  saved_value = dict.gameboy("GAMEBOY_RD", 0xA000)
+  saved_value = dict.gameboy("GB_RD", 0xA000)
 
   -- try to write and read back
-  dict.gameboy("GAMEBOY_WR", 0xA000, saved_value ~ 0xff)
-  read_value = dict.gameboy("GAMEBOY_RD", 0xA000)
+  dict.gameboy("GB_WR", 0xA000, saved_value ~ 0xff)
+  read_value = dict.gameboy("GB_RD", 0xA000)
   if read_value ~= (saved_value ~ 0xff) then
     test = false
   end
 
   -- put back original value
-  dict.gameboy("GAMEBOY_WR", 0xA000, saved_value)
-  read_value = dict.gameboy("GAMEBOY_RD", 0xA000)
+  dict.gameboy("GB_WR", 0xA000, saved_value)
+  read_value = dict.gameboy("GB_RD", 0xA000)
   if read_value ~= (saved_value) then
     test = false
   end
 
   -- disable RAM
-  dict.gameboy("GAMEBOY_WR", 0x0000, 0x00)
+  dict.gameboy("GB_WR", 0x0000, 0x00)
 
   return test
 end
@@ -327,7 +327,7 @@ local function ram_get_size()
   log.section("Detecting RAM size")
 
   -- enable RAM
-  dict.gameboy("GAMEBOY_WR", 0x0000, 0x0A)
+  dict.gameboy("GB_WR", 0x0000, 0x0A)
 
   -- write to banks backwards
   while cur_bank >= 0 do
@@ -338,10 +338,10 @@ local function ram_get_size()
     end
 
     -- set bank
-    dict.gameboy("GAMEBOY_WR", 0x4000, cur_bank)
+    dict.gameboy("GB_WR", 0x4000, cur_bank)
 
     -- write data
-    dict.gameboy("GAMEBOY_WR", 0xA000, cur_bank)
+    dict.gameboy("GB_WR", 0xA000, cur_bank)
 
     cur_bank = cur_bank - 1
   end
@@ -349,11 +349,11 @@ local function ram_get_size()
   spinner.clear()
 
   -- read back only last bank
-  dict.gameboy("GAMEBOY_WR", 0x4000, num_banks - 1)
-  ram_size_kb = (dict.gameboy("GAMEBOY_RD", 0xA000) + 1) * 8
+  dict.gameboy("GB_WR", 0x4000, num_banks - 1)
+  ram_size_kb = (dict.gameboy("GB_RD", 0xA000) + 1) * 8
 
   -- disable RAM
-  dict.gameboy("GAMEBOY_WR", 0x0000, 0x00)
+  dict.gameboy("GB_WR", 0x0000, 0x00)
 
   if ram_size_kb >= 0 and ram_size_kb <= 32 then
     log.success("RAM size detected", ram_size_kb .. "KB")
@@ -379,7 +379,7 @@ local function ram_exercise(wram_size_kb, retroprog_id)
   log.info("RAM size", wram_size_kb .. "KB")
 
   -- enable RAM
-  dict.gameboy("GAMEBOY_WR", 0x0000, 0x0A)
+  dict.gameboy("GB_WR", 0x0000, 0x0A)
 
   -- write random data to all banks
   log.point("Writing random data to RAM")
@@ -391,12 +391,12 @@ local function ram_exercise(wram_size_kb, retroprog_id)
     end
 
     -- set bank
-    dict.gameboy("GAMEBOY_WR", 0x4000, cur_bank)
+    dict.gameboy("GB_WR", 0x4000, cur_bank)
 
     -- write random data
     local addr = 0xA000
     while addr < 0xC000 do
-      dict.gameboy("GAMEBOY_PAGE_WR_LFSR", addr)
+      dict.gameboy("GB_PAGE_WR_LFSR", addr)
       addr = addr + 256
     end
 
@@ -414,7 +414,7 @@ local function ram_exercise(wram_size_kb, retroprog_id)
   ram_dump(file, wram_size_kb)
 
   -- disable RAM
-  dict.gameboy("GAMEBOY_WR", 0x0000, 0x00)
+  dict.gameboy("GB_WR", 0x0000, 0x00)
 
   -- close file
   assert(file:close())
@@ -473,7 +473,7 @@ local function process(process_opts, console_opts)
 
   -- Initialize device i/o
   dict.io("IO_RESET")
-  dict.io("GAMEBOY_INIT")
+  dict.io("GB_INIT")
 
   dict.io("GB_POWER_5V") -- Gameboy carts prob run fine at 3v if want to be safe
 
@@ -566,7 +566,7 @@ local function process(process_opts, console_opts)
     file = assert(io.open(ram_dump_file.filename, "wb"))
 
     -- enable RAM
-    dict.gameboy("GAMEBOY_WR", 0x0000, 0x0A)
+    dict.gameboy("GB_WR", 0x0000, 0x0A)
 
     -- dump cart to file
     if wram_size_kb ~= 0 then
@@ -581,7 +581,7 @@ local function process(process_opts, console_opts)
     end
 
     -- disable RAM
-    dict.gameboy("GAMEBOY_WR", 0x0000, 0x00)
+    dict.gameboy("GB_WR", 0x0000, 0x00)
 
     -- close file
     assert(file:close())
@@ -600,7 +600,7 @@ local function process(process_opts, console_opts)
     file = assert(io.open(ram_write_file.filename, "rb"))
 
     -- enable RAM
-    dict.gameboy("GAMEBOY_WR", 0x0000, 0x0A)
+    dict.gameboy("GB_WR", 0x0000, 0x0A)
 
     -- flash cart
     if wram_size_kb ~= 0 then
@@ -613,7 +613,7 @@ local function process(process_opts, console_opts)
     end
 
     -- disable RAM
-    dict.gameboy("GAMEBOY_WR", 0x0000, 0x00)
+    dict.gameboy("GB_WR", 0x0000, 0x00)
 
     -- close file
     assert(file:close())
