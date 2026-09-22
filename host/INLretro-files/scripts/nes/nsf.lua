@@ -13,7 +13,7 @@ local files      = require "scripts.app.files"
 local help       = require "scripts.app.help"
 
 -- file constants and global variables
-local mapname    = "EZNSF"
+local mapname    = "NSF"
 local prg_flash_chip
 
 -- registers
@@ -145,7 +145,7 @@ local function prg_rom_flash(file, rom_size_kb)
     nes.cpu_wr(PRG_BANK_0, cur_bank) -- bank at $8000
 
     -- flash data
-    flash.write_file(file, bank_size_kb, { mapper = "EZNSF", mem_type = "NES_PRG_ROM", options = options })
+    flash.write_file(file, bank_size_kb, { mapper = "NSF", mem_type = "NES_PRG_ROM", options = options })
 
     cur_bank = cur_bank + 1
   end

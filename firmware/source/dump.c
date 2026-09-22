@@ -135,7 +135,7 @@ uint8_t dump_buff(buffer* buff)
       // nes_cpu_wr(0x5000, 0x00); // chr reg select act like CNROM
       //}
       ///* migrated to script controlled
-      //if (buff->mapper == EZNSF) {
+      //if (buff->mapper == NSF) {
       // //addrH &= 0b1000 1111 A14-12 must always be low
       // addrH &= 0x8F;
       // //write bank value to bank table

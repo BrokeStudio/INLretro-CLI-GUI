@@ -190,7 +190,7 @@
 #define VRC6b 26
 #define A53 28
 #define MAP30 30
-#define EZNSF 31
+#define NSF 31
 #define BxROM 34
 #define RAMBO 64
 #define H3001 65 // IREM mapper

@@ -639,13 +639,13 @@ uint8_t flash_buff(buffer* buff)
 
     case NES_PRG_ROM: //$8000
       if(buff->part_num == USE_BUFFER) {
-        if(buff->mapper == A53 || buff->mapper == EZNSF || buff->mapper == RNBW) {
+        if(buff->mapper == A53 || buff->mapper == NSF || buff->mapper == RNBW) {
           result = write_page_buffer_verify_8((addrH + 0x80), buff, nes_cpu_wr, nes_cpu_rd);
         } else {
           return ERR_BUFF_PART_NUM_RANGE;
         }
       } else if(buff->part_num == USE_UNLOCK_BYPASS) {
-        if(buff->mapper == A53 || buff->mapper == EZNSF || buff->mapper == RNBW) {
+        if(buff->mapper == A53 || buff->mapper == NSF || buff->mapper == RNBW) {
           // enter unlock mode bypass
           nes_cpu_wr(0x8AAA, 0xAA);
           nes_cpu_wr(0x8555, 0x55);
@@ -696,7 +696,7 @@ uint8_t flash_buff(buffer* buff)
           nes_cpu_wr((0x6000), 0xA5); // select desired bank
           nes_cpu_wr((0xFFFF), bank); // select desired bank
           write_page_cninja(0, addrH, 0xD555, 0xAAAA, buff, nes_cpu_wr, nes_cpu_rd);
-        } else if(buff->mapper == A53 || buff->mapper == EZNSF) {
+        } else if(buff->mapper == A53 || buff->mapper == NSF) {
           result = write_page_verify_8((addrH + 0x80), buff, nes_prgrom_flash_wr_long);
         } else if(buff->mapper == JALECO_SS88006) {
           result = write_page_verify_8((addrH + 0x80), buff, nes_prgrom_flash_wr_m2_high);
