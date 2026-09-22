@@ -15,8 +15,8 @@ uint8_t gb_flash_wr_long(uint16_t addr, uint8_t data);
 uint8_t gb_flash_wr_pin31_long(uint16_t addr, uint8_t data);
 uint8_t gb_flash_wr_pin31_unlock(uint16_t addr, uint8_t data);
 uint8_t gb_flash_wr_pin31_short(uint16_t addr, uint8_t data);
-void gb_page_wr_lfsr(uint16_t addr, uint8_t data);
+void gb_page_wr_lfsr(uint16_t addr);
 
-uint8_t gb_page_rd_poll(uint8_t* data, uint8_t addrH, uint8_t first, uint8_t len, uint8_t poll);
+uint8_t gb_page_rd(uint8_t* data, uint8_t addrH, uint8_t first, uint8_t len);
 
 #endif

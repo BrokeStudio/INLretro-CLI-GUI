@@ -9,8 +9,8 @@
   #define SEGA_A19_MASK 0x04
 
 // uint16_t sega_bank = 0;
-uint8_t sega_addr_hi = 0;  // A23-A16
-uint16_t sega_addr_lo = 0; // A15-A0
+static uint8_t sega_addr_hi = 0;  // A23-A16
+static uint16_t sega_addr_lo = 0; // A15-A0
 
 //=================================================================================================
 //

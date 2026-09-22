@@ -13,7 +13,7 @@
 //=================================================================================================
 
 // global variables
-uint8_t cur_bank; // used by some flash algos, must be initialized prior to depending on it
+static uint16_t cur_bank; // used by some flash algos, must be initialized prior to depending on it
 
 /* Desc: Dispatch a Game Boy dictionary opcode received over USB
  *       shared_dict_gameboy.h defines opcodes shared by host and firmware
@@ -61,7 +61,7 @@ uint8_t gb_call(uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_t* rda
       break;
 
     case GB_PAGE_WR_LFSR:
-      gb_page_wr_lfsr(operand, miscdata);
+      gb_page_wr_lfsr(operand);
       break;
 
     // 8bit return values:
@@ -237,7 +237,7 @@ void gb_wr_pin31(uint16_t addr, uint8_t data)
  *       no program command, retry or flash reset is issued here
  * Rtn:  Last cartridge byte read at addr; a mismatch indicates polling failure
  */
-static uint8_t rom_wr_polling(uint16_t addr, uint8_t data)
+static uint8_t gb_rom_wr_polling(uint16_t addr, uint8_t data)
 {
   uint8_t rv;
   uint16_t timeout = 0xffff;
@@ -254,11 +254,11 @@ static uint8_t rom_wr_polling(uint16_t addr, uint8_t data)
 
 /* Desc: Program one Game Boy ROM byte using normal /WR and the long unlock profile
  *       send 0xAA/0x55/0xA0 at flash addresses 0x5555/0x2AAA/0x5555
- *       then poll the target byte through rom_wr_polling
+ *       then poll the target byte through gb_rom_wr_polling
  * Pre:  gb_init() setup of I/O pins and desired bank selected
  *       board and flash support this command sequence
  * Post: Write attempted; polling stops on matching data or after at most
- *       0xFFFF reads through rom_wr_polling
+ *       0xFFFF reads through gb_rom_wr_polling
  *       data bus left in input mode; /RD, /WR and SRAM /CS high
  * Rtn:  Last byte read at the effective target address; compare with data for success
  */
@@ -272,18 +272,18 @@ uint8_t gb_flash_wr_long(uint16_t addr, uint8_t data)
   // write data
   gb_wr(addr, data);
 
-  return rom_wr_polling(addr, data);
+  return gb_rom_wr_polling(addr, data);
 }
 
 /* Desc: Program one Game Boy ROM byte through pin 31 using the long unlock profile
  *       send 0xAA/0x55/0xA0 at flash addresses 0x5555/0x2AAA/0x5555
  *       mask addr to 0x0000-0x3FFF when cur_bank is zero
- *       then poll the effective target address through rom_wr_polling
+ *       then poll the effective target address through gb_rom_wr_polling
  * Pre:  gb_init() setup of I/O pins and desired bank selected
  *       board routes pin 31 to flash /WE; cur_bank identifies the target bank
  *       mapper must provide the expected mapping for the unlock sequence
  * Post: Write attempted; polling stops on matching data or after at most
- *       0xFFFF reads through rom_wr_polling
+ *       0xFFFF reads through gb_rom_wr_polling
  *       0x2000 bank register written with 0, then cur_bank if nonzero
  *       data bus left in input mode; /RD, /WR and SRAM /CS high
  * Rtn:  Last byte read at the effective target address; compare with data for success
@@ -310,17 +310,17 @@ uint8_t gb_flash_wr_pin31_long(uint16_t addr, uint8_t data)
   // write data
   gb_wr_pin31(addr, data);
 
-  return rom_wr_polling(addr, data);
+  return gb_rom_wr_polling(addr, data);
 }
 
 /* Desc: Program one Game Boy ROM byte in unlock bypass mode through pin 31
  *       mask addr to 0x0000-0x3FFF when cur_bank is zero
- *       send 0xA0 and data at the target, then poll through rom_wr_polling
+ *       send 0xA0 and data at the target, then poll through gb_rom_wr_polling
  * Pre:  gb_init() setup of I/O pins and desired bank selected
  *       board routes pin 31 to flash /WE; flash already in unlock bypass mode
  *       cur_bank must agree with the selected hardware bank
  * Post: Write attempted; polling stops on matching data or after at most
- *       0xFFFF reads through rom_wr_polling
+ *       0xFFFF reads through gb_rom_wr_polling
  *       unlock bypass mode remains active; bank registers unchanged
  *       data bus left in input mode; /RD, /WR and SRAM /CS high
  * Rtn:  Last byte read at the effective target address; compare with data for success
@@ -337,18 +337,18 @@ uint8_t gb_flash_wr_pin31_unlock(uint16_t addr, uint8_t data)
   // write data
   gb_wr_pin31(addr, data);
 
-  return rom_wr_polling(addr, data);
+  return gb_rom_wr_polling(addr, data);
 }
 
 /* Desc: Program one Game Boy ROM byte through pin 31 using the short unlock profile
  *       send 0xAA/0x55/0xA0 at flash addresses 0x0AAA/0x0555/0x0AAA
  *       mask addr to 0x0000-0x3FFF when cur_bank is zero
- *       then poll the effective target address through rom_wr_polling
+ *       then poll the effective target address through gb_rom_wr_polling
  * Pre:  gb_init() setup of I/O pins and desired bank selected
  *       board routes pin 31 to flash /WE and supports this command sequence
  *       cur_bank must agree with the selected hardware bank
  * Post: Write attempted; polling stops on matching data or after at most
- *       0xFFFF reads through rom_wr_polling
+ *       0xFFFF reads through gb_rom_wr_polling
  *       bank registers unchanged
  *       data bus left in input mode; /RD, /WR and SRAM /CS high
  * Rtn:  Last byte read at the effective target address; compare with data for success
@@ -368,7 +368,7 @@ uint8_t gb_flash_wr_pin31_short(uint16_t addr, uint8_t data)
   // write data
   gb_wr_pin31(addr, data);
 
-  return rom_wr_polling(addr, data);
+  return gb_rom_wr_polling(addr, data);
 }
 
 /* Desc: Write 256 successive LFSR-generated bytes starting at addr
@@ -381,10 +381,11 @@ uint8_t gb_flash_wr_pin31_short(uint16_t addr, uint8_t data)
  *       data bus returned to input (AVR pull-ups enabled on bits written as 1)
  * Rtn:  None
  */
-void gb_page_wr_lfsr(uint16_t addr, uint8_t data)
+void gb_page_wr_lfsr(uint16_t addr)
 {
   // TODO give other data sources
   uint16_t i;
+  uint8_t data;
 
   for(i = 0; i < 256; i++) {
     data = lfsr_32();
@@ -396,7 +397,6 @@ void gb_page_wr_lfsr(uint16_t addr, uint8_t data)
 /* Desc: Read len + 1 Game Boy bytes from page offset first into data[0..len]
  *       hold /RD low; toggle SRAM /CS for each RAM read for FRAM compatibility
  *       RAM range is 0xA000-0xBFFF; clock pin is not toggled
- *       poll argument is reserved and currently unused
  * Pre:  gb_init() setup of I/O pins and desired bank selected
  *       RAM enabled when reading cartridge RAM; data has room for len + 1 bytes
  *       len must be below 255 or the 8-bit counter loops indefinitely
@@ -406,7 +406,7 @@ void gb_page_wr_lfsr(uint16_t addr, uint8_t data)
  *       data bus left in input mode
  * Rtn:  Number of bytes read (len + 1)
  */
-uint8_t gb_page_rd_poll(uint8_t* data, uint8_t addrH, uint8_t first, uint8_t len, uint8_t poll)
+uint8_t gb_page_rd(uint8_t* data, uint8_t addrH, uint8_t first, uint8_t len)
 {
   uint8_t i;
 

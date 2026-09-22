@@ -14,9 +14,9 @@
 //=================================================================================================
 
 // global variables
-uint8_t cur_bank;      // used by some flash algos, must be initialized prior to depending on it
-uint16_t bank_table;   // address offset of bank table for mapper writes with bus conflicts
-uint8_t num_prg_banks; // used to determine banktable for mappers like colordreams
+static uint8_t cur_bank;      // used by some flash algos, must be initialized prior to depending on it
+static uint16_t bank_table;   // address offset of bank table for mapper writes with bus conflicts
+static uint8_t num_prg_banks; // used to determine banktable for mappers like colordreams
 
 /* Desc: Dispatch a NES dictionary opcode received over USB
  *       use miscdata and operand as the selected operation arguments
@@ -116,10 +116,10 @@ uint8_t nes_call(uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_t* rd
       gtrom_prgrom_flash_wr(operand, miscdata);
       break;
     case PPU_PAGE_WR_LFSR:
-      ppu_page_wr_lfsr(operand, miscdata);
+      ppu_page_wr_lfsr(operand);
       break;
     case CPU_PAGE_WR_LFSR:
-      cpu_page_wr_lfsr(operand, miscdata);
+      cpu_page_wr_lfsr(operand);
       break;
     case RNBW_PRG_FLASH_WR:
       nes_prgrom_flash_wr_short(operand, miscdata);
@@ -1186,10 +1186,11 @@ uint8_t nes_ppu_page_rd_toggle(uint8_t* data, uint8_t addrH, uint8_t first, uint
  *       last written address left on bus; data bus returned to input
  * Rtn:  None
  */
-void ppu_page_wr_lfsr(uint16_t addr, uint8_t data)
-// TODO give other data sources
+void ppu_page_wr_lfsr(uint16_t addr)
 {
+  // TODO give other data sources
   uint16_t i;
+  uint8_t data;
 
   for(i = 0; i < 256; i++) {
     data = lfsr_32();
@@ -1210,10 +1211,11 @@ void ppu_page_wr_lfsr(uint16_t addr, uint8_t data)
  *       last written address left on bus; data bus returned to input
  * Rtn:  None
  */
-void cpu_page_wr_lfsr(uint16_t addr, uint8_t data)
+void cpu_page_wr_lfsr(uint16_t addr)
 {
   // TODO give other data sources
   uint16_t i;
+  uint8_t data;
 
   for(i = 0; i < 256; i++) {
     data = lfsr_32();

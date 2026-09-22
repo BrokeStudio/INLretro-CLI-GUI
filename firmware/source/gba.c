@@ -3,8 +3,8 @@
 //only need this file if connector is present on the device
 #ifdef GB_CONN
 
-uint16_t cur_addr_lo;
-uint8_t cur_addr_hi;
+static uint16_t cur_addr_lo;
+static uint8_t cur_addr_hi;
 
 //=================================================================================================
 //

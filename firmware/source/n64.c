@@ -3,7 +3,7 @@
 //only need this file if connector is present on the device
 #ifdef N64_CONN
 
-uint16_t n64_bank; //A16-31 the upper 16bits that gets latched with ALE_H
+static uint16_t n64_bank; //A16-31 the upper 16bits that gets latched with ALE_H
 
 //=================================================================================================
 //
