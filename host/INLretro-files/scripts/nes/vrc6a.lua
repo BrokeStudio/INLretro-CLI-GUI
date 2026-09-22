@@ -54,19 +54,19 @@ end
 -- leaves $8000 control reg selected to IRQ value selected so $A000 writes don't affect banking
 local function init_mapper()
   -- set $8000 16k bank register for flashing purpose
-  dict.nes("NES_CPU_WR", FLASH_ENABLE, 0x00) -- disable prgram flashing
-  dict.nes("NES_CPU_WR", PRG_16K, 0x00)
+  nes.cpu_wr(FLASH_ENABLE, 0x00) -- disable prgram flashing
+  nes.cpu_wr(PRG_16K, 0x00)
 
   -- set $C000 8k bank register for flashing purpose
-  dict.nes("NES_CPU_WR", PRG_8K, 0x02)
+  nes.cpu_wr(PRG_8K, 0x02)
 
   -- disable PRG-RAM
   -- enable PPU banking mode 1
-  dict.nes("NES_CPU_WR", PPU_BANKING, 0x00)
+  nes.cpu_wr(PPU_BANKING, 0x00)
 
   -- set $1000 and $1800 CHR banks for flashing purpose
-  dict.nes("NES_CPU_WR", CHR_5, 0x15)
-  dict.nes("NES_CPU_WR", CHR_6, 0x0A)
+  nes.cpu_wr(CHR_5, 0x15)
+  nes.cpu_wr(CHR_6, 0x0A)
 end
 
 -- test the mapper's mirroring modes to verify working properly
@@ -78,7 +78,7 @@ local function mirror_test()
   init_mapper()
 
   -- Vertical
-  dict.nes("NES_CPU_WR", PPU_BANKING, 0x20)
+  nes.cpu_wr(PPU_BANKING, 0x20)
   if nes.detect_mapper_mirroring() ~= "VERT" then
     log.error("Vertical mirroring test failed")
     return false
@@ -87,7 +87,7 @@ local function mirror_test()
   end
 
   --Horizontal
-  dict.nes("NES_CPU_WR", PPU_BANKING, 0x24)
+  nes.cpu_wr(PPU_BANKING, 0x24)
   if nes.detect_mapper_mirroring() ~= "HORZ" then
     log.error("Horizontal mirroring test failed")
     return false
@@ -96,7 +96,7 @@ local function mirror_test()
   end
 
   -- 1 screen A
-  dict.nes("NES_CPU_WR", PPU_BANKING, 0x28)
+  nes.cpu_wr(PPU_BANKING, 0x28)
   if nes.detect_mapper_mirroring() ~= "1SCRNA" then
     log.error("One screen mirroring test failed (1 screen A)")
     return false
@@ -105,7 +105,7 @@ local function mirror_test()
   end
 
   -- 1 screen B
-  dict.nes("NES_CPU_WR", PPU_BANKING, 0x2C)
+  nes.cpu_wr(PPU_BANKING, 0x2C)
   if nes.detect_mapper_mirroring() ~= "1SCRNB" then
     log.error("One screen mirroring test failed (1 screen B)")
     return false
@@ -114,7 +114,7 @@ local function mirror_test()
   end
 
   -- restore register PPU_BANKING value
-  dict.nes("NES_CPU_WR", PPU_BANKING, 0x00)
+  nes.cpu_wr(PPU_BANKING, 0x00)
 
   -- passed all tests
   return true
@@ -145,24 +145,24 @@ local function prg_rom_flash_byte(addr, value, bank)
   addr = addr | 0x6000
 
   -- select bank
-  -- dict.nes("NES_CPU_WR", FLASH_ENABLE, 0x01)  --enable prgram flashing -- must be done by caller
-  dict.nes("NES_CPU_WR", RAM_8K, bank)
+  -- nes.cpu_wr(FLASH_ENABLE, 0x01)  --enable prgram flashing -- must be done by caller
+  nes.cpu_wr(RAM_8K, bank)
 
   -- send unlock command and write byte
-  dict.nes("NES_CPU_WR", 0xD555, 0xAA)
-  dict.nes("NES_CPU_WR", 0xAAAA, 0x55)
-  dict.nes("NES_CPU_WR", 0xD555, 0xA0)
-  dict.nes("NES_CPU_WR", addr, value)
+  nes.cpu_wr(0xD555, 0xAA)
+  nes.cpu_wr(0xAAAA, 0x55)
+  nes.cpu_wr(0xD555, 0xA0)
+  nes.cpu_wr(addr, value)
 
   -- recover bank
-  -- dict.nes("NES_CPU_WR", PRG_16K, bank)
+  -- nes.cpu_wr(PRG_16K, bank)
 
-  local rv = dict.nes("NES_CPU_RD", addr)
+  local rv = nes.cpu_rd(addr)
 
   local i = 0
 
-  while rv ~= dict.nes("NES_CPU_RD", addr) do
-    rv = dict.nes("NES_CPU_RD", addr)
+  while rv ~= nes.cpu_rd(addr) do
+    rv = nes.cpu_rd(addr)
     i = i + 1
   end
 
@@ -170,7 +170,7 @@ local function prg_rom_flash_byte(addr, value, bank)
     log.info("Done writing byte,", i .. " naks")
   end
 
-  --dict.nes("NES_CPU_WR", FLASH_ENABLE, 0x00)  --disable prgram flashing -- must be done by caller
+  --nes.cpu_wr(FLASH_ENABLE, 0x00)  --disable prgram flashing -- must be done by caller
 
   --TODO handle timeout for problems
 
@@ -197,7 +197,7 @@ local function prg_rom_dump(file, rom_size_kb)
     end
 
     -- select desired bank(s) to dump
-    dict.nes("NES_CPU_WR", PRG_16K, cur_bank) -- 16KB @ CPU $8000
+    nes.cpu_wr(PRG_16K, cur_bank) -- 16KB @ CPU $8000
 
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
 
@@ -232,7 +232,7 @@ local function prg_rom_flash(file, rom_size_kb)
   -- this is a custom register
   -- that allow flashing data
   -- in the $6000-$7FFF area
-  dict.nes("NES_CPU_WR", FLASH_ENABLE, 0x01) -- enable prgram flashing
+  nes.cpu_wr(FLASH_ENABLE, 0x01) -- enable prgram flashing
 
   while cur_bank < num_banks do
     if DEBUG then
@@ -242,7 +242,7 @@ local function prg_rom_flash(file, rom_size_kb)
     end
 
     -- select desired bank, needed for first write
-    dict.nes("NES_CPU_WR", RAM_8K, cur_bank) -- 8KB @ CPU $6000
+    nes.cpu_wr(RAM_8K, cur_bank) -- 8KB @ CPU $6000
 
     -- set cur_bank for recovery and subsequent bytes
     dict.nes("SET_CUR_BANK", cur_bank)
@@ -257,7 +257,7 @@ local function prg_rom_flash(file, rom_size_kb)
   spinner.clear()
   log.success("Done programming PRG-ROM")
 
-  dict.nes("NES_CPU_WR", FLASH_ENABLE, 0x02) -- disable prgram flashing
+  nes.cpu_wr(FLASH_ENABLE, 0x02) -- disable prgram flashing
 end
 
 --[[
@@ -281,17 +281,17 @@ local function wr_chr_flash_byte(addr, value, bank)
   end
 
   --send unlock command and write byte
-  dict.nes("NES_PPU_WR", 0x1555, 0xAA)
-  dict.nes("NES_PPU_WR", 0x0AAA, 0x55)
-  dict.nes("NES_PPU_WR", 0x1555, 0xA0)
-  dict.nes("NES_PPU_WR", addr, value)
+  nes.ppu_wr(0x1555, 0xAA)
+  nes.ppu_wr(0x0AAA, 0x55)
+  nes.ppu_wr(0x1555, 0xA0)
+  nes.ppu_wr(addr, value)
 
-  local rv = dict.nes("NES_PPU_RD", addr)
+  local rv = nes.ppu_rd(addr)
 
   local i = 0
 
   while (rv ~= value) do
-    rv = dict.nes("NES_PPU_RD", addr)
+    rv = nes.ppu_rd(addr)
     i = i + 1
   end
   if DEBUG then print(i, "naks, done writing byte.") end
@@ -320,10 +320,10 @@ local function chr_dump(file, rom_size_kb)
     end
 
     -- set 1K banks x 4
-    dict.nes("NES_CPU_WR", CHR_0, (cur_bank * 4))     --1KB @ PPU $0000
-    dict.nes("NES_CPU_WR", CHR_1, (cur_bank * 4 + 1)) --1KB @ PPU $0400
-    dict.nes("NES_CPU_WR", CHR_2, (cur_bank * 4 + 2)) --1KB @ PPU $0800
-    dict.nes("NES_CPU_WR", CHR_3, (cur_bank * 4 + 3)) --1KB @ PPU $0C00
+    nes.cpu_wr(CHR_0, (cur_bank * 4))     --1KB @ PPU $0000
+    nes.cpu_wr(CHR_1, (cur_bank * 4 + 1)) --1KB @ PPU $0400
+    nes.cpu_wr(CHR_2, (cur_bank * 4 + 2)) --1KB @ PPU $0800
+    nes.cpu_wr(CHR_3, (cur_bank * 4 + 3)) --1KB @ PPU $0C00
 
     -- 4 = number of KB to dump per loop
     -- 0x00 = starting read address A10-13 -> $0000
@@ -360,10 +360,10 @@ local function chr_rom_flash(file, rom_size_kb)
     end
 
     -- set current 1K banks
-    dict.nes("NES_CPU_WR", CHR_0, cur_bank * 4)     -- 1KB @ PPU $0000
-    dict.nes("NES_CPU_WR", CHR_1, cur_bank * 4 + 1) -- 1KB @ PPU $0400
-    dict.nes("NES_CPU_WR", CHR_2, cur_bank * 4 + 2) -- 1KB @ PPU $0800
-    dict.nes("NES_CPU_WR", CHR_3, cur_bank * 4 + 3) -- 1KB @ PPU $0C00
+    nes.cpu_wr(CHR_0, cur_bank * 4)     -- 1KB @ PPU $0000
+    nes.cpu_wr(CHR_1, cur_bank * 4 + 1) -- 1KB @ PPU $0400
+    nes.cpu_wr(CHR_2, cur_bank * 4 + 2) -- 1KB @ PPU $0800
+    nes.cpu_wr(CHR_3, cur_bank * 4 + 3) -- 1KB @ PPU $0C00
 
     -- flash data
     flash.write_file(file, 4, { mapper = mapname, mem_type = "NES_CHR_ROM" })
@@ -426,7 +426,7 @@ local function prg_ram_write(file, ram_size_kb)
   local num_banks = math.floor(ram_size_kb / bank_size_kb)
 
   -- enable PRG-RAM
-  dict.nes("NES_CPU_WR", PPU_BANKING, 0x80)
+  nes.cpu_wr(PPU_BANKING, 0x80)
 
   while cur_bank < num_banks do
     if DEBUG then
@@ -442,7 +442,7 @@ local function prg_ram_write(file, ram_size_kb)
   end
 
   -- disable PRG-RAM
-  dict.nes("NES_CPU_WR", PPU_BANKING, 0x00)
+  nes.cpu_wr(PPU_BANKING, 0x00)
 
   spinner.clear()
   log.success("Done programming PRG-RAM")
@@ -458,27 +458,27 @@ local function prg_ram_test()
   log.section("Detecting PRG-RAM")
 
   -- enable PRG-RAM
-  dict.nes("NES_CPU_WR", PPU_BANKING, 0x80)
+  nes.cpu_wr(PPU_BANKING, 0x80)
 
   -- save potential battery backed data first
-  saved_value = dict.nes("NES_CPU_RD", 0x6000)
+  saved_value = nes.cpu_rd(0x6000)
 
   -- try to write and read back
-  dict.nes("NES_CPU_WR", 0x6000, saved_value ~ 0xff)
-  read_value = dict.nes("NES_CPU_RD", 0x6000)
+  nes.cpu_wr(0x6000, saved_value ~ 0xff)
+  read_value = nes.cpu_rd(0x6000)
   if read_value ~= (saved_value ~ 0xff) then
     test = false
   end
 
   -- put back original value
-  dict.nes("NES_CPU_WR", 0x6000, saved_value)
-  read_value = dict.nes("NES_CPU_RD", 0x6000)
+  nes.cpu_wr(0x6000, saved_value)
+  read_value = nes.cpu_rd(0x6000)
   if read_value ~= (saved_value) then
     test = false
   end
 
   -- disable PRG-RAM
-  dict.nes("NES_CPU_WR", PPU_BANKING, 0x40)
+  nes.cpu_wr(PPU_BANKING, 0x40)
 
   if test then
     log.success("PRG-RAM detected")
@@ -504,7 +504,7 @@ local function prg_ram_exercise(wram_size_kb, retroprog_id)
   log.info("PRG-RAM size", wram_size_kb .. "KB")
 
   -- enable PRG-RAM
-  dict.nes("NES_CPU_WR", PPU_BANKING, 0x80)
+  nes.cpu_wr(PPU_BANKING, 0x80)
 
   -- write random data to all banks
   log.point("Writing random data to PRG-RAM")
@@ -534,7 +534,7 @@ local function prg_ram_exercise(wram_size_kb, retroprog_id)
   assert(file:close())
 
   -- disable PRG-RAM
-  dict.nes("NES_CPU_WR", PPU_BANKING, 0x00)
+  nes.cpu_wr(PPU_BANKING, 0x00)
 
   -- re-open & compare dump with known lsfr bitstream
   local goodfile = opts.lua_path .. "./ignore/lfsr_32KB.bin"
@@ -584,13 +584,13 @@ local function chr_ram_exercise(chr_ram_size_kb, retroprog_id)
 
     --the bank is half the size of KB per read so must multiply by 2
     --but bit0 isn't used with these 2KB banks, so shift by 1
-    dict.nes("NES_CPU_WR", PRG_16K, 0x00)
-    dict.nes("NES_CPU_WR", 0x8001, ((cur_bank * 2) << 1)) -- 2KB @ PPU $0000
+    nes.cpu_wr(PRG_16K, 0x00)
+    nes.cpu_wr(0x8001, ((cur_bank * 2) << 1)) -- 2KB @ PPU $0000
 
     --the bank is half the size of KB per read so must multiply by 2 and add 1 for second 4KB
     --but bit0 isn't used with these 2KB banks, so shift by 1
-    dict.nes("NES_CPU_WR", PRG_16K, 0x01)
-    dict.nes("NES_CPU_WR", 0x8001, ((cur_bank * 2 + 1) << 1)) -- 2KB @ CPU $0800
+    nes.cpu_wr(PRG_16K, 0x01)
+    nes.cpu_wr(0x8001, ((cur_bank * 2 + 1) << 1)) -- 2KB @ CPU $0800
 
     -- write data
     local addr = 0x0000
@@ -777,7 +777,7 @@ local function process(process_opts, console_opts)
     log.section("Dumping PRG-RAM")
 
     -- enable PRG-RAM
-    dict.nes("NES_CPU_WR", PPU_BANKING, 0x80)
+    nes.cpu_wr(PPU_BANKING, 0x80)
 
     file = assert(io.open(ram_dump_file.filename, "wb"))
 
@@ -785,7 +785,7 @@ local function process(process_opts, console_opts)
     prg_ram_dump(file, wram_size_kb)
 
     -- disable PRG-RAM
-    dict.nes("NES_CPU_WR", PPU_BANKING, 0x00)
+    nes.cpu_wr(PPU_BANKING, 0x00)
 
     -- close file
     assert(file:close())
@@ -807,14 +807,14 @@ local function process(process_opts, console_opts)
     init_mapper()
 
     -- enable PRG-RAM
-    dict.nes("NES_CPU_WR", PPU_BANKING, 0x80)
+    nes.cpu_wr(PPU_BANKING, 0x80)
 
     file = assert(io.open(ram_write_file.filename, "rb"))
 
     flash.write_file(file, wram_size_kb, { mapper = "NOVAR", mem_type = "NES_PRG_RAM" })
 
     -- disable PRG-RAM
-    dict.nes("NES_CPU_WR", PPU_BANKING, 0x00)
+    nes.cpu_wr(PPU_BANKING, 0x00)
 
     -- close file
     assert(file:close())

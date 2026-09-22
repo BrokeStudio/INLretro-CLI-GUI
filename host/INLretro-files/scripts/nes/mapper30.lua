@@ -63,23 +63,23 @@ local function prg_rom_manf_id()
   -- A15 14 - 13 12
   --  1   1    0  1  : 0x5555 -> bank1, $9555
   --  1   0    1  0  : 0x2AAA -> bank0, $AAAA
-  dict.nes("NES_CPU_WR", 0xC000, 0x01)
-  dict.nes("NES_CPU_WR", 0x9555, 0xAA)
+  nes.cpu_wr(0xC000, 0x01)
+  nes.cpu_wr(0x9555, 0xAA)
 
-  dict.nes("NES_CPU_WR", 0xC000, 0x00)
-  dict.nes("NES_CPU_WR", 0xAAAA, 0x55)
+  nes.cpu_wr(0xC000, 0x00)
+  nes.cpu_wr(0xAAAA, 0x55)
 
-  dict.nes("NES_CPU_WR", 0xC000, 0x01)
-  dict.nes("NES_CPU_WR", 0x9555, 0x90)
+  nes.cpu_wr(0xC000, 0x01)
+  nes.cpu_wr(0x9555, 0x90)
 
-  manufacturer_id = dict.nes("NES_CPU_RD", 0x8000)
+  manufacturer_id = nes.cpu_rd(0x8000)
   chips.display_manufacturer(manufacturer_id)
 
-  device_id = dict.nes("NES_CPU_RD", 0x8001)
+  device_id = nes.cpu_rd(0x8001)
   found, device = chips.display_device(manufacturer_id, device_id)
 
   -- exit software
-  dict.nes("NES_CPU_WR", 0x8000, 0xF0)
+  nes.cpu_wr(0x8000, 0xF0)
 
   return found, device
 end
@@ -94,22 +94,22 @@ local function prg_rom_flash_byte(addr, value, bank)
     return
   end
 
-  dict.nes("NES_CPU_WR", 0xC000, 0x01)
-  dict.nes("NES_CPU_WR", 0x9555, 0xAA)
-  dict.nes("NES_CPU_WR", 0xC000, 0x00)
-  dict.nes("NES_CPU_WR", 0xAAAA, 0x55)
-  dict.nes("NES_CPU_WR", 0xC000, 0x01)
-  dict.nes("NES_CPU_WR", 0x9555, 0xA0)
+  nes.cpu_wr(0xC000, 0x01)
+  nes.cpu_wr(0x9555, 0xAA)
+  nes.cpu_wr(0xC000, 0x00)
+  nes.cpu_wr(0xAAAA, 0x55)
+  nes.cpu_wr(0xC000, 0x01)
+  nes.cpu_wr(0x9555, 0xA0)
 
-  dict.nes("NES_CPU_WR", 0xC000, bank)
-  dict.nes("NES_CPU_WR", addr, value)
+  nes.cpu_wr(0xC000, bank)
+  nes.cpu_wr(addr, value)
 
-  local rv = dict.nes("NES_CPU_RD", addr)
+  local rv = nes.cpu_rd(addr)
 
   local i = 0
 
-  while rv ~= dict.nes("NES_CPU_RD", addr) do
-    rv = dict.nes("NES_CPU_RD", addr)
+  while rv ~= nes.cpu_rd(addr) do
+    rv = nes.cpu_rd(addr)
     i = i + 1
   end
 
@@ -140,7 +140,7 @@ local function prg_rom_dump(file, rom_size_kb)
 
     -- set bank
     -- mapper 30 bank register is $C000-FFFF
-    dict.nes("NES_CPU_WR", 0xFC80, cur_bank) -- 16KB @ CPU $8000
+    nes.cpu_wr(0xFC80, cur_bank) -- 16KB @ CPU $8000
 
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
 
@@ -247,7 +247,7 @@ local function chr_dump(file, rom_size_kb)
       spinner.update("Dumping", cur_bank, "/", num_banks - 1)
     end
 
-    dict.nes("NES_CPU_WR", 0xC000, cur_bank << 5) -- 8KB bank at $0000
+    nes.cpu_wr(0xC000, cur_bank << 5) -- 8KB bank at $0000
 
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_PPU_PAGE" })
 
@@ -273,14 +273,14 @@ local function chr_ram_get_size()
   -- write to banks backwards
   for cur_bank = num_banks, 0, -1 do
     if DEBUG then log.point("trying to write to CHR bank", cur_bank, "of", num_banks) end
-    dict.nes("NES_CPU_WR", 0xC000, cur_bank << 5) -- 8KB bank at $0000
-    dict.nes("NES_PPU_WR", 0x0000, cur_bank)
+    nes.cpu_wr(0xC000, cur_bank << 5) -- 8KB bank at $0000
+    nes.ppu_wr(0x0000, cur_bank)
     cur_bank = cur_bank + 1
   end
 
   -- read back only last bank
-  dict.nes("NES_CPU_WR", 0xC000, num_banks << 5) -- 8KB bank at $0000
-  rv = dict.nes("NES_PPU_RD", 0x0000)
+  nes.cpu_wr(0xC000, num_banks << 5) -- 8KB bank at $0000
+  rv = nes.ppu_rd(0x0000)
   chr_ram_size_kb = (rv + 1) * 8
 
   if chr_ram_size_kb >= 0 and chr_ram_size_kb <= 32 then
@@ -312,7 +312,7 @@ local function chr_ram_exercise(chr_ram_size_kb, retroprog_id)
   log.point("Writing random data to CHR-RAM")
   while cur_bank < num_banks do
     if DEBUG then log.point("init CHR-RAM 8K bank", cur_bank, "of", num_banks - 1) end
-    dict.nes("NES_CPU_WR", 0xC000, cur_bank << 5) --8KB bank at $0000
+    nes.cpu_wr(0xC000, cur_bank << 5) --8KB bank at $0000
     local addr = 0x0000
     while addr < 0x2000 do
       dict.nes("PPU_PAGE_WR_LFSR", addr)

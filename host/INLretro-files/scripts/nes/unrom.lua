@@ -44,8 +44,8 @@ local function init_mapper()
   --becomes catch 22 situation.  Will have to rely on mcu over powering PRG-ROM..
   --ahh but a way out would be to disable the PRG-ROM with exp0 (/WE) going low
   --for now the write below seems to be working fine though..
-  -- dict.nes("NES_CPU_WR", 0x8000, 0x00)
-  dict.nes("NES_CPU_WR", 0xC000, 0x00)
+  -- nes.cpu_wr(0x8000, 0x00)
+  nes.cpu_wr(0xC000, 0x00)
 end
 
 --[[
@@ -102,19 +102,19 @@ local function prg_rom_flash_byte(addr, value, bank)
     return
   end
 
-  dict.nes("NES_CPU_WR", bank_table_base, 0x00)
-  dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x5555, 0xAA)
-  dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x2AAA, 0x55)
-  dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x5555, 0xA0)
-  dict.nes("NES_CPU_WR", bank_table_base + bank, bank)
-  dict.nes("DISCRETE_EXP0_PRGROM_WR", addr, value)
+  nes.cpu_wr(bank_table_base, 0x00)
+  nes.cpu_wr(0x5555, 0xAA, { opcode = "DISCRETE_EXP0_PRGROM_WR" })
+  nes.cpu_wr(0x2AAA, 0x55, { opcode = "DISCRETE_EXP0_PRGROM_WR" })
+  nes.cpu_wr(0x5555, 0xA0, { opcode = "DISCRETE_EXP0_PRGROM_WR" })
+  nes.cpu_wr(bank_table_base + bank, bank)
+  nes.cpu_wr(addr, value, { opcode = "DISCRETE_EXP0_PRGROM_WR" })
 
-  local rv = dict.nes("NES_CPU_RD", addr)
+  local rv = nes.cpu_rd(addr)
 
   local i = 0
 
-  while rv ~= dict.nes("NES_CPU_RD", addr) do
-    rv = dict.nes("NES_CPU_RD", addr)
+  while rv ~= nes.cpu_rd(addr) do
+    rv = nes.cpu_rd(addr)
     i = i + 1
   end
 
@@ -144,7 +144,7 @@ local function prg_rom_dump(file, rom_size_kb)
     end
 
     -- set bank
-    dict.nes("NES_CPU_WR", bank_table_base + cur_bank, cur_bank) --16KB @ CPU $8000
+    nes.cpu_wr(bank_table_base + cur_bank, cur_bank) --16KB @ CPU $8000
 
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
 
@@ -243,7 +243,7 @@ local function write_bank_table(addr_base, entries)
   while cur_bank >= 0 do
     --select bank to write to (last bank first)
     --use the bank table to make the switch
-    dict.nes("NES_CPU_WR", base+cur_bank, cur_bank)
+    nes.cpu_wr(base+cur_bank, cur_bank)
 
     --write bank table to selected bank
     local i = 0

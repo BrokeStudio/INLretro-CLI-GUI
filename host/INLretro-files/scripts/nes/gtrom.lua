@@ -64,7 +64,7 @@ local function mirror_test(retroprog_id)
     spinner.update("NT", nt, "/", 1)
 
     -- enable set of 4 nametables
-    dict.nes("NES_CPU_WR", 0x5000, nt << 5)
+    nes.cpu_wr(0x5000, nt << 5)
 
     fileA:seek("set")
     fileB:seek("set")
@@ -163,18 +163,18 @@ local function prg_rom_manf_id()
   --A15 14 - 13 12
   -- 1   1    0  1  : 0x5555 -> $D555
   -- 1   0    1  0  : 0x2AAA -> $AAAA
-  dict.nes("NES_CPU_WR", 0xD555, 0xAA)
-  dict.nes("NES_CPU_WR", 0xAAAA, 0x55)
-  dict.nes("NES_CPU_WR", 0xD555, 0x90)
+  nes.cpu_wr(0xD555, 0xAA)
+  nes.cpu_wr(0xAAAA, 0x55)
+  nes.cpu_wr(0xD555, 0x90)
 
-  manufacturer_id = dict.nes("NES_CPU_RD", 0x8000)
+  manufacturer_id = nes.cpu_rd(0x8000)
   chips.display_manufacturer(manufacturer_id)
 
-  device_id = dict.nes("NES_CPU_RD", 0x8001)
+  device_id = nes.cpu_rd(0x8001)
   found, device = chips.display_device(manufacturer_id, device_id)
 
   -- exit software
-  dict.nes("NES_CPU_WR", 0x8000, 0xF0)
+  nes.cpu_wr(0x8000, 0xF0)
 
   return found, device
 end
@@ -189,20 +189,20 @@ local function prg_rom_flash_byte(addr, value, bank)
     return
   end
 
-  dict.nes("NES_CPU_WR", 0x5000, bank)
+  nes.cpu_wr(0x5000, bank)
 
-  dict.nes("NES_CPU_WR", 0xD555, 0xAA)
-  dict.nes("NES_CPU_WR", 0xAAAA, 0x55)
-  dict.nes("NES_CPU_WR", 0xD555, 0xA0)
+  nes.cpu_wr(0xD555, 0xAA)
+  nes.cpu_wr(0xAAAA, 0x55)
+  nes.cpu_wr(0xD555, 0xA0)
 
-  dict.nes("NES_CPU_WR", addr, value)
+  nes.cpu_wr(addr, value)
 
-  local rv = dict.nes("NES_CPU_RD", addr)
+  local rv = nes.cpu_rd(addr)
 
   local i = 0
 
-  while rv ~= dict.nes("NES_CPU_RD", addr) do
-    rv = dict.nes("NES_CPU_RD", addr)
+  while rv ~= nes.cpu_rd(addr) do
+    rv = nes.cpu_rd(addr)
     i = i + 1
   end
 
@@ -232,7 +232,7 @@ local function prg_rom_dump(file, rom_size_kb)
     end
 
     -- select desired bank(s) to dump
-    dict.nes("NES_CPU_WR", 0x5000, cur_bank) --32KB @ CPU $8000
+    nes.cpu_wr(0x5000, cur_bank) --32KB @ CPU $8000
 
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
 
@@ -255,7 +255,7 @@ local function prg_rom_flash(file, rom_size_kb)
 
   while cur_bank < num_banks do
     -- select bank to flash
-    dict.nes("NES_CPU_WR", 0x5000, cur_bank)
+    nes.cpu_wr(0x5000, cur_bank)
     dict.nes("SET_CUR_BANK", cur_bank)
 
     if DEBUG then
@@ -308,7 +308,7 @@ local function chr_dump(file, rom_size_kb)
       spinner.update("Dumping", cur_bank, "/", num_banks - 1)
     end
 
-    dict.nes("NES_CPU_WR", 0x5000, cur_bank << 4) -- 8KB bank at $0000
+    nes.cpu_wr(0x5000, cur_bank << 4) -- 8KB bank at $0000
 
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_PPU_PAGE" })
 
@@ -338,7 +338,7 @@ local function chr_ram_exercise(chr_ram_size_kb, retroprog_id)
   log.point("Writing random data to CHR-RAM")
   while cur_bank < num_banks do
     if DEBUG then log.point("init CHR-RAM 8K bank", cur_bank, "of", num_banks - 1) end
-    dict.nes("NES_CPU_WR", 0x5000, cur_bank << 4) -- 8KB bank at $0000
+    nes.cpu_wr(0x5000, cur_bank << 4) -- 8KB bank at $0000
     local addr = 0x0000
     while addr < 0x2000 do
       dict.nes("PPU_PAGE_WR_LFSR", addr)
@@ -374,38 +374,38 @@ end
 -- -- select different chr-ram banks and verify all 4 banks are present
 -- local function gtrom_chrbank_test()
 
---   dict.nes("NES_CPU_WR", 0x5000, 0x00) --PT & NT bank 0
---   dict.nes("NES_PPU_WR", 0x0000, 0xAA) --PT write
---   dict.nes("NES_PPU_WR", 0x2000, 0xCC) --NT write
+--   nes.cpu_wr(0x5000, 0x00) --PT & NT bank 0
+--   nes.ppu_wr(0x0000, 0xAA) --PT write
+--   nes.ppu_wr(0x2000, 0xCC) --NT write
 
---   dict.nes("NES_CPU_WR", 0x5000, 0x30) --PT & NT bank 1
---   dict.nes("NES_PPU_WR", 0x0000, 0x55) --PT write
---   dict.nes("NES_PPU_WR", 0x2000, 0x33) --NT write
+--   nes.cpu_wr(0x5000, 0x30) --PT & NT bank 1
+--   nes.ppu_wr(0x0000, 0x55) --PT write
+--   nes.ppu_wr(0x2000, 0x33) --NT write
 
 --   --read back
 --   local test = true
---   dict.nes("NES_CPU_WR", 0x5000, 0x00) --CHR bank 0
---   rv = dict.nes("NES_PPU_RD", 0x0000)
+--   nes.cpu_wr(0x5000, 0x00) --CHR bank 0
+--   rv = nes.ppu_rd(0x0000)
 --   if rv ~= 0xAA then
 --     print( "\nFAIL CHR-RAM BANKING TEST!!!\n")
 --     print("PT bank0 read:", string.format("%X", rv))
 --     test = false
 --   end
---   rv = dict.nes("NES_PPU_RD", 0x2000)
+--   rv = nes.ppu_rd(0x2000)
 --   if rv ~= 0xCC then
 --     print( "\nFAIL CHR-RAM BANKING TEST!!!\n")
 --     print("NT bank0 read:", string.format("%X", rv))
 --     test = false
 --   end
 
---   dict.nes("NES_CPU_WR", 0x5000, 0x30) --CHR bank 1
---   rv = dict.nes("NES_PPU_RD", 0x0000)
+--   nes.cpu_wr(0x5000, 0x30) --CHR bank 1
+--   rv = nes.ppu_rd(0x0000)
 --   if rv ~= 0x55 then
 --     print( "\nFAIL CHR-RAM BANKING TEST!!!\n")
 --     print("PT bank1 read:", string.format("%X", rv))
 --     test = false
 --   end
---   rv = dict.nes("NES_PPU_RD", 0x2000)
+--   rv = nes.ppu_rd(0x2000)
 --   if rv ~= 0x33 then
 --     print( "\nFAIL CHR-RAM BANKING TEST!!!\n")
 --     print("NT bank1 read:", string.format("%X", rv))
@@ -552,19 +552,19 @@ local function process(process_opts, console_opts)
     if prg_size_kb ~= 0 then
       log.section("Erasing PRG-ROM")
       time.start()
-      dict.nes("NES_CPU_WR", 0xD555, 0xAA)
-      dict.nes("NES_CPU_WR", 0xAAAA, 0x55)
-      dict.nes("NES_CPU_WR", 0xD555, 0x80)
-      dict.nes("NES_CPU_WR", 0xD555, 0xAA)
-      dict.nes("NES_CPU_WR", 0xAAAA, 0x55)
-      dict.nes("NES_CPU_WR", 0xD555, 0x10)
+      nes.cpu_wr(0xD555, 0xAA)
+      nes.cpu_wr(0xAAAA, 0x55)
+      nes.cpu_wr(0xD555, 0x80)
+      nes.cpu_wr(0xD555, 0xAA)
+      nes.cpu_wr(0xAAAA, 0x55)
+      nes.cpu_wr(0xD555, 0x10)
 
       -- TODO create some function to pass the read value
       -- that's smart enough to figure out if the board is actually erasing or not
-      rv = dict.nes("NES_CPU_RD", 0x8000)
-      while rv ~= dict.nes("NES_CPU_RD", 0x8000) do
+      rv = nes.cpu_rd(0x8000)
+      while rv ~= nes.cpu_rd(0x8000) do
         spinner.update("Erasing")
-        rv = dict.nes("NES_CPU_RD", 0x8000)
+        rv = nes.cpu_rd(0x8000)
         i = i + 1
       end
       spinner.clear()

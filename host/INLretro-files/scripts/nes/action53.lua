@@ -32,30 +32,30 @@ local prg_flash_chip
 local function init_mapper()
   -- //Setup as CNROM, then scroll through outer banks.
   -- cpu_wr(0x5000, 0x80);   //reg select mode
-  dict.nes("NES_CPU_WR", 0x5000, 0x80)
+  nes.cpu_wr(0x5000, 0x80)
 
   -- //   xxSSPPMM   SS-size: 0-32KB, PP-prg mode: 0,1 32KB, MM-mirror
   -- cpu_wr(0x8000, 0b00000000);     //reg value 256KB inner, 32KB banks
-  dict.nes("NES_CPU_WR", 0x8000, 0x00)
+  nes.cpu_wr(0x8000, 0x00)
   -- cpu_wr(0x5000, 0x81);   //outer reg select mode
-  dict.nes("NES_CPU_WR", 0x5000, 0x81)
+  nes.cpu_wr(0x5000, 0x81)
   -- cpu_wr(0x8000, 0x00);   //first 32KB bank
-  dict.nes("NES_CPU_WR", 0x8000, 0x00)
+  nes.cpu_wr(0x8000, 0x00)
 
   -- cpu_wr(0x5000, 0x01);   //inner prg reg select
-  dict.nes("NES_CPU_WR", 0x5000, 0x01)
+  nes.cpu_wr(0x5000, 0x01)
   -- cpu_wr(0x8000, 0x00);   //controls nothing in this size
-  dict.nes("NES_CPU_WR", 0x8000, 0x00)
+  nes.cpu_wr(0x8000, 0x00)
   -- cpu_wr(0x5000, 0x00);   //chr reg select
-  dict.nes("NES_CPU_WR", 0x5000, 0x00)
+  nes.cpu_wr(0x5000, 0x00)
   -- cpu_wr(0x8000, 0x00);   //first chr bank
-  dict.nes("NES_CPU_WR", 0x8000, 0x00)
+  nes.cpu_wr(0x8000, 0x00)
   -- selecting CNROM means that mapper writes to $8000-FFFF will only change the CHR-RAM bank which
   -- doesn't affect anything we're concerned about
 
   -- enable flash writes $5000 set to 0b0 101 010 0
-  -- dict.nes("NES_CPU_WR", 0x5000, 0x54)
-  -- dict.nes("NES_CPU_WR", 0x5555, 0x54)
+  -- nes.cpu_wr(0x5000, 0x54)
+  -- nes.cpu_wr(0x5555, 0x54)
 end
 
 local function create_header(file, prg_kb, chr_kb)
@@ -72,8 +72,8 @@ local function mirror_test(chr_size_kb, chr_ram_detected, retroprog_id)
   init_mapper()
 
   -- 1 screen A
-  dict.nes("NES_CPU_WR", 0x5000, 0x80)
-  dict.nes("NES_CPU_WR", 0x8000, 0x00)
+  nes.cpu_wr(0x5000, 0x80)
+  nes.cpu_wr(0x8000, 0x00)
   if nes.detect_mapper_mirroring() ~= "1SCRNA" then
     log.error("One screen mirroring test failed (1 screen A)")
     return false
@@ -82,8 +82,8 @@ local function mirror_test(chr_size_kb, chr_ram_detected, retroprog_id)
   end
 
   -- 1 screen B
-  dict.nes("NES_CPU_WR", 0x5000, 0x80)
-  dict.nes("NES_CPU_WR", 0x8000, 0x01)
+  nes.cpu_wr(0x5000, 0x80)
+  nes.cpu_wr(0x8000, 0x01)
   if nes.detect_mapper_mirroring() ~= "1SCRNB" then
     log.error("One screen mirroring test failed (1 screen B)")
     return false
@@ -92,8 +92,8 @@ local function mirror_test(chr_size_kb, chr_ram_detected, retroprog_id)
   end
 
   -- Vertical
-  dict.nes("NES_CPU_WR", 0x5000, 0x80)
-  dict.nes("NES_CPU_WR", 0x8000, 0x02)
+  nes.cpu_wr(0x5000, 0x80)
+  nes.cpu_wr(0x8000, 0x02)
   if nes.detect_mapper_mirroring() ~= "VERT" then
     log.error("Vertical mirroring test failed")
     return false
@@ -102,8 +102,8 @@ local function mirror_test(chr_size_kb, chr_ram_detected, retroprog_id)
   end
 
   -- Horizontal
-  dict.nes("NES_CPU_WR", 0x5000, 0x80)
-  dict.nes("NES_CPU_WR", 0x8000, 0x03)
+  nes.cpu_wr(0x5000, 0x80)
+  nes.cpu_wr(0x8000, 0x03)
   if nes.detect_mapper_mirroring() ~= "HORZ" then
     log.error("Horizontal mirroring test failed")
     return false
@@ -182,8 +182,8 @@ local function prg_rom_dump(file, rom_size_kb)
     end
 
     -- select desired bank to dump
-    dict.nes("NES_CPU_WR", 0x5000, 0x81)
-    dict.nes("NES_CPU_WR", 0x8000, cur_bank)
+    nes.cpu_wr(0x5000, 0x81)
+    nes.cpu_wr(0x8000, cur_bank)
 
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
 
@@ -223,9 +223,9 @@ local function prg_rom_flash(file, rom_size_kb)
     end
 
     -- write the bank to flash to the mapper register
-    dict.nes("NES_CPU_WR", 0x5000, 0x81)
-    dict.nes("NES_CPU_WR", 0x8000, cur_bank)
-    dict.nes("NES_CPU_WR", 0x5000, 0x00)
+    nes.cpu_wr(0x5000, 0x81)
+    nes.cpu_wr(0x8000, cur_bank)
+    nes.cpu_wr(0x5000, 0x00)
 
     -- flash data
     flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "NES_PRG_ROM", options = options })
@@ -242,13 +242,13 @@ local function read_gift(base, len)
   init_mapper()
 
   --select last bank in read only mode
-  dict.nes("NES_CPU_WR", 0x5000, 0x81)
-  dict.nes("NES_CPU_WR", 0x8000, 0xFF)
+  nes.cpu_wr(0x5000, 0x81)
+  nes.cpu_wr(0x8000, 0xFF)
 
   local i = 0
 
   while i < len do
-    rv = dict.nes("NES_CPU_RD", base + i)
+    rv = nes.cpu_rd(base + i)
     io.write(string.char(rv))
     i = i + 1
   end
@@ -258,7 +258,7 @@ local function read_gift(base, len)
   print("")
 
   while i < len do
-    rv = dict.nes("NES_CPU_RD", base + i)
+    rv = nes.cpu_rd(base + i)
     io.write(string.format("%X.", rv))
     i = i + 1
   end
@@ -272,24 +272,24 @@ local function write_gift(base, off)
   init_mapper()
 
   --select last bank in flash mode
-  dict.nes("NES_CPU_WR", 0x5000, 0x81)
-  dict.nes("NES_CPU_WR", 0x8000, 0xFF)
-  --dict.nes("NES_CPU_WR", 0x5000, 0x54)
+  nes.cpu_wr(0x5000, 0x81)
+  nes.cpu_wr(0x8000, 0xFF)
+  --nes.cpu_wr(0x5000, 0x54)
 
   --enter unlock bypass mode
-  dict.nes("FLASH_3V_WR", 0x8AAA, 0xAA)
-  dict.nes("FLASH_3V_WR", 0x8555, 0x55)
-  dict.nes("FLASH_3V_WR", 0x8AAA, 0x20)
+  nes.cpu_wr(0x8AAA, 0xAA, { opcode = "FLASH_3V_WR" })
+  nes.cpu_wr(0x8555, 0x55, { opcode = "FLASH_3V_WR" })
+  nes.cpu_wr(0x8AAA, 0x20, { opcode = "FLASH_3V_WR" })
 
   --write 0xA0 to address of byte to write, then write data
-  dict.nes("FLASH_3V_WR", base + off, 0xA0)
-  dict.nes("FLASH_3V_WR", base + off, 0x00) --end previous line
+  nes.cpu_wr(base + off, 0xA0, { opcode = "FLASH_3V_WR" })
+  nes.cpu_wr(base + off, 0x00, { opcode = "FLASH_3V_WR" }) --end previous line
   off = off + 1
-  dict.nes("FLASH_3V_WR", base + off, 0xA0)
-  dict.nes("FLASH_3V_WR", base + off, 0x15) --line number..?
+  nes.cpu_wr(base + off, 0xA0, { opcode = "FLASH_3V_WR" })
+  nes.cpu_wr(base + off, 0x15, { opcode = "FLASH_3V_WR" }) --line number..?
   off = off + 1
-  dict.nes("FLASH_3V_WR", base + off, 0xA0)
-  dict.nes("FLASH_3V_WR", base + off, string.byte("(", 1)) --start with open parenth
+  nes.cpu_wr(base + off, 0xA0, { opcode = "FLASH_3V_WR" })
+  nes.cpu_wr(base + off, string.byte("(", 1), { opcode = "FLASH_3V_WR" }) --start with open parenth
 
 
   --off = off + 1  --increase to start of message but index starting at 1
@@ -306,22 +306,22 @@ local function write_gift(base, off)
   local len = string.len(msg1)
 
   while (i <= len) do
-    dict.nes("FLASH_3V_WR", base + off + i, 0xA0)
-    dict.nes("FLASH_3V_WR", base + off + i, string.byte(msg1, i)) --line 1 of message
+    nes.cpu_wr(base + off + i, 0xA0, { opcode = "FLASH_3V_WR" })
+    nes.cpu_wr(base + off + i, string.byte(msg1, i), { opcode = "FLASH_3V_WR" }) --line 1 of message
     print("write:", string.byte(msg1, i))
     i = i + 1
   end
 
   off = off + i
 
-  dict.nes("FLASH_3V_WR", base + off, 0xA0)
-  dict.nes("FLASH_3V_WR", base + off, 0x00) --end current line
+  nes.cpu_wr(base + off, 0xA0, { opcode = "FLASH_3V_WR" })
+  nes.cpu_wr(base + off, 0x00, { opcode = "FLASH_3V_WR" }) --end current line
   off = off + 1
-  dict.nes("FLASH_3V_WR", base + off, 0xA0)
-  dict.nes("FLASH_3V_WR", base + off, 0x16) --line number..?
+  nes.cpu_wr(base + off, 0xA0, { opcode = "FLASH_3V_WR" })
+  nes.cpu_wr(base + off, 0x16, { opcode = "FLASH_3V_WR" }) --line number..?
   off = off + 1
-  dict.nes("FLASH_3V_WR", base + off, 0xA0)
-  dict.nes("FLASH_3V_WR", base + off, string.byte("(", 1)) --start with open parenth
+  nes.cpu_wr(base + off, 0xA0, { opcode = "FLASH_3V_WR" })
+  nes.cpu_wr(base + off, string.byte("(", 1), { opcode = "FLASH_3V_WR" }) --start with open parenth
 
   i = 1
 
@@ -329,30 +329,30 @@ local function write_gift(base, off)
   len = string.len(msg2)
 
   while (i <= len) do
-    dict.nes("FLASH_3V_WR", base + off + i, 0xA0)
-    dict.nes("FLASH_3V_WR", base + off + i, string.byte(msg2, i)) --line 2 of message
+    nes.cpu_wr(base + off + i, 0xA0, { opcode = "FLASH_3V_WR" })
+    nes.cpu_wr(base + off + i, string.byte(msg2, i), { opcode = "FLASH_3V_WR" }) --line 2 of message
     print("write:", string.byte(msg2, i))
     i = i + 1
   end
 
   off = off + i
 
-  dict.nes("FLASH_3V_WR", base + off, 0xA0)
-  dict.nes("FLASH_3V_WR", base + off, 0x00) --end current line
+  nes.cpu_wr(base + off, 0xA0, { opcode = "FLASH_3V_WR" })
+  nes.cpu_wr(base + off, 0x00, { opcode = "FLASH_3V_WR" }) --end current line
 
   --]]
 
 
   --poll until stops toggling, or data is as wrote
-  --  rv = dict.nes("NES_CPU_RD", 0x8BDC)
+  --  rv = nes.cpu_rd(0x8BDC)
   --  print (rv)
 
 
   --exit unlock bypass
-  dict.nes("FLASH_3V_WR", 0x8000, 0x90)
-  dict.nes("FLASH_3V_WR", 0x8000, 0x00)
+  nes.cpu_wr(0x8000, 0x90, { opcode = "FLASH_3V_WR" })
+  nes.cpu_wr(0x8000, 0x00, { opcode = "FLASH_3V_WR" })
   --reset the flash chip
-  dict.nes("FLASH_3V_WR", 0x8000, 0xF0)
+  nes.cpu_wr(0x8000, 0xF0, { opcode = "FLASH_3V_WR" })
 end
 
 --- Dump CHR contents to an already-open output file.
@@ -373,7 +373,7 @@ local function chr_dump(file, rom_size_kb)
       spinner.update("Dumping", cur_bank, "/", num_banks - 1)
     end
 
-    dict.nes("NES_CPU_WR", 0x8000, cur_bank) -- 8KB @ PPU $0000
+    nes.cpu_wr(0x8000, cur_bank) -- 8KB @ PPU $0000
 
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_PPU_1KB" })
 
@@ -406,22 +406,22 @@ local function chr_ram_get_size()
 
   log.section("Detecting CHR-RAM size")
 
-  dict.nes("NES_CPU_WR", 0x5000, 0x00)
+  nes.cpu_wr(0x5000, 0x00)
 
   -- set CHR bank to bank 0
-  dict.nes("NES_CPU_WR", 0x8000, 0x00)
+  nes.cpu_wr(0x8000, 0x00)
 
   -- write to banks backwards
   for cur_bank = num_banks, 0, -1 do
     if DEBUG then log.point("trying to write to CHR bank", cur_bank, "of", num_banks) end
-    dict.nes("NES_CPU_WR", 0x8000, cur_bank) -- 8KB bank at $0000
-    dict.nes("NES_PPU_WR", 0x0000, cur_bank)
+    nes.cpu_wr(0x8000, cur_bank) -- 8KB bank at $0000
+    nes.ppu_wr(0x0000, cur_bank)
     cur_bank = cur_bank + 1
   end
 
   -- read back only last bank
-  dict.nes("NES_CPU_WR", 0x8000, num_banks) -- 8KB bank at $0000
-  rv = dict.nes("NES_PPU_RD", 0x0000)
+  nes.cpu_wr(0x8000, num_banks) -- 8KB bank at $0000
+  rv = nes.ppu_rd(0x0000)
   chr_ram_size_kb = (rv + 1) * 8
 
   if chr_ram_size_kb >= 0 and chr_ram_size_kb <= 32 then
@@ -447,16 +447,16 @@ local function chr_ram_exercise(chr_ram_size_kb, retroprog_id)
   log.section("Exercising CHR-RAM")
   log.info("CHR-RAM size", chr_ram_size_kb .. "KB")
 
-  dict.nes("NES_CPU_WR", 0x5000, 0x00)
+  nes.cpu_wr(0x5000, 0x00)
 
   -- set CHR bank to bank 0
-  dict.nes("NES_CPU_WR", 0x8000, 0x00)
+  nes.cpu_wr(0x8000, 0x00)
 
   -- write random data to all banks
   log.point("Writing random data to CHR-RAM")
   while cur_bank < num_banks do
     if DEBUG then log.point("init CHR-RAM 8K bank", cur_bank, "of", num_banks - 1) end
-    dict.nes("NES_CPU_WR", 0x8000, cur_bank) -- 8KB bank at $0000
+    nes.cpu_wr(0x8000, cur_bank) -- 8KB bank at $0000
     local addr = 0x0000
     while (addr < 0x2000) do
       dict.nes("PPU_PAGE_WR_LFSR", addr)

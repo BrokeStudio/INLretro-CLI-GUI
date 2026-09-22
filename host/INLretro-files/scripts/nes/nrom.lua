@@ -56,17 +56,17 @@ local function prg_rom_flash_byte(addr, value)
   end
 
   -- send unlock command and write byte
-  dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x5555, 0xAA)
-  dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x2AAA, 0x55)
-  dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x5555, 0xA0)
-  dict.nes("DISCRETE_EXP0_PRGROM_WR", addr, value)
+  nes.cpu_wr(0x5555, 0xAA, { opcode = "DISCRETE_EXP0_PRGROM_WR" })
+  nes.cpu_wr(0x2AAA, 0x55, { opcode = "DISCRETE_EXP0_PRGROM_WR" })
+  nes.cpu_wr(0x5555, 0xA0, { opcode = "DISCRETE_EXP0_PRGROM_WR" })
+  nes.cpu_wr(addr, value, { opcode = "DISCRETE_EXP0_PRGROM_WR" })
 
-  local rv = dict.nes("NES_CPU_RD", addr)
+  local rv = nes.cpu_rd(addr)
 
   local i = 0
 
-  while rv ~= dict.nes("NES_CPU_RD", addr) do
-    rv = dict.nes("NES_CPU_RD", addr)
+  while rv ~= nes.cpu_rd(addr) do
+    rv = nes.cpu_rd(addr)
     i = i + 1
   end
 
@@ -151,17 +151,17 @@ local function wr_chr_flash_byte(addr, value)
   end
 
   -- send unlock command and write byte
-  dict.nes("NES_PPU_WR", 0x1555, 0xAA)
-  dict.nes("NES_PPU_WR", 0x0AAA, 0x55)
-  dict.nes("NES_PPU_WR", 0x1555, 0xA0)
-  dict.nes("NES_PPU_WR", addr, value)
+  nes.ppu_wr(0x1555, 0xAA)
+  nes.ppu_wr(0x0AAA, 0x55)
+  nes.ppu_wr(0x1555, 0xA0)
+  nes.ppu_wr(addr, value)
 
-  local rv = dict.nes("NES_PPU_RD", addr)
+  local rv = nes.ppu_rd(addr)
 
   local i = 0
 
-  while rv ~= dict.nes("NES_PPU_RD", addr) do
-    rv = dict.nes("NES_PPU_RD", addr)
+  while rv ~= nes.ppu_rd(addr) do
+    rv = nes.ppu_rd(addr)
     i = i + 1
   end
 

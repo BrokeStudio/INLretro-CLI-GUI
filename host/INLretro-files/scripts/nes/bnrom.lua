@@ -56,17 +56,17 @@ local function prg_rom_flash_byte(addr, value)
   end
 
   -- send unlock command and write byte
-  dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x5555, 0xAA)
-  dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x2AAA, 0x55)
-  dict.nes("DISCRETE_EXP0_PRGROM_WR", 0x5555, 0xA0)
-  dict.nes("DISCRETE_EXP0_PRGROM_WR", addr, value)
+  nes.cpu_wr(0x5555, 0xAA, { opcode = "DISCRETE_EXP0_PRGROM_WR" })
+  nes.cpu_wr(0x2AAA, 0x55, { opcode = "DISCRETE_EXP0_PRGROM_WR" })
+  nes.cpu_wr(0x5555, 0xA0, { opcode = "DISCRETE_EXP0_PRGROM_WR" })
+  nes.cpu_wr(addr, value, { opcode = "DISCRETE_EXP0_PRGROM_WR" })
 
-  local rv = dict.nes("NES_CPU_RD", addr)
+  local rv = nes.cpu_rd(addr)
 
   local i = 0
 
-  while rv ~= dict.nes("NES_CPU_RD", addr) do
-    rv = dict.nes("NES_CPU_RD", addr)
+  while rv ~= nes.cpu_rd(addr) do
+    rv = nes.cpu_rd(addr)
     i = i + 1
   end
 
@@ -97,7 +97,7 @@ local function prg_rom_dump(file, rom_size_kb)
     end
 
     -- set bank
-    dict.nes("NES_CPU_WR", bank_table_base + cur_bank, cur_bank) -- 32KB @ CPU $8000
+    nes.cpu_wr(bank_table_base + cur_bank, cur_bank) -- 32KB @ CPU $8000
 
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
 
@@ -157,7 +157,7 @@ local function prg_rom_dump_no_bank_table(file, rom_size_kb)
     end
 
     -- set bank
-    dict.nes("NES_CPU_WR", 0x8000 + search_pos, cur_bank)
+    nes.cpu_wr(0x8000 + search_pos, cur_bank)
 
     -- dump bank
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
@@ -285,7 +285,7 @@ local function prg_rom_flash(file, rom_size_kb)
     end
 
     -- set bank
-    dict.nes("NES_CPU_WR", bank_table_base + cur_bank, cur_bank) -- 32KB @ CPU $8000
+    nes.cpu_wr(bank_table_base + cur_bank, cur_bank) -- 32KB @ CPU $8000
 
     -- flash data
     flash.write_file(file, bank_size_kb, { mapper = "NROM", mem_type = "NES_PRG_ROM" })
@@ -318,7 +318,7 @@ local function write_bank_table(addr_base, entries)
 
     --select bank to write to (last bank first)
     --use the bank table to make the switch
-    dict.nes("NES_CPU_WR", addr_base + cur_bank, cur_bank)
+    nes.cpu_wr(addr_base + cur_bank, cur_bank)
 
     --write bank table to selected bank
     for byte = entries - 1, 0, -1 do

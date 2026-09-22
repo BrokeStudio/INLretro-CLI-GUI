@@ -50,14 +50,14 @@ local function init_mapper()
   -- $A000  1  0  1  0 0000 0000 0000 => banks 2, 6, A, E, ... => $AAAA
   -- $D000  1  1  0  0 0000 0000 0000 => banks 1, 3, 5, 7, 9, B, D, F, ... => $D555
 
-  --dict.nes("NES_CPU_WR", 0x5000, 0x00) -- $8000
-  --dict.nes("NES_CPU_WR", 0x5001, 0x00) -- $9000
-  dict.nes("NES_CPU_WR", 0x5002, 0x0A) -- $A000
-  --dict.nes("NES_CPU_WR", 0x5003, 0x00) -- $B000
-  --dict.nes("NES_CPU_WR", 0x5004, 0x00) -- $C000
-  dict.nes("NES_CPU_WR", 0x5005, 0x05) -- $D000
-  --dict.nes("NES_CPU_WR", 0x5006, 0x00) -- $E000
-  --dict.nes("NES_CPU_WR", 0x5007, 0x00) -- $F000
+  --nes.cpu_wr(0x5000, 0x00) -- $8000
+  --nes.cpu_wr(0x5001, 0x00) -- $9000
+  nes.cpu_wr(0x5002, 0x0A) -- $A000
+  --nes.cpu_wr(0x5003, 0x00) -- $B000
+  --nes.cpu_wr(0x5004, 0x00) -- $C000
+  nes.cpu_wr(0x5005, 0x05) -- $D000
+  --nes.cpu_wr(0x5006, 0x00) -- $E000
+  --nes.cpu_wr(0x5007, 0x00) -- $F000
 
   --flash /WE signal only goes low for $9000-9FFF
 end
@@ -92,7 +92,7 @@ local function prg_rom_dump(file, rom_size_kb)
     end
 
     --select desired bank(s) to dump
-    dict.nes("NES_CPU_WR", 0x5000, cur_bank) --4KB @ CPU $8000
+    nes.cpu_wr(0x5000, cur_bank) --4KB @ CPU $8000
 
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
 
@@ -132,7 +132,7 @@ local function prg_rom_flash(file, rom_size_kb)
     end
 
     --write the current bank to the mapper register
-    dict.nes("NES_CPU_WR", 0x5000, cur_bank) --bank at $8000
+    nes.cpu_wr(0x5000, cur_bank) --bank at $8000
 
     -- flash data
     flash.write_file(file, bank_size_kb, { mapper = "EZNSF", mem_type = "NES_PRG_ROM", options = options })
