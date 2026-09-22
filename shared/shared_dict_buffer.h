@@ -186,10 +186,10 @@
 #define MMC4 10
 #define CDREAM 11
 #define CNINJA 12 // not actually mapper 12, just a temp mapper assignment
+#define JALECO_SS88006 18
 #define VRC6a 24
 #define VRC6b 26
 #define A53 28
-#define A53_512K 39 // referred as "Duplicate mappers assigned by mistake." in nesdev wiki
 #define MAP30 30
 #define EZNSF 31
 #define BxROM 34

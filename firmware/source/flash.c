@@ -486,9 +486,8 @@ uint8_t flash_buff(buffer* buff)
           write_page_cninja(0, addrH, 0xD555, 0xAAAA, buff, nes_cpu_wr, nes_cpu_rd);
         } else if(buff->mapper == A53 || buff->mapper == EZNSF) {
           result = write_page_verify_8((addrH + 0x80), buff, nes_prgrom_flash_wr_long);
-        } else if(buff->mapper == A53_512K) {
-          // TODO: can we use nes_prgrom_flash_wr_long instead?
-          result = write_page_verify_8((addrH + 0x80), buff, a53_512k_prgrom_flash_wr);
+        } else if(buff->mapper == JALECO_SS88006) {
+          result = write_page_verify_8((addrH + 0x80), buff, nes_prgrom_flash_wr_m2_high);
         } else if(buff->mapper == GTROM) {
           result = write_page_verify_8((addrH + 0x80), buff, gtrom_prgrom_flash_wr);
         } else if(buff->mapper == RNBW) {

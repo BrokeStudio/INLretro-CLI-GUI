@@ -1871,16 +1871,16 @@ uint8_t gtrom_prgrom_flash_wr(uint16_t addr, uint8_t data)
   return prgrom_wr_polling(addr, data);
 }
 
-/* Desc: NES ACTION53 using SST 512K PRG-ROM FLASH Write
+/* Desc: NES PRG-ROM flash byte write with M2 held high during writes
+ *       unlock/program commands use CPU addresses 0xD555 and 0xAAAA
  * Pre:  nes_init() setup of I/O pins
  *       mapper and flash configured for this command sequence and target bank
  * Post: Write attempted; prgrom_wr_polling polls the CPU bus with usbPoll
  *       polling stops on matching data or after at most 0xFFFF reads
- *       an extra read at 0x8000 follows a write to 0xFFFC
  * Rtn:  Last CPU byte read at addr by prgrom_wr_polling
  *       compare with data to detect polling failure
  */
-uint8_t a53_512k_prgrom_flash_wr(uint16_t addr, uint8_t data)
+uint8_t nes_prgrom_flash_wr_m2_high(uint16_t addr, uint8_t data)
 {
   uint8_t rv;
 
@@ -1893,10 +1893,6 @@ uint8_t a53_512k_prgrom_flash_wr(uint16_t addr, uint8_t data)
   nes_m2_high_wr(addr, data);
 
   rv = prgrom_wr_polling(addr, data);
-
-  if(addr == 0xFFFC) {
-    nes_cpu_rd(0x8000); // prevent resetting mapper config
-  }
 
   return rv;
 }
