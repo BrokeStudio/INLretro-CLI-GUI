@@ -6,7 +6,6 @@ local dict          = require "scripts.app.dict"
 local genesis       = require "scripts.app.genesis"
 local dump          = require "scripts.app.dump"
 local flash         = require "scripts.app.flash"
-local chips         = require "scripts.app.chips"
 local time          = require "scripts.app.time"
 local log           = require "scripts.app.log"
 local spinner       = require "scripts.app.spinner"
@@ -44,27 +43,27 @@ local function test_bootrom()
   log.point("Enable Bootrom")
   genesis.time_wr(R_BOOTROM, 0x03) -- Enable Bootrom
 
-  dict.sega("GEN_SET_ADDR_HI", 0x00)
+  -- genesis.set_addr_hi(0x00)
 
-  rv = dict.sega("GEN_ROM_RD", 0x0000 >> 1)
+  rv = genesis.rom_rd(0x0000)
   log.print(help.hex_0x4(rv))
-  rv = dict.sega("GEN_ROM_RD", 0x0002 >> 1)
+  rv = genesis.rom_rd(0x0002)
   log.print(help.hex_0x4(rv))
-  rv = dict.sega("GEN_ROM_RD", 0x0004 >> 1)
+  rv = genesis.rom_rd(0x0004)
   log.print(help.hex_0x4(rv))
-  rv = dict.sega("GEN_ROM_RD", 0x0006 >> 1)
+  rv = genesis.rom_rd(0x0006)
   log.print(help.hex_0x4(rv))
 
   log.point("Disable Bootrom")
   genesis.time_wr(R_BOOTROM, 0x00) -- Disable Bootrom
 
-  rv = dict.sega("GEN_ROM_RD", 0x0000 >> 1)
+  rv = genesis.rom_rd(0x0000)
   log.print(help.hex_0x4(rv))
-  rv = dict.sega("GEN_ROM_RD", 0x0002 >> 1)
+  rv = genesis.rom_rd(0x0002)
   log.print(help.hex_0x4(rv))
-  rv = dict.sega("GEN_ROM_RD", 0x0004 >> 1)
+  rv = genesis.rom_rd(0x0004)
   log.print(help.hex_0x4(rv))
-  rv = dict.sega("GEN_ROM_RD", 0x0006 >> 1)
+  rv = genesis.rom_rd(0x0006)
   log.print(help.hex_0x4(rv))
 end
 
@@ -82,7 +81,7 @@ local function test_wifi()
   log.point("Acknowledge messages if needed")
   rv = 0
   while rv ~= 0 do
-    rv = dict.sega("GEN_TIME_RD", R_RNBW_RX) -- ack message
+    rv = genesis.time_rd(R_RNBW_RX) -- ack message
   end
 
   log.point("Set TX RAM address")
@@ -92,9 +91,9 @@ local function test_wifi()
   genesis.time_wr(R_RNBW_RX_RAM, 0x01) -- set RX RAM address
 
   log.point("Prepare command")
-  dict.sega("GEN_SET_ADDR_HI", 0x20)
-  dict.sega("GEN_RAM_WR", 0x1800, 0x01)
-  dict.sega("GEN_RAM_WR", 0x1801, 0x00)
+  genesis.set_addr_hi(0x20)
+  genesis.ram_wr(0x1800, 0x01)
+  genesis.ram_wr(0x1801, 0x00)
 
   log.point("Send command")
   genesis.time_wr(R_RNBW_TX, 0x01) -- send command
@@ -102,15 +101,15 @@ local function test_wifi()
   log.point("Wait for response")
   rv = 0
   while rv < 0x80 do
-    rv = dict.sega("GEN_TIME_RD", R_RNBW_RX)
+    rv = genesis.time_rd(R_RNBW_RX)
   end
 
   log.point("Read response")
-  rv = dict.sega("GEN_RAM_RD", 0x1900)
+  rv = genesis.ram_rd(0x1900)
   log.bullet(help.hex_0x2(rv))
-  rv = dict.sega("GEN_RAM_RD", 0x1901)
+  rv = genesis.ram_rd(0x1901)
   log.bullet(help.hex_0x2(rv))
-  rv = dict.sega("GEN_RAM_RD", 0x1902)
+  rv = genesis.ram_rd(0x1902)
   log.bullet(help.hex_0x2(rv))
 
   log.point("Acknowledge message")
@@ -144,7 +143,7 @@ local function rom_erase_sector(addr)
   genesis.time_wr(0xF3, cur_bank >> 2) -- 0xF3 => 0xA130F3
 
   -- set address hi bits (A23-A16)
-  dict.sega("GEN_SET_ADDR_HI", 0x08 | ((cur_bank & 0x03) << 1)) -- 0x08 controls A19, set to 1 to read from bank 1 (0x80000-0xFFFFF)
+  genesis.set_addr_hi(0x08 | ((cur_bank & 0x03) << 1)) -- 0x08 controls A19, set to 1 to read from bank 1 (0x80000-0xFFFFF)
 
   genesis.rom_wr(window_addr | (0x000555 << 1), 0x00AA)
   genesis.rom_wr(window_addr | (0x0002AA << 1), 0x0055)
@@ -511,19 +510,19 @@ local function fpga_ram_test()
   genesis.time_wr(R_SRAM, 0x81)
 
   -- save potential battery backed data first
-  dict.sega("GEN_SET_ADDR_HI", addr_hi)
-  saved_value = dict.sega("GEN_RAM_RD", 0x0000)
+  genesis.set_addr_hi(addr_hi)
+  saved_value = genesis.ram_rd(0x0000)
 
   -- try to write and read back
-  dict.sega("GEN_RAM_WR", 0x0000, saved_value ~ 0xff)
-  read_value = dict.sega("GEN_RAM_RD", 0x0000)
+  genesis.ram_wr(0x0000, saved_value ~ 0xff)
+  read_value = genesis.ram_rd(0x0000)
   if read_value ~= (saved_value ~ 0xff) then
     test = false
   end
 
   -- put back original value
-  dict.sega("GEN_RAM_WR", 0x0000, saved_value)
-  read_value = dict.sega("GEN_RAM_RD", 0x0000)
+  genesis.ram_wr(0x0000, saved_value)
+  read_value = genesis.ram_rd(0x0000)
   if read_value ~= (saved_value) then
     test = false
   end
@@ -650,7 +649,7 @@ local function process(process_opts, console_opts)
 
     -- attempt to read ROM flash ID
     if options.force_flash_test or (do_rom_write and rom_size_kb ~= 0) then
-      rv, flash_chip = genesis.rom_manf_id()
+      rv, flash_chip = genesis.rom_get_chip()
       if not rv then
         if do_rom_write then
           log.error("Couldn't identify flash chip")
@@ -662,7 +661,7 @@ local function process(process_opts, console_opts)
     end
 
     -- TEST
-    -- rv = dict.sega("GEN_TIME_RD", 0xAA)
+    -- rv = genesis.time_rd(0xAA)
     -- log.print(help.hex_0x2(rv))
     -- genesis.dbg_rom_rd(0xA130AA)
     -- test_wifi()
@@ -710,7 +709,7 @@ local function process(process_opts, console_opts)
   -----------------------------------------------------
 
   -- genesis.time_wr(0xF3, 0x01)
-  -- -- dict.sega("GEN_SET_ADDR_HI", 0x0a)
+  -- -- genesis.set_addr_hi(0x0a)
 
   -- genesis.dbg_rom_rd(0x080000 + 0x0000)
   -- genesis.dbg_rom_rd(0x080000 + 0x05BC)
@@ -733,13 +732,13 @@ local function process(process_opts, console_opts)
   -- rom_flash_byte(i, 0xFEED)
 
   -- i = 0
-  -- log.bullet(help.hex_0x4((dict.sega("GEN_ROM_RD", i))))
+  -- log.bullet(help.hex_0x4((genesis.rom_rd())))
   -- i = i + step
-  -- log.bullet(help.hex_0x4((dict.sega("GEN_ROM_RD", i))))
+  -- log.bullet(help.hex_0x4((genesis.rom_rd())))
   -- i = i + step
-  -- log.bullet(help.hex_0x4((dict.sega("GEN_ROM_RD", i))))
+  -- log.bullet(help.hex_0x4((genesis.rom_rd())))
   -- i = i + step
-  -- log.bullet(help.hex_0x4((dict.sega("GEN_ROM_RD", i))))
+  -- log.bullet(help.hex_0x4((genesis.rom_rd())))
 
   -- dict.io("IO_RESET")
   -- do return end
@@ -767,10 +766,10 @@ local function process(process_opts, console_opts)
   -- -- write program buffer to flash (confirm)
   -- genesis.dbg_rom_wr(base_addr, 0x29);
 
-  -- rv = dict.sega("GEN_ROM_RD", base_addr)
+  -- rv = genesis.rom_rd()se_addr)
 
-  -- while (rv ~= dict.sega("GEN_ROM_RD", base_addr)) do
-  --   rv = dict.sega("GEN_ROM_RD", base_addr)
+  -- while (rv ~= genesis.rom_rd()se_addr)) do
+  --   rv = genesis.rom_rd()se_addr)
   -- end
 
   -- for w = 0, count - 1 do
@@ -789,7 +788,7 @@ local function process(process_opts, console_opts)
 
   -- Écris un mot distinct en banque 0.
   -- Sélectionne banque 32 :genesis.time_wr(0xF3, 32 >> 2) -- 0x08
-  -- dict.sega("GEN_SET_ADDR_HI", 0x08 | (32 & 0x03))
+  -- genesis.set_addr_hi(0x08 | (32 & 0x03))
 
   -- Lis la même adresse.
   -- Compare avec banque 0.
@@ -1018,7 +1017,7 @@ local function process(process_opts, console_opts)
   end
 
   -- for a = 0x2060, 0x2080, 2 do
-  --   log.bullet(help.hex_0x6(a), help.hex_0x4(dict.sega("GEN_ROM_RD", a)))
+  --   log.bullet(help.hex_0x6(a), help.hex_0x4(genesis.rom_rd()))
   -- end
 
   dict.io("IO_RESET")

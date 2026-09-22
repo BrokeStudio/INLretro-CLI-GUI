@@ -6,7 +6,6 @@ local dict    = require "scripts.app.dict"
 local genesis = require "scripts.app.genesis"
 local dump    = require "scripts.app.dump"
 local flash   = require "scripts.app.flash"
-local chips   = require "scripts.app.chips"
 local time    = require "scripts.app.time"
 local log     = require "scripts.app.log"
 local spinner = require "scripts.app.spinner"
@@ -415,7 +414,7 @@ local function process(process_opts, console_opts)
 
     -- attempt to read ROM flash ID
     if options.force_flash_test or (do_rom_write and rom_size_kb ~= 0) then
-      rv, flash_chip = genesis.rom_manf_id()
+      rv, flash_chip = genesis.rom_get_chip()
       if not rv then
         if do_rom_write then
           log.error("Couldn't identify flash chip")

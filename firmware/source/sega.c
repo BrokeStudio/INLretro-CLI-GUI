@@ -58,10 +58,10 @@ uint8_t sega_call(uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_t* r
       break;
 
     case GEN_ROM_RD:
-      // address high bits must be set before calling GEN_ROM_RD,
-      // using GEN_SET_ADDR_HI
+      // address must be set before calling GEN_ROM_WR,
+      // using GEN_SET_ADDR_HI and GEN_SET_ADDR_LO, or GEN_SET_ADDR
       rdata[RD_LEN] = HWORD_LEN;
-      temp = gen_rom_rd(operand);
+      temp = gen_rom_rd(sega_addr_lo);
       rdata[RD0] = temp;
       rdata[RD1] = temp >> 8;
       break;

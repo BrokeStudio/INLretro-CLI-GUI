@@ -234,94 +234,43 @@ end
 
 --]]
 
---- Read and identify the ROM flash manufacturer/device ID.
--- @return boolean success True when the flash chip is recognized
--- @return table info Flash chip information
-local function rom_manf_id()
-  local found
-  local manufacturer_id
-  local device_id
-  local device
 
-  -- compatible SST39VF / MX29
-  -- compatible S29GL01GS / S29GL512S / S29GL256S / S29GL128S
+--- Write an 8-bit value to a Genesis /TIME register.
+-- Register offset maps to CPU address 0xA13000 | addr.
+-- @param addr integer /TIME register offset, 0x00-0xFF
+-- @param value integer 8-bit value to write
+local function time_wr(addr, val, options)
+  options = options or {}
+  local comment = options.comment or ""
+  local opcode = options.opcode or "GEN_TIME_WR"
 
-  -- flash manf ID
-  genesis.rom_wr(0x000555 << 1, 0x00AA)
-  genesis.rom_wr(0x0002AA << 1, 0x0055)
-  genesis.rom_wr(0x000555 << 1, 0x0090)
-
-  found, manufacturer_id = genesis.rom_rd(0x0000 << 1)
-  chips.display_manufacturer(manufacturer_id)
-
-  if manufacturer_id == 0xC2 then
-    -- MX chips
-    device_id = genesis.rom_rd(0x0001 << 1)
-    found, device = chips.display_device(manufacturer_id, device_id)
-  elseif manufacturer_id == 0x01 then
-    -- Cypress / Spansion
-    device_id = genesis.rom_rd(0x000E << 1)
-    found, device = chips.display_device(manufacturer_id, device_id)
-  else
-    -- fallback (SST)
-    device_id = genesis.rom_rd(0x0001 << 1)
-    found, device = chips.display_device(manufacturer_id, device_id)
+  if (addr > 0xff) then
+    log.warning("/TIME address value too high ($00-$FF)")
+    addr = addr & 0xff
   end
 
-  -- exit software
-  genesis.rom_wr(0x000000, 0x00F0)
-
-  if found then
-    log.success("Flash chip deteted successfully")
-  else
-    log.error("Flash chip unknown")
-  end
-  return found, device
+  dict.sega(opcode, addr, val)
+  if DEBUG then log.point("TIME", " W", opcode, help.hex_0x6(0xA13000 | addr), val, help.hex_0x4(val), comment) end
 end
 
 --- Read an 8-bit value from a Genesis /TIME register.
 -- Register offset maps to CPU address 0xA13000 | addr.
 -- @param addr integer /TIME register offset, 0x00-0xFF
 -- @return integer|nil value 8-bit value read, or nil if addr is invalid
-local function time_rd(addr)
-  if (addr > 0xff) then
-    log.error("/TIME addresse value too high ($00-$FF)")
-    return
-  end
-  return dict.sega("GEN_TIME_RD", addr)
-end
+local function time_rd(addr, options)
+  options = options or {}
+  local comment = options.comment or ""
+  local opcode = options.opcode or "GEN_TIME_RD"
+  local rv
 
---- Read and log an 8-bit value from a Genesis /TIME register.
--- @param addr integer /TIME register offset, 0x00-0xFF
--- @param label? string Optional text appended to the log line
--- @return integer|nil value 8-bit value read, or nil if addr is invalid
-local function dbg_time_rd(addr, label)
-  if not (type(label) == "string") then label = "" end
-  local rv = time_rd(addr)
-  log.bullet("TIME", "R ", help.hex_0x6(0xA13000 | (addr & 0xff)), help.hex_0x4(rv), "(" .. rv .. ")", label)
+  if (addr > 0xff) then
+    log.warning("/TIME address value too high ($00-$FF)")
+    addr = addr & 0xff
+  end
+
+  rv = dict.sega(opcode, addr)
+  if DEBUG then log.point("TIME", "R", opcode, help.hex_0x6(0xA13000 | addr), rv, help.hex_0x4(rv), comment) end
   return rv
-end
-
---- Write an 8-bit value to a Genesis /TIME register.
--- Register offset maps to CPU address 0xA13000 | addr.
--- @param addr integer /TIME register offset, 0x00-0xFF
--- @param value integer 8-bit value to write
-local function time_wr(addr, value)
-  if (addr > 0xff) then
-    log.error("/TIME addresse value too high ($00-$FF)")
-    return
-  end
-  dict.sega("GEN_TIME_WR", addr, value)
-end
-
---- Write and log an 8-bit value to a Genesis /TIME register.
--- @param addr integer /TIME register offset, 0x00-0xFF
--- @param value integer 8-bit value to write
--- @param comment? string Optional text appended to the log line
-local function dbg_time_wr(addr, value, comment)
-  if not (type(comment) == "string") then comment = "" end
-  time_wr(addr, value)
-  log.bullet("TIME", " W", help.hex_0x6(0xA13000 | (addr & 0xff)), help.hex_0x4(value), "(" .. value .. ")", comment)
 end
 
 --- Set the current Genesis bus address from a full 24-bit address.
@@ -352,20 +301,15 @@ end
 -- Sets the full 24-bit address before reading.
 -- @param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
 -- @return integer value 16-bit value read from ROM
-local function rom_rd(addr)
-  local addr_lo = addr & 0xFFFF
-  set_addr(addr)
-  return dict.sega("GEN_ROM_RD", addr_lo)
-end
+local function rom_rd(addr, options)
+  options = options or {}
+  local comment = options.comment or ""
+  local opcode = options.opcode or "GEN_ROM_RD"
+  local rv
 
---- Read and log a 16-bit word from the Genesis ROM bus.
--- @param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
--- @param label? string Optional text appended to the log line
--- @return integer value 16-bit value read from ROM
-local function dbg_rom_rd(addr, label)
-  if not (type(label) == "string") then label = "" end
-  local rv = rom_rd(addr)
-  log.bullet("ROM", "R ", help.hex_0x6(addr), help.hex_0x4(rv), "(" .. rv .. ")", label)
+  set_addr(addr)
+  rv = dict.sega(opcode)
+  if DEBUG then log.point("ROM ", "R", opcode, help.hex_0x6(addr), rv, help.hex_0x4(rv), comment) end
   return rv
 end
 
@@ -373,39 +317,30 @@ end
 -- Sets the full 24-bit address before writing.
 -- @param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
 -- @param value integer 16-bit value to write
-local function rom_wr(addr, value)
-  set_addr(addr)
-  dict.sega("GEN_ROM_WR", value)
-end
+local function rom_wr(addr, val, options)
+  options = options or {}
+  local comment = options.comment or ""
+  local opcode = options.opcode or "GEN_ROM_WR"
 
---- Write and log a 16-bit word to the Genesis ROM bus.
--- @param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
--- @param value integer 16-bit value to write
--- @param comment? string Optional text appended to the log line
-local function dbg_rom_wr(addr, value, comment)
-  if not (type(comment) == "string") then comment = "" end
-  rom_wr(addr, value)
-  log.bullet("ROM", " W", help.hex_0x6(addr), help.hex_0x4(value), "(" .. value .. ")", comment)
+  set_addr(addr)
+  dict.sega(opcode, val)
+  if DEBUG then log.point("ROM ", " W", opcode, help.hex_0x6(addr), val, help.hex_0x4(val), comment) end
 end
 
 --- Read an 8-bit value from the Genesis RAM bus.
 -- Sets the full 24-bit address before reading.
 -- @param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
 -- @return integer value 8-bit value read from RAM
-local function ram_rd(addr)
+local function ram_rd(addr, options)
+  options = options or {}
+  local comment = options.comment or ""
+  local opcode = options.opcode or "GEN_RAM_RD"
+  local rv
+
   local addr_lo = addr & 0xFFFF
   set_addr(addr)
-  return dict.sega("GEN_RAM_RD", addr_lo)
-end
-
---- Read and log an 8-bit value from the Genesis RAM bus.
--- @param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
--- @param label? string Optional text appended to the log line
--- @return integer value 8-bit value read from RAM
-local function dbg_ram_rd(addr, label)
-  if not (type(label) == "string") then label = "" end
-  local rv = ram_rd(addr)
-  log.bullet("RAM", "R ", help.hex_0x6(addr), help.hex_0x2(rv), "(" .. rv .. ")", label)
+  rv = dict.sega(opcode, addr_lo)
+  if DEBUG then log.point("RAM ", "R", opcode, help.hex_0x6(addr), rv, help.hex_0x2(rv), comment) end
   return rv
 end
 
@@ -413,20 +348,15 @@ end
 -- Sets the full 24-bit address before writing.
 -- @param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
 -- @param value integer 8-bit value to write
-local function ram_wr(addr, value)
-  set_addr(addr)
-  local addr_lo = addr & 0xFFFF
-  dict.sega("GEN_RAM_WR", addr_lo, value)
-end
+local function ram_wr(addr, val, options)
+  options = options or {}
+  local comment = options.comment or ""
+  local opcode = options.opcode or "GEN_RAM_WR"
 
---- Write and log an 8-bit value to the Genesis RAM bus.
--- @param addr integer 24-bit Genesis address, 0x000000-0xFFFFFF
--- @param value integer 8-bit value to write
--- @param comment? string Optional text appended to the log line
-local function dbg_ram_wr(addr, value, comment)
-  if not (type(comment) == "string") then comment = "" end
-  ram_wr(addr, value)
-  log.bullet("RAM", " W", help.hex_0x6(addr), help.hex_0x2(value), "(" .. value .. ")", comment)
+  local addr_lo = addr & 0xFFFF
+  set_addr(addr)
+  dict.sega(opcode, addr_lo, val) -- addr?
+  if DEBUG then log.point("RAM ", " W", opcode, help.hex_0x6(addr), val, help.hex_0x2(val), comment) end
 end
 
 --- Enable Genesis cartridge SRAM through /TIME register 0xF1.
@@ -437,6 +367,52 @@ end
 --- Disable Genesis cartridge SRAM through /TIME register 0xF1.
 local function ram_disable()
   time_wr(0xF1, 0x00)
+end
+
+--- Read and identify the ROM flash manufacturer/device ID.
+-- @return boolean success True when the flash chip is recognized
+-- @return table info Flash chip information
+local function rom_get_chip()
+  local found
+  local manufacturer_id
+  local device_id
+  local device
+
+  -- compatible SST39VF / MX29
+  -- compatible S29GL01GS / S29GL512S / S29GL256S / S29GL128S
+
+  -- flash manf ID
+  rom_wr(0x000000 << 1, 0x00F0)
+  rom_wr(0x000555 << 1, 0x00AA)
+  rom_wr(0x0002AA << 1, 0x0055)
+  rom_wr(0x000555 << 1, 0x0090)
+
+  manufacturer_id = rom_rd(0x000000 << 1)
+  chips.display_manufacturer(manufacturer_id)
+
+  if manufacturer_id == 0xC2 then
+    -- MX chips
+    device_id = rom_rd(0x000001 << 1)
+    found, device = chips.display_device(manufacturer_id, device_id)
+  elseif manufacturer_id == 0x01 then
+    -- Cypress / Spansion
+    device_id = rom_rd(0x00000E << 1)
+    found, device = chips.display_device(manufacturer_id, device_id)
+  else
+    -- fallback (SST)
+    device_id = rom_rd(0x000001 << 1)
+    found, device = chips.display_device(manufacturer_id, device_id)
+  end
+
+  -- exit software
+  rom_wr(0x000000, 0x00F0)
+
+  if found then
+    log.success("Flash chip deteted successfully")
+  else
+    log.error("Flash chip unknown")
+  end
+  return found, device
 end
 
 --[[
@@ -460,25 +436,19 @@ genesis.parse_header_cart = parse_header_cart
 
 -- helpers
 genesis.time_rd           = time_rd
-genesis.dbg_time_rd       = dbg_time_rd
 genesis.time_wr           = time_wr
-genesis.dbg_time_wr       = dbg_time_wr
 
 genesis.set_addr          = set_addr
 genesis.set_addr_hi       = set_addr_hi
 genesis.set_addr_lo       = set_addr_lo
 
-genesis.rom_manf_id       = rom_manf_id
+genesis.rom_get_chip      = rom_get_chip
 
 genesis.rom_rd            = rom_rd
-genesis.dbg_rom_rd        = dbg_rom_rd
 genesis.rom_wr            = rom_wr
-genesis.dbg_rom_wr        = dbg_rom_wr
 
 genesis.ram_rd            = ram_rd
-genesis.dbg_ram_rd        = dbg_ram_rd
 genesis.ram_wr            = ram_wr
-genesis.dbg_ram_wr        = dbg_ram_wr
 genesis.ram_enable        = ram_enable
 genesis.ram_disable       = ram_disable
 
