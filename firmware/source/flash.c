@@ -20,12 +20,18 @@
 static uint8_t write_page_verify_8(uint8_t addrH, buffer* buff, write_rv_funcptr wr_func)
 {
   uint16_t cur = buff->cur_byte;
+  const uint16_t last = buff->last_idx;
+
+  if(cur > last) {
+    return SUCCESS;
+  }
+
   uint16_t addr;
   uint8_t value;
   uint8_t readback;
   uint8_t retries;
 
-  while(cur <= buff->last_idx) {
+  while(cur <= last) {
     buff->cur_byte = cur;
 
     addr = ((uint16_t)addrH << 8) | cur;
@@ -64,15 +70,20 @@ static uint8_t write_page_verify_8(uint8_t addrH, buffer* buff, write_rv_funcptr
  *       byte range fits the flash write buffer and its alignment requirements
  *       buff->data contains the bytes to program
  * Post: buff->cur_byte unchanged so verification can start at the same byte
- *       only the last byte is checked; use buffer_verify_page for a full check
+ *       only the last byte is checked; use page_buffer_verify_8 for a full check
  *       bus state determined by wr_func and rd_func
  * Rtn:  SUCCESS if the last byte matches, or no bytes remain
  *       STOPPED if the last byte still differs when polling times out
  */
-static uint8_t buffer_write_page(uint8_t addrH, buffer* buff, write_funcptr wr_func, read_funcptr rd_func)
+static uint8_t write_page_buffer_8(uint8_t addrH, buffer* buff, write_funcptr wr_func, read_funcptr rd_func)
 {
   uint16_t cur = buff->cur_byte;
   const uint16_t last = buff->last_idx;
+
+  if(cur > last) {
+    return SUCCESS;
+  }
+
   const uint16_t byte_count = (last + 1 - cur);
   uint16_t addr;
   uint16_t base_addr = (uint16_t)addrH << 8;
@@ -83,10 +94,6 @@ static uint8_t buffer_write_page(uint8_t addrH, buffer* buff, write_funcptr wr_f
   uint16_t unlock_base = base_addr & 0xF000;
   uint16_t unlock_addr1 = unlock_base | 0xAAA;
   uint16_t unlock_addr2 = unlock_base | 0x555;
-
-  if(cur > last) {
-    return SUCCESS;
-  }
 
   // unlock and write data
   wr_func(unlock_addr1, 0xAA);
@@ -133,15 +140,20 @@ static uint8_t buffer_write_page(uint8_t addrH, buffer* buff, write_funcptr wr_f
  * Rtn:  SUCCESS if all checked bytes match, or no bytes remain
  *       STOPPED on the first mismatch
  */
-static uint8_t buffer_verify_page(uint8_t addrH, buffer* buff, read_funcptr rd_func)
+static uint8_t page_buffer_verify_8(uint8_t addrH, buffer* buff, read_funcptr rd_func)
 {
   uint16_t cur = buff->cur_byte;
+  const uint16_t last = buff->last_idx;
+
+  if(cur > last) {
+    return SUCCESS;
+  }
+
   uint16_t addr;
   uint8_t value;
   uint8_t readback;
 
-  cur = buff->cur_byte;
-  while(cur <= buff->last_idx) {
+  while(cur <= last) {
     value = buff->data[cur + 0];
     addr = (addrH << 8) | cur;
 
@@ -160,8 +172,8 @@ static uint8_t buffer_verify_page(uint8_t addrH, buffer* buff, read_funcptr rd_f
 }
 
 /* Desc: Program a flash write buffer, then verify every programmed byte
- *       call buffer_write_page and verify only if programming succeeds
- * Pre:  all requirements of buffer_write_page and buffer_verify_page apply
+ *       call write_page_buffer_8 and verify only if programming succeeds
+ * Pre:  all requirements of write_page_buffer_8 and page_buffer_verify_8 apply
  *       desired bank remains selected throughout programming and verification
  * Post: buff->cur_byte unchanged if programming times out
  *       otherwise it identifies the first verification mismatch, or advances
@@ -170,14 +182,14 @@ static uint8_t buffer_verify_page(uint8_t addrH, buffer* buff, read_funcptr rd_f
  * Rtn:  SUCCESS if programming and verification succeed, or no bytes remain
  *       STOPPED on a programming timeout or verification mismatch
  */
-static uint8_t buffer_write_page_verify(uint8_t addrH, buffer* buff, write_funcptr wr_func, read_funcptr rd_func)
+static uint8_t write_page_buffer_verify_8(uint8_t addrH, buffer* buff, write_funcptr wr_func, read_funcptr rd_func)
 {
   uint8_t result;
 
-  result = buffer_write_page(addrH, buff, wr_func, rd_func);
+  result = write_page_buffer_8(addrH, buff, wr_func, rd_func);
 
   if(result == SUCCESS) {
-    result = buffer_verify_page(addrH, buff, rd_func);
+    result = page_buffer_verify_8(addrH, buff, rd_func);
   }
 
   return result;
@@ -187,21 +199,41 @@ static uint8_t buffer_write_page_verify(uint8_t addrH, buffer* buff, write_funcp
 
 #ifdef NES_CONN
 
+/* Desc: Write one byte to NES PRG RAM and read it back
+ * Pre:  cartridge I/O initialized and target PRG RAM bank selected
+ * Post: data written at addr; bus state determined by nes_cpu_rd
+ * Rtn:  byte read back from PRG RAM
+ */
 static uint8_t nes_prgram_wr_verify(uint16_t addr, uint8_t data)
 {
   nes_cpu_wr(addr, data);
   return nes_cpu_rd(addr);
 }
 
-// only used by cninja currently..
+/* Desc: Program 8-bit PRG ROM data through the CNINJA mapper path,
+ *       issuing an unlock and byte-program sequence per byte
+ * Pre:  cartridge I/O initialized and desired bank selected
+ *       unlock1 and unlock2 address the flash command locations
+ *       buff->data contains the bytes to program in the page at addrH
+ * Post: buff->cur_byte advances past last_idx on success
+ *       each write is polled until two consecutive reads are identical
+ *       bus state determined by rd_func
+ * Rtn:  SUCCESS when all requested bytes have been processed, or none remain
+ */
 static uint8_t write_page_cninja(uint8_t bank, uint8_t addrH, uint16_t unlock1, uint16_t unlock2, buffer* buff, write_funcptr wr_func, read_funcptr rd_func)
 {
   uint16_t cur = buff->cur_byte;
+  const uint16_t last = buff->last_idx;
+
+  if(cur > last) {
+    return SUCCESS;
+  }
+
   uint16_t addr;
   uint8_t value;
   uint8_t readback;
 
-  while(cur <= buff->last_idx) {
+  while(cur <= last) {
     addr = (addrH << 8) | cur;
     value = buff->data[cur];
 
@@ -221,15 +253,29 @@ static uint8_t write_page_cninja(uint8_t bank, uint8_t addrH, uint16_t unlock1, 
   return SUCCESS;
 }
 
-// only used by MM2 currently
+/* Desc: Program 8-bit PRG ROM data through the MM2 mapper path,
+ *       selecting the target bank for each byte write
+ * Pre:  cartridge I/O initialized
+ *       unlock1 and unlock2 address the flash command locations
+ *       buff->data contains the bytes to program in the page at addrH
+ * Post: buff->cur_byte advances past last_idx on success
+ *       a mismatching byte is retried until it reads back correctly
+ *       bus state determined by rd_func
+ * Rtn:  SUCCESS when all requested bytes have been written, or none remain
+ */
 static uint8_t write_page_mm2(uint8_t bank, uint8_t addrH, uint16_t unlock1, uint16_t unlock2, buffer* buff, write_funcptr wr_func, read_funcptr rd_func)
 {
   uint16_t cur = buff->cur_byte;
+  const uint16_t last = buff->last_idx;
+
+  if(cur > last) {
+    return SUCCESS;
+  }
   uint16_t addr;
   uint8_t value;
   uint8_t readback;
 
-  while(cur <= buff->last_idx) {
+  while(cur <= last) {
     addr = (addrH << 8) | cur;
     value = buff->data[cur];
 
@@ -265,6 +311,11 @@ static uint8_t write_page_mm2(uint8_t bank, uint8_t addrH, uint16_t unlock1, uin
 
 #ifdef GB_CONN
 
+/* Desc: Write one byte to Game Boy cartridge RAM and read it back
+ * Pre:  cartridge I/O initialized and target RAM bank selected
+ * Post: data written at addr; bus state determined by gb_rd
+ * Rtn:  byte read back from cartridge RAM
+ */
 static uint8_t gb_ram_wr_verify(uint16_t addr, uint8_t data)
 {
   gb_wr(addr, data);
@@ -274,9 +325,25 @@ static uint8_t gb_ram_wr_verify(uint16_t addr, uint8_t data)
 #endif
 
 #ifdef SEGA_CONN
+/* Desc: Program and verify Genesis ROM data one 16-bit word at a time
+ *       attempt each word up to three times before stopping on a mismatch
+ * Pre:  cartridge I/O initialized and upper address bank selected
+ *       cur_byte and last_idx delimit an even-sized, word-aligned range
+ *       buff->data stores each word in big-endian byte order
+ * Post: the original upper address bank is restored
+ *       buff->cur_byte identifies the failed word on failure
+ *       on success it advances past last_idx (wraps to 0 after index 255)
+ * Rtn:  SUCCESS if all words are written and verified, or no words remain
+ *       STOPPED if a word still differs after three write attempts
+ */
 static uint8_t genesis_rom_write_page_verify(buffer* buff)
 {
   uint16_t cur = buff->cur_byte; // need 16 bits here so it won't overflow
+  const uint16_t last = buff->last_idx;
+
+  if(cur > last) {
+    return SUCCESS;
+  }
 
   uint8_t saved_addr_hi = gen_get_addr_hi();
   uint8_t page_addr_hi = saved_addr_hi + (buff->page_num >> 8);
@@ -289,7 +356,7 @@ static uint8_t genesis_rom_write_page_verify(buffer* buff)
   uint16_t readback;
   uint8_t retries;
 
-  while(cur <= buff->last_idx) {
+  while(cur <= last) {
     buff->cur_byte = cur;
 
     value = buff->data[cur + 0] << 8;
@@ -300,7 +367,7 @@ static uint8_t genesis_rom_write_page_verify(buffer* buff)
 
     do {
       // write word
-      readback = gen_sst_flash_wr(addr, value);
+      readback = gen_rom_flash_wr_short(addr, value);
       if(readback == value) {
         LED_IP_PU();
         cur += 2;
@@ -322,19 +389,40 @@ static uint8_t genesis_rom_write_page_verify(buffer* buff)
   return SUCCESS;
 }
 
-static uint8_t genesis_rom_write_page_buffer_verify(buffer* buff)
+/* Desc: Program Genesis ROM data using the flash write-buffer sequence
+ *       load 16-bit words, confirm the operation and poll the final word
+ * Pre:  cartridge I/O initialized and upper address bank selected
+ *       flash supports the 0xAA/0x55, 0x25 and 0x29 command sequence
+ *       cur_byte and last_idx delimit a non-empty, even-sized, word-aligned
+ *       range that fits the flash write buffer
+ *       buff->data stores each word in big-endian byte order
+ * Post: the original upper address bank and buff->cur_byte are unchanged
+ *       only the final word is checked; use genesis_rom_page_buffer_verify
+ *       for a full check
+ * Rtn:  SUCCESS if the final word matches
+ *       STOPPED if it still differs when polling times out
+ */
+static uint8_t genesis_rom_write_page_buffer(buffer* buff)
 {
   uint16_t cur = buff->cur_byte; // need 16 bits here so it won't overflow
+  const uint16_t last = buff->last_idx;
 
-  uint8_t saved_addr_hi = gen_get_addr_hi();
+  if(cur > last) {
+    return SUCCESS;
+  }
+
+  const uint16_t word_count = (last + 1 - cur) >> 1;
+
+  const uint8_t saved_addr_hi = gen_get_addr_hi();
   uint8_t page_addr_hi = saved_addr_hi + (buff->page_num >> 8);
   uint16_t base_addr = (buff->page_num & 0x00FF) << 8; // byte address for 256 bytes
 
-  gen_set_addr_hi(page_addr_hi);
-
-  uint16_t addr;
+  uint16_t addr_lo;
   uint16_t value;
-  uint16_t word_count = (buff->last_idx + 1 - buff->cur_byte) >> 1;
+  uint16_t readback;
+  uint16_t timeout = 0xFFFF;
+
+  gen_set_addr_hi(page_addr_hi);
 
   // write "write to buffer" command and sector address
   gen_rom_wr(0x0555 << 1, 0x00AA);
@@ -342,13 +430,13 @@ static uint8_t genesis_rom_write_page_buffer_verify(buffer* buff)
   gen_rom_wr(base_addr, 0x0025);         // the bank set before calling sets the sector
   gen_rom_wr(base_addr, word_count - 1); // number of words to write minus one
 
-  while(cur <= buff->last_idx) {
+  while(cur <= last) {
     value = buff->data[cur + 0] << 8;
     value |= buff->data[cur + 1];
-    addr = base_addr + cur;
+    addr_lo = base_addr + cur;
 
     // add word to write buffer
-    gen_rom_wr(addr, value);
+    gen_rom_wr(addr_lo, value);
 
     cur = cur + 2;
   }
@@ -356,50 +444,174 @@ static uint8_t genesis_rom_write_page_buffer_verify(buffer* buff)
   // write program buffer to flash
   gen_rom_wr(base_addr, 0x29);
 
-  uint16_t timeout = 0xFFFF;
-
   do {
-    if(gen_rom_rd(addr) == value) {
+    readback = gen_rom_rd(addr_lo);
+    if(readback == value) {
       break;
     }
   } while(--timeout);
 
   gen_set_addr_hi(saved_addr_hi);
 
-  if(!timeout) {
+  if(readback != value) {
     return STOPPED;
   }
 
   return SUCCESS;
 }
 
+/* Desc: Read and compare 16-bit Genesis ROM words against the supplied buffer
+ *       stop at the first word that differs
+ * Pre:  cartridge I/O initialized and upper address bank selected
+ *       cur_byte and last_idx delimit an even-sized, word-aligned range
+ *       buff->data stores each expected word in big-endian byte order
+ * Post: the original upper address bank is restored
+ *       buff->cur_byte identifies the first mismatch on failure
+ *       on success it advances past last_idx (wraps to 0 after index 255)
+ * Rtn:  SUCCESS if all words match, or no words remain
+ *       STOPPED on the first mismatch
+ */
+static uint8_t genesis_rom_page_buffer_verify(buffer* buff)
+{
+  uint16_t cur = buff->cur_byte; // need 16 bits here so it won't overflow
+  const uint16_t last = buff->last_idx;
+
+  if(cur > last) {
+    return SUCCESS;
+  }
+
+  uint8_t saved_addr_hi = gen_get_addr_hi();
+  uint8_t page_addr_hi = saved_addr_hi + (buff->page_num >> 8);
+  uint16_t base_addr = (buff->page_num & 0x00FF) << 8; // byte address for 256 bytes
+
+  gen_set_addr_hi(page_addr_hi);
+
+  uint16_t addr_lo;
+  uint16_t value;
+  uint16_t readback;
+
+  while(cur <= last) {
+    value = buff->data[cur + 0] << 8;
+    value |= buff->data[cur + 1];
+    addr_lo = base_addr + cur;
+
+    readback = gen_rom_rd(addr_lo);
+
+    if(readback != value) {
+      buff->cur_byte = cur;
+      gen_set_addr_hi(saved_addr_hi);
+      return STOPPED;
+    }
+
+    cur = cur + 2;
+  }
+
+  buff->cur_byte = cur;
+  gen_set_addr_hi(saved_addr_hi);
+  return SUCCESS;
+}
+
+/* Desc: Program a Genesis flash write buffer, then verify every written word
+ *       verify only when the write-buffer operation succeeds
+ * Pre:  all requirements of genesis_rom_write_page_buffer and
+ *       genesis_rom_page_buffer_verify apply
+ * Post: buff->cur_byte is unchanged if programming times out
+ *       otherwise it identifies the first mismatch, or advances past
+ *       last_idx on success (wraps to 0 after index 255)
+ *       the original upper address bank is restored
+ * Rtn:  SUCCESS if programming and verification succeed, or no words remain
+ *       STOPPED on a programming timeout or verification mismatch
+ */
+static uint8_t genesis_rom_write_page_buffer_verify(buffer* buff)
+{
+  uint8_t result;
+
+  result = genesis_rom_write_page_buffer(buff);
+
+  if(result == SUCCESS) {
+    result = genesis_rom_page_buffer_verify(buff);
+  }
+
+  return result;
+}
+
+/* Desc: Write one byte to Genesis cartridge RAM and read it back
+ * Pre:  cartridge I/O initialized and upper address bank selected
+ * Post: data written at addr_lo; bus state determined by gen_ram_rd
+ * Rtn:  byte read back from cartridge RAM
+ */
+static uint8_t genesis_ram_wr_verify(uint16_t addr_lo, uint8_t data)
+{
+  gen_ram_wr(addr_lo, data);
+  return gen_ram_rd(addr_lo);
+}
+
+/* Desc: Write and verify 8-bit Genesis cartridge RAM data
+ *       attempt each byte up to three times before stopping on a mismatch
+ * Pre:  cartridge I/O initialized and upper address bank selected
+ *       buff->data contains the bytes to write in the selected page
+ * Post: buff->cur_byte identifies the failed byte on failure
+ *       on success it advances past last_idx (wraps to 0 after index 255)
+ *       bytes preceding a failed byte have been written and verified
+ * Rtn:  SUCCESS if all bytes are written and verified, or no bytes remain
+ *       STOPPED if a byte still differs after three write attempts
+ */
 static uint8_t genesis_ram_page_write(buffer* buff)
 {
-  // TODO: improve timeout control write
   uint16_t cur = buff->cur_byte;
-  uint16_t addr_base = ((buff->page_num) << 8);
-  uint16_t addr;
-  uint16_t value;
+  const uint16_t last = buff->last_idx;
 
-  while(cur <= buff->last_idx) {
-    addr = addr_base | cur;
-    value = buff->data[cur];
-    gen_ram_wr(addr, value);
-    cur++;
+  if(cur > last) {
+    return SUCCESS;
   }
-  buff->cur_byte = cur;
 
-  // TODO error check/report
+  uint16_t addr_base = ((buff->page_num) << 8);
+  uint16_t addr_lo;
+  uint8_t value;
+  uint8_t readback;
+  uint8_t retries;
+
+  while(cur <= last) {
+    buff->cur_byte = cur;
+
+    addr_lo = addr_base | cur;
+    value = buff->data[cur];
+
+    retries = 3;
+
+    do {
+      readback = genesis_ram_wr_verify(addr_lo, value);
+      if(readback == value) {
+        LED_IP_PU();
+        cur++;
+        break;
+      } else {
+        LED_OP();
+        LED_HI();
+      }
+    } while(--retries);
+
+    if(readback != value) {
+      return STOPPED;
+    }
+  }
+
+  buff->cur_byte = cur;
   return SUCCESS;
 }
 #endif
 
-/* Desc: Flash buffer contents on to cartridge memory
- * Pre:  buffer elements must be updated to designate how/where to flash
- *       buffer's cur_byte must be cleared or set to where to start flashing
- *       mapper registers must be initialized
- * Post: buffer page flashed/programmed to memory.
- * Rtn:  SUCCESS or ERROR# depending on if there were errors.
+/* Desc: Dispatch a buffered page write to the selected cartridge memory type,
+ *       mapper and flash programming mode
+ * Pre:  cartridge I/O initialized and required mapper bank selected
+ *       buff identifies the memory type, mapper, page and programming mode
+ *       buff->data contains the bytes from cur_byte through last_idx
+ * Post: buff->cur_byte is updated according to the selected write routine
+ *       the activity LED is returned to its input/pull-up state
+ * Rtn:  SUCCESS when the selected operation completes
+ *       STOPPED when programming or verification fails
+ *       ERR_BUFF_PART_NUM_RANGE for an unsupported mapper/programming mode
+ *       ERR_BUFF_UNSUP_MEM_TYPE for an unsupported memory type
  */
 uint8_t flash_buff(buffer* buff)
 {
@@ -428,7 +640,7 @@ uint8_t flash_buff(buffer* buff)
     case PRGROM: //$8000
       if(buff->part_num == USE_BUFFER) {
         if(buff->mapper == A53 || buff->mapper == EZNSF || buff->mapper == RNBW) {
-          result = buffer_write_page_verify((addrH + 0x80), buff, nes_cpu_wr, nes_cpu_rd);
+          result = write_page_buffer_verify_8((addrH + 0x80), buff, nes_cpu_wr, nes_cpu_rd);
         } else {
           return ERR_BUFF_PART_NUM_RANGE;
         }
@@ -506,7 +718,7 @@ uint8_t flash_buff(buffer* buff)
         // TODO: we're using the same call for every mapper
         //       but some may need a different unlock sequence
 
-        result = buffer_write_page_verify(addrH, buff, nes_ppu_wr, nes_ppu_rd);
+        result = write_page_buffer_verify_8(addrH, buff, nes_ppu_wr, nes_ppu_rd);
       } else if(buff->part_num == USE_UNLOCK_BYPASS) {
         // TODO: we're using the same call for every mapper
         //       but some may need a different unlock sequence
@@ -562,8 +774,7 @@ uint8_t flash_buff(buffer* buff)
       }
 
       if(buff->part_num == USE_BUFFER) {
-        // result = snes_write_page_buffer(addrH, buff);
-        result = buffer_write_page_verify(addrH, buff, snes_wr_romsel_0, snes_rd_romsel_0);
+        result = write_page_buffer_verify_8(addrH, buff, snes_wr_romsel_0, snes_rd_romsel_0);
       } else if(buff->part_num == USE_UNLOCK_BYPASS) {
         // enter unlock bypass mode
         snes_wr(0x8AAA, 0xAA, 0);
@@ -622,7 +833,7 @@ uint8_t flash_buff(buffer* buff)
 
       if(buff->mapper == MBC1 || buff->mapper == MBC5) {
         if(buff->part_num == USE_BUFFER) {
-          result = buffer_write_page_verify(addrH + 0x40, buff, gb_wr_pin31, gb_rd);
+          result = write_page_buffer_verify_8(addrH + 0x40, buff, gb_wr_pin31, gb_rd);
         } else if(buff->part_num == USE_UNLOCK_BYPASS) {
           // enter unlock bypass mode
           gb_wr_pin31(0x0AAA, 0xAA);

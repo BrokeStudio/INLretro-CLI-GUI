@@ -367,38 +367,6 @@ uint8_t gen_rom_page_rd(uint8_t* data, uint16_t addrH, uint8_t first, uint8_t le
   return i;
 }
 
-/* Desc: Program a 16-bit SST flash word through the Genesis ROM bus
- *       use byte addresses 0x0AAA and 0x0554 for the unlock sequence
- *       poll until the word matches data or 0xFFFF attempts expire
- *       no USB polling is performed
- * Pre:  sega_init() setup of I/O pins
- *       high byte address and mapper selected for the target and unlock commands
- *       addr_lo even; flash supports the 0x00AA/0x0055/0x00A0 sequence
- * Post: Write attempted; return does not guarantee successful programming
- *       sega_addr_lo left at target; data bus input
- *       /AS, /C_CE, /C_OE, /LDSW and /UDSW high
- * Rtn:  Last 16-bit word read at target; compare with data to detect failure
- */
-uint16_t gen_sst_flash_wr(uint16_t addr_lo, uint16_t data)
-{
-  uint16_t rv;
-  uint16_t timeout = 0xFFFF;
-
-  gen_rom_wr(0x0555 << 1, 0x00AA);
-  gen_rom_wr(0x02AA << 1, 0x0055);
-  gen_rom_wr(0x0555 << 1, 0x00A0);
-  gen_rom_wr(addr_lo, data);
-
-  do {
-    rv = gen_rom_rd(addr_lo);
-    if(rv == data) {
-      break;
-    }
-  } while(--timeout);
-
-  return rv;
-}
-
 /* Desc: Read D7-D0 with /TIME asserted and /ASEL high
  *       addr_lo is passed directly to physical A16-A1 without shifting
  *       this address convention differs from gen_time_wr
@@ -756,6 +724,59 @@ void gen_ram_page_wr_lfsr(uint16_t addr, uint8_t size_kb)
 
   // Free data bus
   DATA_IP();
+}
+
+/* Desc: Poll a 16-bit Genesis ROM address until it matches the expected word
+ *       stop after at most 0xFFFF read attempts
+ * Pre:  cartridge I/O initialized and upper address bank selected
+ *       addr_lo identifies the word being programmed
+ * Post: sega_addr_lo set to addr_lo; data bus returned to input
+ *       /C_CE and /C_OE high after the final read
+ * Rtn:  Last 16-bit word read; compare with data to detect a timeout
+ */
+static uint16_t gen_rom_wr_polling(uint16_t addr_lo, uint16_t data)
+{
+  uint16_t rv;
+  uint16_t timeout = 0xFFFF;
+
+  do {
+    rv = gen_rom_rd(addr_lo);
+    if(rv == data) {
+      break;
+    }
+  } while(--timeout);
+
+  return rv;
+}
+
+/* Desc: Program a 16-bit flash word using the short unlock profile
+ *       use flash word offsets 0x0555/0x02AA, corresponding to Genesis
+ *       byte addresses 0x0AAA/0x0554
+ *       poll the target through gen_rom_wr_polling
+ *       no USB polling is performed
+ * Pre:  sega_init() setup of I/O pins
+ *       high byte address and mapper selected for the target and unlock commands
+ *       addr_lo even; flash supports the 0x00AA/0x0055/0x00A0 sequence
+ * Post: Write attempted; return does not guarantee successful programming
+ *       sega_addr_lo left at target; data bus input
+ *       /AS, /C_CE, /C_OE, /LDSW and /UDSW high
+ * Rtn:  Last 16-bit word read at target; compare with data to detect failure
+ */
+uint16_t gen_rom_flash_wr_short(uint16_t addr_lo, uint16_t data)
+{
+  uint16_t rv;
+
+  // write unlock command
+  gen_rom_wr(0x0555 << 1, 0x00AA);
+  gen_rom_wr(0x02AA << 1, 0x0055);
+  gen_rom_wr(0x0555 << 1, 0x00A0);
+
+  // write data
+  gen_rom_wr(addr_lo, data);
+
+  rv = gen_rom_wr_polling(addr_lo, data);
+
+  return rv;
 }
 
 #endif // SEGA_CONN
