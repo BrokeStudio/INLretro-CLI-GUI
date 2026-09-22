@@ -1,20 +1,56 @@
 -- create the module's table
-local mmc5    = {}
+local mmc5                = {}
 
 -- import required modules
-local dict    = require "scripts.app.dict"
-local nes     = require "scripts.app.nes"
-local dump    = require "scripts.app.dump"
-local flash   = require "scripts.app.flash"
-local chips   = require "scripts.app.chips"
-local time    = require "scripts.app.time"
-local log     = require "scripts.app.log"
-local spinner = require "scripts.app.spinner"
-local files   = require "scripts.app.files"
-local help    = require "scripts.app.help"
+local dict                = require "scripts.app.dict"
+local nes                 = require "scripts.app.nes"
+local dump                = require "scripts.app.dump"
+local flash               = require "scripts.app.flash"
+local chips               = require "scripts.app.chips"
+local time                = require "scripts.app.time"
+local log                 = require "scripts.app.log"
+local spinner             = require "scripts.app.spinner"
+local files               = require "scripts.app.files"
+local help                = require "scripts.app.help"
 
 -- file constants and global variables
-local mapname = "MMC5"
+local mapname             = "MMC5"
+local prg_flash_chip
+local chr_flash_chip
+
+-- registers
+local FLASH_MODE          = 0x50FF
+
+local PRG_MODE            = 0x5100
+local CHR_MODE            = 0x5101
+local PRG_RAM_PROTECT_1   = 0x5102
+local PRG_RAM_PROTECT_2   = 0x5103
+local EXRAM_MODE          = 0x5104
+local NAMETABLE_MAPPING   = 0x5105
+
+local PRG_BANK_0          = 0x5113
+local PRG_BANK_1          = 0x5114
+local PRG_BANK_2          = 0x5115
+local PRG_BANK_3          = 0x5116
+local PRG_BANK_4          = 0x5117
+
+local CHR_BANK_A_0        = 0x5120
+local CHR_BANK_A_1        = 0x5121
+local CHR_BANK_A_2        = 0x5122
+local CHR_BANK_A_3        = 0x5123
+local CHR_BANK_A_4        = 0x5124
+local CHR_BANK_A_5        = 0x5125
+local CHR_BANK_A_6        = 0x5126
+local CHR_BANK_A_7        = 0x5127
+local CHR_BANK_B_0        = 0x5128
+local CHR_BANK_B_1        = 0x5129
+local CHR_BANK_B_2        = 0x512A
+local CHR_BANK_B_3        = 0x512B
+local UPPER_CHR_BANK_BITS = 0x5130
+
+local IRQ_STATUS          = 0x5204
+local MULTIPLICAND        = 0x5205
+local MULTIPLIER          = 0x5206
 
 -- local functions
 
@@ -36,60 +72,60 @@ end
 -- disables PRG-RAM, selects horizontal mirroring
 local function init_mapper()
   -- flash mode
-  nes.cpu_wr(0x50FF, 0x80) -- enable flash mode + clear in-frame flag
+  nes.cpu_wr(FLASH_MODE, 0x80) -- enable flash mode + clear in-frame flag
 
   -- for save data safety start by disabling PRG-RAM writes
-  nes.cpu_wr(0x5102, 0x01) -- bits 1&0 must be '01' (ie 0x02) to allow writes to PRG-RAM
-  nes.cpu_wr(0x5103, 0x02) -- bits 1&0 must be '10' (ie 0x01) to allow writes to PRG-RAM
+  nes.cpu_wr(PRG_RAM_PROTECT_1, 0x01) -- bits 1&0 must be '01' (ie 0x02) to allow writes to PRG-RAM
+  nes.cpu_wr(PRG_RAM_PROTECT_2, 0x02) -- bits 1&0 must be '10' (ie 0x01) to allow writes to PRG-RAM
 
   -- set mirroring
-  nes.cpu_wr(0x5105, 0x44) -- horizontal mirroring
+  nes.cpu_wr(NAMETABLE_MAPPING, 0x44) -- horizontal mirroring
 
   -- PRG MODE
-  nes.cpu_wr(0x5100, 0x00) -- PRG banking mode 0 single 32KByte bank (couldn't get this to work..)
-  -- nes.cpu_wr(0x5100, 0x03) -- PRG banking mode 3 4x 8KB banks
+  nes.cpu_wr(PRG_MODE, 0x00) -- PRG banking mode 0 single 32KByte bank (couldn't get this to work..)
+  -- nes.cpu_wr(PRG_MODE, 0x03) -- PRG banking mode 3 4x 8KB banks
 
   -- PRG-RAM bank
-  nes.cpu_wr(0x5113, 0x00) -- PRG-RAM bank @ $6000-7FFF (regardless of PRG mode)
+  nes.cpu_wr(PRG_BANK_0, 0x00) -- PRG-RAM bank @ $6000-7FFF (regardless of PRG mode)
 
   -- PRG-ROM bank
-  nes.cpu_wr(0x5117, 0x00) -- PRG-ROM bank @ $8000-FFFF (mode 0) bits 1&0 don't matter (CPU A14/13)
-  -- nes.cpu_wr(0x5114, 0x80) -- PRG-ROM bank @ $8000-9FFF (mode 3) bit7 must be set to see ROM
-  -- nes.cpu_wr(0x5115, 0x81)  -- PRG-ROM bank @ $A000-BFFF (mode 3) bit7 must be set to see ROM
-  -- nes.cpu_wr(0x5116, 0x82)  -- PRG-ROM bank @ $C000-DFFF (mode 3) bit7 must be set to see ROM
-  -- nes.cpu_wr(0x5117, 0x83)  -- PRG-ROM bank @ $E000-FFFF (mode 3) bit7 must be set to see ROM
+  nes.cpu_wr(PRG_BANK_4, 0x00) -- PRG-ROM bank @ $8000-FFFF (mode 0) bits 1&0 don't matter (CPU A14/13)
+  -- nes.cpu_wr(PRG_BANK_1, 0x80) -- PRG-ROM bank @ $8000-9FFF (mode 3) bit7 must be set to see ROM
+  -- nes.cpu_wr(PRG_BANK_2, 0x81) -- PRG-ROM bank @ $A000-BFFF (mode 3) bit7 must be set to see ROM
+  -- nes.cpu_wr(PRG_BANK_3, 0x82) -- PRG-ROM bank @ $C000-DFFF (mode 3) bit7 must be set to see ROM
+  -- nes.cpu_wr(PRG_BANK_4, 0x83) -- PRG-ROM bank @ $E000-FFFF (mode 3) bit7 must be set to see ROM
 
   -- CHR MODE
   nes.cpu_wr(0x2000, 0x00) -- 8x8 sprite mode
-  -- nes.cpu_wr(0x5101, 0x00)  -- single 8KByte bank
-  -- nes.cpu_wr(0x5101, 0x02) -- four 2KByte bank (mode 2)
+  -- nes.cpu_wr(CHR_MODE, 0x00) -- single 8KByte bank
+  -- nes.cpu_wr(CHR_MODE, 0x02) -- four 2KByte bank (mode 2)
 
-  nes.cpu_wr(0x5101, 0x00) -- one 8KByte bank (mode 0)
-  nes.cpu_wr(0x5127, 0x00) -- CHR-ROM bank @ $0000-1FFF (mode 0)
+  nes.cpu_wr(CHR_MODE, 0x00)     -- one 8KByte bank (mode 0)
+  nes.cpu_wr(CHR_BANK_A_7, 0x00) -- CHR-ROM bank @ $0000-1FFF (mode 0)
 
   -- CHR-ROM bank
-  -- nes.cpu_wr(0x5127, 0x00)  -- CHR-ROM bank @ $0000-1FFF (mode 0)
-  -- nes.cpu_wr(0x512B, 0x00)  -- CHR-ROM bank @ $0000-1FFF (mode 0 8x16 sprites)
+  -- nes.cpu_wr(CHR_BANK_A_7, 0x00) -- CHR-ROM bank @ $0000-1FFF (mode 0)
+  -- nes.cpu_wr(CHR_BANK_B_3, 0x00) -- CHR-ROM bank @ $0000-1FFF (mode 0 8x16 sprites)
 
-  nes.cpu_wr(0x5130, 0x00) -- Upper CHR Bank bits
+  nes.cpu_wr(UPPER_CHR_BANK_BITS, 0x00)
 
-  -- nes.cpu_wr(0x5120, 0x00)
-  -- nes.cpu_wr(0x5121, 0x00)
-  -- nes.cpu_wr(0x5122, 0x00)
-  -- nes.cpu_wr(0x5123, 0x00)
-  -- nes.cpu_wr(0x5124, 0x00)
-  -- nes.cpu_wr(0x5126, 0x00)
-  -- nes.cpu_wr(0x5128, 0x00)
-  -- nes.cpu_wr(0x5129, 0x00)
-  -- nes.cpu_wr(0x512A, 0x00)
-  -- nes.cpu_wr(0x512B, 0x00)
+  -- nes.cpu_wr(CHR_BANK_A_0, 0x00)
+  -- nes.cpu_wr(CHR_BANK_A_1, 0x00)
+  -- nes.cpu_wr(CHR_BANK_A_2, 0x00)
+  -- nes.cpu_wr(CHR_BANK_A_3, 0x00)
+  -- nes.cpu_wr(CHR_BANK_A_4, 0x00)
+  -- nes.cpu_wr(CHR_BANK_A_6, 0x00)
+  -- nes.cpu_wr(CHR_BANK_B_0, 0x00)
+  -- nes.cpu_wr(CHR_BANK_B_1, 0x00)
+  -- nes.cpu_wr(CHR_BANK_B_2, 0x00)
+  -- nes.cpu_wr(CHR_BANK_B_3, 0x00)
 
-  -- nes.cpu_wr(0x5125, 0x0A) -- CHR-ROM bank @ $1000-17FF (mode 2)
-  -- nes.cpu_wr(0x5127, 0x05) -- CHR-ROM bank @ $1800-1FFF (mode 2)
+  -- nes.cpu_wr(CHR_BANK_A_5, 0x0A) -- CHR-ROM bank @ $1000-17FF (mode 2)
+  -- nes.cpu_wr(CHR_BANK_A_7, 0x05) -- CHR-ROM bank @ $1800-1FFF (mode 2)
 
   -- CHR-ROM upper bank
   -- TODO
-  -- nes.cpu_wr(0x5130, 0x00)
+  -- nes.cpu_wr(UPPER_CHR_BANK_BITS, 0x00)
 end
 
 -- test the mapper's mirroring modes to verify working properly
@@ -100,7 +136,7 @@ local function mirror_test()
   local res
 
   -- $5105 = 0x44: Horizontal arrangement
-  nes.cpu_wr(0x5105, 0x44)
+  nes.cpu_wr(NAMETABLE_MAPPING, 0x44)
   res = nes.detect_mapper_mirroring()
   if res ~= "VERT" then
     log.error("Horizontal arrangement test failed")
@@ -110,7 +146,7 @@ local function mirror_test()
   end
 
   -- $5105 = 0x50: Vertical arrangement
-  nes.cpu_wr(0x5105, 0x50)
+  nes.cpu_wr(NAMETABLE_MAPPING, 0x50)
   if nes.detect_mapper_mirroring() ~= "HORZ" then
     log.error("Vertical arrangement test failed")
     return false
@@ -119,7 +155,7 @@ local function mirror_test()
   end
 
   -- $5105 = 0x00: single screen 0
-  nes.cpu_wr(0x5105, 0x00)
+  nes.cpu_wr(NAMETABLE_MAPPING, 0x00)
   if nes.detect_mapper_mirroring() ~= "1SCRNA" then
     log.error("One screen A mirror test failed")
     return false
@@ -128,7 +164,7 @@ local function mirror_test()
   end
 
   -- $5105 = 0x55: single screen 1
-  nes.cpu_wr(0x5105, 0x55)
+  nes.cpu_wr(NAMETABLE_MAPPING, 0x55)
   if nes.detect_mapper_mirroring() ~= "1SCRNB" then
     log.error("One screen B mirror test failed")
     return false
@@ -157,11 +193,11 @@ local function test_multiplication()
 
   log.info(lo, "x", hi)
 
-  nes.cpu_wr(0x5205, lo)
-  nes.cpu_wr(0x5206, hi)
+  nes.cpu_wr(MULTIPLICAND, lo)
+  nes.cpu_wr(MULTIPLIER, hi)
 
-  lo = nes.cpu_rd(0x5205)
-  hi = nes.cpu_rd(0x5206)
+  lo = nes.cpu_rd(MULTIPLICAND)
+  hi = nes.cpu_rd(MULTIPLIER)
 
   if (result ~= (hi << 8) | lo) then
     log.error("Multiplication test failed")
@@ -179,45 +215,6 @@ end
 ╚═╝     ╚═╝  ╚═╝ ╚═════╝       ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝
 
 --]]
-
---- Read and identify the PRG-ROM flash manufacturer/device ID.
--- @return boolean found True when the flash chip is recognized
--- @return table device Flash chip information, or an empty table when unknown
-local function prg_rom_manf_id()
-  local manufacturer_id
-  local device_id
-  local found
-  local device
-
-  init_mapper()
-
-  log.section("Reading PRG-ROM manufacturer/device ID")
-
-  -- exit software
-  nes.cpu_wr(0x8000, 0xF0)
-
-  nes.cpu_wr(0x8AAA, 0xAA)
-  nes.cpu_wr(0x8555, 0x55)
-  nes.cpu_wr(0x8AAA, 0x90)
-
-  manufacturer_id = nes.cpu_rd(0x8000)
-  chips.display_manufacturer(manufacturer_id)
-
-  device_id = nes.cpu_rd(0x8001)
-  found, device = chips.display_device(manufacturer_id, device_id)
-
-  if not found then
-    device_id = nes.cpu_rd(0x8002) << 16
-    device_id = device_id | (nes.cpu_rd(0x801C) << 8)
-    device_id = device_id | nes.cpu_rd(0x801E)
-    found, device = chips.display_device(manufacturer_id, device_id)
-  end
-
-  -- exit software
-  nes.cpu_wr(0x8000, 0xF0)
-
-  return found, device
-end
 
 --- Dump PRG-ROM contents to an already-open output file.
 -- @param file file* Open binary output file
@@ -242,9 +239,9 @@ local function prg_rom_dump(file, rom_size_kb)
     end
 
     -- select desired bank to dump
-    nes.cpu_wr(0x5117, ((cur_bank << 2)|0x80)) -- 32KB & CPU $8000 (bits0&1 don't matter)
+    nes.cpu_wr(PRG_BANK_4, ((cur_bank << 2)|0x80)) -- 32KB & CPU $8000 (bits0&1 don't matter)
     -- above didn't work, only saw the last 8KB repeated...
-    -- nes.cpu_wr(0x5114, (cur_bank | 0x80)) -- 8KB & CPU $8000 (bit7 must be set to see ROM)
+    -- nes.cpu_wr(PRG_BANK_1, (cur_bank | 0x80)) -- 8KB & CPU $8000 (bit7 must be set to see ROM)
 
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
 
@@ -270,6 +267,15 @@ local function prg_rom_flash(file, rom_size_kb)
   -- local byte_num -- byte number gets reset for each bank
   -- local byte_str, data, readdata
 
+  local options
+  if prg_flash_chip.buffer == true then
+    options = "USE_BUFFER"
+    log.info("Using buffer programming")
+  elseif prg_flash_chip.unlock_bypass == true then
+    options = "USE_UNLOCK_BYPASS"
+    log.info("Using unlock bypass mode")
+  end
+
   while cur_bank < num_banks do
     if DEBUG then
       log.point("writing PRG-ROM bank", cur_bank, "of", num_banks - 1)
@@ -278,9 +284,9 @@ local function prg_rom_flash(file, rom_size_kb)
     end
 
     -- select desired bank to dump
-    nes.cpu_wr(0x5117, cur_bank << 2) -- 32KB & CPU $8000 (bits0&1&7 don't matter)
+    nes.cpu_wr(PRG_BANK_4, cur_bank << 2) -- 32KB & CPU $8000 (bits0&1&7 don't matter)
     -- write the current bank to the mapper register
-    -- nes.cpu_wr(0x5114, (cur_bank | 0x80)) -- 8KB @ CPU $8000
+    -- nes.cpu_wr(PRG_BANK_1, (cur_bank | 0x80)) -- 8KB @ CPU $8000
 
     -- flash data
 
@@ -322,7 +328,7 @@ local function prg_rom_flash(file, rom_size_kb)
     --]]
 
     -- flash data
-    flash.write_file(file, bank_size_kb, { mapper = "RNBW", mem_type = "NES_PRG_ROM" })
+    flash.write_file(file, bank_size_kb, { mapper = "RNBW", mem_type = "NES_PRG_ROM", options = options })
 
     cur_bank = cur_bank + 1
   end
@@ -353,28 +359,28 @@ local function test_chr_banks(retroprog_id)
 
   log.section("Test CHR banks")
 
-  nes.cpu_rd(0x5204)
+  nes.cpu_rd(IRQ_STATUS)
 
-  nes.cpu_wr(0x5101, 0x00) -- 1 8KByte bank (mode 0)
+  nes.cpu_wr(CHR_MODE, 0x00) -- 1 8KByte bank (mode 0)
 
-  nes.cpu_wr(0x5120, 0xff)
-  nes.cpu_wr(0x5121, 0xff)
-  nes.cpu_wr(0x5122, 0xff)
-  nes.cpu_wr(0x5123, 0xff)
-  nes.cpu_wr(0x5124, 0xff)
-  nes.cpu_wr(0x5125, 0xff)
-  nes.cpu_wr(0x5126, 0xff)
-  nes.cpu_wr(0x5127, 0xff)
-  nes.cpu_wr(0x5128, 0xff)
-  nes.cpu_wr(0x5129, 0xff)
-  nes.cpu_wr(0x512a, 0xff)
-  nes.cpu_wr(0x512b, 0xff)
+  nes.cpu_wr(CHR_BANK_A_0, 0xff)
+  nes.cpu_wr(CHR_BANK_A_1, 0xff)
+  nes.cpu_wr(CHR_BANK_A_2, 0xff)
+  nes.cpu_wr(CHR_BANK_A_3, 0xff)
+  nes.cpu_wr(CHR_BANK_A_4, 0xff)
+  nes.cpu_wr(CHR_BANK_A_5, 0xff)
+  nes.cpu_wr(CHR_BANK_A_6, 0xff)
+  nes.cpu_wr(CHR_BANK_A_7, 0xff)
+  nes.cpu_wr(CHR_BANK_B_0, 0xff)
+  nes.cpu_wr(CHR_BANK_B_1, 0xff)
+  nes.cpu_wr(CHR_BANK_B_2, 0xff)
+  nes.cpu_wr(CHR_BANK_B_3, 0xff)
 
-  for i = 0, 1, 1 do      -- 255
+  for i = 0, 1, 1 do            -- 255
     bank = i * 8
-    nes.cpu_wr(0x5127, i) -- CHR-ROM bank @ $0000-1FFF (mode 0)
-    -- nes.cpu_wr(0x5120, i)
-    nes.cpu_rd(0x5127)
+    nes.cpu_wr(CHR_BANK_A_7, i) -- CHR-ROM bank @ $0000-1FFF (mode 0)
+    -- nes.cpu_wr(CHR_BANK_A_0, i)
+    nes.cpu_rd(CHR_BANK_A_7)
     rv = nes.ppu_rd(0x03ff)
     if (rv ~= bank + 0) then log.error("ERROR") end
     rv = nes.ppu_rd(0x07ff)
@@ -398,52 +404,15 @@ local function test_chr_banks(retroprog_id)
   do return end
 
 
-  nes.cpu_wr(0x5101, 0x03) -- 8 1KByte bank (mode 3)
+  nes.cpu_wr(CHR_MODE, 0x03)    -- 8 1KByte bank (mode 3)
 
-  for i = 0, 15, 1 do      -- 255
-    nes.cpu_wr(0x5120, i)  -- CHR-ROM bank @ $0000-03FF (mode 3)
-    -- nes.cpu_wr(0x5120, i)
-    nes.cpu_rd(0x5120)
+  for i = 0, 15, 1 do           -- 255
+    nes.cpu_wr(CHR_BANK_A_0, i) -- CHR-ROM bank @ $0000-03FF (mode 3)
+    -- nes.cpu_wr(CHR_BANK_A_0, i)
+    nes.cpu_rd(CHR_BANK_A_0)
     nes.ppu_rd(0x03ff)
     -- log.print()
   end
-end
-
---- Read and identify the CHR-ROM flash manufacturer/device ID.
--- @return boolean found True when the flash chip is recognized
--- @return table device Flash chip information, or an empty table when unknown
-local function chr_rom_manf_id()
-  local manufacturer_id
-  local device_id
-  local found
-  local device
-
-  init_mapper()
-
-  log.section("Reading CHR-ROM manufacturer/device ID")
-
-  -- exit software
-  nes.ppu_wr(0x0000, 0xF0)
-
-  nes.ppu_wr(0x0AAA, 0xAA)
-  nes.ppu_wr(0x0555, 0x55)
-  nes.ppu_wr(0x0AAA, 0x90)
-
-  manufacturer_id = nes.ppu_rd(0x0000)
-  chips.display_manufacturer(manufacturer_id)
-
-  device_id = nes.ppu_rd(0x0001)
-  found, device = chips.display_device(manufacturer_id, device_id)
-
-  device_id = nes.ppu_rd(0x0002) << 16
-  device_id = device_id | (nes.ppu_rd(0x001C) << 8)
-  device_id = device_id | nes.ppu_rd(0x001E)
-  found, device = chips.display_device(manufacturer_id, device_id)
-
-  -- exit software
-  nes.ppu_wr(0x0000, 0xF0)
-
-  return found, device
 end
 
 --- Dump CHR contents to an already-open output file.
@@ -465,11 +434,11 @@ local function chr_dump(file, rom_size_kb)
     end
 
     -- CHR-ROM bank
-    nes.cpu_wr(0x5127, cur_bank) -- CHR-ROM bank @ $0000-1FFF (mode 0)
-    -- nes.cpu_wr(0x512B, cur_bank)  -- CHR-ROM bank @ $0000-1FFF (mode 0 8x16 sprites)
+    nes.cpu_wr(CHR_BANK_A_7, cur_bank) -- CHR-ROM bank @ $0000-1FFF (mode 0)
+    -- nes.cpu_wr(CHR_BANK_B_3, cur_bank) -- CHR-ROM bank @ $0000-1FFF (mode 0 8x16 sprites)
 
-    -- nes.cpu_wr(0x5121, cur_bank * 2)     -- CHR-ROM bank @ $0000-07FF (mode 2)
-    -- nes.cpu_wr(0x5123, cur_bank * 2 + 1) -- CHR-ROM bank @ $0800-0FFF (mode 2)
+    -- nes.cpu_wr(CHR_BANK_A_1, cur_bank * 2) -- CHR-ROM bank @ $0000-07FF (mode 2)
+    -- nes.cpu_wr(CHR_BANK_A_3, cur_bank * 2 + 1) -- CHR-ROM bank @ $0800-0FFF (mode 2)
 
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_PPU_1KB_TOGGLE" })
 
@@ -492,6 +461,15 @@ local function chr_rom_flash(file, rom_size_kb)
   local cur_bank = 0
   local num_banks = math.floor(rom_size_kb / bank_size_kb)
 
+  local options
+  if prg_flash_chip.buffer == true then
+    options = "USE_BUFFER"
+    log.info("Using buffer programming")
+  elseif prg_flash_chip.unlock_bypass == true then
+    options = "USE_UNLOCK_BYPASS"
+    log.info("Using unlock bypass mode")
+  end
+
   while cur_bank < num_banks do
     if DEBUG then
       log.point("writing CHR bank", cur_bank, "of", num_banks - 1)
@@ -500,9 +478,9 @@ local function chr_rom_flash(file, rom_size_kb)
     end
 
     -- set bank
-    nes.cpu_wr(0x5127, cur_bank) -- CHR-ROM bank @ $0000-1FFF (mode 0)
-    -- nes.cpu_wr(0x5121, cur_bank * 2)     -- 2KB @ PPU $0000
-    -- nes.cpu_wr(0x5123, cur_bank * 2 + 1) -- 2KB @ PPU $0800
+    nes.cpu_wr(CHR_BANK_A_7, cur_bank) -- CHR-ROM bank @ $0000-1FFF (mode 0)
+    -- nes.cpu_wr(CHR_BANK_A_1, cur_bank * 2) -- 2KB @ PPU $0000
+    -- nes.cpu_wr(CHR_BANK_A_3, cur_bank * 2 + 1) -- 2KB @ PPU $0800
 
     -- flash data
     --[[  This version of the code programs a single byte at a time but doesn't require
@@ -535,7 +513,7 @@ local function chr_rom_flash(file, rom_size_kb)
     --]]
 
     -- flash data
-    flash.write_file(file, bank_size_kb, { mapper = "RNBW", mem_type = "NES_CHR_ROM" })
+    flash.write_file(file, bank_size_kb, { mapper = "RNBW", mem_type = "NES_CHR_ROM", options = options })
 
     cur_bank = cur_bank + 1
   end
@@ -573,7 +551,7 @@ local function prg_ram_dump(file, ram_size_kb)
     end
 
     -- set bank
-    nes.cpu_wr(0x5113, cur_bank) -- PRG-RAM bank @ $6000-7FFF (regardless of PRG mode)
+    nes.cpu_wr(PRG_BANK_0, cur_bank) -- PRG-RAM bank @ $6000-7FFF (regardless of PRG mode)
 
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
 
@@ -617,7 +595,7 @@ local function write_ram(file, ram_size_kb)
 
     -- write the current bank to the mapper register
     -- DATA writes written to $6000-7FFF
-    nes.cpu_wr(0x5113, cur_bank) -- PRG-RAM bank @ $6000-7FFF (regardless of PRG mode)
+    nes.cpu_wr(PRG_BANK_0, cur_bank) -- PRG-RAM bank @ $6000-7FFF (regardless of PRG mode)
 
 
     -- flash data
@@ -675,11 +653,11 @@ local function prg_ram_test()
   log.section("Detecting PRG-RAM")
 
   -- disable write protection
-  nes.cpu_wr(0x5102, 0x02) -- bits 1&0 must be '10' (ie 0x02) to allow writes to PRG-RAM
-  nes.cpu_wr(0x5103, 0x01) -- bits 1&0 must be '01' (ie 0x01) to allow writes to PRG-RAM
+  nes.cpu_wr(PRG_RAM_PROTECT_1, 0x02) -- bits 1&0 must be '10' (ie 0x02) to allow writes to PRG-RAM
+  nes.cpu_wr(PRG_RAM_PROTECT_2, 0x01) -- bits 1&0 must be '01' (ie 0x01) to allow writes to PRG-RAM
 
   -- set bank
-  nes.cpu_wr(0x5113, 0x00)
+  nes.cpu_wr(PRG_BANK_0, 0x00)
 
   -- save potential battery backed data first
   saved_value = nes.cpu_rd(0x6000)
@@ -696,8 +674,8 @@ local function prg_ram_test()
     nes.cpu_wr(0x6000, saved_value)
 
     -- enable write protection
-    nes.cpu_wr(0x5102, 0x00) -- bits 1&0 must be '01' (ie 0x02) to allow writes to PRG-RAM
-    nes.cpu_wr(0x5103, 0x00) -- bits 1&0 must be '10' (ie 0x01) to allow writes to PRG-RAM
+    nes.cpu_wr(PRG_RAM_PROTECT_1, 0x00) -- bits 1&0 must be '01' (ie 0x02) to allow writes to PRG-RAM
+    nes.cpu_wr(PRG_RAM_PROTECT_2, 0x00) -- bits 1&0 must be '10' (ie 0x01) to allow writes to PRG-RAM
 
     -- TODO: maybe check if it worked?
     log.success("PRG-RAM detected")
@@ -722,8 +700,8 @@ local function prg_ram_get_size()
   log.section("Detecting PRG-RAM size")
 
   -- disable write protection
-  nes.cpu_wr(0x5102, 0x02) -- bits 1&0 must be '10' (ie 0x02) to allow writes to PRG-RAM
-  nes.cpu_wr(0x5103, 0x01) -- bits 1&0 must be '01' (ie 0x01) to allow writes to PRG-RAM
+  nes.cpu_wr(PRG_RAM_PROTECT_1, 0x02) -- bits 1&0 must be '10' (ie 0x02) to allow writes to PRG-RAM
+  nes.cpu_wr(PRG_RAM_PROTECT_2, 0x01) -- bits 1&0 must be '01' (ie 0x01) to allow writes to PRG-RAM
 
   -- write to banks backwards
   while cur_bank >= 0 do
@@ -734,7 +712,7 @@ local function prg_ram_get_size()
     end
 
     -- set bank
-    nes.cpu_wr(0x5113, cur_bank)
+    nes.cpu_wr(PRG_BANK_0, cur_bank)
 
     -- write data
     nes.cpu_wr(0x6000, cur_bank)
@@ -745,12 +723,12 @@ local function prg_ram_get_size()
   spinner.clear()
 
   -- read back only last bank
-  nes.cpu_wr(0x5113, num_banks - 1)
+  nes.cpu_wr(PRG_BANK_0, num_banks - 1)
   prg_ram_size_kb = (nes.cpu_rd(0x6000) + 1) * 8
 
   -- enable write protection
-  nes.cpu_wr(0x5102, 0x00) -- bits 1&0 must be '01' (ie 0x02) to allow writes to PRG-RAM
-  nes.cpu_wr(0x5103, 0x00) -- bits 1&0 must be '10' (ie 0x01) to allow writes to PRG-RAM
+  nes.cpu_wr(PRG_RAM_PROTECT_1, 0x00) -- bits 1&0 must be '01' (ie 0x02) to allow writes to PRG-RAM
+  nes.cpu_wr(PRG_RAM_PROTECT_2, 0x00) -- bits 1&0 must be '10' (ie 0x01) to allow writes to PRG-RAM
 
   if prg_ram_size_kb >= 0 and prg_ram_size_kb <= 128 then
     log.success("PRG-RAM size detected", prg_ram_size_kb .. "KB")
@@ -781,8 +759,8 @@ local function prg_ram_exercise(wram_size_kb, retroprog_id)
   log.info("PRG-RAM size", wram_size_kb .. "KB")
 
   -- disable write protection
-  nes.cpu_wr(0x5102, 0x02) -- bits 1&0 must be '10' (ie 0x02) to allow writes to PRG-RAM
-  nes.cpu_wr(0x5103, 0x01) -- bits 1&0 must be '01' (ie 0x01) to allow writes to PRG-RAM
+  nes.cpu_wr(PRG_RAM_PROTECT_1, 0x02) -- bits 1&0 must be '10' (ie 0x02) to allow writes to PRG-RAM
+  nes.cpu_wr(PRG_RAM_PROTECT_2, 0x01) -- bits 1&0 must be '01' (ie 0x01) to allow writes to PRG-RAM
 
   -- write random data to all banks
   log.point("Writing random data to PRG-RAM")
@@ -792,7 +770,7 @@ local function prg_ram_exercise(wram_size_kb, retroprog_id)
     end
 
     -- set bank
-    nes.cpu_wr(0x5113, cur_bank)
+    nes.cpu_wr(PRG_BANK_0, cur_bank)
 
     -- write random data
     local addr = 0x6000
@@ -815,8 +793,8 @@ local function prg_ram_exercise(wram_size_kb, retroprog_id)
   assert(file:close())
 
   -- enable write protection
-  nes.cpu_wr(0x5102, 0x00) -- bits 1&0 must be '01' (ie 0x02) to allow writes to PRG-RAM
-  nes.cpu_wr(0x5103, 0x00) -- bits 1&0 must be '10' (ie 0x01) to allow writes to PRG-RAM
+  nes.cpu_wr(PRG_RAM_PROTECT_1, 0x00) -- bits 1&0 must be '01' (ie 0x02) to allow writes to PRG-RAM
+  nes.cpu_wr(PRG_RAM_PROTECT_2, 0x00) -- bits 1&0 must be '10' (ie 0x01) to allow writes to PRG-RAM
 
   -- re-open & compare dump with known lsfr bitstream
   local goodfile = opts.lua_path .. "./ignore/lfsr_32KB.bin"
@@ -884,13 +862,13 @@ local function exram_exercise_mode0_1_cpu_ppu(retroprog_id, mode)
   local test = true
 
   -- set EXRAM mode
-  nes.cpu_wr(0x5104, mode & 1)
+  nes.cpu_wr(EXRAM_MODE, mode & 1)
 
   -- set Nametable mapping
-  nes.cpu_wr(0x5105, 0xAA) -- EXRAM
+  nes.cpu_wr(NAMETABLE_MAPPING, 0xAA) -- EXRAM
 
   -- flash mode
-  nes.cpu_wr(0x50FF, 0xC0) -- enable flash mode + set in-frame flag
+  nes.cpu_wr(FLASH_MODE, 0xC0) -- enable flash mode + set in-frame flag
 
   log.section("Exercising EXRAM (mode " .. mode .. ") - CPU writes / PPU reads")
 
@@ -927,7 +905,7 @@ local function exram_exercise_mode0_1_cpu_ppu(retroprog_id, mode)
     end
   end
 
-  nes.cpu_wr(0x50FF, 0x80) -- enable flash mode + clear in-frame flag
+  nes.cpu_wr(FLASH_MODE, 0x80) -- enable flash mode + clear in-frame flag
   assert(file:close())
   return test
 end
@@ -938,13 +916,13 @@ local function exram_exercise_mode0_1_ppu_ppu(retroprog_id, mode)
   local test = true
 
   -- set EXRAM mode
-  nes.cpu_wr(0x5104, mode & 1)
+  nes.cpu_wr(EXRAM_MODE, mode & 1)
 
   -- set Nametable mapping
-  nes.cpu_wr(0x5105, 0xAA) -- EXRAM
+  nes.cpu_wr(NAMETABLE_MAPPING, 0xAA) -- EXRAM
 
   -- flash mode
-  nes.cpu_wr(0x50FF, 0xC0) -- enable flash mode + set in-frame flag
+  nes.cpu_wr(FLASH_MODE, 0xC0) -- enable flash mode + set in-frame flag
 
   log.section("Exercising EXRAM (mode " .. mode .. ") - PPU writes / PPU reads")
 
@@ -982,7 +960,7 @@ local function exram_exercise_mode0_1_ppu_ppu(retroprog_id, mode)
     end
   end
 
-  nes.cpu_wr(0x50FF, 0x80) -- enable flash mode + clear in-frame flag
+  nes.cpu_wr(FLASH_MODE, 0x80) -- enable flash mode + clear in-frame flag
   assert(file:close())
   return test
 end
@@ -994,14 +972,14 @@ local function exram_exercise_mode2(retroprog_id)
   log.section("Exercising EXRAM (mode 2)")
 
   -- set EXRAM mode - CPU R/W
-  nes.cpu_wr(0x5104, 0x02)
+  nes.cpu_wr(EXRAM_MODE, 0x02)
 
   -- write random data
   log.point("Writing random data to EXRAM (CPU, in-frame)")
 
-  nes.cpu_wr(0x50FF, 0xC0) -- enable flash mode + set in-frame flag
+  nes.cpu_wr(FLASH_MODE, 0xC0) -- enable flash mode + set in-frame flag
 
-  dict.stuff("RESET_LFSR") -- sets it to 1
+  dict.stuff("RESET_LFSR")     -- sets it to 1
 
   addr = 0x5C00
   while (addr < 0x6000) do
@@ -1031,9 +1009,9 @@ local function exram_exercise_mode2(retroprog_id)
   -- write random data
   log.point("Writing random data to EXRAM (CPU, not in-frame)")
 
-  nes.cpu_wr(0x50FF, 0x80) -- enable flash mode + clear in-frame flag
+  nes.cpu_wr(FLASH_MODE, 0x80) -- enable flash mode + clear in-frame flag
 
-  dict.stuff("RESET_LFSR") -- sets it to 1
+  dict.stuff("RESET_LFSR")     -- sets it to 1
 
   addr = 0x5C00
   while (addr < 0x6000) do
@@ -1194,7 +1172,8 @@ local function process(process_opts, console_opts)
     chr_ram_detected = nes.ppu_ram_sense(0x1000)
 
     if options.force_flash_test or (do_rom_write and prg_size_kb ~= 0) then
-      rv = prg_rom_manf_id()
+      -- rv = prg_rom_manf_id()
+      rv, prg_flash_chip = nes.prg_rom_get_chip()
       if not rv then
         if do_rom_write and prg_size_kb ~= 0 then
           log.error("Couldn't identify flash chip")
@@ -1206,7 +1185,8 @@ local function process(process_opts, console_opts)
     end
 
     if options.force_flash_test or (do_rom_write and chr_size_kb ~= 0) then
-      rv = chr_rom_manf_id()
+      -- rv = chr_rom_manf_id()
+      rv, chr_flash_chip = nes.chr_rom_get_chip()
       if not rv then
         if do_rom_write and chr_size_kb ~= 0 then
           log.error("Couldn't identify flash chip")
@@ -1317,8 +1297,8 @@ local function process(process_opts, console_opts)
 
     -- disable write protection, and enable PRG-RAM
     -- for save data safety start by disabling PRG-RAM writes
-    --  nes.cpu_wr(0x5102, 0x02)  -- bits 1&0 must be '01' (ie 0x02) to allow writes to PRG-RAM
-    --  nes.cpu_wr(0x5103, 0x01)  -- bits 1&0 must be '10' (ie 0x01) to allow writes to PRG-RAM
+    -- nes.cpu_wr(PRG_RAM_PROTECT_1, 0x02) -- bits 1&0 must be '01' (ie 0x02) to allow writes to PRG-RAM
+    -- nes.cpu_wr(PRG_RAM_PROTECT_2, 0x01) -- bits 1&0 must be '10' (ie 0x01) to allow writes to PRG-RAM
 
     -- test with 1 Byte
     --    local addr = 0x600C
@@ -1340,8 +1320,8 @@ local function process(process_opts, console_opts)
     -- flash.write_file(file, wram_size_kb, { mapper = "MMC5", mem_type = "NES_PRG_RAM" })
 
     -- for save data safety disable PRG-RAM writes
-    --  nes.cpu_wr(0x5102, 0x01)  -- bits 1&0 must be '01' (ie 0x02) to allow writes to PRG-RAM
-    --  nes.cpu_wr(0x5103, 0x02)  -- bits 1&0 must be '10' (ie 0x01) to allow writes to PRG-RAM
+    -- nes.cpu_wr(PRG_RAM_PROTECT_1, 0x01) -- bits 1&0 must be '01' (ie 0x02) to allow writes to PRG-RAM
+    -- nes.cpu_wr(PRG_RAM_PROTECT_2, 0x02) -- bits 1&0 must be '10' (ie 0x01) to allow writes to PRG-RAM
 
     -- close file
     assert(file:close())
