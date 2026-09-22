@@ -3,7 +3,7 @@ local rainbow       = {}
 
 -- import required modules
 local dict          = require "scripts.app.dict"
-local genesis       = require "scripts.app.genesis"
+local gen           = require "scripts.app.gen"
 local dump          = require "scripts.app.dump"
 local flash         = require "scripts.app.flash"
 local time          = require "scripts.app.time"
@@ -41,29 +41,29 @@ local function test_bootrom()
   log.section("Bootrom test")
 
   log.point("Enable Bootrom")
-  genesis.time_wr(R_BOOTROM, 0x03) -- Enable Bootrom
+  gen.time_wr(R_BOOTROM, 0x03) -- Enable Bootrom
 
-  -- genesis.set_addr_hi(0x00)
+  -- gen.set_addr_hi(0x00)
 
-  rv = genesis.rom_rd(0x0000)
+  rv = gen.rom_rd(0x0000)
   log.print(help.hex_0x4(rv))
-  rv = genesis.rom_rd(0x0002)
+  rv = gen.rom_rd(0x0002)
   log.print(help.hex_0x4(rv))
-  rv = genesis.rom_rd(0x0004)
+  rv = gen.rom_rd(0x0004)
   log.print(help.hex_0x4(rv))
-  rv = genesis.rom_rd(0x0006)
+  rv = gen.rom_rd(0x0006)
   log.print(help.hex_0x4(rv))
 
   log.point("Disable Bootrom")
-  genesis.time_wr(R_BOOTROM, 0x00) -- Disable Bootrom
+  gen.time_wr(R_BOOTROM, 0x00) -- Disable Bootrom
 
-  rv = genesis.rom_rd(0x0000)
+  rv = gen.rom_rd(0x0000)
   log.print(help.hex_0x4(rv))
-  rv = genesis.rom_rd(0x0002)
+  rv = gen.rom_rd(0x0002)
   log.print(help.hex_0x4(rv))
-  rv = genesis.rom_rd(0x0004)
+  rv = gen.rom_rd(0x0004)
   log.print(help.hex_0x4(rv))
-  rv = genesis.rom_rd(0x0006)
+  rv = gen.rom_rd(0x0006)
   log.print(help.hex_0x4(rv))
 end
 
@@ -73,53 +73,53 @@ local function test_wifi()
   log.section("Wi-Fi/ESP test")
 
   log.point("Enable ESP")
-  genesis.time_wr(R_RNBW_CONFIG, 0x01) -- enable ESP
+  gen.time_wr(R_RNBW_CONFIG, 0x01) -- enable ESP
 
   log.point("Enable FPGA-RAM")
-  genesis.time_wr(R_SRAM, 0x81)
+  gen.time_wr(R_SRAM, 0x81)
 
   log.point("Acknowledge messages if needed")
   rv = 0
   while rv ~= 0 do
-    rv = genesis.time_rd(R_RNBW_RX) -- ack message
+    rv = gen.time_rd(R_RNBW_RX) -- ack message
   end
 
   log.point("Set TX RAM address")
-  genesis.time_wr(R_RNBW_TX_RAM, 0x00) -- set TX RAM address
+  gen.time_wr(R_RNBW_TX_RAM, 0x00) -- set TX RAM address
 
   log.point("Set RX RAM address")
-  genesis.time_wr(R_RNBW_RX_RAM, 0x01) -- set RX RAM address
+  gen.time_wr(R_RNBW_RX_RAM, 0x01) -- set RX RAM address
 
   log.point("Prepare command")
-  genesis.set_addr_hi(0x20)
-  genesis.ram_wr(0x1800, 0x01)
-  genesis.ram_wr(0x1801, 0x00)
+  gen.set_addr_hi(0x20)
+  gen.ram_wr(0x1800, 0x01)
+  gen.ram_wr(0x1801, 0x00)
 
   log.point("Send command")
-  genesis.time_wr(R_RNBW_TX, 0x01) -- send command
+  gen.time_wr(R_RNBW_TX, 0x01) -- send command
 
   log.point("Wait for response")
   rv = 0
   while rv < 0x80 do
-    rv = genesis.time_rd(R_RNBW_RX)
+    rv = gen.time_rd(R_RNBW_RX)
   end
 
   log.point("Read response")
-  rv = genesis.ram_rd(0x1900)
+  rv = gen.ram_rd(0x1900)
   log.bullet(help.hex_0x2(rv))
-  rv = genesis.ram_rd(0x1901)
+  rv = gen.ram_rd(0x1901)
   log.bullet(help.hex_0x2(rv))
-  rv = genesis.ram_rd(0x1902)
+  rv = gen.ram_rd(0x1902)
   log.bullet(help.hex_0x2(rv))
 
   log.point("Acknowledge message")
-  genesis.time_wr(R_RNBW_RX) -- ack message
+  gen.time_wr(R_RNBW_RX) -- ack message
 
   log.point("Disable FPGA-RAM/SRAM")
-  genesis.ram_disable()
+  gen.ram_disable()
 
   log.point("Disable ESP")
-  genesis.time_wr(R_RNBW_CONFIG, 0x00) -- disable ESP
+  gen.time_wr(R_RNBW_CONFIG, 0x00) -- disable ESP
 end
 
 --[[
@@ -140,17 +140,17 @@ local function rom_erase_sector(addr)
   local window_addr = 0x080000 | ((cur_bank & 0x03) << 17)
 
   -- select desired bank
-  genesis.time_wr(0xF3, cur_bank >> 2) -- 0xF3 => 0xA130F3
+  gen.time_wr(0xF3, cur_bank >> 2) -- 0xF3 => 0xA130F3
 
   -- set address hi bits (A23-A16)
-  genesis.set_addr_hi(0x08 | ((cur_bank & 0x03) << 1)) -- 0x08 controls A19, set to 1 to read from bank 1 (0x80000-0xFFFFF)
+  gen.set_addr_hi(0x08 | ((cur_bank & 0x03) << 1)) -- 0x08 controls A19, set to 1 to read from bank 1 (0x80000-0xFFFFF)
 
-  genesis.rom_wr(window_addr | (0x000555 << 1), 0x00AA)
-  genesis.rom_wr(window_addr | (0x0002AA << 1), 0x0055)
-  genesis.rom_wr(window_addr | (0x000555 << 1), 0x0080)
-  genesis.rom_wr(window_addr | (0x000555 << 1), 0x00AA)
-  genesis.rom_wr(window_addr | (0x0002AA << 1), 0x0055)
-  genesis.rom_wr(window_addr | local_addr, 0x0030)
+  gen.rom_wr(window_addr | (0x000555 << 1), 0x00AA)
+  gen.rom_wr(window_addr | (0x0002AA << 1), 0x0055)
+  gen.rom_wr(window_addr | (0x000555 << 1), 0x0080)
+  gen.rom_wr(window_addr | (0x000555 << 1), 0x00AA)
+  gen.rom_wr(window_addr | (0x0002AA << 1), 0x0055)
+  gen.rom_wr(window_addr | local_addr, 0x0030)
 
   if DEBUG then
     log.point("erasing sector @ " .. help.hex_0x6(addr))
@@ -160,10 +160,10 @@ local function rom_erase_sector(addr)
   local nak = 0
   local check_addr = window_addr | local_addr
 
-  while (genesis.rom_rd(check_addr) ~= 0xFFFF) do
+  while (gen.rom_rd(check_addr) ~= 0xFFFF) do
     nak = nak + 1
     if nak > 100000 then
-      temp = genesis.rom_rd(check_addr)
+      temp = gen.rom_rd(check_addr)
       log.error("sector erase failed", help.hex_0x6(addr), "read", help.hex_0x4(temp))
       return false
     end
@@ -171,7 +171,7 @@ local function rom_erase_sector(addr)
 
   for offset = 0, 30, 2 do
     check_addr = window_addr | (local_addr + offset)
-    temp = genesis.rom_rd(check_addr)
+    temp = gen.rom_rd(check_addr)
     if temp ~= 0xFFFF then
       log.error("sector erase verify failed", help.hex_0x6(addr + offset), "read", help.hex_0x4(temp))
       return false
@@ -197,17 +197,17 @@ local function rom_flash_byte(addr, value)
     log.info("write a byte", help.hex_0x6(addr), help.hex_0x4(value))
   end
 
-  genesis.rom_wr(0x000555 << 1, 0x00AA)
-  genesis.rom_wr(0x0002AA << 1, 0x0055)
-  genesis.rom_wr(0x000555 << 1, 0x00A0)
-  genesis.rom_wr(addr, value)
+  gen.rom_wr(0x000555 << 1, 0x00AA)
+  gen.rom_wr(0x0002AA << 1, 0x0055)
+  gen.rom_wr(0x000555 << 1, 0x00A0)
+  gen.rom_wr(addr, value)
 
-  local rv = genesis.rom_rd(addr_lo)
+  local rv = gen.rom_rd(addr_lo)
 
   local i = 0
 
   while (rv ~= value) do
-    rv = genesis.rom_rd(addr_lo)
+    rv = gen.rom_rd(addr_lo)
     -- if DEBUG then print("post write read:", help.hex(rv)) end
     i = i + 1
     if i > 30 then
@@ -237,7 +237,7 @@ local function rom_dump(file, rom_size_kb)
   log.info("ROM size", rom_size_kb .. "KB")
 
   -- disable SRAM
-  genesis.ram_disable()
+  gen.ram_disable()
 
   while cur_bank < num_banks do
     -- A "large" Genesis ROM is 24 banks, many are 8 and 16 - status every 4 is reasonable.
@@ -252,13 +252,13 @@ local function rom_dump(file, rom_size_kb)
     end
 
     -- select desired SSF2 bank
-    genesis.time_wr(0xF3, cur_bank >> 2) -- 0xF3 => 0xA130F3
+    gen.time_wr(0xF3, cur_bank >> 2) -- 0xF3 => 0xA130F3
 
     -- set address hi bits (A23-A16)
-    genesis.set_addr_hi(0x08 | ((cur_bank & 0x03) << 1)) -- 0x08 controls A19 and selects the $080000-$0FFFFF window
+    gen.set_addr_hi(0x08 | ((cur_bank & 0x03) << 1)) -- 0x08 controls A19 and selects the $080000-$0FFFFF window
 
-    dump.dumptofile(file, kb_per_bank / 2, { addr_base = addr_base, mem_type = "GENESIS_ROM_PAGE0" })
-    dump.dumptofile(file, kb_per_bank / 2, { addr_base = addr_base, mem_type = "GENESIS_ROM_PAGE1" })
+    dump.dumptofile(file, kb_per_bank / 2, { addr_base = addr_base, mem_type = "GEN_ROM_PAGE0" })
+    dump.dumptofile(file, kb_per_bank / 2, { addr_base = addr_base, mem_type = "GEN_ROM_PAGE1" })
 
     cur_bank = cur_bank + 1
   end
@@ -284,7 +284,7 @@ local function rom_flash(file, rom_size_kb)
   end
 
   -- disable SRAM
-  genesis.ram_disable()
+  gen.ram_disable()
 
   while cur_bank < num_banks do
     if DEBUG then
@@ -294,12 +294,12 @@ local function rom_flash(file, rom_size_kb)
     end
 
     -- select desired SSF2 bank
-    genesis.time_wr(0xF3, cur_bank >> 2) -- 0xF3 => 0xA130F3
+    gen.time_wr(0xF3, cur_bank >> 2) -- 0xF3 => 0xA130F3
 
     -- set address hi bits (A23-A16)
-    genesis.set_addr_hi(0x08 | ((cur_bank & 0x03) << 1)) -- 0x08 controls A19 and selects the $080000-$0FFFFF window
+    gen.set_addr_hi(0x08 | ((cur_bank & 0x03) << 1)) -- 0x08 controls A19 and selects the $080000-$0FFFFF window
 
-    flash.write_file(file, kb_per_bank, { mapper = mapname, mem_type = "GENESISROM", options = options })
+    flash.write_file(file, kb_per_bank, { mapper = mapname, mem_type = "GEN_ROM", options = options })
 
     cur_bank = cur_bank + 1
   end
@@ -334,7 +334,7 @@ local function ram_dump(file, addr_hi, ram_size_kb)
 
   -- select desired bank
   -- set address hi bits (A23-A16)
-  genesis.set_addr_hi(addr_hi)
+  gen.set_addr_hi(addr_hi)
 
   while cur_bank < num_banks do
     if DEBUG then
@@ -344,7 +344,7 @@ local function ram_dump(file, addr_hi, ram_size_kb)
     end
 
     -- currently don't have means of dumping RAM with A16 high
-    dump.dumptofile(file, ram_size_kb, { addr_base = addr_base, mem_type = "GENESIS_RAM_PAGE" }) -- A16 low
+    dump.dumptofile(file, ram_size_kb, { addr_base = addr_base, mem_type = "GEN_RAM_PAGE" }) -- A16 low
 
     cur_bank = cur_bank + 1
   end
@@ -365,7 +365,7 @@ local function ram_write(file, addr_hi, ram_size_kb)
   log.info("SRAM size", ram_size_kb .. "KB")
 
   -- enable RAM
-  genesis.ram_enable()
+  gen.ram_enable()
 
   while cur_bank < num_banks do
     if DEBUG then
@@ -374,15 +374,15 @@ local function ram_write(file, addr_hi, ram_size_kb)
       spinner.update("Writing", cur_bank, "/", num_banks - 1)
     end
 
-    genesis.set_addr_hi(addr_hi + cur_bank)
+    gen.set_addr_hi(addr_hi + cur_bank)
 
-    flash.write_file(file, ram_size_kb, { mapper = mapname, mem_type = "GENESISRAM" })
+    flash.write_file(file, ram_size_kb, { mapper = mapname, mem_type = "GEN_RAM" })
 
     cur_bank = cur_bank + 1
   end
 
   -- disable SRAM
-  genesis.ram_disable()
+  gen.ram_disable()
 
   spinner.clear()
   log.success("Done programming SRAM")
@@ -399,28 +399,28 @@ local function ram_test()
   log.section("Detecting SRAM")
 
   -- enable RAM
-  genesis.ram_enable()
+  gen.ram_enable()
 
   -- save potential battery backed data first
-  saved_value = genesis.ram_rd(0x200000)
+  saved_value = gen.ram_rd(0x200000)
   write_value = saved_value ~ 0xff
 
   -- try to write and read back
-  genesis.ram_wr(0x200000, write_value)
-  read_value = genesis.ram_rd(0x200000)
+  gen.ram_wr(0x200000, write_value)
+  read_value = gen.ram_rd(0x200000)
   if read_value ~= write_value then
     test = false
   end
 
   -- put back original value
-  genesis.ram_wr(0x200000, saved_value)
-  read_value = genesis.ram_rd(0x200000)
+  gen.ram_wr(0x200000, saved_value)
+  read_value = gen.ram_rd(0x200000)
   if read_value ~= (saved_value) then
     test = false
   end
 
   -- disable RAM
-  genesis.ram_disable()
+  gen.ram_disable()
 
   if test then
     log.success("SRAM detected")
@@ -447,17 +447,17 @@ local function ram_exercise(ram_size_kb, retroprog_id)
   dict.stuff("RESET_LFSR") -- sets it to 1
 
   -- enable SRAM
-  genesis.ram_enable()
+  gen.ram_enable()
 
   -- set SRAM address high bits
-  genesis.set_addr_hi(addr_hi)
+  gen.set_addr_hi(addr_hi)
 
   log.section("Exercising RAM")
   log.info("RAM size", ram_size_kb .. "KB")
 
   -- write random data to all banks
   log.point("Writing random data to RAM")
-  dict.sega("GEN_PAGE_RAM_WR_LFSR", 0x00, ram_size_kb)
+  dict.gen("GEN_PAGE_RAM_WR_LFSR", 0x00, ram_size_kb)
 
   --dump sram into file
   local filename = opts.write_path .. "./ignore/gen_sram_dump-" .. retroprog_id .. ".bin"
@@ -466,7 +466,7 @@ local function ram_exercise(ram_size_kb, retroprog_id)
   ram_dump(file, addr_hi, ram_size_kb)
 
   -- disable SRAM
-  genesis.ram_disable()
+  gen.ram_disable()
 
   -- close the file
   assert(file:close())
@@ -507,28 +507,28 @@ local function fpga_ram_test()
   log.section("Detecting FPGA-RAM")
 
   -- enable FPGA-RAM
-  genesis.time_wr(R_SRAM, 0x81)
+  gen.time_wr(R_SRAM, 0x81)
 
   -- save potential battery backed data first
-  genesis.set_addr_hi(addr_hi)
-  saved_value = genesis.ram_rd(0x0000)
+  gen.set_addr_hi(addr_hi)
+  saved_value = gen.ram_rd(0x0000)
 
   -- try to write and read back
-  genesis.ram_wr(0x0000, saved_value ~ 0xff)
-  read_value = genesis.ram_rd(0x0000)
+  gen.ram_wr(0x0000, saved_value ~ 0xff)
+  read_value = gen.ram_rd(0x0000)
   if read_value ~= (saved_value ~ 0xff) then
     test = false
   end
 
   -- put back original value
-  genesis.ram_wr(0x0000, saved_value)
-  read_value = genesis.ram_rd(0x0000)
+  gen.ram_wr(0x0000, saved_value)
+  read_value = gen.ram_rd(0x0000)
   if read_value ~= (saved_value) then
     test = false
   end
 
   -- disable RAM
-  genesis.ram_disable()
+  gen.ram_disable()
 
   if test then
     log.success("FPGA-RAM detected")
@@ -556,14 +556,14 @@ local function fpga_ram_exercise(retroprog_id)
   dict.stuff("RESET_LFSR") -- sets it to 1
 
   -- enable FPGA-RAM
-  genesis.time_wr(R_SRAM, 0x81)
+  gen.time_wr(R_SRAM, 0x81)
 
   log.section("Exercising FPGA-RAM")
   log.info("FPGA-RAM size", ram_size_kb .. "KB")
 
   -- write random data to all banks
   log.point("Writing random data to FPGA-RAM")
-  dict.sega("GEN_PAGE_RAM_WR_LFSR", 0x0000, (ram_size_kb * 0x400) >> 8)
+  dict.gen("GEN_PAGE_RAM_WR_LFSR", 0x0000, (ram_size_kb * 0x400) >> 8)
 
   --dump sram into file
   local filename = opts.write_path .. "./ignore/gen_fpga_ram_dump-" .. retroprog_id .. ".bin"
@@ -572,7 +572,7 @@ local function fpga_ram_exercise(retroprog_id)
   ram_dump(file, addr_hi, ram_size_kb)
 
   -- disable SRAM
-  genesis.ram_disable()
+  gen.ram_disable()
 
   -- close the file
   assert(file:close())
@@ -631,10 +631,10 @@ local function process(process_opts, console_opts)
 
   -- Initialize device i/o
   dict.io("IO_RESET")
-  dict.io("SEGA_INIT")
+  dict.io("GEN_INIT")
 
   -- Disable Bootrom
-  genesis.time_wr(R_BOOTROM, 0x00)
+  gen.time_wr(R_BOOTROM, 0x00)
 
   --[[
   888888 888888 .dP"Y8 888888
@@ -649,7 +649,7 @@ local function process(process_opts, console_opts)
 
     -- attempt to read ROM flash ID
     if options.force_flash_test or (do_rom_write and rom_size_kb ~= 0) then
-      rv, flash_chip = genesis.rom_get_chip()
+      rv, flash_chip = gen.rom_get_chip()
       if not rv then
         if do_rom_write then
           log.error("Couldn't identify flash chip")
@@ -661,9 +661,9 @@ local function process(process_opts, console_opts)
     end
 
     -- TEST
-    -- rv = genesis.time_rd(0xAA)
+    -- rv = gen.time_rd(0xAA)
     -- log.print(help.hex_0x2(rv))
-    -- genesis.dbg_rom_rd(0xA130AA)
+    -- gen.dbg_rom_rd(0xA130AA)
     -- test_wifi()
     -- test_bootrom()
 
@@ -687,8 +687,8 @@ local function process(process_opts, console_opts)
       if ram_size_kb == 0 then
         ram_size_kb = 32
       end
-      local is_header_valid = genesis.file_header.is_valid or genesis.cart_header.is_valid
-      local has_battery = genesis.file_header:has_battery() or genesis.cart_header:has_battery()
+      local is_header_valid = gen.file_header.is_valid or gen.cart_header.is_valid
+      local has_battery = gen.file_header:has_battery() or gen.cart_header:has_battery()
       if options.force_wram_test or is_header_valid then
         if not options.force_wram_test and has_battery then
           log.print()
@@ -708,13 +708,13 @@ local function process(process_opts, console_opts)
 
   -----------------------------------------------------
 
-  -- genesis.time_wr(0xF3, 0x01)
-  -- -- genesis.set_addr_hi(0x0a)
+  -- gen.time_wr(0xF3, 0x01)
+  -- -- gen.set_addr_hi(0x0a)
 
-  -- genesis.dbg_rom_rd(0x080000 + 0x0000)
-  -- genesis.dbg_rom_rd(0x080000 + 0x05BC)
-  -- genesis.dbg_rom_rd(0x080000 + 0x05BE)
-  -- genesis.dbg_rom_rd(0x080000 + 0x05C0)
+  -- gen.dbg_rom_rd(0x080000 + 0x0000)
+  -- gen.dbg_rom_rd(0x080000 + 0x05BC)
+  -- gen.dbg_rom_rd(0x080000 + 0x05BE)
+  -- gen.dbg_rom_rd(0x080000 + 0x05C0)
   -- dict.io("IO_RESET")
   -- do return end
 
@@ -732,13 +732,13 @@ local function process(process_opts, console_opts)
   -- rom_flash_byte(i, 0xFEED)
 
   -- i = 0
-  -- log.bullet(help.hex_0x4((genesis.rom_rd())))
+  -- log.bullet(help.hex_0x4((gen.rom_rd())))
   -- i = i + step
-  -- log.bullet(help.hex_0x4((genesis.rom_rd())))
+  -- log.bullet(help.hex_0x4((gen.rom_rd())))
   -- i = i + step
-  -- log.bullet(help.hex_0x4((genesis.rom_rd())))
+  -- log.bullet(help.hex_0x4((gen.rom_rd())))
   -- i = i + step
-  -- log.bullet(help.hex_0x4((genesis.rom_rd())))
+  -- log.bullet(help.hex_0x4((gen.rom_rd())))
 
   -- dict.io("IO_RESET")
   -- do return end
@@ -750,31 +750,31 @@ local function process(process_opts, console_opts)
 
   -- rom_erase_sector(base_addr)
 
-  -- genesis.dbg_rom_wr(0x000000, 0x00F0);
+  -- gen.dbg_rom_wr(0x000000, 0x00F0);
 
-  -- genesis.dbg_rom_wr(0x000555, 0x00AA);
-  -- genesis.dbg_rom_wr(0x0002AA, 0x0055);
-  -- genesis.dbg_rom_wr(base_addr, 0x0025);    -- the bank set before calling sets the sector
-  -- genesis.dbg_rom_wr(base_addr, count - 1); -- number of words to write minus one
+  -- gen.dbg_rom_wr(0x000555, 0x00AA);
+  -- gen.dbg_rom_wr(0x0002AA, 0x0055);
+  -- gen.dbg_rom_wr(base_addr, 0x0025);    -- the bank set before calling sets the sector
+  -- gen.dbg_rom_wr(base_addr, count - 1); -- number of words to write minus one
 
   -- for w = 0, count - 1 do
   --   local byte_addr = base_addr + w
   --   local value = (((w ~ 0xff) & 0xff) << 8) | (w & 0xff)
-  --   genesis.dbg_rom_wr(byte_addr, value)
+  --   gen.dbg_rom_wr(byte_addr, value)
   -- end
 
   -- -- write program buffer to flash (confirm)
-  -- genesis.dbg_rom_wr(base_addr, 0x29);
+  -- gen.dbg_rom_wr(base_addr, 0x29);
 
-  -- rv = genesis.rom_rd()se_addr)
+  -- rv = gen.rom_rd()se_addr)
 
-  -- while (rv ~= genesis.rom_rd()se_addr)) do
-  --   rv = genesis.rom_rd()se_addr)
+  -- while (rv ~= gen.rom_rd()se_addr)) do
+  --   rv = gen.rom_rd()se_addr)
   -- end
 
   -- for w = 0, count - 1 do
   --   local byte_addr = base_addr + w
-  --   genesis.dbg_rom_rd(byte_addr);
+  --   gen.dbg_rom_rd(byte_addr);
   -- end
 
   -- dict.io("IO_RESET")
@@ -787,8 +787,8 @@ local function process(process_opts, console_opts)
   --  rom_flash_byte(0x000000, 0xDEAD)
 
   -- Écris un mot distinct en banque 0.
-  -- Sélectionne banque 32 :genesis.time_wr(0xF3, 32 >> 2) -- 0x08
-  -- genesis.set_addr_hi(0x08 | (32 & 0x03))
+  -- Sélectionne banque 32 :gen.time_wr(0xF3, 32 >> 2) -- 0x08
+  -- gen.set_addr_hi(0x08 | (32 & 0x03))
 
   -- Lis la même adresse.
   -- Compare avec banque 0.
@@ -803,7 +803,7 @@ local function process(process_opts, console_opts)
   -- dump cart RAM to file
   if do_ram_dump then
     -- enable RAM
-    genesis.ram_enable()
+    gen.ram_enable()
 
     -- open file
     file = assert(io.open(ram_dump_file.filename, "wb"))
@@ -820,7 +820,7 @@ local function process(process_opts, console_opts)
     assert(file:close())
 
     -- disable SRAM
-    genesis.ram_disable()
+    gen.ram_disable()
   end
 
   --[[
@@ -857,7 +857,7 @@ local function process(process_opts, console_opts)
       -- open file
       file = assert(io.open(rom_dump_file.filename, "wb"))
 
-      genesis.time_wr(R_BOOTROM, 0x03)
+      gen.time_wr(R_BOOTROM, 0x03)
 
       -- dump cart to file
       log.section("Dumping ROM")
@@ -872,7 +872,7 @@ local function process(process_opts, console_opts)
       -- parse ROM dump file header
       log.point("Parsing dumped file header")
       file = assert(io.open(rom_dump_file.filename, "rb"))
-      if not genesis.parse_header_file(file) then
+      if not gen.parse_header_file(file) then
         log.warning("Failed to parse ROM dump file header")
       else
         log.success("ROM dump file header parsed successfully")
@@ -927,22 +927,22 @@ local function process(process_opts, console_opts)
         --]]
         log.warning("Erasing full flash chip can take up to 4 minutes...")
         -- disable SRAM
-        genesis.ram_disable()
+        gen.ram_disable()
 
-        genesis.rom_wr(0x000555 << 1, 0x00AA)
-        genesis.rom_wr(0x0002AA << 1, 0x0055)
-        genesis.rom_wr(0x000555 << 1, 0x0080)
-        genesis.rom_wr(0x000555 << 1, 0x00AA)
-        genesis.rom_wr(0x0002AA << 1, 0x0055)
-        genesis.rom_wr(0x000555 << 1, 0x0010)
+        gen.rom_wr(0x000555 << 1, 0x00AA)
+        gen.rom_wr(0x0002AA << 1, 0x0055)
+        gen.rom_wr(0x000555 << 1, 0x0080)
+        gen.rom_wr(0x000555 << 1, 0x00AA)
+        gen.rom_wr(0x0002AA << 1, 0x0055)
+        gen.rom_wr(0x000555 << 1, 0x0010)
 
         local nak = 1
-        temp = genesis.rom_rd(0x0000)
-        while (temp ~= genesis.rom_rd(0x0000)) do
-          temp = genesis.rom_rd(0x0000)
+        temp = gen.rom_rd(0x0000)
+        while (temp ~= gen.rom_rd(0x0000)) do
+          temp = gen.rom_rd(0x0000)
           nak = nak + 1
         end
-        temp = genesis.rom_rd(0x0000)
+        temp = gen.rom_rd(0x0000)
         log.success("Done erasing ROM", nak .. " naks")
       end
       time.report(size_to_erase)
@@ -999,7 +999,7 @@ local function process(process_opts, console_opts)
       -- parse ROM dump file header
       log.point("Parsing dumped file header")
       file = assert(io.open(verify_file.filename, "rb"))
-      if not genesis.parse_header_file(file) then
+      if not gen.parse_header_file(file) then
         log.warning("Failed to parse ROM dump file header")
       else
         log.success("ROM dump file header parsed successfully")
@@ -1017,7 +1017,7 @@ local function process(process_opts, console_opts)
   end
 
   -- for a = 0x2060, 0x2080, 2 do
-  --   log.bullet(help.hex_0x6(a), help.hex_0x4(genesis.rom_rd()))
+  --   log.bullet(help.hex_0x6(a), help.hex_0x4(gen.rom_rd()))
   -- end
 
   dict.io("IO_RESET")

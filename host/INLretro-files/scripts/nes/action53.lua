@@ -185,7 +185,7 @@ local function prg_rom_dump(file, rom_size_kb)
     dict.nes("NES_CPU_WR", 0x5000, 0x81)
     dict.nes("NES_CPU_WR", 0x8000, cur_bank)
 
-    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESCPU_PAGE" })
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
 
     cur_bank = cur_bank + 1
   end
@@ -228,7 +228,7 @@ local function prg_rom_flash(file, rom_size_kb)
     dict.nes("NES_CPU_WR", 0x5000, 0x00)
 
     -- flash data
-    flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "PRGROM", options = options })
+    flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "NES_PRG_ROM", options = options })
 
     cur_bank = cur_bank + 1
   end
@@ -375,7 +375,7 @@ local function chr_dump(file, rom_size_kb)
 
     dict.nes("NES_CPU_WR", 0x8000, cur_bank) -- 8KB @ PPU $0000
 
-    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESPPU_1KB" })
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_PPU_1KB" })
 
     cur_bank = cur_bank + 1
   end

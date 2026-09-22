@@ -63,9 +63,9 @@ uint8_t io_call(uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_t* rda
       gba_init();
       break;
 #endif
-#ifdef SEGA_CONN
-    case SEGA_INIT:
-      sega_init();
+#ifdef GEN_CONN
+    case GEN_INIT:
+      gen_init();
       break;
 #endif
 #ifdef N64_CONN
@@ -374,8 +374,8 @@ void gba_init()
 // set outputs as required
 // latch address of $00:0000
 // disable cart memories
-#ifdef SEGA_CONN
-void sega_init()
+#ifdef GEN_CONN
+void gen_init()
 {
   // start with a reset
   // expecting user to do this but just to be sure

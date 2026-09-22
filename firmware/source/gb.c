@@ -1,4 +1,4 @@
-#include "gameboy.h"
+#include "gb.h"
 
 // only need this file if connector is present on the device
 #ifdef GB_CONN
@@ -16,7 +16,7 @@
 static uint16_t cur_bank; // used by some flash algos, must be initialized prior to depending on it
 
 /* Desc: Dispatch a Game Boy dictionary opcode received over USB
- *       shared_dict_gameboy.h defines opcodes shared by host and firmware
+ *       shared_dict_gb.h defines opcodes shared by host and firmware
  * Pre:  I/O and mapper state satisfy the selected operation requirements
  *       rdata has room for the response length and one data byte
  * Post: GB_RD sets rdata[0] to 1 and rdata[1] to the byte read

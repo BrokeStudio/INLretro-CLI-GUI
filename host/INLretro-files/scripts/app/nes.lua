@@ -379,23 +379,23 @@ local function cpu_wr(addr, val, options)
   local opcode = options.opcode or "NES_CPU_WR"
 
   dict.nes(opcode, addr, val)
-  if DEBUG then log.point("CPU", " W", help.hex(addr, 4, "0x"), val, help.hex(val, 2, "0x"), comment) end
+  if DEBUG then log.point("CPU", " W", opcode, help.hex_0x4(addr), val, help.hex_0x2(val), comment) end
 end
 
 --- Read a byte from the NES CPU bus.
 -- @param addr integer CPU address
 -- @param options? table Read options
--- @param options.label? string Text appended to the debug log; defaults to an empty string
+-- @param options.comment? string Text appended to the debug log; defaults to an empty string
 -- @param options.opcode? string Dictionary opcode; defaults to NES_CPU_RD
 -- @return integer value Byte read from the CPU bus
 local function cpu_rd(addr, options)
   options = options or {}
-  local label = options.label or ""
+  local comment = options.comment or ""
   local opcode = options.opcode or "NES_CPU_RD"
   local rv
 
   rv = dict.nes(opcode, addr)
-  if DEBUG then log.point("CPU", "R ", help.hex(addr, 4, "0x"), rv, help.hex(rv, 2, "0x"), label) end
+  if DEBUG then log.point("CPU", "R ", opcode, help.hex_0x4(addr), rv, help.hex_0x2(rv), comment) end
   return rv
 end
 
@@ -411,22 +411,22 @@ local function ppu_wr(addr, val, options)
   local opcode = options.opcode or "NES_PPU_WR"
 
   dict.nes(opcode, addr, val)
-  if DEBUG then log.point("PPU", " W", help.hex(addr, 4, "0x"), val, help.hex(val, 2, "0x"), comment) end
+  if DEBUG then log.point("PPU", " W", opcode, help.hex_0x4(addr), val, help.hex_0x2(val), comment) end
 end
 
 --- Read a byte from the NES PPU bus.
 -- @param addr integer PPU address
 -- @param options? table Read options
--- @param options.label? string Text appended to the debug log; defaults to an empty string
+-- @param options.comment? string Text appended to the debug log; defaults to an empty string
 -- @param options.opcode? string Dictionary opcode; defaults to NES_PPU_RD
 -- @return integer value Byte read from the PPU bus
 local function ppu_rd(addr, options)
   options = options or {}
-  local label = options.label or ""
+  local comment = options.comment or ""
   local opcode = options.opcode or "NES_PPU_RD"
   local rv
   rv = dict.nes(opcode, addr)
-  if DEBUG then log.point("PPU", "R ", help.hex(addr, 4, "0x"), rv, help.hex(rv, 2, "0x"), label) end
+  if DEBUG then log.point("PPU", "R ", opcode, help.hex_0x4(addr), rv, help.hex_0x2(rv), comment) end
   return rv
 end
 

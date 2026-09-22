@@ -39,18 +39,18 @@ local function rom_manf_id()
 
   log.section("Reading ROM manufacturer/device ID")
 
-  dict.gameboy("GB_WR", 0x5555, 0xAA)
-  dict.gameboy("GB_WR", 0x2AAA, 0x55)
-  dict.gameboy("GB_WR", 0x5555, 0x90)
+  gb.rom_wr(0x5555, 0xAA)
+  gb.rom_wr(0x2AAA, 0x55)
+  gb.rom_wr(0x5555, 0x90)
 
-  manufacturer_id = dict.gameboy("GB_RD", 0x0000)
+  manufacturer_id = gb.rom_rd(0x0000)
   chips.display_manufacturer(manufacturer_id)
 
-  device_id = dict.gameboy("GB_RD", 0x0001)
+  device_id = gb.rom_rd(0x0001)
   found, device = chips.display_device(manufacturer_id, device_id)
 
   -- exit software
-  dict.gameboy("GB_WR", 0x0000, 0xF0)
+  gb.rom_wr(0x0000, 0xF0)
 
   return found, device
 end
@@ -61,20 +61,20 @@ local function rom_erase()
   local rv
 
   log.section("Erasing ROM")
-  dict.gameboy("GB_WR", 0x2000, 0x01)
-  dict.gameboy("GB_WR", 0x5555, 0xAA)
-  dict.gameboy("GB_WR", 0x2AAA, 0x55)
-  dict.gameboy("GB_WR", 0x5555, 0x80)
-  dict.gameboy("GB_WR", 0x5555, 0xAA)
-  dict.gameboy("GB_WR", 0x2AAA, 0x55)
-  dict.gameboy("GB_WR", 0x5555, 0x10)
+  gb.rom_wr(0x2000, 0x01)
+  gb.rom_wr(0x5555, 0xAA)
+  gb.rom_wr(0x2AAA, 0x55)
+  gb.rom_wr(0x5555, 0x80)
+  gb.rom_wr(0x5555, 0xAA)
+  gb.rom_wr(0x2AAA, 0x55)
+  gb.rom_wr(0x5555, 0x10)
 
   -- TODO create some function to pass the read value
   -- that's smart enough to figure out if the board is actually erasing or not
-  rv = dict.gameboy("GB_RD", 0x0000)
-  while rv ~= dict.gameboy("GB_RD", 0x0000) do
+  rv = gb.rom_rd(0x0000)
+  while rv ~= gb.rom_rd(0x0000) do
     spinner.update("Erasing")
-    rv = dict.gameboy("GB_RD", 0x0000)
+    rv = gb.rom_rd(0x0000)
     i = i + 1
   end
   spinner.clear()
@@ -121,9 +121,9 @@ local function rom_flash(file, rom_size_kb)
     spinner.update("Flashing", cur_bank, "/", num_banks - 1)
   end
 
-  dict.gameboy("GB_SET_CUR_BANK", cur_bank)
+  dict.gb("GB_SET_CUR_BANK", cur_bank)
 
-  flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "GBROM" })
+  flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "GB_ROM" })
 
   spinner.clear()
   log.success("Done programming ROM")
@@ -144,17 +144,17 @@ local function wr_rom_flash_byte(addr, value)
   end
 
   --send unlock command and write byte
-  dict.gameboy("GB_WR", 0x5555, 0xAA)
-  dict.gameboy("GB_WR", 0x2AAA, 0x55)
-  dict.gameboy("GB_WR", 0x5555, 0xA0)
-  dict.gameboy("GB_WR", addr, value)
+  gb.rom_wr(0x5555, 0xAA)
+  gb.rom_wr(0x2AAA, 0x55)
+  gb.rom_wr(0x5555, 0xA0)
+  gb.rom_wr(addr, value)
 
-  local rv = dict.gameboy("GB_RD", addr)
+  local rv = gb.rom_rd(addr)
 
   local i = 0
 
   while (rv ~= value) do
-    rv = dict.gameboy("GB_RD", addr)
+    rv = gb.rom_rd(addr)
     i = i + 1
   end
   if DEBUG then print(i, "naks, done writing byte.") end
@@ -220,7 +220,7 @@ local function ram_write(file, ram_size_kb)
     end
 
     -- flash data
-    flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "GBRAM" })
+    flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "GB_RAM" })
 
     cur_bank = cur_bank + 1
   end
@@ -239,18 +239,18 @@ local function ram_test()
   log.section("Detecting RAM")
 
   -- save potential battery backed data first
-  saved_value = dict.gameboy("GB_RD", 0xA000)
+  saved_value = gb.rom_rd(0xA000)
 
   -- try to write and read back
-  dict.gameboy("GB_WR", 0xA000, saved_value ~ 0xff)
-  read_value = dict.gameboy("GB_RD", 0xA000)
+  gb.rom_wr(0xA000, saved_value ~ 0xff)
+  read_value = gb.rom_rd(0xA000)
   if read_value ~= (saved_value ~ 0xff) then
     test = false
   end
 
   -- put back original value
-  dict.gameboy("GB_WR", 0xA000, saved_value)
-  read_value = dict.gameboy("GB_RD", 0xA000)
+  gb.rom_wr(0xA000, saved_value)
+  read_value = gb.rom_rd(0xA000)
   if read_value ~= (saved_value) then
     test = false
   end
@@ -290,7 +290,7 @@ local function ram_exercise(ram_size_kb, retroprog_id)
     -- write random data
     local addr = 0xA000
     while addr < 0xC000 do
-      dict.gameboy("GB_PAGE_WR_LFSR", addr)
+      dict.gb("GB_PAGE_WR_LFSR", addr)
       addr = addr + 256
     end
 

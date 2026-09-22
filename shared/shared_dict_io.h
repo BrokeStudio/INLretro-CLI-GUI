@@ -64,7 +64,7 @@
 
 #define GB_INIT 5
 #define GBA_INIT 6
-#define SEGA_INIT 7
+#define GEN_INIT 7
 #define N64_INIT 8
 
 //default is 3v by pulling up on GBP pin

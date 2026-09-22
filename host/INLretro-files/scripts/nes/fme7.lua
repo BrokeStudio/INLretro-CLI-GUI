@@ -246,7 +246,7 @@ local function prg_rom_dump(file, rom_size_kb)
     dict.nes("NES_CPU_WR", 0xA000, cur_bank * 2 + 1) -- 8KB @ CPU $A000
 
     -- have the device dump a bank worth of data
-    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESCPU_PAGE" })
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
 
     cur_bank = cur_bank + 1
   end
@@ -285,7 +285,7 @@ local function prg_rom_flash(file, rom_size_kb)
 
     --have the device write a bank worth of data
     --MMC3 functions work perfectly for FME7
-    flash.write_file(file, bank_size_kb, { mapper = "MMC3", mem_type = "PRGROM" })
+    flash.write_file(file, bank_size_kb, { mapper = "MMC3", mem_type = "NES_PRG_ROM" })
 
     cur_bank = cur_bank + 1
   end
@@ -364,7 +364,7 @@ local function chr_dump(file, rom_size_kb)
     dict.nes("NES_CPU_WR", 0xA000, cur_bank * 2 + 1) -- 1KB @ PPU $0800
 
     -- have the device dump a bank worth of data
-    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESPPU_1KB" })
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_PPU_1KB" })
 
     cur_bank = cur_bank + 1
   end
@@ -405,7 +405,7 @@ local function chr_rom_flash(file, rom_size_kb)
 
     --have the device write a bank worth of data
     --MMC3 functions work perfectly for FME7
-    flash.write_file(file, 4, { mapper = "MMC3", mem_type = "CHRROM" })
+    flash.write_file(file, 4, { mapper = "MMC3", mem_type = "NES_CHR_ROM" })
 
     cur_bank = cur_bank + 1
   end
@@ -450,7 +450,7 @@ local function prg_ram_dump(file, ram_size_kb)
     dict.nes("NES_CPU_WR", 0xA000, 0xC0 | cur_bank)
 
     -- have the device dump a bank worth of data
-    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESCPU_PAGE" })
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
 
     cur_bank = cur_bank + 1
   end
@@ -483,7 +483,7 @@ local function prg_ram_write(file, ram_size_kb)
     dict.nes("NES_CPU_WR", 0xA000, 0xC0 | cur_bank)
 
     --have the device write a bank worth of data
-    flash.write_file(file, bank_size_kb, { mapper = "NOVAR", mem_type = "PRGRAM" })
+    flash.write_file(file, bank_size_kb, { mapper = "NOVAR", mem_type = "NES_PRG_RAM" })
 
     cur_bank = cur_bank + 1
   end

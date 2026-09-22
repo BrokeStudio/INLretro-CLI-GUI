@@ -170,7 +170,7 @@ local function prg_rom_dump(file, rom_size_kb)
     --select desired bank(s) to dump
     dict.nes("NES_CPU_WR", 0xA000, cur_bank) -- 16KB @ CPU $8000
 
-    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESCPU_PAGE" })
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
 
     cur_bank = cur_bank + 1
   end
@@ -214,7 +214,7 @@ local function prg_rom_flash(file, rom_size_kb)
     dict.nes("NES_CPU_WR", 0x8000, 0x00)
 
     -- flash data
-    flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "PRGROM" })
+    flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "NES_PRG_ROM" })
 
     cur_bank = cur_bank + 1
   end
@@ -306,8 +306,8 @@ local function chr_dump(file, rom_size_kb)
     --   bits 7, 6, 1, & 0 CAN NOT BE SET!
     --   0x04 would designate that A10 is set -> $0400 (the second 1KB PT bank)
     --   0x20 would designate that A13 is set -> $2000 (first name table)
-    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESPPU_1KB_TOGGLE" })
-    -- dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESPPU_PAGE" })
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_PPU_1KB_TOGGLE" })
+    -- dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_PPU_PAGE" })
 
     cur_bank = cur_bank + 1
   end
@@ -343,7 +343,7 @@ local function chr_rom_flash(file, rom_size_kb)
     dict.nes("SET_CUR_BANK", cur_bank)
 
     -- flash data
-    flash.write_file(file, bank_size_kb, { mapper = "MMC4", mem_type = "CHRROM" })
+    flash.write_file(file, bank_size_kb, { mapper = "MMC4", mem_type = "NES_CHR_ROM" })
 
     cur_bank = cur_bank + 1
   end
@@ -379,7 +379,7 @@ local function prg_ram_dump(file, ram_size_kb)
       spinner.update("Dumping", cur_bank, "/", num_banks - 1)
     end
 
-    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESCPU_PAGE" })
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
 
     cur_bank = cur_bank + 1
   end
@@ -410,7 +410,7 @@ local function prg_ram_write(file, ram_size_kb)
     end
 
     --have the device write a bank worth of data
-    flash.write_file(file, bank_size_kb, { mapper = "NOVAR", mem_type = "PRGRAM" })
+    flash.write_file(file, bank_size_kb, { mapper = "NOVAR", mem_type = "NES_PRG_RAM" })
 
     cur_bank = cur_bank + 1
   end
@@ -701,7 +701,7 @@ local function process(process_opts, console_opts)
 
     file = assert(io.open(ram_write_file.filename, "rb"))
 
-    flash.write_file(file, wram_size_kb, { mapper = "NOVAR", mem_type = "PRGRAM" })
+    flash.write_file(file, wram_size_kb, { mapper = "NOVAR", mem_type = "NES_PRG_RAM" })
 
     -- close file
     assert(file:close())
@@ -1068,7 +1068,7 @@ local function process(process_opts, console_opts)
 
   --     file = assert(io.open(ramwritefile, "rb"))
 
-  --     flash.write_file(file, wram_size_kb, { mapper = "NOVAR", mem_type = "PRGRAM" })
+  --     flash.write_file(file, wram_size_kb, { mapper = "NOVAR", mem_type = "NES_PRG_RAM" })
 
   --     -- close file
   --     assert(file:close())

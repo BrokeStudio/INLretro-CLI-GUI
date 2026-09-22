@@ -1,19 +1,19 @@
 -- create the module's table
-local genesis_basic = {}
+local basic   = {}
 
 -- import required modules
-local dict          = require "scripts.app.dict"
-local genesis       = require "scripts.app.genesis"
-local dump          = require "scripts.app.dump"
-local flash         = require "scripts.app.flash"
-local time          = require "scripts.app.time"
-local log           = require "scripts.app.log"
-local spinner       = require "scripts.app.spinner"
-local files         = require "scripts.app.files"
-local help          = require "scripts.app.help"
+local dict    = require "scripts.app.dict"
+local gen     = require "scripts.app.gen"
+local dump    = require "scripts.app.dump"
+local flash   = require "scripts.app.flash"
+local time    = require "scripts.app.time"
+local log     = require "scripts.app.log"
+local spinner = require "scripts.app.spinner"
+local files   = require "scripts.app.files"
+local help    = require "scripts.app.help"
 
 -- file constants and global variables
-local mapname       = "BASIC"
+local mapname = "BASIC"
 
 local flash_chip
 
@@ -30,17 +30,17 @@ local flash_chip
 --- Erase one flash sector on the 32Mb Genesis cartridge.
 -- @param addr integer 24-bit sector address, 0x000000-0x3FFFFF
 local function rom_erase_sector(addr)
-  genesis.rom_wr(0x000555 << 1, 0x00AA)
-  genesis.rom_wr(0x0002AA << 1, 0x0055)
-  genesis.rom_wr(0x000555 << 1, 0x0080)
-  genesis.rom_wr(0x000555 << 1, 0x00AA)
-  genesis.rom_wr(0x0002AA << 1, 0x0055)
-  genesis.rom_wr(addr, 0x0030)
+  gen.rom_wr(0x000555 << 1, 0x00AA)
+  gen.rom_wr(0x0002AA << 1, 0x0055)
+  gen.rom_wr(0x000555 << 1, 0x0080)
+  gen.rom_wr(0x000555 << 1, 0x00AA)
+  gen.rom_wr(0x0002AA << 1, 0x0055)
+  gen.rom_wr(addr, 0x0030)
 
-  local temp = genesis.rom_rd(addr)
+  local temp = gen.rom_rd(addr)
   local nak = 1
-  while (temp ~= genesis.rom_rd(addr)) do
-    temp = genesis.rom_rd(addr)
+  while (temp ~= gen.rom_rd(addr)) do
+    temp = gen.rom_rd(addr)
     nak = nak + 1
   end
 end
@@ -71,17 +71,17 @@ local function rom_flash_byte(addr, value)
     log.info("write a byte", help.hex_0x6(addr), help.hex_0x4(value))
   end
 
-  genesis.rom_wr(0x000555 << 1, 0x00AA)
-  genesis.rom_wr(0x0002AA << 1, 0x0055)
-  genesis.rom_wr(0x000555 << 1, 0x00A0)
-  genesis.rom_wr(addr, value)
+  gen.rom_wr(0x000555 << 1, 0x00AA)
+  gen.rom_wr(0x0002AA << 1, 0x0055)
+  gen.rom_wr(0x000555 << 1, 0x00A0)
+  gen.rom_wr(addr, value)
 
-  local rv = genesis.rom_rd(addr_lo)
+  local rv = gen.rom_rd(addr_lo)
 
   local i = 0
 
   while (rv ~= value) do
-    rv = genesis.rom_rd(addr_lo)
+    rv = gen.rom_rd(addr_lo)
     -- if DEBUG then print("post write read:", help.hex(rv)) end
     i = i + 1
     if i > 30 then
@@ -111,7 +111,7 @@ local function rom_dump(file, rom_size_kb)
   log.info("ROM size", rom_size_kb .. "KB")
 
   -- disable SRAM
-  genesis.ram_disable()
+  gen.ram_disable()
 
   while cur_bank < num_banks do
     -- A "large" Genesis ROM is 24 banks, many are 8 and 16 - status every 4 is reasonable.
@@ -127,14 +127,14 @@ local function rom_dump(file, rom_size_kb)
 
     -- select the current bank
     if cur_bank <= 0x7F then
-      genesis.set_addr_hi(cur_bank << 1)
+      gen.set_addr_hi(cur_bank << 1)
     else
       log.error("SEGA bank cannot exceed 0x7F, it was: ", help.hex_0x2(cur_bank))
       return
     end
 
-    dump.dumptofile(file, kb_per_bank / 2, { addr_base = addr_base, mem_type = "GENESIS_ROM_PAGE0" })
-    dump.dumptofile(file, kb_per_bank / 2, { addr_base = addr_base, mem_type = "GENESIS_ROM_PAGE1" })
+    dump.dumptofile(file, kb_per_bank / 2, { addr_base = addr_base, mem_type = "GEN_ROM_PAGE0" })
+    dump.dumptofile(file, kb_per_bank / 2, { addr_base = addr_base, mem_type = "GEN_ROM_PAGE1" })
 
     cur_bank = cur_bank + 1
   end
@@ -160,7 +160,7 @@ local function rom_flash(file, rom_size_kb)
   end
 
   -- disable SRAM
-  genesis.ram_disable()
+  gen.ram_disable()
 
   while cur_bank < num_banks do
     if DEBUG then
@@ -171,13 +171,13 @@ local function rom_flash(file, rom_size_kb)
 
     -- select the current bank
     if cur_bank <= 0x7F then
-      genesis.set_addr_hi(cur_bank << 1)
+      gen.set_addr_hi(cur_bank << 1)
     else
       log.error("SEGA bank cannot exceed 0x7F, it was: ", help.hex_0x2(cur_bank))
       return
     end
 
-    flash.write_file(file, kb_per_bank, { mapper = mapname, mem_type = "GENESISROM", options = options })
+    flash.write_file(file, kb_per_bank, { mapper = mapname, mem_type = "GEN_ROM", options = options })
 
     cur_bank = cur_bank + 1
   end
@@ -212,7 +212,7 @@ local function ram_dump(file, addr_hi, ram_size_kb)
 
   -- select desired bank
   -- set address hi bits (A23-A16)
-  genesis.set_addr_hi(addr_hi)
+  gen.set_addr_hi(addr_hi)
 
   while cur_bank < num_banks do
     if DEBUG then
@@ -222,7 +222,7 @@ local function ram_dump(file, addr_hi, ram_size_kb)
     end
 
     -- currently don't have means of dumping RAM with A16 high
-    dump.dumptofile(file, ram_size_kb, { addr_base = addr_base, mem_type = "GENESIS_RAM_PAGE" }) -- A16 low
+    dump.dumptofile(file, ram_size_kb, { addr_base = addr_base, mem_type = "GEN_RAM_PAGE" }) -- A16 low
 
     cur_bank = cur_bank + 1
   end
@@ -243,7 +243,7 @@ local function ram_write(file, addr_hi, ram_size_kb)
   log.info("SRAM size", ram_size_kb .. "KB")
 
   -- enable RAM
-  genesis.ram_enable()
+  gen.ram_enable()
 
   while cur_bank < num_banks do
     if DEBUG then
@@ -252,15 +252,15 @@ local function ram_write(file, addr_hi, ram_size_kb)
       spinner.update("Writing", cur_bank, "/", num_banks - 1)
     end
 
-    genesis.set_addr_hi(addr_hi + cur_bank)
+    gen.set_addr_hi(addr_hi + cur_bank)
 
-    flash.write_file(file, ram_size_kb, { mapper = mapname, mem_type = "GENESISRAM" })
+    flash.write_file(file, ram_size_kb, { mapper = mapname, mem_type = "GEN_RAM" })
 
     cur_bank = cur_bank + 1
   end
 
   -- disable SRAM
-  genesis.ram_disable()
+  gen.ram_disable()
 
   spinner.clear()
   log.success("Done programming SRAM")
@@ -277,28 +277,28 @@ local function ram_test()
   log.section("Detecting SRAM")
 
   -- enable RAM
-  genesis.ram_enable()
+  gen.ram_enable()
 
   -- save potential battery backed data first
-  saved_value = genesis.ram_rd(0x200000)
+  saved_value = gen.ram_rd(0x200000)
   write_value = saved_value ~ 0xff
 
   -- try to write and read back
-  genesis.ram_wr(0x200000, write_value)
-  read_value = genesis.ram_rd(0x200000)
+  gen.ram_wr(0x200000, write_value)
+  read_value = gen.ram_rd(0x200000)
   if read_value ~= write_value then
     test = false
   end
 
   -- put back original value
-  genesis.ram_wr(0x200000, saved_value)
-  read_value = genesis.ram_rd(0x200000)
+  gen.ram_wr(0x200000, saved_value)
+  read_value = gen.ram_rd(0x200000)
   if read_value ~= (saved_value) then
     test = false
   end
 
   -- disable RAM
-  genesis.ram_disable()
+  gen.ram_disable()
 
   if test then
     log.success("SRAM detected")
@@ -325,17 +325,17 @@ local function ram_exercise(ram_size_kb, retroprog_id)
   dict.stuff("RESET_LFSR") -- sets it to 1
 
   -- enable SRAM
-  genesis.ram_enable()
+  gen.ram_enable()
 
   -- set SRAM address high bits
-  genesis.set_addr_hi(addr_hi)
+  gen.set_addr_hi(addr_hi)
 
   log.section("Exercising RAM")
   log.info("RAM size", ram_size_kb .. "KB")
 
   -- write random data to all banks
   log.point("Writing random data to RAM")
-  dict.sega("GEN_PAGE_RAM_WR_LFSR", 0x00, ram_size_kb)
+  dict.gen("GEN_PAGE_RAM_WR_LFSR", 0x00, ram_size_kb)
 
   --dump sram into file
   local filename = opts.write_path .. "./ignore/gen_sram_dump-" .. retroprog_id .. ".bin"
@@ -344,7 +344,7 @@ local function ram_exercise(ram_size_kb, retroprog_id)
   ram_dump(file, addr_hi, ram_size_kb)
 
   -- disable SRAM
-  genesis.ram_disable()
+  gen.ram_disable()
 
   -- close the file
   assert(file:close())
@@ -403,7 +403,7 @@ local function process(process_opts, console_opts)
 
   -- Initialize device i/o
   dict.io("IO_RESET")
-  dict.io("SEGA_INIT")
+  dict.io("GEN_INIT")
 
   --[[
   888888 888888 .dP"Y8 888888
@@ -418,7 +418,7 @@ local function process(process_opts, console_opts)
 
     -- attempt to read ROM flash ID
     if options.force_flash_test or (do_rom_write and rom_size_kb ~= 0) then
-      rv, flash_chip = genesis.rom_get_chip()
+      rv, flash_chip = gen.rom_get_chip()
       if not rv then
         if do_rom_write then
           log.error("Couldn't identify flash chip")
@@ -439,8 +439,8 @@ local function process(process_opts, console_opts)
       if ram_size_kb == 0 then
         ram_size_kb = 32
       end
-      local is_header_valid = genesis.file_header.is_valid or genesis.cart_header.is_valid
-      local has_battery = genesis.file_header:has_battery() or genesis.cart_header:has_battery()
+      local is_header_valid = gen.file_header.is_valid or gen.cart_header.is_valid
+      local has_battery = gen.file_header:has_battery() or gen.cart_header:has_battery()
       if options.force_wram_test or is_header_valid then
         if not options.force_wram_test and has_battery then
           log.print()
@@ -468,7 +468,7 @@ local function process(process_opts, console_opts)
   -- dump cart RAM to file
   if do_ram_dump then
     -- enable RAM
-    genesis.ram_enable()
+    gen.ram_enable()
 
     -- open file
     file = assert(io.open(ram_dump_file.filename, "wb"))
@@ -485,7 +485,7 @@ local function process(process_opts, console_opts)
     assert(file:close())
 
     -- disable SRAM
-    genesis.ram_disable()
+    gen.ram_disable()
   end
 
   --[[
@@ -535,7 +535,7 @@ local function process(process_opts, console_opts)
       -- parse ROM dump file header
       log.point("Parsing dumped file header")
       file = assert(io.open(rom_dump_file.filename, "rb"))
-      if not genesis.parse_header_file(file) then
+      if not gen.parse_header_file(file) then
         log.warning("Failed to parse ROM dump file header")
       else
         log.success("ROM dump file header parsed successfully")
@@ -584,19 +584,19 @@ local function process(process_opts, console_opts)
       else
         --]]
         -- disable SRAM
-        genesis.ram_disable()
+        gen.ram_disable()
 
-        genesis.rom_wr(0x000555 << 1, 0x00AA)
-        genesis.rom_wr(0x0002AA << 1, 0x0055)
-        genesis.rom_wr(0x000555 << 1, 0x0080)
-        genesis.rom_wr(0x000555 << 1, 0x00AA)
-        genesis.rom_wr(0x0002AA << 1, 0x0055)
-        genesis.rom_wr(0x000555 << 1, 0x0010)
+        gen.rom_wr(0x000555 << 1, 0x00AA)
+        gen.rom_wr(0x0002AA << 1, 0x0055)
+        gen.rom_wr(0x000555 << 1, 0x0080)
+        gen.rom_wr(0x000555 << 1, 0x00AA)
+        gen.rom_wr(0x0002AA << 1, 0x0055)
+        gen.rom_wr(0x000555 << 1, 0x0010)
 
-        rv = genesis.rom_rd(0x0000)
-        while (rv ~= genesis.rom_rd(0x0000)) do
+        rv = gen.rom_rd(0x0000)
+        while (rv ~= gen.rom_rd(0x0000)) do
           spinner.update("Erasing")
-          rv = genesis.rom_rd(0x0000)
+          rv = gen.rom_rd(0x0000)
           i = i + 1
         end
         spinner.clear()
@@ -656,7 +656,7 @@ local function process(process_opts, console_opts)
       -- parse ROM dump file header
       log.point("Parsing dumped file header")
       file = assert(io.open(verify_file.filename, "rb"))
-      if not genesis.parse_header_file(file) then
+      if not gen.parse_header_file(file) then
         log.warning("Failed to parse ROM dump file header")
       else
         log.success("ROM dump file header parsed successfully")
@@ -681,7 +681,7 @@ end
 -- call functions desired to run when script is called/imported
 
 -- functions other modules are able to call
-genesis_basic.process = process
+basic.process = process
 
 -- return the module's table
-return genesis_basic
+return basic

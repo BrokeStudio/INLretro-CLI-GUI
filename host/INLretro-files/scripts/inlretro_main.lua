@@ -1,13 +1,13 @@
 -- Main application flow for interacting with cartridges via USB device.
 -- Refactored version that doesn't require commenting/uncommenting to change functionality.
 
-local help    = require "scripts.app.help"
-local log     = require "scripts.app.log"
-local nes     = require "scripts.app.nes"
-local gb      = require "scripts.app.gb"
-local genesis = require "scripts.app.genesis"
-local snes    = require "scripts.app.snes"
-local n64     = require "scripts.app.n64"
+local help = require "scripts.app.help"
+local log  = require "scripts.app.log"
+local nes  = require "scripts.app.nes"
+local gb   = require "scripts.app.gb"
+local gen  = require "scripts.app.gen"
+local snes = require "scripts.app.snes"
+local n64  = require "scripts.app.n64"
 
 -- Just to avoid warnings in VS Code
 if opts == nil then opts = {} end
@@ -288,8 +288,8 @@ end
 
 --]]
 
--- Wrapper for managing original Genesis/Megadrive operations.
-local function genesis_exec(process_opts, console_opts)
+-- Wrapper for managing original Genesis / Mega Drive operations.
+local function gen_exec(process_opts, console_opts)
   local header
 
   -- if a rom write file is provided, parse its header
@@ -298,27 +298,27 @@ local function genesis_exec(process_opts, console_opts)
     log.section("Parsing ROM flash file header")
     log.bullet("Filename", process_opts.rom_write_file.filename)
     local gen_file = assert(io.open(process_opts.rom_write_file.filename, "rb"))
-    if not genesis.parse_header_file(gen_file) then
+    if not gen.parse_header_file(gen_file) then
       log.warning("Failed to parse ROM flash file header")
     else
       log.success("ROM flash file header parsed successfully")
     end
     assert(gen_file:close())
 
-    header = genesis.file_header
+    header = gen.file_header
   end
 
   -- if a rom dump file is provided, parse the cartridge ROM header
   if process_opts.rom_dump_file ~= "" then
     -- parse cartridge ROM header
     log.section("Parsing cartridge ROM header")
-    if not genesis.parse_header_cart() then
+    if not gen.parse_header_cart() then
       log.warning("Failed to parse cartridge ROM header")
     else
       log.success("Cartridge ROM header parsed successfully")
     end
 
-    header = genesis.cart_header
+    header = gen.cart_header
   end
 
   if header ~= nil and header.is_valid then
@@ -333,15 +333,15 @@ local function genesis_exec(process_opts, console_opts)
   end
 
   -- Defensively filter out any console options that aren't standard.
-  local genesis_console_opts = {
+  local gen_console_opts = {
     rom_size_kb  = console_opts.rom_size_kb,
     wram_size_kb = console_opts.wram_size_kb,
   }
 
   local mappers = {
-    basic   = require "scripts.genesis.basic",
-    ssf2    = require "scripts.genesis.ssf2",
-    rainbow = require "scripts.genesis.rainbow",
+    basic   = require "scripts.gen.basic",
+    ssf2    = require "scripts.gen.ssf2",
+    rainbow = require "scripts.gen.rainbow",
   }
 
   -- if no mapper provided, use default one (32mb)
@@ -354,7 +354,7 @@ local function genesis_exec(process_opts, console_opts)
     log.error("UNSUPPORTED MAPPER: ", console_opts.mapper)
   else
     -- Attempt requested operations with hardware!
-    m.process(process_opts, genesis_console_opts)
+    m.process(process_opts, gen_console_opts)
   end
 end
 
@@ -650,10 +650,10 @@ local function main()
     gba       = default_exec,
 
     -- SEGA MegaDrive / SEGA Genesis
-    genesis   = genesis_exec,
-    gen       = genesis_exec,
-    megadrive = genesis_exec,
-    md        = genesis_exec,
+    genesis   = gen_exec,
+    gen       = gen_exec,
+    megadrive = gen_exec,
+    md        = gen_exec,
 
     -- Nintendo 64
     n64       = n64_exec, --default_exec,
@@ -673,10 +673,10 @@ local function main()
   --   gba       = require "scripts.gba.basic",
 
   --   -- SEGA MegaDrive / SEGA Genesis
-  --   genesis   = require "scripts.app.genesis",
-  --   gen       = require "scripts.app.genesis",
-  --   megadrive = require "scripts.app.genesis",
-  --   md        = require "scripts.app.genesis",
+  --   genesis   = require "scripts.app.gen",
+  --   gen       = require "scripts.app.gen",
+  --   megadrive = require "scripts.app.gen",
+  --   md        = require "scripts.app.gen",
 
   --   -- Nintendo 64
   --   n64 = require "scripts.n64.basic",

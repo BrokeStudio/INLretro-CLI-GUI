@@ -1,5 +1,5 @@
-#ifndef _gameboy_h
-#define _gameboy_h
+#ifndef _gb_h
+#define _gb_h
 
 #include "pinport.h"
 #include "buffer.h"

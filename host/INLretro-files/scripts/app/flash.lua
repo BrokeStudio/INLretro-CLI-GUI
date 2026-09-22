@@ -200,8 +200,8 @@ local function flash_nes(file)
 --
 -- //set mem_type and part_num to designate how to get/write data
   print("setting map n part")
-  dict.buffer("SET_MEM_N_PART", (op_buffer["PRGROM"]<<8 | op_buffer["MASKROM"]), buff0 )
-  dict.buffer("SET_MEM_N_PART", (op_buffer["PRGROM"]<<8 | op_buffer["MASKROM"]), buff1 )
+  dict.buffer("SET_MEM_N_PART", (op_buffer["NES_PRG_ROM"]<<8 | op_buffer["MASKROM"]), buff0 )
+  dict.buffer("SET_MEM_N_PART", (op_buffer["NES_PRG_ROM"]<<8 | op_buffer["MASKROM"]), buff1 )
 -- //set multiple and add_mult only when flashing
 -- //TODO
 -- //set mapper, map_var, and function to designate read/write algo
@@ -304,8 +304,8 @@ local function flash_nes(file)
 --
 -- //set mem_type and part_num to designate how to get/write data
   print("setting map n part")
-  dict.buffer("SET_MEM_N_PART", (op_buffer["CHRROM"]<<8 | op_buffer["MASKROM"]), buff0 )
-  dict.buffer("SET_MEM_N_PART", (op_buffer["CHRROM"]<<8 | op_buffer["MASKROM"]), buff1 )
+  dict.buffer("SET_MEM_N_PART", (op_buffer["NES_CHR_ROM"]<<8 | op_buffer["MASKROM"]), buff0 )
+  dict.buffer("SET_MEM_N_PART", (op_buffer["NES_CHR_ROM"]<<8 | op_buffer["MASKROM"]), buff1 )
 -- //set multiple and add_mult only when flashing
 -- //TODO
 -- //set mapper, map_var, and function to designate read/write algo
@@ -427,8 +427,8 @@ local function flash_nes(file)
 --
 -- check(! reset_buffers( transfer ), "Unable to reset device buffers");
 -- check(! allocate_buffers( transfer, num_buffers, buff_size ), "Unable to allocate buffers");
--- check(! set_mem_n_part( transfer, buff0, CHRROM, SST_MANF_ID ), "Unable to set mem_type and part");
--- check(! set_mem_n_part( transfer, buff1, CHRROM, SST_MANF_ID ), "Unable to set mem_type and part");
+-- check(! set_mem_n_part( transfer, buff0, NES_CHR_ROM, SST_MANF_ID ), "Unable to set mem_type and part");
+-- check(! set_mem_n_part( transfer, buff1, NES_CHR_ROM, SST_MANF_ID ), "Unable to set mem_type and part");
 -- check(! set_map_n_mapvar( transfer, buff0, NROM, NILL ), "Unable to set mapper and map_var");
 -- check(! set_map_n_mapvar( transfer, buff1, NROM, NILL ), "Unable to set mapper and map_var");
 --
@@ -530,8 +530,8 @@ local function flash_snes(file)
 
   -- //set mem_type and part_num to designate how to get/write data
   print("setting map n part")
-  dict.buffer("SET_MEM_N_PART", (op_buffer["SNESROM"] << 8 | op_buffer["MASKROM"]), buff0)
-  dict.buffer("SET_MEM_N_PART", (op_buffer["SNESROM"] << 8 | op_buffer["MASKROM"]), buff1)
+  dict.buffer("SET_MEM_N_PART", (op_buffer["SNES_ROM"] << 8 | op_buffer["MASKROM"]), buff0)
+  dict.buffer("SET_MEM_N_PART", (op_buffer["SNES_ROM"] << 8 | op_buffer["MASKROM"]), buff1)
   -- //set multiple and add_mult only when flashing
   -- //TODO
   -- //set mapper, map_var, and function to designate read/write algo

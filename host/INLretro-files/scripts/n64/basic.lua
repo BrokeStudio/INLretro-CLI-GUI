@@ -230,8 +230,8 @@ local function process(process_opts, console_opts)
     --
     --    file = assert(io.open(ramwritefile, "rb"))
     --
-    --    --flash.write_file(file, ram_size, { mapper = "NOVAR", mem_type = "PRGRAM" })
-    --    --flash.write_file(file, ram_size, { mapper = "LOROM_3VOLT", mem_type = "SNESROM" })
+    --    --flash.write_file(file, ram_size, { mapper = "NOVAR", mem_type = "NES_PRG_RAM" })
+    --    --flash.write_file(file, ram_size, { mapper = "LOROM_3VOLT", mem_type = "SNES_ROM" })
     --    wr_ram(file, rambank, ram_size, snes_mapping, true)
     --
     --    -- close file

@@ -95,43 +95,42 @@
 // operLSB: part number
 #define SET_MEM_N_PART 0x30
 // operand MSB memtype
-#define PRGROM 0x10
-#define CHRROM 0x11
-#define PRGRAM 0x12
-#define SNESROM 0x13
-#define SNESRAM 0x14
-#define GENESISROM 0x15
-#define GENESISRAM 0x16
-#define GBROM 0x17
-#define GBRAM 0x18
-#define GBROM_FLASH 0x19
-#define CIC 0x1A
+#define NES_PRG_ROM 0x10
+#define NES_CHR_ROM 0x11
+#define NES_PRG_RAM 0x12
+#define SNES_ROM 0x13
+#define SNES_RAM 0x14
+#define GEN_ROM 0x15
+#define GEN_RAM 0x16
+#define GB_ROM 0x17
+#define GB_RAM 0x18
+#define CIC 0x19
 
 // Read specific sections of memory map
 //  4KB/1KB naming designates the granularity of the starting address
 //  Any amount can be read, but unexpected behavior will result when reading past memory map limits
 //  designate the address base with mapper since this read is mapper independent
-#define NESCPU_4KB 0x20 // mapper (bits 3-0) specifies A12-15 (4bits)
-#define NESPPU_1KB 0x21 // mapper (bits 5-2) specifies A10-13 (4bits)
+#define NES_CPU_4KB 0x20 // mapper (bits 3-0) specifies A12-15 (4bits)
+#define NES_PPU_1KB 0x21 // mapper (bits 5-2) specifies A10-13 (4bits)
 // DON'T WANT TO USE THESE ANY MORE, USE THE PAGE VERSIONS BELOW
 
 // since the types above only specify the granularity of the read, there is no reason
 // to limit it to 1-4KByte.  May as well give page granularity and use the whole mapper byte!
-#define NESCPU_PAGE 0x22       // mapper byte specifies A15-8
-#define NESPPU_PAGE 0x23       // mapper byte specifies A13-8  bits 6 & 7 can't be set
-#define SNESROM_PAGE 0x24      // mapper byte specifies A15-8 ROMSEL low
+#define NES_CPU_PAGE 0x22       // mapper byte specifies A15-8
+#define NES_PPU_PAGE 0x23       // mapper byte specifies A13-8  bits 6 & 7 can't be set
+#define SNES_ROM_PAGE 0x24      // mapper byte specifies A15-8 ROMSEL low
 #define SNESSYS_PAGE 0x25      // mapper byte specifies A15-8 ROMSEL high
 #define GB_PAGE 0x26      // mapper byte specifies A15-8
 #define GBA_ROM_PAGE 0x27      // address must have already been latched with gba dictionary
-#define GENESIS_ROM_PAGE0 0x28 // bank address A17-23 must have been latched already
+#define GEN_ROM_PAGE0 0x28 // bank address A17-23 must have been latched already
 // TODO come up with better way to handle genesis address complications
-#define GENESIS_ROM_PAGE1 0x29 // bank address A17-23 must have been latched already
+#define GEN_ROM_PAGE1 0x29 // bank address A17-23 must have been latched already
 #define N64_ROM_PAGE 0x30
 
-#define NESPPU_1KB_TOGGLE 0x31  // similar to PPU page read but /RD signal toggles with each read
-#define NESCPU_4KB_TOGGLE 0x32  // similar to CPU page read but M2 toggles with each read
-#define GENESIS_RAM_PAGE 0x33   // bank address A17-23 must have been latched already
-#define NESCPU_PAGE_TOGGLE 0x34 // mapper byte specifies A15-8 read but M2 toggles with each read
+#define NES_PPU_1KB_TOGGLE 0x31  // similar to PPU page read but /RD signal toggles with each read
+#define NES_CPU_4KB_TOGGLE 0x32  // similar to CPU page read but M2 toggles with each read
+#define GEN_RAM_PAGE 0x33   // bank address A17-23 must have been latched already
+#define NES_CPU_PAGE_TOGGLE 0x34 // mapper byte specifies A15-8 read but M2 toggles with each read
 
 // operand LSB
 #define USE_UNLOCK_BYPASS 0x01  // tells the flash routine that unlock bypass programming can be used if available

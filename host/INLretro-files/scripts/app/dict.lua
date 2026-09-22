@@ -342,26 +342,26 @@ local function snes(opcode, operand, misc, data)
   end
 end
 
--- external call for gameboy dictionary
-local function gameboy(opcode, operand, misc, data)
-  assert(op_gameboy[opcode], "\nERROR undefined opcode: " .. opcode .. " must be defined in shared_dict_gameboy.h")
+-- external call for game boy dictionary
+local function gb(opcode, operand, misc, data)
+  assert(op_gb[opcode], "\nERROR undefined opcode: " .. opcode .. " must be defined in shared_dict_gb.h")
 
   if not operand then
     operand = 0
   elseif type(operand) == "string" then
-    assert(op_gameboy[operand], "\nERROR undefined operand: " .. operand .. " must be defined in shared_dict_gameboy.h")
+    assert(op_gb[operand], "\nERROR undefined operand: " .. operand .. " must be defined in shared_dict_gb.h")
     --decode string operands into
-    operand = op_gameboy[operand]
+    operand = op_gb[operand]
   end
 
   if not misc then misc = 0 end
 
-  local wLength, ep = default_rlen_1_in(op_gameboy[opcode .. "rlen"])
+  local wLength, ep = default_rlen_1_in(op_gb[opcode .. "rlen"])
 
   local count
   count, data = usb_vend_xfr(
   -- ep,  dictionary    wValue[misc:opcode]     wIndex  wLength       data
-    ep, dict["DICT_GAMEBOY"], (misc << 8 | op_gameboy[opcode]), operand, wLength, data)
+    ep, dict["DICT_GB"], (misc << 8 | op_gb[opcode]), operand, wLength, data)
   --print(count)
   local error_code, data_len
   if ep == USB_IN then
@@ -387,7 +387,7 @@ local function gameboy(opcode, operand, misc, data)
 end
 
 
--- external call for gba dictionary
+-- external call for game boy advance dictionary
 local function gba(opcode, operand, misc, data)
   assert(op_gba[opcode], "\nERROR undefined opcode: " .. opcode .. " must be defined in shared_dict_gba.h")
 
@@ -432,26 +432,26 @@ local function gba(opcode, operand, misc, data)
 end
 
 
--- external call for sega dictionary
-local function sega(opcode, operand, misc, data)
-  assert(op_sega[opcode], "\nERROR undefined opcode: " .. opcode .. " must be defined in shared_dict_sega.h")
+-- external call for genesis / mega drive dictionary
+local function gen(opcode, operand, misc, data)
+  assert(op_gen[opcode], "\nERROR undefined opcode: " .. opcode .. " must be defined in shared_dict_gen.h")
 
   if not operand then
     operand = 0
   elseif type(operand) == "string" then
-    assert(op_sega[operand], "\nERROR undefined operand: " .. operand .. " must be defined in shared_dict_sega.h")
+    assert(op_gen[operand], "\nERROR undefined operand: " .. operand .. " must be defined in shared_dict_gen.h")
     --decode string operands into
-    operand = op_sega[operand]
+    operand = op_gen[operand]
   end
 
   if not misc then misc = 0 end
 
-  local wLength, ep = default_rlen_1_in(op_sega[opcode .. "rlen"])
+  local wLength, ep = default_rlen_1_in(op_gen[opcode .. "rlen"])
 
   local count
   count, data = usb_vend_xfr(
   -- ep,  dictionary    wValue[misc:opcode]     wIndex  wLength       data
-    ep, dict["DICT_SEGA"], (misc << 8 | op_sega[opcode]), operand, wLength, data)
+    ep, dict["DICT_GEN"], (misc << 8 | op_gen[opcode]), operand, wLength, data)
   --print(count)
   local error_code, data_len
   if ep == USB_IN then
@@ -961,9 +961,9 @@ op_io = {}
 op_operation = {}
 op_nes = {}
 op_snes = {}
-op_gameboy = {}
+op_gb = {}
 op_gba = {}
-op_sega = {}
+op_gen = {}
 op_n64 = {}
 op_swim = {}
 op_jtag = {}
@@ -991,9 +991,9 @@ create_dict_tables(op_io, shared_path .. "shared_dict_io.h")
 create_dict_tables(op_operation, shared_path .. "shared_dict_operation.h")
 create_dict_tables(op_nes, shared_path .. "shared_dict_nes.h")
 create_dict_tables(op_snes, shared_path .. "shared_dict_snes.h")
-create_dict_tables(op_gameboy, shared_path .. "shared_dict_gameboy.h")
+create_dict_tables(op_gb, shared_path .. "shared_dict_gb.h")
 create_dict_tables(op_gba, shared_path .. "shared_dict_gba.h")
-create_dict_tables(op_sega, shared_path .. "shared_dict_sega.h")
+create_dict_tables(op_gen, shared_path .. "shared_dict_gen.h")
 create_dict_tables(op_n64, shared_path .. "shared_dict_n64.h")
 create_dict_tables(op_swim, shared_path .. "shared_dict_swim.h")
 create_dict_tables(op_jtag, shared_path .. "shared_dict_jtag.h")
@@ -1008,9 +1008,9 @@ dict.pinport = pinport
 dict.io = io
 dict.nes = nes
 dict.snes = snes
-dict.gameboy = gameboy
+dict.gb = gb
 dict.gba = gba
-dict.sega = sega
+dict.gen = gen
 dict.n64 = n64
 dict.swim = swim
 dict.jtag = jtag

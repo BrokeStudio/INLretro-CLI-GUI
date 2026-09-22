@@ -1,12 +1,12 @@
-#ifndef _sega_h
-#define _sega_h
+#ifndef _gen_h
+#define _gen_h
 
 #include "pinport.h"
 #include "shared_dictionaries.h"
 #include "shared_errors.h"
 #include "stuff.h"
 
-uint8_t sega_call(uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_t* rdata);
+uint8_t gen_call(uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_t* rdata);
 
 void gen_refresh_addr(uint8_t force_set_time);
 uint8_t gen_get_addr_hi(void);

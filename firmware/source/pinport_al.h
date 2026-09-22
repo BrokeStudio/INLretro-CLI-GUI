@@ -23,7 +23,7 @@
 #if defined(STM_INL6)
   #define NES_CONN //includes famicom as definitions are effectively the same
   #define SNES_CONN
-  #define SEGA_CONN
+  #define GEN_CONN
   #define GB_CONN
   #define N64_CONN
 #endif
@@ -31,7 +31,7 @@
 #if defined(STM_INL6_PROTO)
   #define NES_CONN //includes famicom as definitions are effectively the same
   #define SNES_CONN
-  //	#define SEGA_CONN	//don't feel like fixing these definitions right now..
+  //	#define GEN_CONN	//don't feel like fixing these definitions right now..
   #define GB_CONN
   #define N64_CONN
 #endif

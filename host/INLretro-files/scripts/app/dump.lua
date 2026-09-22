@@ -209,10 +209,10 @@ local function dump_nes( file, debug )
 -- //set reload to 256 = 1 when translated to page_num (done in allocate buffers funct)
 -- //set page_num to non-zero if offset arg sent
 -- //set mem_type and part_num to designate how to get/write data
--- check(! set_mem_n_part( transfer, buff0, PRGROM, MASKROM ), "Unable to set mem_type and part");
+-- check(! set_mem_n_part( transfer, buff0, NES_PRG_ROM, MASKROM ), "Unable to set mem_type and part");
   print("setting map n part")
-  dict.buffer("SET_MEM_N_PART", (op_buffer["PRGROM"]<<8 | op_buffer["MASKROM"]), buff0 )
-  dict.buffer("SET_MEM_N_PART", (op_buffer["PRGROM"]<<8 | op_buffer["MASKROM"]), buff1 )
+  dict.buffer("SET_MEM_N_PART", (op_buffer["NES_PRG_ROM"]<<8 | op_buffer["MASKROM"]), buff0 )
+  dict.buffer("SET_MEM_N_PART", (op_buffer["NES_PRG_ROM"]<<8 | op_buffer["MASKROM"]), buff1 )
 -- //set multiple and add_mult only when flashing
 -- //set mapper, map_var, and function to designate read/write algo
 --
@@ -321,10 +321,10 @@ local function dump_nes( file, debug )
 -- //set reload to 256 = 1 when translated to page_num (done in allocate buffers funct)
 -- //set page_num to non-zero if offset arg sent
 -- //set mem_type and part_num to designate how to get/write data
--- check(! set_mem_n_part( transfer, buff0, PRGROM, MASKROM ), "Unable to set mem_type and part");
+-- check(! set_mem_n_part( transfer, buff0, NES_PRG_ROM, MASKROM ), "Unable to set mem_type and part");
   print("setting map n part")
-  dict.buffer("SET_MEM_N_PART", (op_buffer["CHRROM"]<<8 | op_buffer["MASKROM"]), buff0 )
-  dict.buffer("SET_MEM_N_PART", (op_buffer["CHRROM"]<<8 | op_buffer["MASKROM"]), buff1 )
+  dict.buffer("SET_MEM_N_PART", (op_buffer["NES_CHR_ROM"]<<8 | op_buffer["MASKROM"]), buff0 )
+  dict.buffer("SET_MEM_N_PART", (op_buffer["NES_CHR_ROM"]<<8 | op_buffer["MASKROM"]), buff1 )
 -- //set multiple and add_mult only when flashing
 -- //set mapper, map_var, and function to designate read/write algo
 --
@@ -419,8 +419,8 @@ local function dump_snes( file, mapping, debug )
   --set page_num to non-zero if offset arg sent
   --set mem_type and part_num to designate how to get/write data
   print("setting map n part")
-  dict.buffer("SET_MEM_N_PART", (op_buffer["SNESROM"]<<8 | op_buffer["MASKROM"]), buff0 )
-  dict.buffer("SET_MEM_N_PART", (op_buffer["SNESROM"]<<8 | op_buffer["MASKROM"]), buff1 )
+  dict.buffer("SET_MEM_N_PART", (op_buffer["SNES_ROM"]<<8 | op_buffer["MASKROM"]), buff0 )
+  dict.buffer("SET_MEM_N_PART", (op_buffer["SNES_ROM"]<<8 | op_buffer["MASKROM"]), buff1 )
 
   --set multiple and add_mult only when flashing
   --set mapper, map_var, and function to designate read/write algo

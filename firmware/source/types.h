@@ -20,7 +20,7 @@ typedef uint8_t (*write_rv_funcptr)(uint16_t addr, uint8_t data);
 typedef uint8_t (*read_funcptr)(uint16_t addr);
 typedef void (*write_snes_funcptr)(uint16_t addr, uint8_t data, uint8_t romsel);
 typedef uint8_t (*read_snes_funcptr)(uint16_t addr, uint8_t romsel);
-typedef void (*write_genesis_funcptr)(uint16_t addr, uint16_t data);
+typedef void (*write_gen_funcptr)(uint16_t addr, uint16_t data);
 
 //~16 bytes per buffer...
 typedef struct buffer
@@ -58,7 +58,7 @@ typedef struct buffer
                     //SNES add to MSB of page_num (max 16MByte)
 
   uint8_t mapper; //mapper number of board
-                  //some mem_types like NESCPU_4KB use this to specify address range
+                  //some mem_types like NES_CPU_4KB use this to specify address range
                   //because they're mapper independent
 
   //currently unused

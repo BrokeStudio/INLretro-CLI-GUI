@@ -1,5 +1,5 @@
-#ifndef _shared_dict_sega_h
-#define _shared_dict_sega_h
+#ifndef _shared_dict_gen_h
+#define _shared_dict_gen_h
 
 // define dictionary's reference number in the shared_dictionaries.h file
 // then include this dictionary file in shared_dictionaries.h
@@ -8,9 +8,9 @@
 
 //=============================================================================================
 //=============================================================================================
-// SEGA (genesis/megadrive) DICTIONARY
+// GENESIS / MEGA DRIVE DICTIONARY
 //
-// opcodes contained in this dictionary must be implemented in firmware/source/sega.c
+// opcodes contained in this dictionary must be implemented in firmware/source/gen.c
 //
 //=============================================================================================
 //=============================================================================================

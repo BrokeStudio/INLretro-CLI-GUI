@@ -246,7 +246,7 @@ local function prg_rom_dump(file, rom_size_kb)
     -- above didn't work, only saw the last 8KB repeated...
     -- dict.nes("NES_CPU_WR", 0x5114, (cur_bank | 0x80)) -- 8KB & CPU $8000 (bit7 must be set to see ROM)
 
-    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESCPU_PAGE" })
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
 
     cur_bank = cur_bank + 1
   end
@@ -322,7 +322,7 @@ local function prg_rom_flash(file, rom_size_kb)
     --]]
 
     -- flash data
-    flash.write_file(file, bank_size_kb, { mapper = "RNBW", mem_type = "PRGROM" })
+    flash.write_file(file, bank_size_kb, { mapper = "RNBW", mem_type = "NES_PRG_ROM" })
 
     cur_bank = cur_bank + 1
   end
@@ -471,7 +471,7 @@ local function chr_dump(file, rom_size_kb)
     -- dict.nes("NES_CPU_WR", 0x5121, cur_bank * 2)     -- CHR-ROM bank @ $0000-07FF (mode 2)
     -- dict.nes("NES_CPU_WR", 0x5123, cur_bank * 2 + 1) -- CHR-ROM bank @ $0800-0FFF (mode 2)
 
-    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESPPU_1KB_TOGGLE" })
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_PPU_1KB_TOGGLE" })
 
     cur_bank = cur_bank + 1
   end
@@ -535,7 +535,7 @@ local function chr_rom_flash(file, rom_size_kb)
     --]]
 
     -- flash data
-    flash.write_file(file, bank_size_kb, { mapper = "RNBW", mem_type = "CHRROM" })
+    flash.write_file(file, bank_size_kb, { mapper = "RNBW", mem_type = "NES_CHR_ROM" })
 
     cur_bank = cur_bank + 1
   end
@@ -575,7 +575,7 @@ local function prg_ram_dump(file, ram_size_kb)
     -- set bank
     dict.nes("NES_CPU_WR", 0x5113, cur_bank) -- PRG-RAM bank @ $6000-7FFF (regardless of PRG mode)
 
-    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESCPU_PAGE" })
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
 
     cur_bank = cur_bank + 1
   end
@@ -656,8 +656,8 @@ local function write_ram(file, ram_size_kb)
 
     -- flash data
     -- FAST!  13sec for 512KB = 39KBps
-    -- flash.write_file(file, bank_size_kb/1024, { mapper = mapname, mem_type = "PRGROM" })
-    -- flash.write_file(file, bank_size_kb/1024, { mapper = "NOVAR", mem_type = "PRGRAM" })
+    -- flash.write_file(file, bank_size_kb/1024, { mapper = mapname, mem_type = "NES_PRG_ROM" })
+    -- flash.write_file(file, bank_size_kb/1024, { mapper = "NOVAR", mem_type = "NES_PRG_RAM" })
 
     cur_bank = cur_bank + 1
   end
@@ -854,7 +854,7 @@ local function exram_dump_cpu(file)
     spinner.update("Dumping", 0, "/", 0)
   end
 
-  dump.dumptofile(file, 1, { addr_base = addr_base, mem_type = "NESCPU_PAGE" })
+  dump.dumptofile(file, 1, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
 
   spinner.clear()
 end
@@ -873,7 +873,7 @@ local function exram_dump_ppu(file, addr_base)
     spinner.update("Dumping", 0, "/", 0)
   end
 
-  dump.dumptofile(file, 1, { addr_base = addr_base, mem_type = "NESPPU_1KB_TOGGLE" })
+  dump.dumptofile(file, 1, { addr_base = addr_base, mem_type = "NES_PPU_1KB_TOGGLE" })
 
   spinner.clear()
 end
@@ -1336,8 +1336,8 @@ local function process(process_opts, console_opts)
     file = assert(io.open(ramwritefile, "rb"))
 
     write_ram(file, wram_size_kb)
-    -- flash.write_file(file, wram_size_kb, { mapper = "NOVAR", mem_type = "PRGRAM" })
-    -- flash.write_file(file, wram_size_kb, { mapper = "MMC5", mem_type = "PRGRAM" })
+    -- flash.write_file(file, wram_size_kb, { mapper = "NOVAR", mem_type = "NES_PRG_RAM" })
+    -- flash.write_file(file, wram_size_kb, { mapper = "MMC5", mem_type = "NES_PRG_RAM" })
 
     -- for save data safety disable PRG-RAM writes
     --  dict.nes("NES_CPU_WR", 0x5102, 0x01)  -- bits 1&0 must be '01' (ie 0x02) to allow writes to PRG-RAM

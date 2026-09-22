@@ -273,7 +273,7 @@ local function parse_header_cart()
   -- dict.snes("SNES_SET_BANK", 0) -- not required?
   dump.dumptocallback(
     function(data) byte_str = byte_str .. data end,
-    64, { mapper = "HIROM", mem_type = "SNESROM" }
+    64, { mapper = "HIROM", mem_type = "SNES_ROM" }
   )
 
   byte_str = string.sub(byte_str, 0xFFC0 + 1, 0xFFFF + 1)
@@ -294,7 +294,7 @@ local function parse_header_cart()
   -- dict.snes("SNES_SET_BANK", 0) -- not required?
   dump.dumptocallback(
     function(data) byte_str = byte_str .. data end,
-    32, { mapper = "LOROM", mem_type = "SNESROM" }
+    32, { mapper = "LOROM", mem_type = "SNES_ROM" }
   )
 
   -- reset device i/o
@@ -455,7 +455,7 @@ local function rom_wr(addr, val, options)
   local opcode = options.opcode or "SNES_ROM_WR"
 
   dict.snes(opcode, addr, val)
-  if DEBUG then log.point("ROM", " W", help.hex(addr, 4, "0x"), val, help.hex(val, 2, "0x"), comment) end
+  if DEBUG then log.point("ROM", " W", opcode, help.hex(addr, 4, "0x"), val, help.hex(val, 2, "0x"), comment) end
 end
 
 local function rom_rd(addr, options)
@@ -465,7 +465,7 @@ local function rom_rd(addr, options)
   local rv
 
   rv = dict.snes(opcode, addr)
-  if DEBUG then log.point("ROM", "R ", help.hex(addr, 4, "0x"), rv, help.hex(rv, 2, "0x"), label) end
+  if DEBUG then log.point("ROM", "R ", opcode, help.hex(addr, 4, "0x"), rv, help.hex(rv, 2, "0x"), label) end
   return rv
 end
 

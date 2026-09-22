@@ -812,7 +812,7 @@ uint8_t pinport_call(uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_t
 //opcode: type of operation
 //operand: value to place on bus
 //============================
-#ifdef SEGA_CONN
+#ifdef GEN_CONN
     case FFADDR_ENABLE_:
       FFADDR_ENABLE();
       break;

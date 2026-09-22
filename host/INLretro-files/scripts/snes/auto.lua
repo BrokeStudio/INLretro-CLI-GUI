@@ -182,7 +182,7 @@ local function rom_dump(file, rom_size_kb)
     --select desired bank
     dict.snes("SNES_SET_BANK", cur_bank) -- start_bank+cur_bank)
 
-    dump.dumptofile(file, kb_per_bank, { addr_base = addr_base, mem_type = "SNESROM_PAGE" })
+    dump.dumptofile(file, kb_per_bank, { addr_base = addr_base, mem_type = "SNES_ROM_PAGE" })
 
     cur_bank = cur_bank + 1
   end
@@ -230,7 +230,7 @@ local function rom_flash(file, rom_size_kb)
     --select desired bank
     dict.snes("SNES_SET_BANK", cur_bank)
 
-    flash.write_file(file, kb_per_bank, { mapper = mapname, mem_type = "SNESROM", options = options })
+    flash.write_file(file, kb_per_bank, { mapper = mapname, mem_type = "SNES_ROM", options = options })
 
     cur_bank = cur_bank + 1
   end
@@ -357,10 +357,11 @@ local function process(process_opts, console_opts)
       assert(file:close())
     end
 
+    -- TODO
     -- -- parse ROM dump file header
     -- log.point("Parsing dumped file header")
     -- file = assert(io.open(rom_dump_file.filename, "rb"))
-    -- if not genesis.parse_header_file(file) then
+    -- if not snes.parse_header_file(file) then
     --   log.warning("Failed to parse ROM dump file header")
     -- else
     --   log.success("ROM dump file header parsed successfully")

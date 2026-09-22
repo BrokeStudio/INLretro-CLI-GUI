@@ -95,7 +95,7 @@ local function prg_rom_dump(file, rom_size_kb)
       spinner.update("Dumping", cur_bank, "/", num_banks - 1)
     end
 
-    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESCPU_PAGE" })
+    dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
 
     cur_bank = cur_bank + 1
   end
@@ -122,7 +122,7 @@ local function prg_rom_flash(file, rom_size_kb)
     end
 
     -- flash data
-    flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "PRGROM" })
+    flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "NES_PRG_ROM" })
 
     cur_bank = cur_bank + 1
   end
@@ -191,7 +191,7 @@ local function chr_dump(file, rom_size_kb)
     spinner.update("Dumping", cur_bank, "/", num_banks - 1)
   end
 
-  dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NESPPU_PAGE" })
+  dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_PPU_PAGE" })
 
   spinner.clear()
 end
@@ -215,7 +215,7 @@ local function chr_rom_flash(file, rom_size_kb)
     end
 
     -- flash data
-    flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "CHRROM" })
+    flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "NES_CHR_ROM" })
 
     cur_bank = cur_bank + 1
   end

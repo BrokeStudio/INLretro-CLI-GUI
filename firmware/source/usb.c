@@ -129,7 +129,7 @@ uint8_t rlen = (uint8_t)spacket->wLength;
 #endif
 
 #ifdef GB_CONN
-      case DICT_GAMEBOY:
+      case DICT_GB:
         rv[RETURN_ERR_IDX] =
           gb_call(spacket->opcode, spacket->miscdata, spacket->operand, &rv[RETURN_LEN_IDX]);
         break;
@@ -140,10 +140,10 @@ uint8_t rlen = (uint8_t)spacket->wLength;
         break;
 #endif
 
-#ifdef SEGA_CONN
-      case DICT_SEGA:
+#ifdef GEN_CONN
+      case DICT_GEN:
         rv[RETURN_ERR_IDX] =
-          sega_call(spacket->opcode, spacket->miscdata, spacket->operand, &rv[RETURN_LEN_IDX]);
+          gen_call(spacket->opcode, spacket->miscdata, spacket->operand, &rv[RETURN_LEN_IDX]);
         break;
 #endif
 

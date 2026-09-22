@@ -135,7 +135,9 @@ local Header = {
   global_checksum = 0,
   file_global_checksum = 0,
 
-  -- return a value in KB
+  --- Return the ROM capacity encoded by the header.
+  -- @param self table Game Boy header
+  -- @return integer size_kb ROM capacity in KiB, or 0 for an unsupported size code
   get_rom_size = function(self)
     local rom_size = 0
 
@@ -168,7 +170,10 @@ local Header = {
     return rom_size
   end,
 
-  -- return a value in KB
+  --- Return the cartridge RAM capacity encoded by the header and cartridge type.
+  -- MBC2 RAM is reported as 1 KiB, and RNBW cartridge types add 8 KiB of FPGA RAM.
+  -- @param self table Game Boy header
+  -- @return integer size_kb RAM capacity in KiB, or 0 when the cartridge has no RAM or the size code is unsupported
   get_ram_size = function(self)
     local ram_size = 0
 
@@ -199,7 +204,9 @@ local Header = {
     return ram_size
   end,
 
-  -- return true or false
+  --- Check whether the cartridge type includes battery-backed storage.
+  -- @param self table Game Boy header
+  -- @return boolean has_battery True when the cartridge type is battery-backed
   has_battery = function(self)
     if
         self.cartridge_type == 0x03 or
@@ -219,19 +226,26 @@ local Header = {
     return false
   end,
 
-  -- return cartridge type name if found
+  --- Return the descriptive name of the cartridge type.
+  -- @param self table Game Boy header
+  -- @return string|nil type_name Cartridge type name, or nil when the type is unknown
   get_cartridge_type_name = function(self)
     return CARTRIDGE_TYPES[help.hex(self.cartridge_type, 2)]
   end,
 
-  -- return new licensee code if found
+  --- Return the publisher name associated with the new licensee code.
+  -- @param self table Game Boy header
+  -- @return string licensee_name Publisher name, or a string containing the unknown code
   get_new_licensee_code = function(self)
     local code = NEW_LICENSEE_CODES[self.new_licensee_code]
     if code == nil then code = "UNKNOWN NEW LICENSEE CODE ()" .. self.new_licensee_code .. ")" end
     return code
   end,
 
-  -- return true or false
+  --- Validate the Game Boy header checksum stored at 0x014D.
+  -- Uses the 25 bytes stored in `self.bytes` before the checksum byte.
+  -- @param self table Game Boy header containing bytes and header_checksum
+  -- @return boolean valid True when the calculated checksum matches header_checksum
   check_header_checksum = function(self)
     local checksum = 0
     for i = 1, 25, 1 do
@@ -245,7 +259,9 @@ local Header = {
     end
   end,
 
-  -- return true or false
+  --- Compare the stored global checksum with the checksum calculated from a ROM file.
+  -- @param self table Game Boy header containing global_checksum and file_global_checksum
+  -- @return boolean valid True when both checksum values match
   check_global_checksum = function(self)
     if self.global_checksum == self.file_global_checksum then
       return true
@@ -259,7 +275,12 @@ local Header = {
 local file_header = help.copy_table(Header)
 local cart_header = help.copy_table(Header)
 
--- parse header from data
+--- Parse Game Boy header bytes into a header table and validate its checksums.
+-- Updates all decoded header fields and `header.is_valid`. A global checksum mismatch
+-- is logged but does not make the header invalid; validity depends on the header checksum.
+-- @param byte_str string Header bytes from ROM offsets 0x0134 through 0x014F
+-- @param header table Destination header table containing the checksum methods and file_global_checksum
+-- @return boolean valid True when the header checksum is valid
 local function parse_header(byte_str, header)
   header.bytes = table.pack(string.unpack(string.rep('B', #byte_str), byte_str))
   header.title = string.sub(byte_str, 1, 11)
@@ -293,8 +314,11 @@ local function parse_header(byte_str, header)
   return header.is_valid
 end
 
--- pass a file pointer for a file which is already open
--- leave file open when done
+--- Read and validate a Game Boy header from an open ROM file.
+-- Calculates the global checksum over the file while excluding offsets 0x014E and
+-- 0x014F, updates `gb.file_header`, and leaves the file open at end of file.
+-- @param file file* Open, readable, and seekable ROM file
+-- @return boolean valid True when the header checksum is valid
 local function parse_header_file(file)
   local byte_str
   byte_str = file:read(0x134) -- skip entry point and nintendo logo
@@ -319,9 +343,10 @@ local function parse_header_file(file)
   return parse_header(byte_str, file_header)
 end
 
--- parse header from rom
--- we should be able to read the header whatever the mapper is
--- global checksum won't be computed though
+--- Read and validate the header from the connected Game Boy cartridge.
+-- Initializes and powers the cartridge interface, dumps the first ROM page, updates
+-- `gb.cart_header`, then resets the interface. The global checksum is not calculated.
+-- @return boolean valid True when the header checksum is valid
 local function parse_header_cart()
   -- initialize device i/o
   dict.io("IO_RESET")
@@ -349,23 +374,37 @@ end
 
 --]]
 
+--- Write a byte to the Game Boy cartridge ROM bus.
+-- When global debug logging is enabled, logs the opcode, address, value, and comment.
+-- @param addr integer ROM bus address
+-- @param val integer Byte to write
+-- @param options? table Write options
+-- @param options.comment? string Text appended to the debug log; defaults to an empty string
+-- @param options.opcode? string Game Boy dictionary opcode; defaults to GB_WR
 local function rom_wr(addr, val, options)
   options = options or {}
   local comment = options.comment or ""
   local opcode = options.opcode or "GB_WR"
 
-  dict.gameboy(opcode, addr, val)
-  if DEBUG then log.bullet(" W", help.hex_0x4(addr), val, help.hex_0x2(val), comment) end
+  dict.gb(opcode, addr, val)
+  if DEBUG then log.bullet("ROM", " W", opcode, help.hex_0x4(addr), val, help.hex_0x2(val), comment) end
 end
 
+--- Read a byte from the Game Boy cartridge ROM bus.
+-- When global debug logging is enabled, logs the opcode, address, value, and comment.
+-- @param addr integer ROM bus address
+-- @param options? table Read options
+-- @param options.comment? string Text appended to the debug log; defaults to an empty string
+-- @param options.opcode? string Game Boy dictionary opcode; defaults to GB_RD
+-- @return integer value Byte returned by the dictionary opcode
 local function rom_rd(addr, options)
   options = options or {}
-  local label = options.label or ""
+  local comment = options.comment or ""
   local opcode = options.opcode or "GB_RD"
   local rv
 
-  rv = dict.gameboy(opcode, addr)
-  if DEBUG then log.bullet("R ", help.hex_0x4(addr), rv, help.hex_0x2(rv), label) end
+  rv = dict.gb(opcode, addr)
+  if DEBUG then log.bullet("ROM", "R ", opcode, help.hex_0x4(addr), rv, help.hex_0x2(rv), comment) end
   return rv
 end
 

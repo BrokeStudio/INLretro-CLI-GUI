@@ -1,12 +1,12 @@
 -- create the module's table
-local genesis = {}
+local gen   = {}
 
 -- import required modules
-local chips   = require "scripts.app.chips"
-local dict    = require "scripts.app.dict"
-local dump    = require "scripts.app.dump"
-local help    = require "scripts.app.help"
-local log     = require "scripts.app.log"
+local chips = require "scripts.app.chips"
+local dict  = require "scripts.app.dict"
+local dump  = require "scripts.app.dump"
+local help  = require "scripts.app.help"
+local log   = require "scripts.app.log"
 
 -- local functions
 
@@ -130,7 +130,7 @@ local cart_header = help.copy_table(Header)
 
 --- Parse a 256-byte Genesis ROM header into a header table.
 -- @param byte_str string Raw 256-byte header data, starting at ROM offset 0x100
--- @param header table Header table to populate, usually genesis.file_header or genesis.cart_header
+-- @param header table Header table to populate, usually gen.file_header or gen.cart_header
 -- @return boolean is_valid True when the parsed system type starts with "SEGA"
 local function parse_header(byte_str, header)
   header.bytes = table.pack(string.unpack(string.rep('B', #byte_str), byte_str))
@@ -209,13 +209,13 @@ end
 local function parse_header_cart()
   -- initialize device i/o
   dict.io("IO_RESET")
-  dict.io("SEGA_INIT")
+  dict.io("GEN_INIT")
 
   -- dump data
   local byte_str = ""
   dump.dumptocallback(
     function(data) byte_str = byte_str .. data end,
-    1, { mapper = 0x0000, mem_type = "GENESIS_ROM_PAGE0" }) -- 64
+    1, { mapper = 0x0000, mem_type = "GEN_ROM_PAGE0" }) -- 64
 
   -- reset device i/o
   dict.io("IO_RESET")
@@ -249,7 +249,7 @@ local function time_wr(addr, val, options)
     addr = addr & 0xff
   end
 
-  dict.sega(opcode, addr, val)
+  dict.gen(opcode, addr, val)
   if DEBUG then log.point("TIME", " W", opcode, help.hex_0x6(0xA13000 | addr), val, help.hex_0x4(val), comment) end
 end
 
@@ -268,7 +268,7 @@ local function time_rd(addr, options)
     addr = addr & 0xff
   end
 
-  rv = dict.sega(opcode, addr)
+  rv = dict.gen(opcode, addr)
   if DEBUG then log.point("TIME", "R", opcode, help.hex_0x6(0xA13000 | addr), rv, help.hex_0x4(rv), comment) end
   return rv
 end
@@ -278,23 +278,23 @@ end
 local function set_addr(addr)
   local addr_hi = (addr >> 16) & 0xFF
   local addr_lo = addr & 0xFFFF
-  dict.sega("GEN_SET_ADDR", addr_lo, addr_hi)
+  dict.gen("GEN_SET_ADDR", addr_lo, addr_hi)
 
   -- or could do:
-  -- dict.sega("GEN_SET_ADDR_HI", addr_hi)
-  -- dict.sega("GEN_SET_ADDR_LO", addr_lo)
+  -- dict.gen("GEN_SET_ADDR_HI", addr_hi)
+  -- dict.gen("GEN_SET_ADDR_LO", addr_lo)
 end
 
 --- Set the high address latch used by subsequent Genesis bus accesses.
 -- @param addr_hi integer High address byte, 0x00-0xFF
 local function set_addr_hi(addr_hi)
-  dict.sega("GEN_SET_ADDR_HI", addr_hi)
+  dict.gen("GEN_SET_ADDR_HI", addr_hi)
 end
 
 --- Set the low address latch used by subsequent Genesis bus accesses.
 -- @param addr_lo integer Low address word, 0x0000-0xFFFF
 local function set_addr_lo(addr_lo)
-  dict.sega("GEN_SET_ADDR_LO", addr_lo)
+  dict.gen("GEN_SET_ADDR_LO", addr_lo)
 end
 
 --- Read a 16-bit word from the Genesis ROM bus.
@@ -308,7 +308,7 @@ local function rom_rd(addr, options)
   local rv
 
   set_addr(addr)
-  rv = dict.sega(opcode)
+  rv = dict.gen(opcode)
   if DEBUG then log.point("ROM ", "R", opcode, help.hex_0x6(addr), rv, help.hex_0x4(rv), comment) end
   return rv
 end
@@ -323,7 +323,7 @@ local function rom_wr(addr, val, options)
   local opcode = options.opcode or "GEN_ROM_WR"
 
   set_addr(addr)
-  dict.sega(opcode, val)
+  dict.gen(opcode, val)
   if DEBUG then log.point("ROM ", " W", opcode, help.hex_0x6(addr), val, help.hex_0x4(val), comment) end
 end
 
@@ -339,7 +339,7 @@ local function ram_rd(addr, options)
 
   local addr_lo = addr & 0xFFFF
   set_addr(addr)
-  rv = dict.sega(opcode, addr_lo)
+  rv = dict.gen(opcode, addr_lo)
   if DEBUG then log.point("RAM ", "R", opcode, help.hex_0x6(addr), rv, help.hex_0x2(rv), comment) end
   return rv
 end
@@ -355,7 +355,7 @@ local function ram_wr(addr, val, options)
 
   local addr_lo = addr & 0xFFFF
   set_addr(addr)
-  dict.sega(opcode, addr_lo, val) -- addr?
+  dict.gen(opcode, addr_lo, val) -- addr?
   if DEBUG then log.point("RAM ", " W", opcode, help.hex_0x6(addr), val, help.hex_0x2(val), comment) end
 end
 
@@ -426,31 +426,31 @@ end
 --]]
 
 -- vars
-genesis.file_header       = file_header
-genesis.cart_header       = cart_header
+gen.file_header       = file_header
+gen.cart_header       = cart_header
 
 -- functions
-genesis.parse_header      = parse_header
-genesis.parse_header_file = parse_header_file
-genesis.parse_header_cart = parse_header_cart
+gen.parse_header      = parse_header
+gen.parse_header_file = parse_header_file
+gen.parse_header_cart = parse_header_cart
 
 -- helpers
-genesis.time_rd           = time_rd
-genesis.time_wr           = time_wr
+gen.time_rd           = time_rd
+gen.time_wr           = time_wr
 
-genesis.set_addr          = set_addr
-genesis.set_addr_hi       = set_addr_hi
-genesis.set_addr_lo       = set_addr_lo
+gen.set_addr          = set_addr
+gen.set_addr_hi       = set_addr_hi
+gen.set_addr_lo       = set_addr_lo
 
-genesis.rom_get_chip      = rom_get_chip
+gen.rom_get_chip      = rom_get_chip
 
-genesis.rom_rd            = rom_rd
-genesis.rom_wr            = rom_wr
+gen.rom_rd            = rom_rd
+gen.rom_wr            = rom_wr
 
-genesis.ram_rd            = ram_rd
-genesis.ram_wr            = ram_wr
-genesis.ram_enable        = ram_enable
-genesis.ram_disable       = ram_disable
+gen.ram_rd            = ram_rd
+gen.ram_wr            = ram_wr
+gen.ram_enable        = ram_enable
+gen.ram_disable       = ram_disable
 
 -- return the module's table
-return genesis
+return gen

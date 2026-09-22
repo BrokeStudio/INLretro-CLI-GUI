@@ -1,5 +1,5 @@
-#ifndef _shared_dict_gameboy_h
-#define _shared_dict_gameboy_h
+#ifndef _shared_dict_gb_h
+#define _shared_dict_gb_h
 
 // define dictionary's reference number in the shared_dictionaries.h file
 // then include this dictionary file in shared_dictionaries.h
@@ -8,9 +8,9 @@
 
 //=============================================================================================
 //=============================================================================================
-// GAMEBOY DICTIONARY
+// GAME BOY DICTIONARY
 //
-// opcodes contained in this dictionary must be implemented in firmware/source/gameboy.c
+// opcodes contained in this dictionary must be implemented in firmware/source/gb.c
 //
 //=============================================================================================
 //=============================================================================================

@@ -13,7 +13,7 @@ uint8_t dump_buff(buffer* buff)
 
   switch(buff->mem_type) {
 #ifdef NES_CONN
-    case NESCPU_4KB:
+    case NES_CPU_4KB:
       // mapper lower nibble specifies NES CPU A12-15
       if(buff->mapper > 0x0F) {
         // mapper can only be 4bits (0-15)
@@ -28,7 +28,7 @@ uint8_t dump_buff(buffer* buff)
         ~FALSE);
       break;
 
-    case NESCPU_4KB_TOGGLE:
+    case NES_CPU_4KB_TOGGLE:
       // mapper lower nibble specifies NES CPU A12-15
       if(buff->mapper > 0x0F) {
         // mapper can only be 4bits (0-15)
@@ -43,7 +43,7 @@ uint8_t dump_buff(buffer* buff)
         ~FALSE);
       break;
 
-    case NESCPU_PAGE:
+    case NES_CPU_PAGE:
       // mapper byte specifies CPU A15-8
       addrH |= buff->mapper;
       buff->cur_byte = nes_cpu_page_rd_poll(buff->data,
@@ -54,7 +54,7 @@ uint8_t dump_buff(buffer* buff)
         ~FALSE);
       break;
 
-    case NESCPU_PAGE_TOGGLE:
+    case NES_CPU_PAGE_TOGGLE:
       // mapper byte specifies CPU A15-8
       addrH |= buff->mapper;
       buff->cur_byte = nes_cpu_page_rd_toggle(buff->data,
@@ -65,7 +65,7 @@ uint8_t dump_buff(buffer* buff)
         ~FALSE);
       break;
 
-    case NESPPU_1KB:
+    case NES_PPU_1KB:
       // mapper bits 2-5 specifies NES PPU A10-13
       if(buff->mapper & 0xC3) { // make sure bits 7, 6, 1, & 0 aren't set
         // mapper can only have bits 2-5 set
@@ -75,7 +75,7 @@ uint8_t dump_buff(buffer* buff)
       buff->cur_byte = nes_ppu_page_rd_poll(buff->data, addrH, buff->id, buff->last_idx, ~FALSE);
       break;
 
-    case NESPPU_1KB_TOGGLE:
+    case NES_PPU_1KB_TOGGLE:
       // mapper bits 2-5 specifies NES PPU A10-13
       if(buff->mapper & 0xC3) { // make sure bits 7, 6, 1, & 0 aren't set
         // mapper can only have bits 2-5 set
@@ -85,7 +85,7 @@ uint8_t dump_buff(buffer* buff)
       buff->cur_byte = nes_ppu_page_rd_toggle(buff->data, addrH, buff->id, buff->last_idx, ~FALSE);
       break;
 
-    case NESPPU_PAGE:
+    case NES_PPU_PAGE:
       // mapper byte specifies PPU A13-8
       if(buff->mapper & 0xC0) { // make sure bits 7, 6 aren't set
         // mapper can only have bits 5-0 set
@@ -104,7 +104,7 @@ uint8_t dump_buff(buffer* buff)
       break;
   #endif
 
-      // case PRGROM:
+      // case NES_PRG_ROM:
       //   addrH |= 0x80; //$8000
       //   if (buff->mapper == MAP30)
       //   {
@@ -149,7 +149,7 @@ uint8_t dump_buff(buffer* buff)
       //*/
       //break;
 
-    case CHRROM: //$0000
+    case NES_CHR_ROM: //$0000
 
       if(buff->mapper == DPROM) {
         // select bank
@@ -166,7 +166,7 @@ uint8_t dump_buff(buffer* buff)
       }
       break;
 
-    case PRGRAM:
+    case NES_PRG_RAM:
       addrH |= 0x60; //$6000
       buff->cur_byte = nes_cpu_page_rd_poll(buff->data, addrH, buff->id, buff->last_idx, ~FALSE);
       break;
@@ -174,7 +174,7 @@ uint8_t dump_buff(buffer* buff)
 #endif
 
 #ifdef SNES_CONN
-    case SNESROM_PAGE: // ROMSEL is always taken low
+    case SNES_ROM_PAGE: // ROMSEL is always taken low
 
       if(buff->mapper == LOROM) {
         addrH = 0x80 | buff->page_num;
@@ -204,7 +204,7 @@ uint8_t dump_buff(buffer* buff)
       //     ~FALSE);
       //   break;
 
-      // case SNESROM:
+      // case SNES_ROM:
       //   if(buff->mapper == LOROM) {
       //     addrH |= 0x80; //$8000 LOROM space
       //     // need to split page_num
@@ -240,8 +240,7 @@ uint8_t dump_buff(buffer* buff)
         addrH,
         buff->id,
         // id contains MSb of page when <256B buffer
-        buff->last_idx,
-        1);
+        buff->last_idx);
       break;
     case GBA_ROM_PAGE:
       // address must have already been latched
@@ -252,8 +251,8 @@ uint8_t dump_buff(buffer* buff)
       break;
 #endif
 
-#ifdef SEGA_CONN
-    case GENESIS_ROM_PAGE0: // A16=0 first half of A1-A16 BANK
+#ifdef GEN_CONN
+    case GEN_ROM_PAGE0: // A16=0 first half of A1-A16 BANK
       // mapper byte specifies Genesis CPU A15-8
       addrH |= (buff->mapper); // no shift needed
       buff->cur_byte = gen_rom_page_rd(buff->data,
@@ -262,7 +261,7 @@ uint8_t dump_buff(buffer* buff)
         // id contains MSb of page when <256B buffer
         buff->last_idx);
       break;
-    case GENESIS_ROM_PAGE1: // A16=1 second half of A1-A16 BANK
+    case GEN_ROM_PAGE1: // A16=1 second half of A1-A16 BANK
       // mapper byte specifies Genesis CPU A15-8
       addrH |= (buff->mapper); // no shift needed
       buff->cur_byte = gen_rom_page_rd(buff->data,
@@ -271,7 +270,7 @@ uint8_t dump_buff(buffer* buff)
         // id contains MSb of page when <256B buffer
         buff->last_idx);
       break;
-    case GENESIS_RAM_PAGE: // Only read data from lower Byte D0-7
+    case GEN_RAM_PAGE: // Only read data from lower Byte D0-7
       // mapper byte specifies Genesis CPU A15-8
       addrH |= (buff->mapper); // no shift needed
       buff->cur_byte = gen_ram_page_rd(buff->data,
