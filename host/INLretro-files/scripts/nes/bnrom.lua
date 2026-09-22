@@ -1,21 +1,24 @@
 -- create the module's table
-local bnrom   = {}
+local bnrom    = {}
 
 -- import required modules
-local dict    = require "scripts.app.dict"
-local nes     = require "scripts.app.nes"
-local dump    = require "scripts.app.dump"
-local flash   = require "scripts.app.flash"
-local time    = require "scripts.app.time"
-local log     = require "scripts.app.log"
-local spinner = require "scripts.app.spinner"
-local files   = require "scripts.app.files"
-local help    = require "scripts.app.help"
+local dict     = require "scripts.app.dict"
+local nes      = require "scripts.app.nes"
+local dump     = require "scripts.app.dump"
+local flash    = require "scripts.app.flash"
+local time     = require "scripts.app.time"
+local log      = require "scripts.app.log"
+local spinner  = require "scripts.app.spinner"
+local files    = require "scripts.app.files"
+local help     = require "scripts.app.help"
 
 -- file constants and global variables
-local mapname = "BxROM"
+local mapname  = "BxROM"
 local prg_flash_chip
 local bank_table_base
+
+-- registers
+local PRG_BANK = 0x8000
 
 -- local functions
 
@@ -157,7 +160,7 @@ local function prg_rom_dump_no_bank_table(file, rom_size_kb)
     end
 
     -- set bank
-    nes.cpu_wr(0x8000 + search_pos, cur_bank)
+    nes.cpu_wr(PRG_BANK + search_pos, cur_bank)
 
     -- dump bank
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
@@ -273,7 +276,7 @@ local function prg_rom_flash(file, rom_size_kb)
   log.section("Programming PRG-ROM")
   log.info("PRG-ROM size", rom_size_kb .. "KB")
 
-  local bank_size_kb = 32 --BNROM 32KByte per PRG bank
+  local bank_size_kb = 32 -- BNROM 32KByte per PRG bank
   local cur_bank = 0
   local num_banks = math.floor(rom_size_kb / bank_size_kb)
 
@@ -307,7 +310,7 @@ local function write_bank_table(addr_base, entries)
   log.section("Writing bank table to PRG-ROM")
   log.info("Bank table address:", help.hex_0x4(addr_base))
 
-  local cur_bank = entries - 1 --16 minus 1 is 15 = 0x0F
+  local cur_bank = entries - 1 -- 16 minus 1 is 15 = 0x0F
 
   while cur_bank >= 0 do
     if DEBUG then
@@ -316,11 +319,11 @@ local function write_bank_table(addr_base, entries)
       spinner.update("Flashing", cur_bank, "/", entries - 1)
     end
 
-    --select bank to write to (last bank first)
-    --use the bank table to make the switch
+    -- select bank to write to (last bank first)
+    -- use the bank table to make the switch
     nes.cpu_wr(addr_base + cur_bank, cur_bank)
 
-    --write bank table to selected bank
+    -- write bank table to selected bank
     for byte = entries - 1, 0, -1 do
       if DEBUG then
         log.point("writing byte", byte, "of", entries - 1)

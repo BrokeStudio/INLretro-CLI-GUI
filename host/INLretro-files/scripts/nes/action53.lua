@@ -1,20 +1,28 @@
 -- create the module's table
-local action53 = {}
+local action53        = {}
 
 -- import required modules
-local dict     = require "scripts.app.dict"
-local nes      = require "scripts.app.nes"
-local dump     = require "scripts.app.dump"
-local flash    = require "scripts.app.flash"
-local time     = require "scripts.app.time"
-local log      = require "scripts.app.log"
-local spinner  = require "scripts.app.spinner"
-local files    = require "scripts.app.files"
-local help     = require "scripts.app.help"
+local dict            = require "scripts.app.dict"
+local nes             = require "scripts.app.nes"
+local dump            = require "scripts.app.dump"
+local flash           = require "scripts.app.flash"
+local time            = require "scripts.app.time"
+local log             = require "scripts.app.log"
+local spinner         = require "scripts.app.spinner"
+local files           = require "scripts.app.files"
+local help            = require "scripts.app.help"
 
 -- file constants and global variables
-local mapname  = "A53"
+local mapname         = "A53"
 local prg_flash_chip
+
+-- registers
+local REGISTER_SELECT = 0x5000
+local CHR_BANK        = 0x00
+local INNER_BANK      = 0x01
+local MODE            = 0x80
+local OUTER_BANK      = 0x81
+local REGISTER_VALUE  = 0x8000
 
 -- local functions
 
@@ -32,30 +40,24 @@ local prg_flash_chip
 local function init_mapper()
   -- //Setup as CNROM, then scroll through outer banks.
   -- cpu_wr(0x5000, 0x80);   //reg select mode
-  nes.cpu_wr(0x5000, 0x80)
+  nes.cpu_wr(REGISTER_SELECT, MODE)
 
   -- //   xxSSPPMM   SS-size: 0-32KB, PP-prg mode: 0,1 32KB, MM-mirror
   -- cpu_wr(0x8000, 0b00000000);     //reg value 256KB inner, 32KB banks
-  nes.cpu_wr(0x8000, 0x00)
+  nes.cpu_wr(REGISTER_VALUE, 0x00)
   -- cpu_wr(0x5000, 0x81);   //outer reg select mode
-  nes.cpu_wr(0x5000, 0x81)
+  nes.cpu_wr(REGISTER_SELECT, OUTER_BANK)
   -- cpu_wr(0x8000, 0x00);   //first 32KB bank
-  nes.cpu_wr(0x8000, 0x00)
+  nes.cpu_wr(REGISTER_VALUE, 0x00)
 
   -- cpu_wr(0x5000, 0x01);   //inner prg reg select
-  nes.cpu_wr(0x5000, 0x01)
+  nes.cpu_wr(REGISTER_SELECT, INNER_BANK)
   -- cpu_wr(0x8000, 0x00);   //controls nothing in this size
-  nes.cpu_wr(0x8000, 0x00)
+  nes.cpu_wr(REGISTER_VALUE, 0x00)
   -- cpu_wr(0x5000, 0x00);   //chr reg select
-  nes.cpu_wr(0x5000, 0x00)
+  nes.cpu_wr(REGISTER_SELECT, CHR_BANK)
   -- cpu_wr(0x8000, 0x00);   //first chr bank
-  nes.cpu_wr(0x8000, 0x00)
-  -- selecting CNROM means that mapper writes to $8000-FFFF will only change the CHR-RAM bank which
-  -- doesn't affect anything we're concerned about
-
-  -- enable flash writes $5000 set to 0b0 101 010 0
-  -- nes.cpu_wr(0x5000, 0x54)
-  -- nes.cpu_wr(0x5555, 0x54)
+  nes.cpu_wr(REGISTER_VALUE, 0x00)
 end
 
 local function create_header(file, prg_kb, chr_kb)
@@ -72,8 +74,8 @@ local function mirror_test(chr_size_kb, chr_ram_detected, retroprog_id)
   init_mapper()
 
   -- 1 screen A
-  nes.cpu_wr(0x5000, 0x80)
-  nes.cpu_wr(0x8000, 0x00)
+  nes.cpu_wr(REGISTER_SELECT, MODE)
+  nes.cpu_wr(REGISTER_VALUE, 0x00)
   if nes.detect_mapper_mirroring() ~= "1SCRNA" then
     log.error("One screen mirroring test failed (1 screen A)")
     return false
@@ -82,8 +84,8 @@ local function mirror_test(chr_size_kb, chr_ram_detected, retroprog_id)
   end
 
   -- 1 screen B
-  nes.cpu_wr(0x5000, 0x80)
-  nes.cpu_wr(0x8000, 0x01)
+  nes.cpu_wr(REGISTER_SELECT, MODE)
+  nes.cpu_wr(REGISTER_VALUE, 0x01)
   if nes.detect_mapper_mirroring() ~= "1SCRNB" then
     log.error("One screen mirroring test failed (1 screen B)")
     return false
@@ -92,8 +94,8 @@ local function mirror_test(chr_size_kb, chr_ram_detected, retroprog_id)
   end
 
   -- Vertical
-  nes.cpu_wr(0x5000, 0x80)
-  nes.cpu_wr(0x8000, 0x02)
+  nes.cpu_wr(REGISTER_SELECT, MODE)
+  nes.cpu_wr(REGISTER_VALUE, 0x02)
   if nes.detect_mapper_mirroring() ~= "VERT" then
     log.error("Vertical mirroring test failed")
     return false
@@ -102,8 +104,8 @@ local function mirror_test(chr_size_kb, chr_ram_detected, retroprog_id)
   end
 
   -- Horizontal
-  nes.cpu_wr(0x5000, 0x80)
-  nes.cpu_wr(0x8000, 0x03)
+  nes.cpu_wr(REGISTER_SELECT, MODE)
+  nes.cpu_wr(REGISTER_VALUE, 0x03)
   if nes.detect_mapper_mirroring() ~= "HORZ" then
     log.error("Horizontal mirroring test failed")
     return false
@@ -182,8 +184,8 @@ local function prg_rom_dump(file, rom_size_kb)
     end
 
     -- select desired bank to dump
-    nes.cpu_wr(0x5000, 0x81)
-    nes.cpu_wr(0x8000, cur_bank)
+    nes.cpu_wr(REGISTER_SELECT, OUTER_BANK)
+    nes.cpu_wr(REGISTER_VALUE, cur_bank)
 
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
 
@@ -223,9 +225,9 @@ local function prg_rom_flash(file, rom_size_kb)
     end
 
     -- write the bank to flash to the mapper register
-    nes.cpu_wr(0x5000, 0x81)
-    nes.cpu_wr(0x8000, cur_bank)
-    nes.cpu_wr(0x5000, 0x00)
+    nes.cpu_wr(REGISTER_SELECT, OUTER_BANK)
+    nes.cpu_wr(REGISTER_VALUE, cur_bank)
+    nes.cpu_wr(REGISTER_SELECT, CHR_BANK)
 
     -- flash data
     flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "NES_PRG_ROM", options = options })
@@ -237,13 +239,14 @@ local function prg_rom_flash(file, rom_size_kb)
   log.success("Done programming PRG-ROM")
 end
 
+-- Legacy code, need to be updated at some point
 local function read_gift(base, len)
   local rv
   init_mapper()
 
-  --select last bank in read only mode
-  nes.cpu_wr(0x5000, 0x81)
-  nes.cpu_wr(0x8000, 0xFF)
+  -- select last bank in read only mode
+  nes.cpu_wr(REGISTER_SELECT, OUTER_BANK)
+  nes.cpu_wr(REGISTER_VALUE, 0xFF)
 
   local i = 0
 
@@ -266,48 +269,48 @@ local function read_gift(base, len)
   print("")
 end
 
+-- Legacy code, need to be updated at some point
 local function write_gift(base, off)
   local i
   local rv
   init_mapper()
 
-  --select last bank in flash mode
-  nes.cpu_wr(0x5000, 0x81)
-  nes.cpu_wr(0x8000, 0xFF)
-  --nes.cpu_wr(0x5000, 0x54)
+  -- select last bank in flash mode
+  nes.cpu_wr(REGISTER_SELECT, OUTER_BANK)
+  nes.cpu_wr(REGISTER_VALUE, 0xFF)
 
-  --enter unlock bypass mode
+  -- enter unlock bypass mode
   nes.cpu_wr(0x8AAA, 0xAA, { opcode = "FLASH_3V_WR" })
   nes.cpu_wr(0x8555, 0x55, { opcode = "FLASH_3V_WR" })
   nes.cpu_wr(0x8AAA, 0x20, { opcode = "FLASH_3V_WR" })
 
-  --write 0xA0 to address of byte to write, then write data
+  -- write 0xA0 to address of byte to write, then write data
   nes.cpu_wr(base + off, 0xA0, { opcode = "FLASH_3V_WR" })
-  nes.cpu_wr(base + off, 0x00, { opcode = "FLASH_3V_WR" }) --end previous line
+  nes.cpu_wr(base + off, 0x00, { opcode = "FLASH_3V_WR" }) -- end previous line
   off = off + 1
   nes.cpu_wr(base + off, 0xA0, { opcode = "FLASH_3V_WR" })
-  nes.cpu_wr(base + off, 0x15, { opcode = "FLASH_3V_WR" }) --line number..?
+  nes.cpu_wr(base + off, 0x15, { opcode = "FLASH_3V_WR" }) -- line number..?
   off = off + 1
   nes.cpu_wr(base + off, 0xA0, { opcode = "FLASH_3V_WR" })
-  nes.cpu_wr(base + off, string.byte("(", 1), { opcode = "FLASH_3V_WR" }) --start with open parenth
+  nes.cpu_wr(base + off, string.byte("(", 1), { opcode = "FLASH_3V_WR" }) -- start with open parenth
 
 
-  --off = off + 1  --increase to start of message but index starting at 1
+  -- off = off + 1  -- increase to start of message but index starting at 1
   i = 1
 
-  --regular editions don't have gift messages
-  --local msg1 = "Contributor Edition"
-  --local msg1 = "Limited Edition"
-  --local msg2 = "82 of 100"  --  all flashed
+  -- regular editions don't have gift messages
+  -- local msg1 = "Contributor Edition"
+  -- local msg1 = "Limited Edition"
+  -- local msg2 = "82 of 100"  --  all flashed
 
-  --local msg1 = " Contributor Edition "
-  --local msg2 = " PinoBatch "  --issue if capital P or R is first char for some reason..
+  -- local msg1 = " Contributor Edition "
+  -- local msg2 = " PinoBatch "  -- issue if capital P or R is first char for some reason..
 
   local len = string.len(msg1)
 
   while (i <= len) do
     nes.cpu_wr(base + off + i, 0xA0, { opcode = "FLASH_3V_WR" })
-    nes.cpu_wr(base + off + i, string.byte(msg1, i), { opcode = "FLASH_3V_WR" }) --line 1 of message
+    nes.cpu_wr(base + off + i, string.byte(msg1, i), { opcode = "FLASH_3V_WR" }) -- line 1 of message
     print("write:", string.byte(msg1, i))
     i = i + 1
   end
@@ -315,13 +318,13 @@ local function write_gift(base, off)
   off = off + i
 
   nes.cpu_wr(base + off, 0xA0, { opcode = "FLASH_3V_WR" })
-  nes.cpu_wr(base + off, 0x00, { opcode = "FLASH_3V_WR" }) --end current line
+  nes.cpu_wr(base + off, 0x00, { opcode = "FLASH_3V_WR" }) -- end current line
   off = off + 1
   nes.cpu_wr(base + off, 0xA0, { opcode = "FLASH_3V_WR" })
-  nes.cpu_wr(base + off, 0x16, { opcode = "FLASH_3V_WR" }) --line number..?
+  nes.cpu_wr(base + off, 0x16, { opcode = "FLASH_3V_WR" }) -- line number..?
   off = off + 1
   nes.cpu_wr(base + off, 0xA0, { opcode = "FLASH_3V_WR" })
-  nes.cpu_wr(base + off, string.byte("(", 1), { opcode = "FLASH_3V_WR" }) --start with open parenth
+  nes.cpu_wr(base + off, string.byte("(", 1), { opcode = "FLASH_3V_WR" }) -- start with open parenth
 
   i = 1
 
@@ -330,7 +333,7 @@ local function write_gift(base, off)
 
   while (i <= len) do
     nes.cpu_wr(base + off + i, 0xA0, { opcode = "FLASH_3V_WR" })
-    nes.cpu_wr(base + off + i, string.byte(msg2, i), { opcode = "FLASH_3V_WR" }) --line 2 of message
+    nes.cpu_wr(base + off + i, string.byte(msg2, i), { opcode = "FLASH_3V_WR" }) -- line 2 of message
     print("write:", string.byte(msg2, i))
     i = i + 1
   end
@@ -338,20 +341,20 @@ local function write_gift(base, off)
   off = off + i
 
   nes.cpu_wr(base + off, 0xA0, { opcode = "FLASH_3V_WR" })
-  nes.cpu_wr(base + off, 0x00, { opcode = "FLASH_3V_WR" }) --end current line
+  nes.cpu_wr(base + off, 0x00, { opcode = "FLASH_3V_WR" }) -- end current line
 
   --]]
 
 
-  --poll until stops toggling, or data is as wrote
+  -- poll until stops toggling, or data is as wrote
   --  rv = nes.cpu_rd(0x8BDC)
   --  print (rv)
 
 
-  --exit unlock bypass
+  -- exit unlock bypass
   nes.cpu_wr(0x8000, 0x90, { opcode = "FLASH_3V_WR" })
   nes.cpu_wr(0x8000, 0x00, { opcode = "FLASH_3V_WR" })
-  --reset the flash chip
+  -- reset the flash chip
   nes.cpu_wr(0x8000, 0xF0, { opcode = "FLASH_3V_WR" })
 end
 
@@ -373,7 +376,7 @@ local function chr_dump(file, rom_size_kb)
       spinner.update("Dumping", cur_bank, "/", num_banks - 1)
     end
 
-    nes.cpu_wr(0x8000, cur_bank) -- 8KB @ PPU $0000
+    nes.cpu_wr(REGISTER_VALUE, cur_bank) -- 8KB @ PPU $0000
 
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_PPU_1KB" })
 
@@ -406,21 +409,21 @@ local function chr_ram_get_size()
 
   log.section("Detecting CHR-RAM size")
 
-  nes.cpu_wr(0x5000, 0x00)
+  nes.cpu_wr(REGISTER_SELECT, CHR_BANK)
 
   -- set CHR bank to bank 0
-  nes.cpu_wr(0x8000, 0x00)
+  nes.cpu_wr(REGISTER_VALUE, 0x00)
 
   -- write to banks backwards
   for cur_bank = num_banks, 0, -1 do
     if DEBUG then log.point("trying to write to CHR bank", cur_bank, "of", num_banks) end
-    nes.cpu_wr(0x8000, cur_bank) -- 8KB bank at $0000
+    nes.cpu_wr(REGISTER_VALUE, cur_bank) -- 8KB bank at $0000
     nes.ppu_wr(0x0000, cur_bank)
     cur_bank = cur_bank + 1
   end
 
   -- read back only last bank
-  nes.cpu_wr(0x8000, num_banks) -- 8KB bank at $0000
+  nes.cpu_wr(REGISTER_VALUE, num_banks) -- 8KB bank at $0000
   rv = nes.ppu_rd(0x0000)
   chr_ram_size_kb = (rv + 1) * 8
 
@@ -447,16 +450,16 @@ local function chr_ram_exercise(chr_ram_size_kb, retroprog_id)
   log.section("Exercising CHR-RAM")
   log.info("CHR-RAM size", chr_ram_size_kb .. "KB")
 
-  nes.cpu_wr(0x5000, 0x00)
+  nes.cpu_wr(REGISTER_SELECT, CHR_BANK)
 
   -- set CHR bank to bank 0
-  nes.cpu_wr(0x8000, 0x00)
+  nes.cpu_wr(REGISTER_VALUE, 0x00)
 
   -- write random data to all banks
   log.point("Writing random data to CHR-RAM")
   while cur_bank < num_banks do
     if DEBUG then log.point("init CHR-RAM 8K bank", cur_bank, "of", num_banks - 1) end
-    nes.cpu_wr(0x8000, cur_bank) -- 8KB bank at $0000
+    nes.cpu_wr(REGISTER_VALUE, cur_bank) -- 8KB bank at $0000
     local addr = 0x0000
     while (addr < 0x2000) do
       dict.nes("PPU_PAGE_WR_LFSR", addr)
@@ -578,13 +581,13 @@ local function process(process_opts, console_opts)
       end
     end
 
-    -- --manipulate gift message
+    -- -- manipulate gift message
     -- local base = 0x8BD0
     -- local start_offset = 0xC
     -- local len = 80
-    -- --read_gift(base, len)
+    -- -- read_gift(base, len)
 
-    -- --write_gift(base, start_offset)
+    -- -- write_gift(base, start_offset)
 
     -- read_gift(base, len)
   end

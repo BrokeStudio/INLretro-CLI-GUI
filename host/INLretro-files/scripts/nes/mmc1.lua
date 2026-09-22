@@ -1,21 +1,27 @@
 -- create the module's table
-local mmc1    = {}
+local mmc1       = {}
 
 -- import required modules
-local dict    = require "scripts.app.dict"
-local nes     = require "scripts.app.nes"
-local dump    = require "scripts.app.dump"
-local flash   = require "scripts.app.flash"
-local time    = require "scripts.app.time"
-local log     = require "scripts.app.log"
-local spinner = require "scripts.app.spinner"
-local files   = require "scripts.app.files"
-local help    = require "scripts.app.help"
+local dict       = require "scripts.app.dict"
+local nes        = require "scripts.app.nes"
+local dump       = require "scripts.app.dump"
+local flash      = require "scripts.app.flash"
+local time       = require "scripts.app.time"
+local log        = require "scripts.app.log"
+local spinner    = require "scripts.app.spinner"
+local files      = require "scripts.app.files"
+local help       = require "scripts.app.help"
 
 -- file constants and global variables
-local mapname = "MMC1"
+local mapname    = "MMC1"
 local prg_flash_chip
 local chr_flash_chip
+
+-- registers
+local CONTROL    = 0x8000
+local CHR_BANK_0 = 0xA000
+local CHR_BANK_1 = 0xC000
+local PRG_BANK   = 0xE000
 
 -- local functions
 
@@ -38,14 +44,14 @@ local function init_mapper()
   -- MMC1 ignores all but the first write
   nes.cpu_rd(0x8000)
   -- reset MMC1 shift register with D7 set
-  nes.cpu_wr(0x8000, 0x80)
+  nes.cpu_wr(CONTROL, 0x80)
   -- this reset also effectively sets the control reg to 0x0C:
   --   prg mode 3: fix last bank at $C000 and switch 16 KB bank at $8000
   --   chr mode 0: switch 8 KB at a time
   --   mirroring 0: 1 screen NT0
 
   -- mmc1_write(0x8000, 0x10);       //32KB mode, prg bank @ $8000-FFFF, 4KB CHR mode
-  nes.cpu_wr(0x8000, 0x10, { opcode = "NES_MMC1_WR" })
+  nes.cpu_wr(CONTROL, 0x10, { opcode = "NES_MMC1_WR" })
   --   prg mode 3: switch 32 KB at $8000, ignoring low bit of bank number
   --   chr mode 1: switch two separate 4 KB banks
   --   mirroring 0: 1 screen NT0
@@ -53,13 +59,13 @@ local function init_mapper()
   --   //PRG-ROM A18-A14
 
   -- select first PRG-ROM bank, disable save RAM
-  nes.cpu_wr(0xE000, 0x10, { opcode = "NES_MMC1_WR" }) -- LSBit ignored in 32KB mode
+  nes.cpu_wr(PRG_BANK, 0x10, { opcode = "NES_MMC1_WR" }) -- LSBit ignored in 32KB mode
   -- bit4 RAM enable 0-enabled 1-disabled
 
   -- //CHR-ROM A16-12 (A14-12 are required to be valid)
   -- bit4 (CHR A16) is /CE pin for PRG-RAM on SNROM
-  nes.cpu_wr(0xA000, 0x12, { opcode = "NES_MMC1_WR" }) -- 4KB bank @ PT0  $2AAA cmd and writes
-  nes.cpu_wr(0xC000, 0x15, { opcode = "NES_MMC1_WR" }) -- 4KB bank @ PT1  $5555 cmd fixed
+  nes.cpu_wr(CHR_BANK_0, 0x12, { opcode = "NES_MMC1_WR" }) -- 4KB bank @ PT0  $2AAA cmd and writes
+  nes.cpu_wr(CHR_BANK_1, 0x15, { opcode = "NES_MMC1_WR" }) -- 4KB bank @ PT1  $5555 cmd fixed
 end
 
 -- test the mapper's mirroring modes to verify working properly
@@ -71,7 +77,7 @@ local function mirror_test()
   init_mapper()
 
   -- Vertical
-  nes.cpu_wr(0x8000, 0x02, { opcode = "NES_MMC1_WR" })
+  nes.cpu_wr(CONTROL, 0x02, { opcode = "NES_MMC1_WR" })
   if nes.detect_mapper_mirroring() ~= "VERT" then
     log.error("Vertical mirroring test failed")
     return false
@@ -80,7 +86,7 @@ local function mirror_test()
   end
 
   -- Horizontal
-  nes.cpu_wr(0x8000, 0x03, { opcode = "NES_MMC1_WR" })
+  nes.cpu_wr(CONTROL, 0x03, { opcode = "NES_MMC1_WR" })
   if nes.detect_mapper_mirroring() ~= "HORZ" then
     log.error("Horizontal mirroring test failed")
     return false
@@ -89,7 +95,7 @@ local function mirror_test()
   end
 
   -- 1 screen A
-  nes.cpu_wr(0x8000, 0x00, { opcode = "NES_MMC1_WR" })
+  nes.cpu_wr(CONTROL, 0x00, { opcode = "NES_MMC1_WR" })
   if nes.detect_mapper_mirroring() ~= "1SCRNA" then
     log.error("One screen mirroring test failed (1 screen A)")
     return false
@@ -98,7 +104,7 @@ local function mirror_test()
   end
 
   -- 1 screen B
-  nes.cpu_wr(0x8000, 0x01, { opcode = "NES_MMC1_WR" })
+  nes.cpu_wr(CONTROL, 0x01, { opcode = "NES_MMC1_WR" })
   if nes.detect_mapper_mirroring() ~= "1SCRNB" then
     log.error("One screen mirroring test failed (1 screen B)")
     return false
@@ -130,41 +136,41 @@ local function prg_rom_flash_byte(addr, value, bank)
     return
   end
 
-  --mmc1_wr(0x8000, 0x10, 0);               //32KB mode
-  --//IDK why, but somehow only the first byte gets programmed when ROM A14=1
-  --//so somehow it's getting out of 32KB mode for follow on bytes..
-  --//even though we reset to 32KB mode after the corrupting final write
+  -- mmc1_wr(0x8000, 0x10, 0);               //32KB mode
+  -- //IDK why, but somehow only the first byte gets programmed when ROM A14=1
+  -- //so somehow it's getting out of 32KB mode for follow on bytes..
+  -- //even though we reset to 32KB mode after the corrupting final write
   --
-  --wr_func( unlock1, 0xAA );
-  --wr_func( unlock2, 0x55 );
-  --wr_func( unlock1, 0xA0 );
-  --wr_func( ((addrH<<8)| n), buff->data[n] );
-  --//writes to flash are to $8000-FFFF so any register could have been corrupted and shift register may be off
-  --//In reality MMC1 should have blocked all subsequent writes, so maybe only the CHR reg2 got corrupted..?                mmc1_wr(0x8000, 0x10, 1);               //32KB mode
-  --mmc1_wr(0xE000, bank, 0);       //reset shift register, and bank register
+  -- wr_func( unlock1, 0xAA );
+  -- wr_func( unlock2, 0x55 );
+  -- wr_func( unlock1, 0xA0 );
+  -- wr_func( ((addrH<<8)| n), buff->data[n] );
+  -- //writes to flash are to $8000-FFFF so any register could have been corrupted and shift register may be off
+  -- //In reality MMC1 should have blocked all subsequent writes, so maybe only the CHR reg2 got corrupted..?                mmc1_wr(0x8000, 0x10, 1);               //32KB mode
+  -- mmc1_wr(0xE000, bank, 0);       //reset shift register, and bank register
 
-  --MMC1 ignores all but the first write
-  --nes.cpu_rd(0x8000)
-  --  nes.cpu_wr(0x8000, 0x80) --reset MMC1 shift register with D7 set
+  -- MMC1 ignores all but the first write
+  -- nes.cpu_rd(0x8000)
+  --  nes.cpu_wr(CONTROL, 0x80) -- reset MMC1 shift register with D7 set
 
-  --nes.cpu_wr(0x8000, 0x10, { opcode = "NES_MMC1_WR" }) --32KB mode, prg bank @ $8000-FFFF, 4KB CHR mode
-  --doing this after the write doesn't work for some reason....
-  --I think the reason this works is because the last instruction is a write (and it's valid)
-  --so the next 4 writes are blocked by the MMC1 including the reset
-  nes.cpu_wr(0xC000, 0x05, { opcode = "NES_MMC1_WR" }) --this seems to work as well which makes sense based on above..
-  --so now all follow on writes will be blocked until there is a read
+  -- nes.cpu_wr(CONTROL, 0x10, { opcode = "NES_MMC1_WR" }) -- 32KB mode, prg bank @ $8000-FFFF, 4KB CHR mode
+  -- doing this after the write doesn't work for some reason....
+  -- I think the reason this works is because the last instruction is a write (and it's valid)
+  -- so the next 4 writes are blocked by the MMC1 including the reset
+  nes.cpu_wr(CHR_BANK_1, 0x05, { opcode = "NES_MMC1_WR" }) -- this seems to work as well which makes sense based on above..
+  -- so now all follow on writes will be blocked until there is a read
 
-  --send unlock command and write byte
-  nes.cpu_wr(0xD555, 0xAA) --this will reset the MMC1..?,
-  --but not if it was blocked by a previous write
-  nes.cpu_wr(0xAAAA, 0x55) --blocked
-  nes.cpu_wr(0xD555, 0xA0) --blocked
-  nes.cpu_wr(addr, value)  --blocked
+  -- send unlock command and write byte
+  nes.cpu_wr(0xD555, 0xAA) -- this will reset the MMC1..?,
+  -- but not if it was blocked by a previous write
+  nes.cpu_wr(0xAAAA, 0x55) -- blocked
+  nes.cpu_wr(0xD555, 0xA0) -- blocked
+  nes.cpu_wr(addr, value)  -- blocked
 
-  --  nes.cpu_rd(0x8000)  --must read before resetting
-  --  nes.cpu_wr(0x8000, 0x80) --reset MMC1 shift register with D7 set
-  --  nes.cpu_wr(0x8000, 0x10, { opcode = "NES_MMC1_WR" }) --32KB mode, prg bank @ $8000-FFFF, 4KB CHR mode
-  --  nes.cpu_wr(0xE000, bank<<1, { opcode = "NES_MMC1_WR" }) --32KB mode, prg bank @ $8000-FFFF, 4KB CHR mode
+  --  nes.cpu_rd(0x8000)  -- must read before resetting
+  --  nes.cpu_wr(CONTROL, 0x80) -- reset MMC1 shift register with D7 set
+  --  nes.cpu_wr(CONTROL, 0x10, { opcode = "NES_MMC1_WR" }) -- 32KB mode, prg bank @ $8000-FFFF, 4KB CHR mode
+  --  nes.cpu_wr(PRG_BANK, bank<<1, { opcode = "NES_MMC1_WR" }) -- 32KB mode, prg bank @ $8000-FFFF, 4KB CHR mode
 
   local rv = nes.cpu_rd(addr)
 
@@ -205,15 +211,15 @@ local function prg_rom_dump(file, rom_size_kb)
 
     -- bit4 (CHR A16) is A18 pin for PRG on SOROM, SUROM and SXROM
     if cur_bank < 8 then
-      nes.cpu_wr(0xA000, 0x00, { opcode = "NES_MMC1_WR" })
-      nes.cpu_wr(0xC000, 0x00, { opcode = "NES_MMC1_WR" })
+      nes.cpu_wr(CHR_BANK_0, 0x00, { opcode = "NES_MMC1_WR" })
+      nes.cpu_wr(CHR_BANK_1, 0x00, { opcode = "NES_MMC1_WR" })
     else
-      nes.cpu_wr(0xA000, 0x10, { opcode = "NES_MMC1_WR" })
-      nes.cpu_wr(0xC000, 0x10, { opcode = "NES_MMC1_WR" })
+      nes.cpu_wr(CHR_BANK_0, 0x10, { opcode = "NES_MMC1_WR" })
+      nes.cpu_wr(CHR_BANK_1, 0x10, { opcode = "NES_MMC1_WR" })
     end
 
     -- set bank
-    nes.cpu_wr(0xE000, cur_bank << 1, { opcode = "NES_MMC1_WR" }) -- LSBit ignored in 32KB mode
+    nes.cpu_wr(PRG_BANK, cur_bank << 1, { opcode = "NES_MMC1_WR" }) -- LSBit ignored in 32KB mode
 
     -- dump a bank worth of data
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
@@ -249,7 +255,7 @@ local function prg_rom_flash(file, rom_size_kb)
     dict.nes("SET_CUR_BANK", cur_bank)
 
     -- write the current bank to the mapper register
-    nes.cpu_wr(0xE000, cur_bank << 1, { opcode = "NES_MMC1_WR" }) -- LSBit ignored in 32KB mode
+    nes.cpu_wr(PRG_BANK, cur_bank << 1, { opcode = "NES_MMC1_WR" }) -- LSBit ignored in 32KB mode
 
     -- flash data
     flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "NES_PRG_ROM" })
@@ -282,8 +288,8 @@ local function chr_rom_flash_byte(addr, value, bank)
   end
 
   -- set banks for unlock commands
-  nes.cpu_wr(0xA000, 0x02) -- 4KB bank @ PT0  $2AAA cmd and writes (always write data to PT0, { opcode = "NES_MMC1_WR" })
-  -- nes.cpu_wr(0xC000, 0x05) -- 4KB bank @ PT1  $5555 cmd fixed (never changed, { opcode = "NES_MMC1_WR" })
+  nes.cpu_wr(CHR_BANK_0, 0x02) -- 4KB bank @ PT0  $2AAA cmd and writes (always write data to PT0, { opcode = "NES_MMC1_WR" })
+  -- nes.cpu_wr(CHR_BANK_1, 0x05) -- 4KB bank @ PT1  $5555 cmd fixed (never changed, { opcode = "NES_MMC1_WR" })
 
   -- send unlock command and write byte
   nes.ppu_wr(0x1555, 0xAA)
@@ -291,7 +297,7 @@ local function chr_rom_flash_byte(addr, value, bank)
   nes.ppu_wr(0x1555, 0xA0)
 
   -- select desired bank for write
-  nes.cpu_wr(0xA000, bank) -- 4KB bank @ PT0  $2AAA cmd and writes (always write data to PT0, { opcode = "NES_MMC1_WR" })
+  nes.cpu_wr(CHR_BANK_0, bank) -- 4KB bank @ PT0  $2AAA cmd and writes (always write data to PT0, { opcode = "NES_MMC1_WR" })
   nes.ppu_wr(addr, value)
 
   local rv = nes.ppu_rd(addr)
@@ -330,8 +336,8 @@ local function chr_dump(file, rom_size_kb)
       spinner.update("Dumping", cur_bank, "/", num_banks - 1)
     end
 
-    nes.cpu_wr(0xA000, cur_bank * 2, { opcode = "NES_MMC1_WR" })     -- 4KB bank at $0000
-    nes.cpu_wr(0xC000, cur_bank * 2 + 1, { opcode = "NES_MMC1_WR" }) -- 4KB bank at $1000
+    nes.cpu_wr(CHR_BANK_0, cur_bank * 2, { opcode = "NES_MMC1_WR" })     -- 4KB bank at $0000
+    nes.cpu_wr(CHR_BANK_1, cur_bank * 2 + 1, { opcode = "NES_MMC1_WR" }) -- 4KB bank at $1000
 
     -- have the device dump a bank worth of data
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_PPU_1KB" })
@@ -407,8 +413,8 @@ local function prg_ram_dump(file, ram_size_kb)
     end
 
     -- set bank
-    nes.cpu_wr(0xA000, cur_bank << 2, { opcode = "NES_MMC1_WR" }) -- 8KB PRG-RAM bank at $6000
-    nes.cpu_wr(0xC000, cur_bank << 2, { opcode = "NES_MMC1_WR" }) -- 8KB PRG-RAM bank at $6000
+    nes.cpu_wr(CHR_BANK_0, cur_bank << 2, { opcode = "NES_MMC1_WR" }) -- 8KB PRG-RAM bank at $6000
+    nes.cpu_wr(CHR_BANK_1, cur_bank << 2, { opcode = "NES_MMC1_WR" }) -- 8KB PRG-RAM bank at $6000
 
     -- have the device dump a bank worth of data
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
@@ -432,11 +438,11 @@ local function prg_ram_write(file, ram_size_kb)
   local num_banks = math.floor(ram_size_kb / bank_size_kb)
 
   -- enable save ram ??????
-  -- nes.cpu_wr(0xE000, 0x00, { opcode = "NES_MMC1_WR" })  -- bit4 RAM enable 0-enabled 1-disabled
+  -- nes.cpu_wr(PRG_BANK, 0x00, { opcode = "NES_MMC1_WR" })  -- bit4 RAM enable 0-enabled 1-disabled
 
   -- bit4 (CHR A16) is /CE pin for PRG-RAM on SNROM
-  nes.cpu_wr(0xA000, 0x00, { opcode = "NES_MMC1_WR" })
-  nes.cpu_wr(0xC000, 0x00, { opcode = "NES_MMC1_WR" })
+  nes.cpu_wr(CHR_BANK_0, 0x00, { opcode = "NES_MMC1_WR" })
+  nes.cpu_wr(CHR_BANK_1, 0x00, { opcode = "NES_MMC1_WR" })
 
   while cur_bank < num_banks do
     if DEBUG then
@@ -446,21 +452,21 @@ local function prg_ram_write(file, ram_size_kb)
     end
 
     -- set bank
-    nes.cpu_wr(0xA000, cur_bank << 2, { opcode = "NES_MMC1_WR" }) -- 8KB PRG-RAM bank at $6000
-    nes.cpu_wr(0xC000, cur_bank << 2, { opcode = "NES_MMC1_WR" }) -- 8KB PRG-RAM bank at $6000
+    nes.cpu_wr(CHR_BANK_0, cur_bank << 2, { opcode = "NES_MMC1_WR" }) -- 8KB PRG-RAM bank at $6000
+    nes.cpu_wr(CHR_BANK_1, cur_bank << 2, { opcode = "NES_MMC1_WR" }) -- 8KB PRG-RAM bank at $6000
 
-    --have the device write a bank worth of data
+    -- have the device write a bank worth of data
     flash.write_file(file, bank_size_kb, { mapper = "NOVAR", mem_type = "NES_PRG_RAM" })
 
     cur_bank = cur_bank + 1
   end
 
   -- for save data safety disable PRG-RAM, and deny writes ??????
-  -- nes.cpu_wr(0xE000, 0x10, { opcode = "NES_MMC1_WR" })  -- bit4 RAM enable 0-enabled 1-disabled
+  -- nes.cpu_wr(PRG_BANK, 0x10, { opcode = "NES_MMC1_WR" })  -- bit4 RAM enable 0-enabled 1-disabled
 
   -- bit4 (CHR A16) is /CE pin for PRG-RAM on SNROM
-  nes.cpu_wr(0xA000, 0x10, { opcode = "NES_MMC1_WR" })
-  nes.cpu_wr(0xC000, 0x10, { opcode = "NES_MMC1_WR" })
+  nes.cpu_wr(CHR_BANK_0, 0x10, { opcode = "NES_MMC1_WR" })
+  nes.cpu_wr(CHR_BANK_1, 0x10, { opcode = "NES_MMC1_WR" })
 
   spinner.clear()
   log.success("Done programming PRG-RAM")
@@ -476,11 +482,11 @@ local function prg_ram_test()
   log.section("Detecting PRG-RAM")
 
   -- enable save ram ??????
-  -- nes.cpu_wr(0xE000, 0x00, { opcode = "NES_MMC1_WR" })  -- bit4 RAM enable 0-enabled 1-disabled
+  -- nes.cpu_wr(PRG_BANK, 0x00, { opcode = "NES_MMC1_WR" })  -- bit4 RAM enable 0-enabled 1-disabled
 
   -- bit4 (CHR A16) is /CE pin for PRG-RAM on SNROM
-  nes.cpu_wr(0xA000, 0x00, { opcode = "NES_MMC1_WR" })
-  nes.cpu_wr(0xC000, 0x00, { opcode = "NES_MMC1_WR" })
+  nes.cpu_wr(CHR_BANK_0, 0x00, { opcode = "NES_MMC1_WR" })
+  nes.cpu_wr(CHR_BANK_1, 0x00, { opcode = "NES_MMC1_WR" })
 
   -- save potential battery backed data first
   saved_value = nes.cpu_rd(0x6000)
@@ -500,11 +506,11 @@ local function prg_ram_test()
   end
 
   -- for save data safety disable PRG-RAM, and deny writes ??????
-  -- nes.cpu_wr(0xE000, 0x10, { opcode = "NES_MMC1_WR" })  -- bit4 RAM enable 0-enabled 1-disabled
+  -- nes.cpu_wr(PRG_BANK, 0x10, { opcode = "NES_MMC1_WR" })  -- bit4 RAM enable 0-enabled 1-disabled
 
   -- bit4 (CHR A16) is /CE pin for PRG-RAM on SNROM
-  nes.cpu_wr(0xA000, 0x10, { opcode = "NES_MMC1_WR" })
-  nes.cpu_wr(0xC000, 0x10, { opcode = "NES_MMC1_WR" })
+  nes.cpu_wr(CHR_BANK_0, 0x10, { opcode = "NES_MMC1_WR" })
+  nes.cpu_wr(CHR_BANK_1, 0x10, { opcode = "NES_MMC1_WR" })
 
   if test then
     log.success("PRG-RAM detected")
@@ -529,11 +535,11 @@ local function prg_ram_get_size()
   log.section("Detecting PRG-RAM size")
 
   -- enable save ram ??????
-  -- nes.cpu_wr(0xE000, 0x00, { opcode = "NES_MMC1_WR" })  -- bit4 RAM enable 0-enabled 1-disabled
+  -- nes.cpu_wr(PRG_BANK, 0x00, { opcode = "NES_MMC1_WR" })  -- bit4 RAM enable 0-enabled 1-disabled
 
   -- bit4 (CHR A16) is /CE pin for PRG-RAM on SNROM
-  nes.cpu_wr(0xA000, 0x00, { opcode = "NES_MMC1_WR" })
-  nes.cpu_wr(0xC000, 0x00, { opcode = "NES_MMC1_WR" })
+  nes.cpu_wr(CHR_BANK_0, 0x00, { opcode = "NES_MMC1_WR" })
+  nes.cpu_wr(CHR_BANK_1, 0x00, { opcode = "NES_MMC1_WR" })
 
   -- write to banks backwards
   while cur_bank >= 0 do
@@ -544,8 +550,8 @@ local function prg_ram_get_size()
     end
 
     -- set bank
-    nes.cpu_wr(0xA000, cur_bank << 2, { opcode = "NES_MMC1_WR" }) -- 8KB PRG-RAM bank at $6000
-    nes.cpu_wr(0xC000, cur_bank << 2, { opcode = "NES_MMC1_WR" }) -- 8KB PRG-RAM bank at $6000
+    nes.cpu_wr(CHR_BANK_0, cur_bank << 2, { opcode = "NES_MMC1_WR" }) -- 8KB PRG-RAM bank at $6000
+    nes.cpu_wr(CHR_BANK_1, cur_bank << 2, { opcode = "NES_MMC1_WR" }) -- 8KB PRG-RAM bank at $6000
 
     -- write data
     nes.cpu_wr(0x6000, cur_bank)
@@ -556,16 +562,16 @@ local function prg_ram_get_size()
   spinner.clear()
 
   -- read back only last bank
-  nes.cpu_wr(0xA000, (num_banks - 1) << 2, { opcode = "NES_MMC1_WR" }) -- 8KB PRG-RAM bank at $6000
-  nes.cpu_wr(0xC000, (num_banks - 1) << 2, { opcode = "NES_MMC1_WR" }) -- 8KB PRG-RAM bank at $6000
+  nes.cpu_wr(CHR_BANK_0, (num_banks - 1) << 2, { opcode = "NES_MMC1_WR" }) -- 8KB PRG-RAM bank at $6000
+  nes.cpu_wr(CHR_BANK_1, (num_banks - 1) << 2, { opcode = "NES_MMC1_WR" }) -- 8KB PRG-RAM bank at $6000
   prg_ram_size_kb = (nes.cpu_rd(0x6000) + 1) * 8
 
   -- for save data safety disable PRG-RAM, and deny writes ??????
-  -- nes.cpu_wr(0xE000, 0x10, { opcode = "NES_MMC1_WR" })  -- bit4 RAM enable 0-enabled 1-disabled
+  -- nes.cpu_wr(PRG_BANK, 0x10, { opcode = "NES_MMC1_WR" })  -- bit4 RAM enable 0-enabled 1-disabled
 
   -- bit4 (CHR A16) is /CE pin for PRG-RAM on SNROM
-  nes.cpu_wr(0xA000, 0x10, { opcode = "NES_MMC1_WR" })
-  nes.cpu_wr(0xC000, 0x10, { opcode = "NES_MMC1_WR" })
+  nes.cpu_wr(CHR_BANK_0, 0x10, { opcode = "NES_MMC1_WR" })
+  nes.cpu_wr(CHR_BANK_1, 0x10, { opcode = "NES_MMC1_WR" })
 
   if prg_ram_size_kb >= 0 and prg_ram_size_kb <= 32 then
     log.success("PRG-RAM size detected", prg_ram_size_kb .. "KB")
@@ -591,11 +597,11 @@ local function prg_ram_exercise(wram_size_kb, retroprog_id)
   log.info("PRG-RAM size", wram_size_kb .. "KB")
 
   -- enable save ram ??????
-  -- nes.cpu_wr(0xE000, 0x00, { opcode = "NES_MMC1_WR" })  -- bit4 RAM enable 0-enabled 1-disabled
+  -- nes.cpu_wr(PRG_BANK, 0x00, { opcode = "NES_MMC1_WR" })  -- bit4 RAM enable 0-enabled 1-disabled
 
   -- bit4 (CHR A16) is /CE pin for PRG-RAM on SNROM
-  nes.cpu_wr(0xA000, 0x00, { opcode = "NES_MMC1_WR" })
-  nes.cpu_wr(0xC000, 0x00, { opcode = "NES_MMC1_WR" })
+  nes.cpu_wr(CHR_BANK_0, 0x00, { opcode = "NES_MMC1_WR" })
+  nes.cpu_wr(CHR_BANK_1, 0x00, { opcode = "NES_MMC1_WR" })
 
   -- write random data to all banks
   log.point("Writing random data to PRG-RAM")
@@ -605,8 +611,8 @@ local function prg_ram_exercise(wram_size_kb, retroprog_id)
     end
 
     -- set bank
-    nes.cpu_wr(0xA000, cur_bank << 2, { opcode = "NES_MMC1_WR" }) -- 8KB bank at $6000
-    nes.cpu_wr(0xC000, cur_bank << 2, { opcode = "NES_MMC1_WR" }) -- 8KB bank at $6000
+    nes.cpu_wr(CHR_BANK_0, cur_bank << 2, { opcode = "NES_MMC1_WR" }) -- 8KB bank at $6000
+    nes.cpu_wr(CHR_BANK_1, cur_bank << 2, { opcode = "NES_MMC1_WR" }) -- 8KB bank at $6000
 
     -- write random data
     local addr = 0x6000
@@ -629,11 +635,11 @@ local function prg_ram_exercise(wram_size_kb, retroprog_id)
   assert(file:close())
 
   -- for save data safety disable PRG-RAM, and deny writes ??????
-  -- nes.cpu_wr(0xE000, 0x10, { opcode = "NES_MMC1_WR" })  -- bit4 RAM enable 0-enabled 1-disabled
+  -- nes.cpu_wr(PRG_BANK, 0x10, { opcode = "NES_MMC1_WR" })  -- bit4 RAM enable 0-enabled 1-disabled
 
   -- bit4 (CHR A16) is /CE pin for PRG-RAM on SNROM
-  nes.cpu_wr(0xA000, 0x10, { opcode = "NES_MMC1_WR" })
-  nes.cpu_wr(0xC000, 0x10, { opcode = "NES_MMC1_WR" })
+  nes.cpu_wr(CHR_BANK_0, 0x10, { opcode = "NES_MMC1_WR" })
+  nes.cpu_wr(CHR_BANK_1, 0x10, { opcode = "NES_MMC1_WR" })
 
   -- re-open & compare dump with known lsfr bitstream
   local goodfile = opts.lua_path .. "./ignore/lfsr_32KB.bin"
@@ -680,8 +686,8 @@ local function chr_ram_get_size()
     end
 
     -- set bank
-    nes.cpu_wr(0xA000, cur_bank * 2, { opcode = "NES_MMC1_WR" })     -- 4KB bank at $0000
-    nes.cpu_wr(0xC000, cur_bank * 2 + 1, { opcode = "NES_MMC1_WR" }) -- 4KB bank at $1000
+    nes.cpu_wr(CHR_BANK_0, cur_bank * 2, { opcode = "NES_MMC1_WR" })     -- 4KB bank at $0000
+    nes.cpu_wr(CHR_BANK_1, cur_bank * 2 + 1, { opcode = "NES_MMC1_WR" }) -- 4KB bank at $1000
 
     -- write data
     nes.ppu_wr(0x0000, cur_bank)
@@ -692,8 +698,8 @@ local function chr_ram_get_size()
   spinner.clear()
 
   -- read back only last bank
-  nes.cpu_wr(0xA000, num_banks * 2, { opcode = "NES_MMC1_WR" })     -- 4KB bank at $0000
-  nes.cpu_wr(0xC000, num_banks * 2 + 1, { opcode = "NES_MMC1_WR" }) -- 4KB bank at $1000
+  nes.cpu_wr(CHR_BANK_0, num_banks * 2, { opcode = "NES_MMC1_WR" })     -- 4KB bank at $0000
+  nes.cpu_wr(CHR_BANK_1, num_banks * 2 + 1, { opcode = "NES_MMC1_WR" }) -- 4KB bank at $1000
   chr_ram_size_kb = (nes.ppu_rd(0x0000) + 1) * 8
 
   if chr_ram_size_kb >= 0 and chr_ram_size_kb <= 32 then
@@ -729,8 +735,8 @@ local function chr_ram_exercise(chr_ram_size_kb, retroprog_id)
     end
 
     -- set bank
-    nes.cpu_wr(0xA000, cur_bank * 2, { opcode = "NES_MMC1_WR" })     -- 4KB bank at $0000
-    nes.cpu_wr(0xC000, cur_bank * 2 + 1, { opcode = "NES_MMC1_WR" }) -- 4KB bank at $1000
+    nes.cpu_wr(CHR_BANK_0, cur_bank * 2, { opcode = "NES_MMC1_WR" })     -- 4KB bank at $0000
+    nes.cpu_wr(CHR_BANK_1, cur_bank * 2 + 1, { opcode = "NES_MMC1_WR" }) -- 4KB bank at $1000
 
     -- write data
     local addr = 0x0000

@@ -1,20 +1,23 @@
 -- create the module's table
-local gtrom   = {}
+local gtrom       = {}
 
 -- import required modules
-local dict    = require "scripts.app.dict"
-local nes     = require "scripts.app.nes"
-local dump    = require "scripts.app.dump"
-local flash   = require "scripts.app.flash"
-local chips   = require "scripts.app.chips"
-local time    = require "scripts.app.time"
-local log     = require "scripts.app.log"
-local spinner = require "scripts.app.spinner"
-local files   = require "scripts.app.files"
-local help    = require "scripts.app.help"
+local dict        = require "scripts.app.dict"
+local nes         = require "scripts.app.nes"
+local dump        = require "scripts.app.dump"
+local flash       = require "scripts.app.flash"
+local chips       = require "scripts.app.chips"
+local time        = require "scripts.app.time"
+local log         = require "scripts.app.log"
+local spinner     = require "scripts.app.spinner"
+local files       = require "scripts.app.files"
+local help        = require "scripts.app.help"
 
 -- file constants and global variables
-local mapname = "GTROM"
+local mapname     = "GTROM"
+
+-- registers
+local BANK_SELECT = 0x5000
 
 -- local functions
 
@@ -64,7 +67,7 @@ local function mirror_test(retroprog_id)
     spinner.update("NT", nt, "/", 1)
 
     -- enable set of 4 nametables
-    nes.cpu_wr(0x5000, nt << 5)
+    nes.cpu_wr(BANK_SELECT, nt << 5)
 
     fileA:seek("set")
     fileB:seek("set")
@@ -156,13 +159,13 @@ local function prg_rom_manf_id()
 
   log.section("Reading PRG-ROM manufacturer/device ID")
 
-  --no bus conflicts
-  --$5000-5FFF / $7000-7FFF writes to mapper
-  --$8000-FFFF writes to mapper
+  -- no bus conflicts
+  -- $5000-5FFF / $7000-7FFF writes to mapper
+  -- $8000-FFFF writes to mapper
   --
-  --A15 14 - 13 12
-  -- 1   1    0  1  : 0x5555 -> $D555
-  -- 1   0    1  0  : 0x2AAA -> $AAAA
+  -- A15 14 - 13 12
+  --  1   1    0  1  : 0x5555 -> $D555
+  --  1   0    1  0  : 0x2AAA -> $AAAA
   nes.cpu_wr(0xD555, 0xAA)
   nes.cpu_wr(0xAAAA, 0x55)
   nes.cpu_wr(0xD555, 0x90)
@@ -189,7 +192,7 @@ local function prg_rom_flash_byte(addr, value, bank)
     return
   end
 
-  nes.cpu_wr(0x5000, bank)
+  nes.cpu_wr(BANK_SELECT, bank)
 
   nes.cpu_wr(0xD555, 0xAA)
   nes.cpu_wr(0xAAAA, 0x55)
@@ -232,7 +235,7 @@ local function prg_rom_dump(file, rom_size_kb)
     end
 
     -- select desired bank(s) to dump
-    nes.cpu_wr(0x5000, cur_bank) --32KB @ CPU $8000
+    nes.cpu_wr(BANK_SELECT, cur_bank) -- 32KB @ CPU $8000
 
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
 
@@ -255,7 +258,7 @@ local function prg_rom_flash(file, rom_size_kb)
 
   while cur_bank < num_banks do
     -- select bank to flash
-    nes.cpu_wr(0x5000, cur_bank)
+    nes.cpu_wr(BANK_SELECT, cur_bank)
     dict.nes("SET_CUR_BANK", cur_bank)
 
     if DEBUG then
@@ -308,7 +311,7 @@ local function chr_dump(file, rom_size_kb)
       spinner.update("Dumping", cur_bank, "/", num_banks - 1)
     end
 
-    nes.cpu_wr(0x5000, cur_bank << 4) -- 8KB bank at $0000
+    nes.cpu_wr(BANK_SELECT, cur_bank << 4) -- 8KB bank at $0000
 
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_PPU_PAGE" })
 
@@ -325,8 +328,8 @@ end
 -- @return boolean success True when the CHR-RAM dump matches the expected LFSR data
 local function chr_ram_exercise(chr_ram_size_kb, retroprog_id)
   dict.stuff("RESET_LFSR") -- sets it to 1
-  -- dict.stuff("SET_LFSR_L", 0) --lock it up to clear ram
-  -- dict.stuff("SET_LFSR_L", 2) --give different seed for testing fails
+  -- dict.stuff("SET_LFSR_L", 0) -- lock it up to clear ram
+  -- dict.stuff("SET_LFSR_L", 2) -- give different seed for testing fails
 
   local cur_bank = 0
   local num_banks = math.floor(chr_ram_size_kb / 8)
@@ -338,7 +341,7 @@ local function chr_ram_exercise(chr_ram_size_kb, retroprog_id)
   log.point("Writing random data to CHR-RAM")
   while cur_bank < num_banks do
     if DEBUG then log.point("init CHR-RAM 8K bank", cur_bank, "of", num_banks - 1) end
-    nes.cpu_wr(0x5000, cur_bank << 4) -- 8KB bank at $0000
+    nes.cpu_wr(BANK_SELECT, cur_bank << 4) -- 8KB bank at $0000
     local addr = 0x0000
     while addr < 0x2000 do
       dict.nes("PPU_PAGE_WR_LFSR", addr)
@@ -374,17 +377,17 @@ end
 -- -- select different chr-ram banks and verify all 4 banks are present
 -- local function gtrom_chrbank_test()
 
---   nes.cpu_wr(0x5000, 0x00) --PT & NT bank 0
---   nes.ppu_wr(0x0000, 0xAA) --PT write
---   nes.ppu_wr(0x2000, 0xCC) --NT write
+--   nes.cpu_wr(BANK_SELECT, 0x00) -- PT & NT bank 0
+--   nes.ppu_wr(0x0000, 0xAA) -- PT write
+--   nes.ppu_wr(0x2000, 0xCC) -- NT write
 
---   nes.cpu_wr(0x5000, 0x30) --PT & NT bank 1
---   nes.ppu_wr(0x0000, 0x55) --PT write
---   nes.ppu_wr(0x2000, 0x33) --NT write
+--   nes.cpu_wr(BANK_SELECT, 0x30) -- PT & NT bank 1
+--   nes.ppu_wr(0x0000, 0x55) -- PT write
+--   nes.ppu_wr(0x2000, 0x33) -- NT write
 
---   --read back
+--   -- read back
 --   local test = true
---   nes.cpu_wr(0x5000, 0x00) --CHR bank 0
+--   nes.cpu_wr(BANK_SELECT, 0x00) -- CHR bank 0
 --   rv = nes.ppu_rd(0x0000)
 --   if rv ~= 0xAA then
 --     print( "\nFAIL CHR-RAM BANKING TEST!!!\n")
@@ -398,7 +401,7 @@ end
 --     test = false
 --   end
 
---   nes.cpu_wr(0x5000, 0x30) --CHR bank 1
+--   nes.cpu_wr(BANK_SELECT, 0x30) -- CHR bank 1
 --   rv = nes.ppu_rd(0x0000)
 --   if rv ~= 0x55 then
 --     print( "\nFAIL CHR-RAM BANKING TEST!!!\n")
@@ -464,7 +467,7 @@ local function process(process_opts, console_opts)
   local chr_size_kb      = console_opts.chr_rom_size_kb
   local wram_size_kb     = console_opts.wram_size_kb
 
-  --initialize device i/o for NES
+  -- initialize device i/o for NES
   dict.io("IO_RESET")
   dict.io("NES_INIT")
 

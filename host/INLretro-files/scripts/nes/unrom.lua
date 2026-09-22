@@ -1,21 +1,24 @@
 -- create the module's table
-local unrom   = {}
+local unrom    = {}
 
 -- import required modules
-local dict    = require "scripts.app.dict"
-local nes     = require "scripts.app.nes"
-local dump    = require "scripts.app.dump"
-local flash   = require "scripts.app.flash"
-local time    = require "scripts.app.time"
-local log     = require "scripts.app.log"
-local spinner = require "scripts.app.spinner"
-local files   = require "scripts.app.files"
-local help    = require "scripts.app.help"
+local dict     = require "scripts.app.dict"
+local nes      = require "scripts.app.nes"
+local dump     = require "scripts.app.dump"
+local flash    = require "scripts.app.flash"
+local time     = require "scripts.app.time"
+local log      = require "scripts.app.log"
+local spinner  = require "scripts.app.spinner"
+local files    = require "scripts.app.files"
+local help     = require "scripts.app.help"
 
 -- file constants and global variables
-local mapname = "UxROM"
+local mapname  = "UxROM"
 local prg_flash_chip
 local bank_table_base
+
+-- registers
+local PRG_BANK = 0xC000
 
 -- local functions
 
@@ -31,21 +34,21 @@ local bank_table_base
 
 local function create_header(file, prg_kb, chr_kb)
   local mirroring = nes.detect_mapper_mirroring()
-  --write_header(file, prg_kb, chr_kb, mapper, mirroring)
+  -- write_header(file, prg_kb, chr_kb, mapper, mirroring)
   nes.write_header(file, prg_kb, 0, op_buffer[mapname], mirroring)
 end
 
 local function init_mapper()
-  --need to select bank0 so PRG-ROM A14 is low when writing to lower bank
-  --TODO this needs to be written to rom where value is 0x00 due to bus conflicts
-  --so need to find the bank table first!
-  --this could present an even larger problem with a blank flash chip
-  --would have to get a byte written to 0x00 first before able to change the bank..
-  --becomes catch 22 situation.  Will have to rely on mcu over powering PRG-ROM..
-  --ahh but a way out would be to disable the PRG-ROM with exp0 (/WE) going low
-  --for now the write below seems to be working fine though..
+  -- need to select bank0 so PRG-ROM A14 is low when writing to lower bank
+  -- TODO this needs to be written to rom where value is 0x00 due to bus conflicts
+  -- so need to find the bank table first!
+  -- this could present an even larger problem with a blank flash chip
+  -- would have to get a byte written to 0x00 first before able to change the bank..
+  -- becomes catch 22 situation.  Will have to rely on mcu over powering PRG-ROM..
+  -- ahh but a way out would be to disable the PRG-ROM with exp0 (/WE) going low
+  -- for now the write below seems to be working fine though..
   -- nes.cpu_wr(0x8000, 0x00)
-  nes.cpu_wr(0xC000, 0x00)
+  nes.cpu_wr(PRG_BANK, 0x00)
 end
 
 --[[
@@ -144,7 +147,7 @@ local function prg_rom_dump(file, rom_size_kb)
     end
 
     -- set bank
-    nes.cpu_wr(bank_table_base + cur_bank, cur_bank) --16KB @ CPU $8000
+    nes.cpu_wr(bank_table_base + cur_bank, cur_bank) -- 16KB @ CPU $8000
 
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
 
@@ -171,13 +174,13 @@ local function prg_rom_flash(file, rom_size_kb)
   log.section("Programming PRG-ROM")
   log.info("PRG-ROM size", rom_size_kb .. "KB")
 
-  --bank table should already be written
+  -- bank table should already be written
 
-  local bank_size_kb = 16 --UNROM 16KByte per PRG bank
+  local bank_size_kb = 16 -- UNROM 16KByte per PRG bank
   local cur_bank = 0
   local num_banks = math.floor(rom_size_kb / bank_size_kb)
 
-  local byte_num --byte number gets reset for each bank
+  local byte_num -- byte number gets reset for each bank
   local byte_str, data, readdata
 
   -- set the bank table address
@@ -191,9 +194,9 @@ local function prg_rom_flash(file, rom_size_kb)
       spinner.update("Flashing", cur_bank, "/", num_banks - 1)
     end
 
-    --select bank to flash
+    -- select bank to flash
     dict.nes("SET_CUR_BANK", cur_bank)
-    --if DEBUG then print("get bank:", dict.nes("GET_CUR_BANK")) end
+    -- if DEBUG then print("get bank:", dict.nes("GET_CUR_BANK")) end
 
     -- flash data
     flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "NES_PRG_ROM" })
@@ -209,8 +212,8 @@ end
 -- @param addr_base integer CPU address of the bank table
 -- @param entries integer Number of bank table entries to write
 local function write_bank_table(addr_base, entries)
-  --UxROM can have a single bank table in $C000-FFFF (assuming this is most likely)
-  --or a bank table in all other banks in $8000-BFFF (unsupported for now)
+  -- UxROM can have a single bank table in $C000-FFFF (assuming this is most likely)
+  -- or a bank table in all other banks in $8000-BFFF (unsupported for now)
 
   init_mapper()
 
@@ -232,20 +235,20 @@ local function write_bank_table(addr_base, entries)
 
   --[[
   if base >= 0xC000 then
-    --only need one bank table in last bank
-    cur_bank = entries - 1  --16 minus 1 is 15 = 0x0F
+    -- only need one bank table in last bank
+    cur_bank = entries - 1  -- 16 minus 1 is 15 = 0x0F
   else
-    --need bank table in all banks except last
-    cur_bank = entries - 2  --16 minus 2 is 14 = 0x0E
+    -- need bank table in all banks except last
+    cur_bank = entries - 2  -- 16 minus 2 is 14 = 0x0E
   end
 
 
   while cur_bank >= 0 do
-    --select bank to write to (last bank first)
-    --use the bank table to make the switch
+    -- select bank to write to (last bank first)
+    -- use the bank table to make the switch
     nes.cpu_wr(base+cur_bank, cur_bank)
 
-    --write bank table to selected bank
+    -- write bank table to selected bank
     local i = 0
     while i < entries do
       print("write entry", i, "bank:", cur_bank)
@@ -256,13 +259,13 @@ local function write_bank_table(addr_base, entries)
     cur_bank = cur_bank-1
 
     if base >= 0xC000 then
-      --only need one bank table in last bank
+      -- only need one bank table in last bank
       break
     end
   end
   --]]
 
-  --TODO verify the bank table was successfully written before continuing!
+  -- TODO verify the bank table was successfully written before continuing!
 end
 
 --[[
@@ -304,8 +307,8 @@ end
 -- @return boolean success True when the CHR-RAM dump matches the expected LFSR data
 local function chr_ram_exercise(chrram_size_kb, retroprog_id)
   dict.stuff("RESET_LFSR") -- sets it to 1
-  -- dict.stuff("SET_LFSR_L", 0) --lock it up to clear ram
-  -- dict.stuff("SET_LFSR_L", 2) --give different seed for testing fails
+  -- dict.stuff("SET_LFSR_L", 0) -- lock it up to clear ram
+  -- dict.stuff("SET_LFSR_L", 2) -- give different seed for testing fails
 
   local cur_bank = 0
   local num_banks = math.floor(chrram_size_kb / 8)

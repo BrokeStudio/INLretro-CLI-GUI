@@ -1,20 +1,23 @@
 -- create the module's table
-local mapper30 = {}
+local mapper30    = {}
 
 -- import required modules
-local dict     = require "scripts.app.dict"
-local nes      = require "scripts.app.nes"
-local dump     = require "scripts.app.dump"
-local flash    = require "scripts.app.flash"
-local chips    = require "scripts.app.chips"
-local time     = require "scripts.app.time"
-local log      = require "scripts.app.log"
-local spinner  = require "scripts.app.spinner"
-local files    = require "scripts.app.files"
-local help     = require "scripts.app.help"
+local dict        = require "scripts.app.dict"
+local nes         = require "scripts.app.nes"
+local dump        = require "scripts.app.dump"
+local flash       = require "scripts.app.flash"
+local chips       = require "scripts.app.chips"
+local time        = require "scripts.app.time"
+local log         = require "scripts.app.log"
+local spinner     = require "scripts.app.spinner"
+local files       = require "scripts.app.files"
+local help        = require "scripts.app.help"
 
 -- file constants and global variables
-local mapname  = "MAP30"
+local mapname     = "MAP30"
+
+-- registers
+local BANK_SELECT = 0xC000
 
 -- local functions
 
@@ -63,13 +66,13 @@ local function prg_rom_manf_id()
   -- A15 14 - 13 12
   --  1   1    0  1  : 0x5555 -> bank1, $9555
   --  1   0    1  0  : 0x2AAA -> bank0, $AAAA
-  nes.cpu_wr(0xC000, 0x01)
+  nes.cpu_wr(BANK_SELECT, 0x01)
   nes.cpu_wr(0x9555, 0xAA)
 
-  nes.cpu_wr(0xC000, 0x00)
+  nes.cpu_wr(BANK_SELECT, 0x00)
   nes.cpu_wr(0xAAAA, 0x55)
 
-  nes.cpu_wr(0xC000, 0x01)
+  nes.cpu_wr(BANK_SELECT, 0x01)
   nes.cpu_wr(0x9555, 0x90)
 
   manufacturer_id = nes.cpu_rd(0x8000)
@@ -94,14 +97,14 @@ local function prg_rom_flash_byte(addr, value, bank)
     return
   end
 
-  nes.cpu_wr(0xC000, 0x01)
+  nes.cpu_wr(BANK_SELECT, 0x01)
   nes.cpu_wr(0x9555, 0xAA)
-  nes.cpu_wr(0xC000, 0x00)
+  nes.cpu_wr(BANK_SELECT, 0x00)
   nes.cpu_wr(0xAAAA, 0x55)
-  nes.cpu_wr(0xC000, 0x01)
+  nes.cpu_wr(BANK_SELECT, 0x01)
   nes.cpu_wr(0x9555, 0xA0)
 
-  nes.cpu_wr(0xC000, bank)
+  nes.cpu_wr(BANK_SELECT, bank)
   nes.cpu_wr(addr, value)
 
   local rv = nes.cpu_rd(addr)
@@ -139,8 +142,7 @@ local function prg_rom_dump(file, rom_size_kb)
     end
 
     -- set bank
-    -- mapper 30 bank register is $C000-FFFF
-    nes.cpu_wr(0xFC80, cur_bank) -- 16KB @ CPU $8000
+    nes.cpu_wr(BANK_SELECT, cur_bank) -- 16KB @ CPU $8000
 
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
 
@@ -192,17 +194,17 @@ local function prg_rom_erase(prg_size_kb)
   -- erase PRG-ROM only if needed
   log.section("Erasing PRG-ROM")
   time.start()
-  nes.cpu_wr(0xC000, 0x01)
+  nes.cpu_wr(BANK_SELECT, 0x01)
   nes.cpu_wr(0x9555, 0xAA)
-  nes.cpu_wr(0xC000, 0x00)
+  nes.cpu_wr(BANK_SELECT, 0x00)
   nes.cpu_wr(0xAAAA, 0x55)
-  nes.cpu_wr(0xC000, 0x01)
+  nes.cpu_wr(BANK_SELECT, 0x01)
   nes.cpu_wr(0x9555, 0x80)
-  nes.cpu_wr(0xC000, 0x01)
+  nes.cpu_wr(BANK_SELECT, 0x01)
   nes.cpu_wr(0x9555, 0xAA)
-  nes.cpu_wr(0xC000, 0x00)
+  nes.cpu_wr(BANK_SELECT, 0x00)
   nes.cpu_wr(0xAAAA, 0x55)
-  nes.cpu_wr(0xC000, 0x01)
+  nes.cpu_wr(BANK_SELECT, 0x01)
   nes.cpu_wr(0x9555, 0x10)
 
   rv = nes.cpu_rd(0x8000)
@@ -247,7 +249,7 @@ local function chr_dump(file, rom_size_kb)
       spinner.update("Dumping", cur_bank, "/", num_banks - 1)
     end
 
-    nes.cpu_wr(0xC000, cur_bank << 5) -- 8KB bank at $0000
+    nes.cpu_wr(BANK_SELECT, cur_bank << 5) -- 8KB bank at $0000
 
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_PPU_PAGE" })
 
@@ -273,13 +275,13 @@ local function chr_ram_get_size()
   -- write to banks backwards
   for cur_bank = num_banks, 0, -1 do
     if DEBUG then log.point("trying to write to CHR bank", cur_bank, "of", num_banks) end
-    nes.cpu_wr(0xC000, cur_bank << 5) -- 8KB bank at $0000
+    nes.cpu_wr(BANK_SELECT, cur_bank << 5) -- 8KB bank at $0000
     nes.ppu_wr(0x0000, cur_bank)
     cur_bank = cur_bank + 1
   end
 
   -- read back only last bank
-  nes.cpu_wr(0xC000, num_banks << 5) -- 8KB bank at $0000
+  nes.cpu_wr(BANK_SELECT, num_banks << 5) -- 8KB bank at $0000
   rv = nes.ppu_rd(0x0000)
   chr_ram_size_kb = (rv + 1) * 8
 
@@ -312,7 +314,7 @@ local function chr_ram_exercise(chr_ram_size_kb, retroprog_id)
   log.point("Writing random data to CHR-RAM")
   while cur_bank < num_banks do
     if DEBUG then log.point("init CHR-RAM 8K bank", cur_bank, "of", num_banks - 1) end
-    nes.cpu_wr(0xC000, cur_bank << 5) --8KB bank at $0000
+    nes.cpu_wr(BANK_SELECT, cur_bank << 5) --8KB bank at $0000
     local addr = 0x0000
     while addr < 0x2000 do
       dict.nes("PPU_PAGE_WR_LFSR", addr)

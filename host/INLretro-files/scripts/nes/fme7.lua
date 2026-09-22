@@ -1,21 +1,41 @@
 -- create the module's table
-local fme7    = {}
+local fme7                = {}
 
 -- import required modules
-local dict    = require "scripts.app.dict"
-local nes     = require "scripts.app.nes"
-local dump    = require "scripts.app.dump"
-local flash   = require "scripts.app.flash"
-local time    = require "scripts.app.time"
-local log     = require "scripts.app.log"
-local spinner = require "scripts.app.spinner"
-local files   = require "scripts.app.files"
-local help    = require "scripts.app.help"
+local dict                = require "scripts.app.dict"
+local nes                 = require "scripts.app.nes"
+local dump                = require "scripts.app.dump"
+local flash               = require "scripts.app.flash"
+local time                = require "scripts.app.time"
+local log                 = require "scripts.app.log"
+local spinner             = require "scripts.app.spinner"
+local files               = require "scripts.app.files"
+local help                = require "scripts.app.help"
 
 -- file constants and global variables
-local mapname = "FME7"
+local mapname             = "FME7"
 local prg_flash_chip
 local chr_flash_chip
+
+-- registers
+local COMMAND             = 0x8000
+local CHR_BANK_0          = 0x00
+local CHR_BANK_1          = 0x01
+local CHR_BANK_2          = 0x02
+local CHR_BANK_3          = 0x03
+local CHR_BANK_4          = 0x04
+local CHR_BANK_5          = 0x05
+local CHR_BANK_6          = 0x06
+local CHR_BANK_7          = 0x07
+local PRG_BANK_6          = 0x08
+local PRG_BANK_8          = 0x09
+local PRG_BANK_A          = 0x0A
+local PRG_BANK_C          = 0x0B
+local NAMETABLE_MIRRORING = 0x0C
+local IRQ_CONTROL         = 0x0D
+local IRQ_COUNTER_LO      = 0x0E
+local IRQ_COUNTER_HI      = 0x0F
+local PARAMETER           = 0xA000
 
 -- local functions
 
@@ -40,12 +60,12 @@ end
 -- leaves $8000 control reg selected to CHR value selected so $A000 writes don't affect banking
 local function init_mapper()
   -- for save data safety start by disable PRG-RAM, and map PRG-ROM to $6000
-  nes.cpu_wr(0x8000, 0x08)
-  nes.cpu_wr(0xA000, 0x00) -- RAM disabled, ROM first bank mapped to $6000
+  nes.cpu_wr(COMMAND, PRG_BANK_6)
+  nes.cpu_wr(PARAMETER, 0x00) -- RAM disabled, ROM first bank mapped to $6000
 
   -- set mirroring
-  nes.cpu_wr(0x8000, 0x0C)
-  nes.cpu_wr(0xA000, 0x00) --00-vert 01-horz 10-NT0 11-NT1
+  nes.cpu_wr(COMMAND, NAMETABLE_MIRRORING)
+  nes.cpu_wr(PARAMETER, 0x00) -- 00-vert 01-horz 10-NT0 11-NT1
 
   -- Bank $0 - PPU $0000-$03FF
   -- Bank $1 - PPU $0400-$07FF
@@ -57,31 +77,31 @@ local function init_mapper()
   -- Bank $7 - PPU $1C00-$1FFF
 
   -- For CHR-ROM flash writes, use lower 4KB (PT0) for writing data & upper 4KB (PT1) for commands
-  nes.cpu_wr(0x8000, 0x00)
-  nes.cpu_wr(0xA000, 0x00) --1KB @ PPU $0000
+  nes.cpu_wr(COMMAND, CHR_BANK_0)
+  nes.cpu_wr(PARAMETER, 0x00) -- 1KB @ PPU $0000
 
-  nes.cpu_wr(0x8000, 0x01)
-  nes.cpu_wr(0xA000, 0x01) --1KB @ PPU $0400
+  nes.cpu_wr(COMMAND, CHR_BANK_1)
+  nes.cpu_wr(PARAMETER, 0x01) -- 1KB @ PPU $0400
 
-  nes.cpu_wr(0x8000, 0x02)
-  nes.cpu_wr(0xA000, 0x02) --1KB @ PPU $0800
+  nes.cpu_wr(COMMAND, CHR_BANK_2)
+  nes.cpu_wr(PARAMETER, 0x02) -- 1KB @ PPU $0800
 
-  nes.cpu_wr(0x8000, 0x03)
-  nes.cpu_wr(0xA000, 0x03) --1KB @ PPU $0C00
+  nes.cpu_wr(COMMAND, CHR_BANK_3)
+  nes.cpu_wr(PARAMETER, 0x03) -- 1KB @ PPU $0C00
 
   -- use lower half of PT1 for $5555 commands
-  nes.cpu_wr(0x8000, 0x04)
-  nes.cpu_wr(0xA000, 0x15) --1KB @ PPU $1000
+  nes.cpu_wr(COMMAND, CHR_BANK_4)
+  nes.cpu_wr(PARAMETER, 0x15) -- 1KB @ PPU $1000
 
-  nes.cpu_wr(0x8000, 0x05)
-  nes.cpu_wr(0xA000, 0x15) --1KB @ PPU $1400
+  nes.cpu_wr(COMMAND, CHR_BANK_5)
+  nes.cpu_wr(PARAMETER, 0x15) -- 1KB @ PPU $1400
 
   -- use upper half of PT1 for $2AAA commands
-  nes.cpu_wr(0x8000, 0x06)
-  nes.cpu_wr(0xA000, 0x0A) --1KB @ PPU $1800
+  nes.cpu_wr(COMMAND, CHR_BANK_6)
+  nes.cpu_wr(PARAMETER, 0x0A) -- 1KB @ PPU $1800
 
-  nes.cpu_wr(0x8000, 0x07)
-  nes.cpu_wr(0xA000, 0x0A) --1KB @ PPU $1C00
+  nes.cpu_wr(COMMAND, CHR_BANK_7)
+  nes.cpu_wr(PARAMETER, 0x0A) -- 1KB @ PPU $1C00
 
   -- For PRG-ROM flash writes:
   -- mode 0: $C000-FFFF fixed to last 16KByte
@@ -103,20 +123,20 @@ local function init_mapper()
 
   -- $5555 commands written to $D555
   -- $2AAA commands written to $AAAA
-  nes.cpu_wr(0x8000, 0x0A)
-  nes.cpu_wr(0xA000, 0x01) --8KB @ CPU $A000
-  nes.cpu_wr(0x8000, 0x0B)
-  nes.cpu_wr(0xA000, 0x02) --8KB @ CPU $C000
+  nes.cpu_wr(COMMAND, PRG_BANK_A)
+  nes.cpu_wr(PARAMETER, 0x01) -- 8KB @ CPU $A000
+  nes.cpu_wr(COMMAND, PRG_BANK_C)
+  nes.cpu_wr(PARAMETER, 0x02) -- 8KB @ CPU $C000
 
   -- DATA writes written to $8000-9FFF
-  nes.cpu_wr(0x8000, 0x09)
-  nes.cpu_wr(0xA000, 0x00) --8KB @ CPU $8000
+  nes.cpu_wr(COMMAND, PRG_BANK_8)
+  nes.cpu_wr(PARAMETER, 0x00) -- 8KB @ CPU $8000
 
-  -- nes.cpu_wr(0x8000, 0x08)
-  -- nes.cpu_wr(0xA000, 0x00)  --8KB @ CPU $6000
+  -- nes.cpu_wr(COMMAND, 0x08)
+  -- nes.cpu_wr(PARAMETER, 0x00)  -- 8KB @ CPU $6000
 
   -- set $8000 bank select register to CHR ctl reg so $A000 writes don't change banking
-  nes.cpu_wr(0x8000, 0x02)
+  nes.cpu_wr(COMMAND, CHR_BANK_2)
 end
 
 -- test the mapper's mirroring modes to verify working properly
@@ -128,8 +148,8 @@ local function mirror_test()
   init_mapper()
 
   -- Vertical
-  nes.cpu_wr(0x8000, 0x0C)
-  nes.cpu_wr(0xA000, 0x00) --00-vert 01-horz 10-NT0 11-NT1
+  nes.cpu_wr(COMMAND, NAMETABLE_MIRRORING)
+  nes.cpu_wr(PARAMETER, 0x00) -- 00-vert 01-horz 10-NT0 11-NT1
   if nes.detect_mapper_mirroring() ~= "VERT" then
     log.error("Vertical mirroring test failed")
     return false
@@ -138,8 +158,8 @@ local function mirror_test()
   end
 
   -- Horizontal
-  nes.cpu_wr(0x8000, 0x0C)
-  nes.cpu_wr(0xA000, 0x01) --00-vert 01-horz 10-NT0 11-NT1
+  nes.cpu_wr(COMMAND, NAMETABLE_MIRRORING)
+  nes.cpu_wr(PARAMETER, 0x01) -- 00-vert 01-horz 10-NT0 11-NT1
   if nes.detect_mapper_mirroring() ~= "HORZ" then
     log.error("Horizontal mirroring test failed")
     return false
@@ -148,8 +168,8 @@ local function mirror_test()
   end
 
   -- 1 screen A
-  nes.cpu_wr(0x8000, 0x0C)
-  nes.cpu_wr(0xA000, 0x02) --00-vert 01-horz 10-NT0 11-NT1
+  nes.cpu_wr(COMMAND, NAMETABLE_MIRRORING)
+  nes.cpu_wr(PARAMETER, 0x02) -- 00-vert 01-horz 10-NT0 11-NT1
   if nes.detect_mapper_mirroring() ~= "1SCRNA" then
     log.error("One screen mirroring test failed (1 screen A)")
     return false
@@ -158,8 +178,8 @@ local function mirror_test()
   end
 
   -- 1 screen B
-  nes.cpu_wr(0x8000, 0x0C)
-  nes.cpu_wr(0xA000, 0x03) --00-vert 01-horz 10-NT0 11-NT1
+  nes.cpu_wr(COMMAND, NAMETABLE_MIRRORING)
+  nes.cpu_wr(PARAMETER, 0x03) -- 00-vert 01-horz 10-NT0 11-NT1
   if nes.detect_mapper_mirroring() ~= "1SCRNB" then
     log.error("One screen mirroring test failed (1 screen B)")
     return false
@@ -197,7 +217,7 @@ local function prg_rom_flash_byte(addr, value)
   nes.cpu_wr(addr, value)
 
   -- recover by setting $8000 reg select back to a CHR reg
-  nes.cpu_wr(0x8000, 0x02)
+  nes.cpu_wr(COMMAND, CHR_BANK_2)
 
   local rv = nes.cpu_rd(addr)
 
@@ -237,13 +257,13 @@ local function prg_rom_dump(file, rom_size_kb)
     end
 
     -- set bank
-    nes.cpu_wr(0x8000, 0x09)
+    nes.cpu_wr(COMMAND, PRG_BANK_8)
     -- the bank is half the size of KB per read so must multiply by 2
-    nes.cpu_wr(0xA000, cur_bank * 2) -- 8KB @ CPU $8000
+    nes.cpu_wr(PARAMETER, cur_bank * 2) -- 8KB @ CPU $8000
 
-    nes.cpu_wr(0x8000, 0x0A)
+    nes.cpu_wr(COMMAND, PRG_BANK_A)
     -- the bank is half the size of KB per read so must multiply by 2 and add 1 for second 8KB
-    nes.cpu_wr(0xA000, cur_bank * 2 + 1) -- 8KB @ CPU $A000
+    nes.cpu_wr(PARAMETER, cur_bank * 2 + 1) -- 8KB @ CPU $A000
 
     -- have the device dump a bank worth of data
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
@@ -276,15 +296,15 @@ local function prg_rom_flash(file, rom_size_kb)
 
     -- write the current bank to the mapper register
     -- DATA writes written to $8000-9FFF
-    nes.cpu_wr(0x8000, 0x09)
-    nes.cpu_wr(0xA000, cur_bank) -- 8KB @ CPU $8000
+    nes.cpu_wr(COMMAND, PRG_BANK_8)
+    nes.cpu_wr(PARAMETER, cur_bank) -- 8KB @ CPU $8000
 
-    --set $8000 bank select back to a CHR register
-    --keeps from having the PRG bank changing when writing data
-    nes.cpu_wr(0x8000, 0x02)
+    -- set $8000 bank select back to a CHR register
+    -- keeps from having the PRG bank changing when writing data
+    nes.cpu_wr(COMMAND, CHR_BANK_2)
 
-    --have the device write a bank worth of data
-    --MMC3 functions work perfectly for FME7
+    -- have the device write a bank worth of data
+    -- MMC3 functions work perfectly for FME7
     flash.write_file(file, bank_size_kb, { mapper = "MMC3", mem_type = "NES_PRG_ROM" })
 
     cur_bank = cur_bank + 1
@@ -355,13 +375,13 @@ local function chr_dump(file, rom_size_kb)
       spinner.update("Dumping", cur_bank, "/", num_banks - 1)
     end
 
-    nes.cpu_wr(0x8000, 0x00)
+    nes.cpu_wr(COMMAND, CHR_BANK_0)
     -- the bank is half the size of KB per read so must multiply by 2
-    nes.cpu_wr(0xA000, cur_bank * 2) -- 1KB @ PPU $0000
+    nes.cpu_wr(PARAMETER, cur_bank * 2) -- 1KB @ PPU $0000
 
-    nes.cpu_wr(0x8000, 0x01)
+    nes.cpu_wr(COMMAND, CHR_BANK_1)
     -- the bank is half the size of KB per read so must multiply by 2 and add 1 for second 1KB
-    nes.cpu_wr(0xA000, cur_bank * 2 + 1) -- 1KB @ PPU $0800
+    nes.cpu_wr(PARAMETER, cur_bank * 2 + 1) -- 1KB @ PPU $0800
 
     -- have the device dump a bank worth of data
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_PPU_1KB" })
@@ -394,17 +414,17 @@ local function chr_rom_flash(file, rom_size_kb)
 
     -- select bank to flash
     -- DATA writes written to $0000-0FFF
-    nes.cpu_wr(0x8000, 0x00)
-    nes.cpu_wr(0xA000, cur_bank * 4)     --1KB @ PPU $0000
-    nes.cpu_wr(0x8000, 0x01)
-    nes.cpu_wr(0xA000, cur_bank * 4 + 1) -- 1KB @ PPU $0400
-    nes.cpu_wr(0x8000, 0x02)
-    nes.cpu_wr(0xA000, cur_bank * 4 + 2) -- 1KB @ PPU $0800
-    nes.cpu_wr(0x8000, 0x03)
-    nes.cpu_wr(0xA000, cur_bank * 4 + 3) -- 1KB @ PPU $0C00
+    nes.cpu_wr(COMMAND, CHR_BANK_0)
+    nes.cpu_wr(PARAMETER, cur_bank * 4)     -- 1KB @ PPU $0000
+    nes.cpu_wr(COMMAND, CHR_BANK_1)
+    nes.cpu_wr(PARAMETER, cur_bank * 4 + 1) -- 1KB @ PPU $0400
+    nes.cpu_wr(COMMAND, CHR_BANK_2)
+    nes.cpu_wr(PARAMETER, cur_bank * 4 + 2) -- 1KB @ PPU $0800
+    nes.cpu_wr(COMMAND, CHR_BANK_3)
+    nes.cpu_wr(PARAMETER, cur_bank * 4 + 3) -- 1KB @ PPU $0C00
 
-    --have the device write a bank worth of data
-    --MMC3 functions work perfectly for FME7
+    -- have the device write a bank worth of data
+    -- MMC3 functions work perfectly for FME7
     flash.write_file(file, 4, { mapper = "MMC3", mem_type = "NES_CHR_ROM" })
 
     cur_bank = cur_bank + 1
@@ -437,7 +457,7 @@ local function prg_ram_dump(file, ram_size_kb)
 
   log.info("PRG-RAM size", ram_size_kb .. "KB")
 
-  nes.cpu_wr(0x8000, 0x08)
+  nes.cpu_wr(COMMAND, PRG_BANK_6)
 
   while cur_bank < num_banks do
     if DEBUG then
@@ -447,7 +467,7 @@ local function prg_ram_dump(file, ram_size_kb)
     end
 
     -- set bank
-    nes.cpu_wr(0xA000, 0xC0 | cur_bank)
+    nes.cpu_wr(PARAMETER, 0xC0 | cur_bank)
 
     -- have the device dump a bank worth of data
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
@@ -470,7 +490,7 @@ local function prg_ram_write(file, ram_size_kb)
   local cur_bank = 0
   local num_banks = math.floor(ram_size_kb / bank_size_kb)
 
-  nes.cpu_wr(0x8000, 0x08)
+  nes.cpu_wr(COMMAND, PRG_BANK_6)
 
   while cur_bank < num_banks do
     if DEBUG then
@@ -480,9 +500,9 @@ local function prg_ram_write(file, ram_size_kb)
     end
 
     -- set bank
-    nes.cpu_wr(0xA000, 0xC0 | cur_bank)
+    nes.cpu_wr(PARAMETER, 0xC0 | cur_bank)
 
-    --have the device write a bank worth of data
+    -- have the device write a bank worth of data
     flash.write_file(file, bank_size_kb, { mapper = "NOVAR", mem_type = "NES_PRG_RAM" })
 
     cur_bank = cur_bank + 1
@@ -502,8 +522,8 @@ local function prg_ram_test()
   log.section("Detecting PRG-RAM")
 
   -- RAM enabled, RAM first bank mapped to $6000
-  nes.cpu_wr(0x8000, 0x08)
-  nes.cpu_wr(0xA000, 0xC0)
+  nes.cpu_wr(COMMAND, PRG_BANK_6)
+  nes.cpu_wr(PARAMETER, 0xC0)
 
   -- save potential battery backed data first
   saved_value = nes.cpu_rd(0x6000)
@@ -530,8 +550,8 @@ local function prg_ram_test()
   end
 
   -- RAM disabled, ROM first bank mapped to $6000
-  nes.cpu_wr(0x8000, 0x08)
-  nes.cpu_wr(0xA000, 0x00)
+  nes.cpu_wr(COMMAND, PRG_BANK_6)
+  nes.cpu_wr(PARAMETER, 0x00)
 
   return test
 end
@@ -550,8 +570,8 @@ local function prg_ram_get_size()
   log.section("Detecting PRG-RAM size")
 
   -- RAM enabled, RAM first bank mapped to $6000
-  nes.cpu_wr(0x8000, 0x08)
-  nes.cpu_wr(0xA000, 0xC0)
+  nes.cpu_wr(COMMAND, PRG_BANK_6)
+  nes.cpu_wr(PARAMETER, 0xC0)
 
   -- write to banks backwards
   while cur_bank >= 0 do
@@ -562,7 +582,7 @@ local function prg_ram_get_size()
     end
 
     -- set bank
-    nes.cpu_wr(0xA000, 0xC0 | cur_bank)
+    nes.cpu_wr(PARAMETER, 0xC0 | cur_bank)
 
     -- write data
     nes.cpu_wr(0x6000, cur_bank)
@@ -574,12 +594,12 @@ local function prg_ram_get_size()
 
   -- read back only last bank
   -- set bank
-  nes.cpu_wr(0xA000, 0xC0 | (num_banks - 1))
+  nes.cpu_wr(PARAMETER, 0xC0 | (num_banks - 1))
   prg_ram_size_kb = (nes.cpu_rd(0x6000) + 1) * 8
 
   -- RAM disabled, ROM first bank mapped to $6000
-  nes.cpu_wr(0x8000, 0x08)
-  nes.cpu_wr(0xA000, 0x00)
+  nes.cpu_wr(COMMAND, PRG_BANK_6)
+  nes.cpu_wr(PARAMETER, 0x00)
 
   if prg_ram_size_kb >= 0 and prg_ram_size_kb <= 32 then
     log.success("PRG-RAM size detected", prg_ram_size_kb .. "KB")
@@ -609,7 +629,7 @@ local function prg_ram_exercise(wram_size_kb, retroprog_id)
   log.section("Exercising PRG-RAM")
   log.info("PRG-RAM size", wram_size_kb .. "KB")
 
-  nes.cpu_wr(0x8000, 0x08)
+  nes.cpu_wr(COMMAND, PRG_BANK_6)
 
   -- write random data to all banks
   log.point("Writing random data to PRG-RAM")
@@ -619,7 +639,7 @@ local function prg_ram_exercise(wram_size_kb, retroprog_id)
     end
 
     -- set bank
-    nes.cpu_wr(0xA000, 0xC0 | cur_bank)
+    nes.cpu_wr(PARAMETER, 0xC0 | cur_bank)
 
     -- write random data
     local addr = 0x6000
@@ -642,7 +662,7 @@ local function prg_ram_exercise(wram_size_kb, retroprog_id)
   assert(file:close())
 
   -- RAM disabled, ROM first bank mapped to $6000
-  nes.cpu_wr(0xA000, 0x00)
+  nes.cpu_wr(PARAMETER, 0x00)
 
   -- re-open & compare dump with known lsfr bitstream
   local goodfile = opts.lua_path .. "./ignore/lfsr_32KB.bin"

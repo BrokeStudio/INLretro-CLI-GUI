@@ -1,21 +1,29 @@
 -- create the module's table
-local mmc4    = {}
+local mmc4      = {}
 
 -- import required modules
-local dict    = require "scripts.app.dict"
-local nes     = require "scripts.app.nes"
-local dump    = require "scripts.app.dump"
-local flash   = require "scripts.app.flash"
-local time    = require "scripts.app.time"
-local log     = require "scripts.app.log"
-local spinner = require "scripts.app.spinner"
-local files   = require "scripts.app.files"
-local help    = require "scripts.app.help"
+local dict      = require "scripts.app.dict"
+local nes       = require "scripts.app.nes"
+local dump      = require "scripts.app.dump"
+local flash     = require "scripts.app.flash"
+local time      = require "scripts.app.time"
+local log       = require "scripts.app.log"
+local spinner   = require "scripts.app.spinner"
+local files     = require "scripts.app.files"
+local help      = require "scripts.app.help"
 
 -- file constants and global variables
-local mapname = "MMC4"
+local mapname   = "MMC4"
 local prg_flash_chip
 local chr_flash_chip
+
+-- registers
+local PRG_BANK  = 0xA000
+local CHR_FD_0  = 0xB000
+local CHR_FE_0  = 0xC000
+local CHR_FD_1  = 0xD000
+local CHR_FE_1  = 0xE000
+local MIRRORING = 0xF000
 
 -- local functions
 
@@ -33,48 +41,46 @@ local function create_header(file, prg_kb, chr_kb)
   nes.write_header(file, prg_kb, chr_kb, op_buffer[mapname], 0)
 end
 
---disables PRG-RAM, selects Vertical mirroring
---sets up CHR-ROM flash PT0 for DATA, Commands: $5555->$1555  $2AAA->$1AAA
---sets up PRG-ROM flash DATA: $8000-9FFF, Commands: $5555->D555  $2AAA->$AAAA
---leaves $8000 control reg selected to IRQ value selected so $A000 writes don't affect banking
+-- disables PRG-RAM, selects Vertical mirroring
+-- sets up CHR-ROM flash PT0 for DATA, Commands: $5555->$1555  $2AAA->$1AAA
+-- sets up PRG-ROM flash DATA: $8000-9FFF, Commands: $5555->D555  $2AAA->$AAAA
+-- leaves $8000 control reg selected to IRQ value selected so $A000 writes don't affect banking
 local function init_mapper()
-  --RAM is always enabled..
+  -- RAM is always enabled..
 
-  --set mirroring
-  nes.cpu_wr(0xF000, 0x00) --bit0: 0-vert 1-horz
+  -- set mirroring
+  nes.cpu_wr(MIRRORING, 0x00) -- bit0: 0-vert 1-horz
 
+  -- For CHR-ROM flash writes, use lower 4KB (PT0) for writing data & upper 4KB (PT1) for commands
+  nes.cpu_wr(CHR_FD_0, 0x02) -- 4KB @ PPU $0000 -> $2AAA cmd & writes
+  nes.cpu_wr(CHR_FE_0, 0x02) -- 4KB @ PPU $0000
+  nes.cpu_wr(CHR_FD_1, 0x05) -- 4KB @ PPU $1000 -> $5555 cmd
+  nes.cpu_wr(CHR_FE_1, 0x05) -- 4KB @ PPU $1000
 
-  --For CHR-ROM flash writes, use lower 4KB (PT0) for writing data & upper 4KB (PT1) for commands
-  nes.cpu_wr(0xB000, 0x02) --4KB @ PPU $0000 -> $2AAA cmd & writes
-  nes.cpu_wr(0xC000, 0x02) --4KB @ PPU $0000
-  nes.cpu_wr(0xD000, 0x05) --4KB @ PPU $1000 -> $5555 cmd
-  nes.cpu_wr(0xE000, 0x05) --4KB @ PPU $1000
+  -- can use upper 16KB $D555 for $5555 commands
+  -- need lower bank for $AAAA commands and writes
+  -- this only allows for writing to even banks when A14=0
+  nes.cpu_wr(PRG_BANK, 0x00) -- 16KB @ CPU $8000
 
-
-  --can use upper 16KB $D555 for $5555 commands
-  --need lower bank for $AAAA commands and writes
-  --this only allows for writing to even banks when A14=0
-  nes.cpu_wr(0xA000, 0x00) --16KB @ CPU $8000
-
-  --mapper control A14-18
-  --even bank A14 = 0
-  --odd  bank A14 = 1
-  --$8000-BFFF bank selected
-  --$C000-FFFF fixed to last 16KB (A14 always high)
-  --$C000-DFFF A14 is low
-  --$E000-FFFF A14 is high
-  --ROM A14 = MAP assign A14 XOR with CPU A13
-  --With this mapper modification $5555 -> $D555, $2AAA -> $EAAA
+  -- mapper control A14-18
+  -- even bank A14 = 0
+  -- odd  bank A14 = 1
+  -- $8000-BFFF bank selected
+  -- $C000-FFFF fixed to last 16KB (A14 always high)
+  -- $C000-DFFF A14 is low
+  -- $E000-FFFF A14 is high
+  -- ROM A14 = MAP assign A14 XOR with CPU A13
+  -- With this mapper modification $5555 -> $D555, $2AAA -> $EAAA
 end
 
 -- test the mapper's mirroring modes to verify working properly
 -- can be used to help identify board: returns true if pass, false if failed
 local function mirror_test()
-  --put mapper in known state (mirror bits cleared)
+  -- put mapper in known state (mirror bits cleared)
   init_mapper()
 
-  --Vertical
-  --nes.cpu_wr(0xF000, 0x00)  --bit0: 0-vert 1-horz
+  -- Vertical
+  -- nes.cpu_wr(MIRRORING, 0x00)  -- bit0: 0-vert 1-horz
   if nes.detect_mapper_mirroring() ~= "VERT" then
     log.error("Vertical mirroring test failed")
     return false
@@ -82,8 +88,8 @@ local function mirror_test()
     log.success("Vertical mirroring test passed")
   end
 
-  --Horizontal
-  nes.cpu_wr(0xF000, 0x01) --bit0: 0-vert 1-horz
+  -- Horizontal
+  nes.cpu_wr(MIRRORING, 0x01) -- bit0: 0-vert 1-horz
   if nes.detect_mapper_mirroring() ~= "HORZ" then
     log.error("Horizontal mirroring test failed")
     return false
@@ -115,20 +121,20 @@ local function wr_prg_flash_byte(addr, value, bank)
     return
   end
 
-  --select bank
-  nes.cpu_wr(0xA000, bank)
+  -- select bank
+  nes.cpu_wr(PRG_BANK, bank)
 
-  --send unlock command and write byte
-  --nes.cpu_wr(0xD555, 0xAA)
-  --nes.cpu_wr(0xAAAA, 0x55)
-  --nes.cpu_wr(0xD555, 0xA0)
+  -- send unlock command and write byte
+  -- nes.cpu_wr(0xD555, 0xAA)
+  -- nes.cpu_wr(0xAAAA, 0x55)
+  -- nes.cpu_wr(0xD555, 0xA0)
   nes.cpu_wr(0xFAAA, 0xAA)
   nes.cpu_wr(0xF555, 0x55)
   nes.cpu_wr(0xFAAA, 0xA0)
-  nes.cpu_wr(addr, value) --if this write was $A000-AFFF it will also corrupt the bank
+  nes.cpu_wr(addr, value) -- if this write was $A000-AFFF it will also corrupt the bank
 
-  --recover bank
-  nes.cpu_wr(0xA000, bank)
+  -- recover bank
+  nes.cpu_wr(PRG_BANK, bank)
 
   local rv = nes.cpu_rd(addr)
 
@@ -143,9 +149,9 @@ local function wr_prg_flash_byte(addr, value, bank)
     log.info("Done writing byte,", i .. " naks")
   end
 
-  --TODO handle timeout for problems
+  -- TODO handle timeout for problems
 
-  --TODO return pass/fail/info
+  -- TODO return pass/fail/info
 end
 
 --- Dump PRG-ROM contents to an already-open output file.
@@ -167,8 +173,8 @@ local function prg_rom_dump(file, rom_size_kb)
       spinner.update("Dumping", cur_bank, "/", num_banks - 1)
     end
 
-    --select desired bank(s) to dump
-    nes.cpu_wr(0xA000, cur_bank) -- 16KB @ CPU $8000
+    -- select desired bank(s) to dump
+    nes.cpu_wr(PRG_BANK, cur_bank) -- 16KB @ CPU $8000
 
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
 
@@ -199,19 +205,10 @@ local function prg_rom_flash(file, rom_size_kb)
     end
 
     -- select desired bank, needed for first write
-    nes.cpu_wr(0xA000, cur_bank) -- 16KB @ CPU $8000
+    nes.cpu_wr(PRG_BANK, cur_bank) -- 16KB @ CPU $8000
 
     -- set cur_bank for recovery and subsequent bytes
     dict.nes("SET_CUR_BANK", cur_bank)
-
-    -- write the current bank to the mapper register
-    -- DATA writes written to $8000-9FFF
-    nes.cpu_wr(0x8000, 0x06)
-    nes.cpu_wr(0x8001, cur_bank) --8KB @ CPU $8000
-
-    -- set $8000 bank select back to a CHR register
-    -- keeps from having the PRG bank changing when writing data
-    nes.cpu_wr(0x8000, 0x00)
 
     -- flash data
     flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "NES_PRG_ROM" })
@@ -243,20 +240,20 @@ local function wr_chr_flash_byte(addr, value, bank)
     return
   end
 
-  --set bank for unlock command
-  nes.cpu_wr(0xB000, 0x0A) --4KB @ PPU $0000 -> $2AAA cmd & writes
-  nes.cpu_wr(0xC000, 0x0A) --4KB @ PPU $0000
+  -- set bank for unlock command
+  nes.cpu_wr(CHR_FD_0, 0x0A) -- 4KB @ PPU $0000 -> $2AAA cmd & writes
+  nes.cpu_wr(CHR_FE_0, 0x0A) -- 4KB @ PPU $0000
 
-  --send unlock command
+  -- send unlock command
   nes.ppu_wr(0x1555, 0xAA)
   nes.ppu_wr(0x0AAA, 0x55)
   nes.ppu_wr(0x1555, 0xA0)
 
-  --select desired bank
-  nes.cpu_wr(0xB000, bank) --4KB @ PPU $0000 -> $2AAA cmd & writes
-  nes.cpu_wr(0xC000, bank) --4KB @ PPU $0000
+  -- select desired bank
+  nes.cpu_wr(CHR_FD_0, bank) -- 4KB @ PPU $0000 -> $2AAA cmd & writes
+  nes.cpu_wr(CHR_FE_0, bank) -- 4KB @ PPU $0000
 
-  --write data
+  -- write data
   nes.ppu_wr(addr, value)
 
   local rv = nes.ppu_rd(addr)
@@ -269,9 +266,9 @@ local function wr_chr_flash_byte(addr, value, bank)
   end
   if DEBUG then print(i, "naks, done writing byte.") end
 
-  --TODO handle timeout for problems
+  -- TODO handle timeout for problems
 
-  --TODO return pass/fail/info
+  -- TODO return pass/fail/info
 end
 
 --- Dump CHR contents to an already-open output file.
@@ -293,12 +290,12 @@ local function chr_dump(file, rom_size_kb)
     end
 
     -- the bank is half the size of KB per read so must multiply by 2
-    nes.cpu_wr(0xB000, (cur_bank * 2)) -- 4KB @ PPU $0000
-    nes.cpu_wr(0xC000, (cur_bank * 2)) -- 4KB @ PPU $0000
+    nes.cpu_wr(CHR_FD_0, (cur_bank * 2)) -- 4KB @ PPU $0000
+    nes.cpu_wr(CHR_FE_0, (cur_bank * 2)) -- 4KB @ PPU $0000
 
     -- the bank is half the size of KB per read so must multiply by 2 and add 1 for second 1KB
-    nes.cpu_wr(0xD000, (cur_bank * 2 + 1)) -- 4KB @ PPU $1000
-    nes.cpu_wr(0xE000, (cur_bank * 2 + 1)) -- 4KB @ PPU $1000
+    nes.cpu_wr(CHR_FD_1, (cur_bank * 2 + 1)) -- 4KB @ PPU $1000
+    nes.cpu_wr(CHR_FE_1, (cur_bank * 2 + 1)) -- 4KB @ PPU $1000
 
     -- 4 = number of KB to dump per loop
     -- 0x00 = starting read address A10-13 -> $0000
@@ -329,7 +326,7 @@ local function chr_rom_flash(file, rom_size_kb)
   local num_banks = math.floor(rom_size_kb / bank_size_kb)
 
 
-  local byte_num --byte number gets reset for each bank
+  local byte_num -- byte number gets reset for each bank
   local byte_str, data, readdata
 
   while cur_bank < num_banks do
@@ -399,9 +396,6 @@ local function prg_ram_write(file, ram_size_kb)
   local cur_bank = 0
   local num_banks = math.floor(ram_size_kb / bank_size_kb)
 
-  -- enable PRG-RAM and allow writes
-  nes.cpu_wr(0xA001, 0x80)
-
   while cur_bank < num_banks do
     if DEBUG then
       log.point("writing PRG-RAM bank", cur_bank, "of", num_banks - 1)
@@ -409,14 +403,11 @@ local function prg_ram_write(file, ram_size_kb)
       spinner.update("Flashing", cur_bank, "/", num_banks - 1)
     end
 
-    --have the device write a bank worth of data
+    -- have the device write a bank worth of data
     flash.write_file(file, bank_size_kb, { mapper = "NOVAR", mem_type = "NES_PRG_RAM" })
 
     cur_bank = cur_bank + 1
   end
-
-  -- disable PRG-RAM and deny writes
-  nes.cpu_wr(0xA001, 0x40)
 
   spinner.clear()
   log.success("Done programming PRG-RAM")
@@ -429,9 +420,6 @@ local function prg_ram_detect()
   local saved_value
 
   log.section("Detecting PRG-RAM")
-
-  -- enable PRG-RAM and allow writes
-  nes.cpu_wr(0xA001, 0x80)
 
   -- save potential battery backed data first
   saved_value = nes.cpu_rd(0x6000)
@@ -450,9 +438,6 @@ local function prg_ram_detect()
     return false
   end
 
-  -- disable PRG-RAM and deny writes
-  nes.cpu_wr(0xA001, 0x40)
-
   return true
 end
 
@@ -468,9 +453,6 @@ local function prg_ram_test(wram_size_kb, retroprog_id)
 
   log.section("Exercising PRG-RAM")
   log.info("PRG-RAM size", wram_size_kb .. "KB")
-
-  -- enable PRG-RAM and allow writes
-  nes.cpu_wr(0xA001, 0x80)
 
   -- write random data to all banks
   log.point("Writing random data to PRG-RAM")
@@ -498,9 +480,6 @@ local function prg_ram_test(wram_size_kb, retroprog_id)
 
   -- close file
   assert(file:close())
-
-  -- disable PRG-RAM and deny writes
-  nes.cpu_wr(0xA001, 0x40)
 
   -- re-open & compare dump with known lsfr bitstream
   local goodfile = opts.lua_path .. "./ignore/lfsr_32KB.bin"
@@ -723,9 +702,9 @@ local function process(process_opts, console_opts)
     -- open file
     file = assert(io.open(rom_dump_file.filename, "wb"))
 
-    --create header: pass open & empty file & rom sizes
+    -- create header: pass open & empty file & rom sizes
     if rom_dump_file.ext == "nes" then
-      --create header: pass open & empty file & rom sizes
+      -- create header: pass open & empty file & rom sizes
       create_header(file, prg_size_kb, chr_size_kb)
     end
 
@@ -858,280 +837,6 @@ local function process(process_opts, console_opts)
       log.error("Flash verification did not match")
     end
   end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  --   --test cart by reading manf/prod ID
-  --   if test then
-  --     print("Testing ", mapname)
-
-  --     init_mapper()
-
-  --     --verify mirroring is behaving as expected
-  --     mirror_test(true)
-
-  --     nes.ppu_ram_sense(0x1000, true)
-  --     print("EXP0 pull-up test:", dict.io("EXP0_PULLUP_TEST"))
-
-  --     --attempt to read PRG-ROM flash ID
-  --     prg_rom_manf_id(true)
-  --     --attempt to read CHR-ROM flash ID
-  --     if chr_size_kb ~= 0 then
-  --       chr_rom_manf_id(true)
-  --     end
-  --   end
-
-  --   --[[ BROKE STUDIO TESTS
-  -- print "----------------------------------------"
-  -- read_addr(0x6000)
-  -- read_addr(0x6001)
-  -- read_addr(0x6002)
-  -- print "----------------------------------------"
-  -- write_addr(0x6000, 0xaa)
-  -- write_addr(0x6001, 0x55)
-  -- write_addr(0x6002, 0xaa)
-  -- print "----------------------------------------"
-  -- read_addr(0x6000)
-  -- read_addr(0x6001)
-  -- read_addr(0x6002)
-  -- do return end
-  -- print "----------------------------------------"
-  -- read_addr(0xfffa)
-  -- read_addr(0xfffb)
-  -- read_addr(0xfffc)
-  -- read_addr(0xfffd)
-  -- read_addr(0xfffe)
-  -- read_addr(0xffff)
-  -- print "----------------------------------------"
-  -- write_addr(0xA000, 0xff)
-  -- print "----------------------------------------"
-  -- for i = 0, 15, 1 do
-  --   read_addr(0xbff0+i)
-  -- end
-
-  -- do return end
-
-  -- print "----------------------------------------"
-  -- write_addr(0xA000, 0x01)
-  -- print "----------------------------------------"
-  -- for i = 0, 15, 1 do
-  --   read_addr(0xC000+i)
-  -- end
-  -- print "----------------------------------------"
-
-  -- for i = 0, 15, 1 do
-  --   read_addr(0xc000+i)
-  -- end
-
-  -- do return end
-
-  -- --]]
-
-  --   --dump the ram to file
-  --   if dumpram then
-  --     print("\nDumping PRG-RAM...")
-
-  --     init_mapper()
-
-  --     --SRAM always enabled
-
-  --     file = assert(io.open(ramdumpfile, "wb"))
-
-  --     -- dump cart to file
-  --     dump_wram(file, wram_size_kb, false)
-
-  --     -- close file
-  --     assert(file:close())
-
-  --     print("DONE Dumping PRG-RAM")
-  --   end
-
-
-
-  --   --dump the cart to dumpfile
-  --   if read then
-  --     print("\nDumping PRG & CHR ROMs...")
-
-  --     init_mapper()
-
-  --     file = assert(io.open(dumpfile, "wb"))
-
-  --     if dump_filetype == "nes" then
-  --       --create header: pass open & empty file & rom sizes
-  --       create_header(file, prg_size_kb, chr_size_kb)
-  --     end
-
-  --     -- dump cart to file
-  --     dump_prgrom(file, prg_size_kb, false)
-  --     if chr_size_kb ~= 0 then
-  --       dump_chrrom(file, chr_size_kb, false)
-  --     end
-
-  --     -- close file
-  --     assert(file:close())
-
-  --     print("DONE Dumping PRG & CHR ROMs")
-  --   end
-
-
-  --   -- erase the cart
-  --   if erase then
-  --     print("\nerasing ", mapname)
-
-  --     init_mapper()
-
-  --     --PLCC
-  --     print("erasing PRG-ROM PLCC-32")
-  --     nes.cpu_wr(0xD555, 0xAA)
-  --     nes.cpu_wr(0xEAAA, 0x55)
-  --     nes.cpu_wr(0xD555, 0x80)
-  --     nes.cpu_wr(0xD555, 0xAA)
-  --     nes.cpu_wr(0xEAAA, 0x55)
-  --     nes.cpu_wr(0xD555, 0x10)
-
-  --     --SOP
-  --     --print("erasing PRG-ROM SOP-44 flash takes a couple sec...")
-  --     --nes.cpu_wr(0xFAAA, 0xAA)
-  --     --nes.cpu_wr(0xF555, 0x55)
-  --     --nes.cpu_wr(0xFAAA, 0x80)
-  --     --nes.cpu_wr(0xFAAA, 0xAA)
-  --     --nes.cpu_wr(0xF555, 0x55)
-  --     --nes.cpu_wr(0xFAAA, 0x10)
-
-  --     rv = nes.cpu_rd(0x8000)
-
-  --     local i = 0
-
-  --     -- TODO create some function to pass the read value
-  --     -- that's smart enough to figure out if the board is actually erasing or not
-  --     while (rv ~= 0xFF) do
-  --       rv = nes.cpu_rd(0x8000)
-  --       i = i + 1
-  --     end
-  --     print(i, "naks, done erasing prg.")
-
-
-  --     --TODO erase CHR-ROM only if present
-  --     init_mapper()
-
-  --     print("erasing CHR-ROM")
-  --     nes.ppu_wr(0x1555, 0xAA)
-  --     nes.ppu_wr(0x0AAA, 0x55)
-  --     nes.ppu_wr(0x1555, 0x80)
-  --     nes.ppu_wr(0x1555, 0xAA)
-  --     nes.ppu_wr(0x0AAA, 0x55)
-  --     nes.ppu_wr(0x1555, 0x10)
-  --     rv = nes.ppu_rd(0x0000)
-
-  --     local i = 0
-
-  --     -- TODO create some function to pass the read value
-  --     -- that's smart enough to figure out if the board is actually erasing or not
-  --     while (rv ~= 0xFF) do
-  --       rv = nes.ppu_rd(0x0000)
-  --       i = i + 1
-  --     end
-  --     print(i, "naks, done erasing chr.")
-  --   end
-
-  --   --write to wram on the cart
-  --   if writeram then
-  --     print("\nWriting to PRG-RAM...")
-
-  --     init_mapper()
-
-  --     --SRAM always enabled
-
-  --     file = assert(io.open(ramwritefile, "rb"))
-
-  --     flash.write_file(file, wram_size_kb, { mapper = "NOVAR", mem_type = "NES_PRG_RAM" })
-
-  --     -- close file
-  --     assert(file:close())
-
-  --     print("DONE Writing PRG-RAM")
-  --   end
-
-  --   --program flashfile to the cart
-  --   if program then
-  --     --open file
-  --     file = assert(io.open(flashfile, "rb"))
-  --     --determine if auto-doubling, deinterleaving, etc,
-  --     --needs done to make board compatible with rom
-
-  --     if flash_filetype == "nes" then
-  --       --advance past the 16byte header
-  --       file:read(16)
-  --     end
-
-  --     flash_prgrom(file, prg_size_kb)
-  --     if chr_size_kb ~= 0 then
-  --       flash_chrrom(file, chr_size_kb)
-  --     end
-
-  --     -- close file
-  --     assert(file:close())
-  --   end
-
-  --   -- verify flash file is on the cart
-  --   if verify then
-  --     --for now let's just dump the file and verify manually
-  --     print("\nPost dumping PRG & CHR ROMs...")
-
-  --     init_mapper()
-
-  --     file = assert(io.open(verifyfile, "wb"))
-
-  --     if verify_filetype == "nes" then
-  --       --create header: pass open & empty file & rom sizes
-  --       create_header(file, prg_size_kb, chr_size_kb)
-  --     end
-
-  --     print("DONE post dumping PRG & CHR ROMs")
-  --     -- dump cart to file
-  --     time.start()
-  --     dump_prgrom(file, prg_size_kb, false)
-  --     if chr_size_kb ~= 0 then
-  --       dump_chrrom(file, chr_size_kb, false)
-  --     end
-  --     time.report(prg_size_kb + chr_size_kb)
-
-  --     -- close file
-  --     assert(file:close())
-
-  --     -- compare the flash file vs post dump file
-  --     local offset
-  --     if flash_filetype == "nes" then offset = 16 else offset = false end
-  --     if (files.compare(verifyfile, flashfile, true, false, offset)) then
-  --       print("\nSUCCESS! Flash verified")
-  --     else
-  --       print("\n\n\n FAILURE! Flash verification did not match")
-  --     end
-  --   end
 
   dict.io("IO_RESET")
 end

@@ -1,20 +1,30 @@
 -- create the module's table
-local nsf_512 = {}
+local nsf_512    = {}
 
 -- import required modules
-local dict    = require "scripts.app.dict"
-local nes     = require "scripts.app.nes"
-local dump    = require "scripts.app.dump"
-local flash   = require "scripts.app.flash"
-local time    = require "scripts.app.time"
-local log     = require "scripts.app.log"
-local spinner = require "scripts.app.spinner"
-local files   = require "scripts.app.files"
-local help    = require "scripts.app.help"
+local dict       = require "scripts.app.dict"
+local nes        = require "scripts.app.nes"
+local dump       = require "scripts.app.dump"
+local flash      = require "scripts.app.flash"
+local time       = require "scripts.app.time"
+local log        = require "scripts.app.log"
+local spinner    = require "scripts.app.spinner"
+local files      = require "scripts.app.files"
+local help       = require "scripts.app.help"
 
 -- file constants and global variables
-local mapname = "EZNSF"
+local mapname    = "EZNSF"
 local prg_flash_chip
+
+-- registers
+local PRG_BANK_0 = 0x5000
+local PRG_BANK_1 = 0x5001
+local PRG_BANK_2 = 0x5002
+local PRG_BANK_3 = 0x5003
+local PRG_BANK_4 = 0x5004
+local PRG_BANK_5 = 0x5005
+local PRG_BANK_6 = 0x5006
+local PRG_BANK_7 = 0x5007
 
 -- local functions
 
@@ -33,16 +43,16 @@ local function create_header(file, prg_kb, chr_kb)
   nes.write_header(file, prg_kb, 0, op_buffer[mapname], mirroring)
 end
 
---initialize mapper for dump/flash routines
+-- initialize mapper for dump/flash routines
 local function init_mapper()
-  --rom A11-0 are directly connected to CPU
-  --A12 pin is part of sector address
-  --in BYTE mode, pin A12 is actually CPU A13
-  --so ROM A11 must be valid for flash commands
-  --ROM A11 pin is actually CPU A12
-  --A12 is actually controlled my mapper register...
-  --So it should need to be initialized to work, but flash ID is responding properly without it..
-  --Therefore I don't think rom A11 pin (CPU A12) needs to be valid, just A11-0?
+  -- rom A11-0 are directly connected to CPU
+  -- A12 pin is part of sector address
+  -- in BYTE mode, pin A12 is actually CPU A13
+  -- so ROM A11 must be valid for flash commands
+  -- ROM A11 pin is actually CPU A12
+  -- A12 is actually controlled my mapper register...
+  -- So it should need to be initialized to work, but flash ID is responding properly without it..
+  -- Therefore I don't think rom A11 pin (CPU A12) needs to be valid, just A11-0?
 
   --       15 14 13 12
   -- $8000  1  0  0  0 0000 0000 0000
@@ -50,16 +60,16 @@ local function init_mapper()
   -- $A000  1  0  1  0 0000 0000 0000 => banks 2, 6, A, E, ... => $AAAA
   -- $D000  1  1  0  0 0000 0000 0000 => banks 1, 3, 5, 7, 9, B, D, F, ... => $D555
 
-  --nes.cpu_wr(0x5000, 0x00) -- $8000
-  --nes.cpu_wr(0x5001, 0x00) -- $9000
-  nes.cpu_wr(0x5002, 0x0A) -- $A000
-  --nes.cpu_wr(0x5003, 0x00) -- $B000
-  --nes.cpu_wr(0x5004, 0x00) -- $C000
-  nes.cpu_wr(0x5005, 0x05) -- $D000
-  --nes.cpu_wr(0x5006, 0x00) -- $E000
-  --nes.cpu_wr(0x5007, 0x00) -- $F000
+  -- nes.cpu_wr(PRG_BANK_0, 0x00) -- $8000
+  -- nes.cpu_wr(PRG_BANK_1, 0x00) -- $9000
+  nes.cpu_wr(PRG_BANK_2, 0x0A) -- $A000
+  -- nes.cpu_wr(PRG_BANK_3, 0x00) -- $B000
+  -- nes.cpu_wr(PRG_BANK_4, 0x00) -- $C000
+  nes.cpu_wr(PRG_BANK_5, 0x05) -- $D000
+  -- nes.cpu_wr(PRG_BANK_6, 0x00) -- $E000
+  -- nes.cpu_wr(PRG_BANK_7, 0x00) -- $F000
 
-  --flash /WE signal only goes low for $9000-9FFF
+  -- flash /WE signal only goes low for $9000-9FFF
 end
 
 --[[
@@ -91,8 +101,8 @@ local function prg_rom_dump(file, rom_size_kb)
       spinner.update("Dumping", cur_bank, "/", num_banks - 1)
     end
 
-    --select desired bank(s) to dump
-    nes.cpu_wr(0x5000, cur_bank) --4KB @ CPU $8000
+    -- select desired bank(s) to dump
+    nes.cpu_wr(PRG_BANK_0, cur_bank) -- 4KB @ CPU $8000
 
     dump.dumptofile(file, kb_per_read, { addr_base = addr_base, mem_type = "NES_CPU_PAGE" })
 
@@ -131,8 +141,8 @@ local function prg_rom_flash(file, rom_size_kb)
       spinner.update("Flashing", cur_bank, "/", num_banks - 1)
     end
 
-    --write the current bank to the mapper register
-    nes.cpu_wr(0x5000, cur_bank) --bank at $8000
+    -- write the current bank to the mapper register
+    nes.cpu_wr(PRG_BANK_0, cur_bank) -- bank at $8000
 
     -- flash data
     flash.write_file(file, bank_size_kb, { mapper = "EZNSF", mem_type = "NES_PRG_ROM", options = options })
@@ -183,8 +193,8 @@ end
 -- @return boolean success True when the CHR-RAM dump matches the expected LFSR data
 local function chr_ram_exercise(chrram_size_kb, retroprog_id)
   dict.stuff("RESET_LFSR") -- sets it to 1
-  -- dict.stuff("SET_LFSR_L", 0) --lock it up to clear ram
-  -- dict.stuff("SET_LFSR_L", 2) --give different seed for testing fails
+  -- dict.stuff("SET_LFSR_L", 0) -- lock it up to clear ram
+  -- dict.stuff("SET_LFSR_L", 2) -- give different seed for testing fails
 
   local cur_bank = 0
   local num_banks = math.floor(chrram_size_kb / 8)
@@ -325,9 +335,9 @@ local function process(process_opts, console_opts)
     -- open file
     file = assert(io.open(rom_dump_file.filename, "wb"))
 
-    --create header: pass open & empty file & rom sizes
+    -- create header: pass open & empty file & rom sizes
     if rom_dump_file.ext == "nes" then
-      --create header: pass open & empty file & rom sizes
+      -- create header: pass open & empty file & rom sizes
       create_header(file, prg_size_kb, chr_size_kb)
     end
 
