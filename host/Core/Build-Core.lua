@@ -27,12 +27,12 @@ includedirs
 {
   "./Source",
   "./include",
+  "./generated",
 
   "../../shared",
 
   "../External/lua",
-  "../External/termcolor",
-  "../../shared",
+  "../External/termcolor"
 }
 
 targetdir("../Binaries/" .. OutputDir .. "/%{prj.name}")
@@ -61,6 +61,10 @@ filter "configurations:Dist"
 
 filter { "system:windows" }
   staticruntime "on"
+  prebuildcommands {
+    "powershell -NoProfile -ExecutionPolicy Bypass -File ../Scripts/generate-build-info.ps1"
+  }
+
 
 filter "system:windows"
   systemversion "latest"
@@ -92,3 +96,6 @@ filter { "system:windows", "configurations:Release or Dist", "platforms:x86_64" 
 filter "system:linux or macosx"
   buildoptions { "`pkg-config --cflags libusb-1.0`" }
   includedirs { "../macOS" }
+  prebuildcommands {
+    "sh ../Scripts/generate-build-info.sh"
+  }

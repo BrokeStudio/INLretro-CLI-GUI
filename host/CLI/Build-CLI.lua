@@ -88,9 +88,6 @@ filter "configurations:Debug or Release"
 
 filter { "system:windows" }
   staticruntime "on"
-  prebuildcommands {
-    "powershell -ExecutionPolicy Bypass -File increment-build.ps1"
-  }
 
 filter { "system:windows", "platforms:x86" }
   linkoptions { "/SAFESEH:NO" } -- Image Has Safe Exception Handers: No
@@ -134,9 +131,6 @@ filter "system:linux"
     "udev",
     "pthread"
   }
-  prebuildcommands {
-    "sh ./increment-build.sh"
-  }
 
 -- macOS
 
@@ -145,7 +139,4 @@ filter "system:macosx"
   linkoptions {
     "-Wl,-force_load,`pkg-config --variable=libdir libusb-1.0`/libusb-1.0.a",
     "`pkg-config --static --libs-only-L --libs-only-other libusb-1.0`",
-  }
-  prebuildcommands {
-    "sh ./increment-build.sh"
   }

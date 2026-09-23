@@ -132,9 +132,6 @@ filter "system:windows"
   libdirs {
     "../External/libusb/INL/static",
   }
-  prebuildcommands {
-    "powershell -ExecutionPolicy Bypass -File increment-build.ps1"
-  }
 
 filter { "system:windows", "configurations:Debug", "platforms:x86" }
   links {
@@ -193,9 +190,6 @@ filter "system:linux"
     "udev",
     "pthread",
   }
-  prebuildcommands {
-    "sh ./increment-build.sh"
-  }
 
 filter { "system:linux", "configurations:Dist" }
   kind "WindowedApp"
@@ -228,10 +222,6 @@ filter "system:macosx"
     "-framework CoreFoundation",
     "-Wl,-force_load,`pkg-config --variable=libdir libusb-1.0`/libusb-1.0.a",
     "`pkg-config --static --libs-only-L --libs-only-other libusb-1.0`",
-  }
-
-  prebuildcommands {
-    "sh ./increment-build.sh"
   }
 
 filter { "system:macosx", "configurations:Dist" }

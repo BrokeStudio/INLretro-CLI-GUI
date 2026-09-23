@@ -1,5 +1,7 @@
 #pragma once
 
+#define INLRETRO_HOST_VERSION "0.1.0"
+
 #include <cstdint>
 
 typedef struct FirmwareVersion
@@ -10,3 +12,6 @@ typedef struct FirmwareVersion
 } FirmwareVersion;
 
 constexpr FirmwareVersion MINIMUM_FIRMWARE = { 0, 1, 0 };
+
+const char* get_host_build_id();
+const char* get_host_version_string();

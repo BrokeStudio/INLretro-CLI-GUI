@@ -4,7 +4,6 @@
 // If such effect is desireable, please consider using #define NOMINMAX before #include <termcolor.hpp>
 #include "termcolor.hpp"
 #include "version.h"
-#include "build.h"
 
 // Core files
 #include "cli.h"
@@ -29,11 +28,7 @@ int main(int argc, char** argv)
             << " | || .` | |__| '_/ -_)  _| '_/ _ \\" << std::endl
             << "|___|_|\\_|____|_| \\___|\\__|_| \\___/" << std::endl
             << termcolor::reset
-#if defined(_DEBUG) || defined(_RELEASE)
-            << "v" << INLRETRO_CLI_VERSION << "-dev+build." << INLRETRO_CLI_BUILD << std::endl
-#else
-            << "v" << INLRETRO_CLI_VERSION << std::endl
-#endif
+            << "v" << get_host_version_string() << std::endl
             << std::endl;
 
   t_INLoptions_std* opts = new t_INLoptions_std();

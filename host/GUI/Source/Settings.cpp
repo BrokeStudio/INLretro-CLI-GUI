@@ -6,7 +6,6 @@
 #include "Ini.h"
 #include "Settings.h"
 #include "version.h"
-#include "build.h"
 
 #include "SDL_version.h"
 #if defined(_WIN32) || defined(__APPLE__)
@@ -312,11 +311,7 @@ namespace Settings
   {
     ImGui::SeparatorText("About");
     ImGui::BeginChild("About");
-#if defined(_DEBUG) || defined(_RELEASE)
-    ImGui::Text(ICON_FA_MICROCHIP " INLretro GUI v%s-dev+build.%d", INLRETRO_GUI_VERSION, INLRETRO_GUI_BUILD);
-#else
-    ImGui::Text(ICON_FA_MICROCHIP " INLretro GUI v%s", INLRETRO_GUI_VERSION);
-#endif
+    ImGui::Text(ICON_FA_MICROCHIP " INLretro GUI v%s", get_host_version_string());
     ImGui::Separator();
     ImGui::Text("2024-2025, Broke Studio");
     ImGui::Text("Developed by Antoine Gohin");
