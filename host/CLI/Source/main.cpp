@@ -54,16 +54,48 @@ int main(int argc, char** argv)
   check(&AppLog::log, usb_init == LIBUSB_SUCCESS, "Failed to initialize libusb: %s", libusb_strerror((libusb_error)usb_init));
 
   // Parse command-line options and flags.
+  bool ok = true;
+
   if(!parseOptions(argc, argv, opts)) {
     goto error;
   } else {
-    // flash
+    // init flasher
     opts->gui = false;
     Flasher flasher(std::string(opts->retroprog_id), true);
-    flasher.log.cliOutput = true;
-    int res = flasher.inlprog_opt(*opts);
+    APP_LOG_SYS(LogTypes_Info, "Flasher hardware type: %s (%d)", Flasher::MODELS[flasher.hardwareType], flasher.hardwareType);
+    APP_LOG_SYS(LogTypes_Info, "Flasher firmware version: %d.%d.%d", flasher.firmwareVersion.major, flasher.firmwareVersion.minor, flasher.firmwareVersion.patch);
     APP_LOG_SYS(LogTypes_None, "");
-    APP_LOG_SYS(LogTypes_Success, "Done !");
+
+    // check if flasher is compatible
+    if(!flasher.isHardwareTypeValid) {
+      LogTypes_ logType = opts->ignoreFirmwareVersion ? LogTypes_Warning : LogTypes_Error;
+      APP_LOG_SYS(logType, "The firmware is outdated and needs to be updated to be compatible.");
+      ok = false;
+    }
+
+    if(!flasher.isFirmwareValid) {
+      LogTypes_ logType = opts->ignoreFirmwareVersion ? LogTypes_Warning : LogTypes_Error;
+      APP_LOG_SYS(logType, "Firmware version is not supported by this CLI version and needs to be updated to be compatible.");
+      ok = false;
+    }
+
+    if(!ok) {
+      if(!opts->ignoreFirmwareVersion) {
+        APP_LOG_SYS(LogTypes_Error, "Run again with --ignore_firmware_version to continue anyway.");
+      } else {
+        APP_LOG_SYS(LogTypes_Warning, "Option --ignore_firmware_version enabled, executing script may raise errors.");
+        ok = true;
+      }
+      APP_LOG_SYS(LogTypes_None, "");
+    }
+
+    if(ok) {
+      // flash
+      flasher.log.cliOutput = true;
+      int res = flasher.inlprog_opt(*opts);
+      APP_LOG_SYS(LogTypes_None, "");
+      APP_LOG_SYS(LogTypes_Success, "Done !");
+    }
   }
 
   if(usb_init == LIBUSB_SUCCESS) {
@@ -76,7 +108,7 @@ int main(int argc, char** argv)
   std::cin.get();
 #endif
 
-  return 0;
+  return ok ? 0 : 1;
 
 error:
 

@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include "bootload.h"
+#include "version.h"
 
 //=================================================================================================
 //
@@ -132,6 +133,13 @@ uint8_t bootload_call(uint8_t opcode, uint8_t miscdata, uint16_t operand, uint8_
       //rdata[RD1] = (uint8_t)'V';
       //rdata[RD2] = (uint8_t)'0';
       //rdata[RD3] = (uint8_t)'3';
+      break;
+
+    case GET_FIRMWARE_VERSION:
+      rdata[RD_LEN] = 3;
+      rdata[RD0] = FIRMWARE_VERSION_MAJOR;
+      rdata[RD1] = FIRMWARE_VERSION_MINOR;
+      rdata[RD2] = FIRMWARE_VERSION_PATCH;
       break;
 
     case GET_HW_TYPE:

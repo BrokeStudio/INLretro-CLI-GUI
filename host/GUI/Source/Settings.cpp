@@ -23,6 +23,8 @@ using namespace std::placeholders; // for `_1`, `_2`
 namespace Settings
 {
 
+  constexpr ImVec4 colorWarning = ImVec4(1.0f, 0.734f, 0.189f, 1.0f);
+
   t_Settings settings = {
     "dark",                          // theme
     "scripts/inlretro.lua",          // main_script (default)
@@ -120,7 +122,7 @@ namespace Settings
         ImGui::TableSetupColumn("Active");
         ImGui::TableSetupColumn("Type");
         ImGui::TableSetupColumn("Firmware");
-        ImGui::TableSetupColumn("");
+        ImGui::TableSetupColumn("Action");
         ImGui::TableHeadersRow();
 
         // Flashers
@@ -133,7 +135,7 @@ namespace Settings
           snprintf(label, sizeof(label), "INL Retro-Pro%s", flasher->id.c_str());
           if(flasher->hardwareType == HW_UNKW) {
             ImGui::BeginGroup();
-            ImGui::TextColored(ImVec4(1.0f, 0.734f, 0.189f, 1.0f), ICON_FA_TRIANGLE_EXCLAMATION);
+            ImGui::TextColored(colorWarning, ICON_FA_TRIANGLE_EXCLAMATION);
             ImGui::SameLine();
             ImGui::TextUnformatted(label);
             ImGui::EndGroup();
@@ -145,10 +147,18 @@ namespace Settings
           snprintf(label, sizeof(label), "##flasher_is_active%s", flasher->id.c_str());
           ImGui::Checkbox(label, &flasher->isActive);
           ImGui::TableSetColumnIndex(2);
-          const char* models[] = { "UNKNOWN", "HW_STM6", "HW_STMN", "HW_STM6P", "HW_AVR" };
-          ImGui::Text("%s", models[flasher->hardwareType]);
+          ImGui::Text("%s", Flasher::MODELS[flasher->hardwareType]);
           ImGui::TableSetColumnIndex(3);
-          ImGui::Text("v2.%d", flasher->firmwareVersion);
+          if(!flasher->isFirmwareValid) {
+            ImGui::BeginGroup();
+            ImGui::TextColored(colorWarning, ICON_FA_TRIANGLE_EXCLAMATION);
+            ImGui::SameLine();
+            ImGui::Text("v%d.%d.%d", flasher->firmwareVersion.major, flasher->firmwareVersion.minor, flasher->firmwareVersion.patch);
+            ImGui::EndGroup();
+            ImGui::SetItemTooltip("The host app doesn't support this firmware version and needs to be updated to be compatible.");
+          } else {
+            ImGui::Text("v%d.%d.%d", flasher->firmwareVersion.major, flasher->firmwareVersion.minor, flasher->firmwareVersion.patch);
+          }
           // ImGui::Text("v%d.%d", (flasher->firmwareVersion & 0xff00) >> 8, flasher->firmwareVersion & 0xff);
           ImGui::TableSetColumnIndex(4);
           if(!flasher->isActive) {

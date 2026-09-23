@@ -88,8 +88,12 @@ Flasher::Flasher(const std::string& id, bool isActive)
 {
   this->id = id;
   this->isActive = isActive;
-  this->firmwareVersion = get_device_version(this->id.c_str()[0]);
+  this->isFirmwareValid = false;
+  if(get_device_version(this->id.c_str()[0], &this->firmwareVersion)) {
+    this->isFirmwareValid = this->firmwareVersion.major == MINIMUM_FIRMWARE.major && this->firmwareVersion.minor == MINIMUM_FIRMWARE.minor && this->firmwareVersion.patch >= MINIMUM_FIRMWARE.patch;
+  }
   this->hardwareType = get_device_hardware_type(this->id.c_str()[0]);
+  this->isHardwareTypeValid = this->hardwareType != 0;
   lua.setLog(&this->log);
 
   this->isFlashing = false;
@@ -308,7 +312,7 @@ int Flasher::inlprog_opt(const t_INLoptions_std& opts)
   if(strlen(opts.lua_file.c_str())) {
     luaScript += opts.lua_file;
   } else {
-    luaScript += "scripts/inlretro2.lua";
+    luaScript += "scripts/inlretro_main.lua";
   }
 
   check(&log, !(luaL_loadfile(L, luaScript.c_str()) || lua_pcall(L, 0, 0, 0)), "cannot run config. file: %s", lua_tostring(L, -1));

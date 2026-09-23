@@ -14,6 +14,8 @@
   #endif
   #include "lua.hpp"
 
+  #include "version.h"
+
   // list of included dictionaries for defining request, wValue, and wIndex fields
   #include "shared_dictionaries.h"
 
@@ -107,7 +109,7 @@ bool find_device(char retroprog_id);
 libusb_device_handle* usb_open(char retroprog_id);
 // void usb_close(libusb_device_handle *handle);
 uint8_t get_device_hardware_type(char retroprog_id);
-uint8_t get_device_version(char retroprog_id);
+bool get_device_version(char retroprog_id, FirmwareVersion* firmwareVersion);
 libusb_device_handle* open_usb_device(int log_level, const char* retroprog_id, Log* log);
 
 void close_usb(libusb_device_handle* handle);

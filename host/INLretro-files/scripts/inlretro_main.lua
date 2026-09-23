@@ -564,12 +564,14 @@ local function main()
 
   -- Print application version of the firmware for debug/support
   -- Should work on all hardware versions
-  local dict = require "scripts.app.dict"
-  local appver = help.hex(dict.bootload("GET_APP_VER", nil, nil, nil, true))
-  log.info("firmware app ver request:", appver)
-  if appver < "3" then
-    log.warning("firmware is out of date, recommend updating")
-  end
+
+  -- TODO: commented for now since firmware version display/verification is done in the cli/gui executable
+  -- local dict = require "scripts.app.dict"
+  -- local appver = help.hex(dict.bootload("GET_APP_VER", nil, nil, nil, true))
+  -- log.info("firmware app ver request:", appver)
+  -- if appver < "3" then
+  --   log.warning("firmware is out of date, recommend updating")
+  -- end
 
   --    this method only works for STM32 based devices and reads version from flash address 0x0800-0800
   --    local fwupdate = require "scripts.app.fwupdate"

@@ -11,6 +11,7 @@ struct t_INLoptions_std
   std::string console_name;
   std::string mapper_name;
   bool display_help = false;
+  bool ignoreFirmwareVersion = false;
   bool debug = false;
   bool gui = false;
 

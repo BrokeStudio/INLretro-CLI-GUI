@@ -406,13 +406,12 @@ void Console::render_rom_write(std::string droppedFilename)
   ImGui::EndDisabled();
 
   if(Flasher::list.size() > 1) {
-    if(ImGui::BeginTable("rom_dump_table", static_cast<int>(Flasher::list.size()), ImGuiTableFlags_SizingStretchSame)) {
+    if(ImGui::BeginTable("rom_write_table_buttons", static_cast<int>(Flasher::list.size()), ImGuiTableFlags_SizingStretchSame)) {
       ImGui::TableNextRow();
       int i = 0;
       for(auto& flasher : Flasher::list) {
         ImGui::TableSetColumnIndex(i);
-        ImGui::BeginDisabled(flasher->isFlashing);
-
+        ImGui::BeginDisabled(flasher->isFlashing || !flasher->isFirmwareValid);
         snprintf(this->buf, sizeof(this->buf), ICON_FA_UPLOAD " Write (%s)##write_btn_%s", flasher->id.c_str(), flasher->id.c_str());
         if(ImGui::Button(buf, ImVec2(-FLT_MIN, 50))) {
           flasher->exec(rom_write_INLOptions, Settings::settings.main_script);

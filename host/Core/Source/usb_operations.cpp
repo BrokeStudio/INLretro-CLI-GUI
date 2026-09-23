@@ -1,4 +1,7 @@
 #include "usb_operations.h"
+#include "version.h"
+#include "shared_dict_bootload.h"
+#include "shared_errors.h"
 
 #define SYMBOL_SUCCESS "√ "
 #define SYMBOL_ERROR "× "
@@ -135,12 +138,12 @@ uint8_t get_device_hardware_type(char retroprog_id)
 
   transfer.handle = usb_open(retroprog_id);
   if(!transfer.handle) {
-    return 0xff; // TODO: add log
+    return 0; // TODO: add log
   }
 
   transfer.endpoint = LIBUSB_ENDPOINT_IN;
-  transfer.request = 10; // DICT_BOOTLOAD
-  transfer.wValue = 13;  // GET_HW_TYPE
+  transfer.request = DICT_BOOTLOAD;
+  transfer.wValue = GET_HW_TYPE;
   transfer.wIndex = 0;
   transfer.wLength = 3; // number of bytes returned (error code, length, value(s))
   transfer.data = data_buff;
@@ -148,8 +151,15 @@ uint8_t get_device_hardware_type(char retroprog_id)
   // TODO: add check
   count = usb_vendor_transfer(&transfer, &AppLog::log); // NULL); // this->log);
 
-  if(transfer.data[0] != 0x8A) { // ERR_UNKN_BOOTLOAD_OPCODE
+  if(transfer.data[0] == ERR_UNKN_BOOTLOAD_OPCODE) {
+    rv = 0; // TODO replace hardcoded value
+  } else if(transfer.data[1] != 1) {
+    rv = 0; // TODO replace hardcoded value
+  } else {
     rv = transfer.data[2];
+    if(rv > 4) {
+      rv = 0; // TODO replace hardcoded value
+    }
   }
 
   if(transfer.handle) {
@@ -160,30 +170,38 @@ uint8_t get_device_hardware_type(char retroprog_id)
   return rv;
 }
 
-uint8_t get_device_version(char retroprog_id)
+bool get_device_version(char retroprog_id, FirmwareVersion* firmwareVersion)
 {
+  bool result = false;
   uint8_t data_buff[MAX_VUSB] = { 0 };
   int count = 0;
-  uint8_t rv = 0;
+  *firmwareVersion = { 0 };
   USBtransfer transfer;
 
   transfer.handle = usb_open(retroprog_id);
   if(!transfer.handle) {
-    return 0xff; // TODO: add log
+    return false; // TODO: add log
   }
 
   transfer.endpoint = LIBUSB_ENDPOINT_IN;
-  transfer.request = 10; // DICT_BOOTLOAD
-  transfer.wValue = 12;  // GET_APP_VER
+  transfer.request = DICT_BOOTLOAD;
+  transfer.wValue = GET_FIRMWARE_VERSION;
   transfer.wIndex = 0;
-  transfer.wLength = 3; // number of bytes returned (error code, length, value(s))
+  transfer.wLength = 5; // number of bytes returned (error code, length, value(s))
   transfer.data = data_buff;
 
   // TODO: add check
   count = usb_vendor_transfer(&transfer, &AppLog::log); // NULL); // this->log);
 
-  if(transfer.data[0] != 0x8A) { // ERR_UNKN_BOOTLOAD_OPCODE
-    rv = transfer.data[2];
+  if(transfer.data[0] == ERR_UNKN_BOOTLOAD_OPCODE) {
+    result = false;
+  } else if(transfer.data[1] != 3) {
+    result = false;
+  } else {
+    firmwareVersion->major = transfer.data[2];
+    firmwareVersion->minor = transfer.data[3];
+    firmwareVersion->patch = transfer.data[4];
+    result = true;
   }
 
   if(transfer.handle) {
@@ -191,7 +209,7 @@ uint8_t get_device_version(char retroprog_id)
   }
   transfer.handle = NULL;
 
-  return rv;
+  return result;
 }
 
 // int get_device_version(char retroprog_id)

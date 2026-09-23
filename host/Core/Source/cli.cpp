@@ -55,6 +55,7 @@ const char* HELP = "Usage: INLretro [options]\n\n"
                    "  --wram_size_kbyte=size, -w size              Size of WRAM in kilobytes (deprecated, use ram_size_kbyte instead)\n"
                    "  --additional_opts=opts, -o opts              Can be used to provide more options/data to a specific mapper script\n"
                    "  --lua_file=filename, -s filename             If provided, use this script for main application logic\n"
+                   "  --ignore_firmware_version                    Continue even if firmware compatibility checks fail\n"
                    "  --debug, -g                                  Debug mode, displays more details\n";
 
 /**
@@ -80,6 +81,11 @@ const char* HELP = "Usage: INLretro [options]\n\n"
  */
 bool parseOptions(int argc, char* argv[], t_INLoptions_std* opts)
 {
+  enum LongOption
+  {
+    OPT_IGNORE_FIRMWARE_VERSION = 256
+  };
+
   // Declare command line flags/options.
   static struct option longopts[] = {
     { "ram_dump_file", required_argument, NULL, 'a' },
@@ -100,6 +106,7 @@ bool parseOptions(int argc, char* argv[], t_INLoptions_std* opts)
     { "nes_prg_rom_size_kbyte", required_argument, NULL, 'x' },
     { "nes_chr_rom_size_kbyte", required_argument, NULL, 'y' },
     { "rom_size_mbit", required_argument, NULL, 'z' },
+    { "ignore_firmware_version", no_argument, NULL, OPT_IGNORE_FIRMWARE_VERSION },
     { 0, 0, 0, 0 } // longopts must end in {0, 0, 0, 0}
   };
 
@@ -213,6 +220,10 @@ bool parseOptions(int argc, char* argv[], t_INLoptions_std* opts)
           printf("rom_size_mbit disagrees with rom_size_kbyte! Using %d Kb as rom size.\n", kbyte);
         }
         opts->rom_size_kb = kbyte;
+        break;
+
+      case OPT_IGNORE_FIRMWARE_VERSION:
+        opts->ignoreFirmwareVersion = true;
         break;
 
       case '?':

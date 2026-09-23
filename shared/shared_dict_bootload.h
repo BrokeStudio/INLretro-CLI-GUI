@@ -76,6 +76,12 @@
 // STM32 just set pointer to 0x08000800 and read 4 bytes for now
 // AVR has to use this method..
 
+#define GET_FIRMWARE_VERSION 13 // RL=5  0-error, 1-len, 2-version major, 3-version minor, 4-version patch
+
+// hardware type (stm6/stmn/stm6p/avr)
+// this is updated more frequently than the USB firmware version
+#define GET_HW_TYPE 14 // RL=3  0-error, 1-len, 2-type
+
 // APPLICATION VERSION NUMBERS
 // #define APP_VERSION "AV00" //released with usb firmware v2.3
 // main update was addition of usb firmware updater
@@ -83,10 +89,6 @@
 // include ram functions & starting to have NES flash algos return data
 //  #define APP_VERSION 3 //released 8/16 with N64 dump fix and MMC2/4 support
 #define APP_VERSION 4 // release for INLretro CLI+GUI by Broke Studio
-
-// hardware type (stm6/stmn/stm6p/avr)
-// this is updated more frequently than the USB firmware version
-#define GET_HW_TYPE 13 // RL=3  0-error, 1-len, 2-type
 
 // HARDWARE TYPES
 #define HW_UNKN 0

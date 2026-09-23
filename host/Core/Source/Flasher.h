@@ -7,6 +7,7 @@
   #include <vector>
 
   #include "usb_operations.h"
+  #include "version.h"
   #include "Lua.h"
 
   #define HW_UNKW 0
@@ -19,6 +20,7 @@ class Flasher
 {
   public:
   static std::vector<Flasher*> list;
+  inline static constexpr const char* MODELS[] = { "UNKNOWN", "HW_STM6", "HW_STMN", "HW_STM6P", "HW_AVR" };
 
   std::string id;
   std::atomic_bool isFlashing;
@@ -26,8 +28,10 @@ class Flasher
   Lua lua;
   Log log;
 
-  uint8_t firmwareVersion;
+  FirmwareVersion firmwareVersion;
+  bool isFirmwareValid = false;
   uint8_t hardwareType;
+  bool isHardwareTypeValid = false;
 
   // constructor / destructor
   Flasher(const std::string& id, bool isActive);
