@@ -167,7 +167,7 @@ local function rom_dump(file, rom_size_kb)
     do return end
   end
 
-  local num_banks = math.floor(rom_size_kb / kb_per_bank)
+  local num_banks = rom_size_kb // kb_per_bank
   local cur_bank = 0
 
   log.info("ROM size", rom_size_kb .. "KB")
@@ -209,7 +209,7 @@ local function rom_flash(file, rom_size_kb)
     do return end
   end
 
-  local num_banks = math.floor(rom_size_kb / kb_per_bank)
+  local num_banks = rom_size_kb // kb_per_bank
 
   local options
   if flash_chip.buffer == true then

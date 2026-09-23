@@ -243,7 +243,7 @@ end
 local function prg_rom_dump(file, rom_size_kb)
   -- PRG-ROM dump 16KB at a time through FME7 reg9&A
   local kb_per_read = 16
-  local num_banks = math.floor(rom_size_kb / kb_per_read)
+  local num_banks = rom_size_kb // kb_per_read
   local cur_bank = 0
   local addr_base = 0x80 -- $8000
 
@@ -283,9 +283,9 @@ local function prg_rom_flash(file, rom_size_kb)
   log.section("Programming PRG-ROM")
   log.info("PRG-ROM size", rom_size_kb .. "KB")
 
-  local bank_size_kb = 8 -- FME7 8KByte per PRG bank
+  local bank_size_kb = 8 -- 8KByte per PRG bank
   local cur_bank = 0
-  local num_banks = math.floor(rom_size_kb / bank_size_kb)
+  local num_banks = rom_size_kb // bank_size_kb
 
   while cur_bank < num_banks do
     if DEBUG then
@@ -304,7 +304,7 @@ local function prg_rom_flash(file, rom_size_kb)
     nes.cpu_wr(COMMAND, CHR_BANK_2)
 
     -- have the device write a bank worth of data
-    -- MMC3 functions work perfectly for FME7
+    -- MMC3 functions work perfectly here
     flash.write_file(file, bank_size_kb, { mapper = "MMC3", mem_type = "NES_PRG_ROM" })
 
     cur_bank = cur_bank + 1
@@ -362,7 +362,7 @@ end
 -- @param rom_size_kb integer CHR size in kilobytes
 local function chr_dump(file, rom_size_kb)
   local kb_per_read = 2 -- dump one half PT at a time so only need 2 reg writes
-  local num_banks = math.floor(rom_size_kb / kb_per_read)
+  local num_banks = rom_size_kb // kb_per_read
   local cur_bank = 0
   local addr_base = 0x00 -- $0000
 
@@ -401,9 +401,9 @@ local function chr_rom_flash(file, rom_size_kb)
   log.section("Programming CHR-ROM")
   log.info("CHR-ROM size", rom_size_kb .. "KB")
 
-  local bank_size_kb = 4 -- FME7 1KByte per lower CHR bank and we're using 4 of them..
+  local bank_size_kb = 4 -- 1KByte per lower CHR bank and we're using 4 of them..
   local cur_bank = 0
-  local num_banks = math.floor(rom_size_kb / bank_size_kb)
+  local num_banks = rom_size_kb // bank_size_kb
 
   while cur_bank < num_banks do
     if DEBUG then
@@ -424,7 +424,7 @@ local function chr_rom_flash(file, rom_size_kb)
     nes.cpu_wr(PARAMETER, cur_bank * 4 + 3) -- 1KB @ PPU $0C00
 
     -- have the device write a bank worth of data
-    -- MMC3 functions work perfectly for FME7
+    -- MMC3 functions work perfectly here
     flash.write_file(file, 4, { mapper = "MMC3", mem_type = "NES_CHR_ROM" })
 
     cur_bank = cur_bank + 1
@@ -451,7 +451,7 @@ local function prg_ram_dump(file, ram_size_kb)
   init_mapper()
 
   local kb_per_read = 8
-  local num_banks = math.floor(ram_size_kb / kb_per_read)
+  local num_banks = ram_size_kb // kb_per_read
   local addr_base = 0x60 -- $6000
   local cur_bank = 0
 
@@ -488,7 +488,7 @@ local function prg_ram_write(file, ram_size_kb)
 
   local bank_size_kb = 8
   local cur_bank = 0
-  local num_banks = math.floor(ram_size_kb / bank_size_kb)
+  local num_banks = ram_size_kb // bank_size_kb
 
   nes.cpu_wr(COMMAND, PRG_BANK_6)
 
@@ -564,7 +564,7 @@ local function prg_ram_get_size()
   -- so we'll check 8 8K banks and see if we can write to each
 
   local prg_ram_size_kb = 32
-  local num_banks = math.floor(prg_ram_size_kb / 8)
+  local num_banks = prg_ram_size_kb // 8
   local cur_bank = num_banks - 1
 
   log.section("Detecting PRG-RAM size")
@@ -624,7 +624,7 @@ local function prg_ram_exercise(wram_size_kb, retroprog_id)
   end
 
   local cur_bank = 0
-  local num_banks = math.floor(wram_size_kb / 8)
+  local num_banks = wram_size_kb // 8
 
   log.section("Exercising PRG-RAM")
   log.info("PRG-RAM size", wram_size_kb .. "KB")

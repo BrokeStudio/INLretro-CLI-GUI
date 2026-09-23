@@ -86,7 +86,7 @@ end
 -- @return boolean success True after all banks have been dumped
 local function prg_rom_dump(file, rom_size_kb)
   local kb_per_read = 32
-  local num_banks = math.floor(rom_size_kb / kb_per_read)
+  local num_banks = rom_size_kb // kb_per_read
   local cur_bank = 0
   local addr_base = 0x80 -- $8000
 
@@ -125,7 +125,7 @@ end
 -- @return boolean success True after all banks are dumped, even if no shared table is found; false if a required bank-selection byte is absent
 local function prg_rom_dump_no_bank_table(file, rom_size_kb)
   local kb_per_read = 32
-  local num_banks = math.floor(rom_size_kb / kb_per_read)
+  local num_banks = rom_size_kb // kb_per_read
   local cur_bank = 0
   local addr_base = 0x80 -- $8000
   local bank_size = kb_per_read * 1024
@@ -276,9 +276,9 @@ local function prg_rom_flash(file, rom_size_kb)
   log.section("Programming PRG-ROM")
   log.info("PRG-ROM size", rom_size_kb .. "KB")
 
-  local bank_size_kb = 32 -- BNROM 32KByte per PRG bank
+  local bank_size_kb = 32 -- 32KByte per PRG bank
   local cur_bank = 0
-  local num_banks = math.floor(rom_size_kb / bank_size_kb)
+  local num_banks = rom_size_kb // bank_size_kb
 
   while cur_bank < num_banks do
     if DEBUG then
@@ -354,7 +354,7 @@ end
 local function chr_dump(file, rom_size_kb)
   -- CHR dump
   local kb_per_read = 8
-  local num_banks = math.floor(rom_size_kb / kb_per_read)
+  local num_banks = rom_size_kb // kb_per_read
   local cur_bank = 0
   local addr_base = 0x00 -- $0000
 
@@ -380,7 +380,7 @@ local function chr_ram_exercise(chrram_size_kb, retroprog_id)
   dict.stuff("RESET_LFSR") -- sets it to 1
 
   local cur_bank = 0
-  local num_banks = math.floor(chrram_size_kb / 8)
+  local num_banks = chrram_size_kb // 8
 
   log.section("Exercising CHR-RAM")
   log.info("CHR-RAM size\t" .. chrram_size_kb .. "KB")
@@ -622,7 +622,7 @@ local function process(process_opts, console_opts)
 
       -- flash PRG-ROM
       time.start()
-      write_bank_table(bank_table_base, math.floor(prg_size_kb / 32))
+      write_bank_table(bank_table_base, prg_size_kb // 32)
       prg_rom_flash(file, prg_size_kb)
       time.report(prg_size_kb)
 

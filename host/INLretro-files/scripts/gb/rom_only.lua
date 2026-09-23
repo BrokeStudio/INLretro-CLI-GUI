@@ -87,7 +87,7 @@ end
 local function rom_dump(file, rom_size_kb)
   -- ROM dump 32KB at a time
   local kb_per_read = 32
-  local num_banks = math.floor(rom_size_kb / kb_per_read)
+  local num_banks = rom_size_kb // kb_per_read
   local cur_bank = 0
   local addr_base = 0x00 -- $0000
 
@@ -112,7 +112,7 @@ local function rom_flash(file, rom_size_kb)
 
   local bank_size_kb = 32
   local cur_bank = 0
-  local num_banks = math.floor(rom_size_kb / bank_size_kb)
+  local num_banks = rom_size_kb // bank_size_kb
 
   -- flash fixed bank first
   if DEBUG then
@@ -179,7 +179,7 @@ end
 -- @param ram_size_kb integer RAM size in kilobytes
 local function ram_dump(file, ram_size_kb)
   local kb_per_read = 8
-  local num_banks = math.floor(ram_size_kb / kb_per_read)
+  local num_banks = ram_size_kb // kb_per_read
   local cur_bank = 0
   local addr_base = 0xA0 -- $A000
 
@@ -210,7 +210,7 @@ local function ram_write(file, ram_size_kb)
 
   local bank_size_kb = 8
   local cur_bank = 0
-  local num_banks = math.floor(ram_size_kb / bank_size_kb)
+  local num_banks = ram_size_kb // bank_size_kb
 
   while cur_bank < num_banks do
     if DEBUG then
@@ -273,7 +273,7 @@ local function ram_exercise(ram_size_kb, retroprog_id)
   dict.stuff("RESET_LFSR") -- sets it to 1
 
   local cur_bank = 0
-  local num_banks = math.floor(ram_size_kb / 8)
+  local num_banks = ram_size_kb // 8
 
   log.section("Exercising RAM")
   log.info("RAM size", ram_size_kb .. "KB")

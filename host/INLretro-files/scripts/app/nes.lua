@@ -619,7 +619,7 @@ end
 
 --- Find a sequential bank-number table in the final bank of a ROM file.
 -- Searches the final bank_size_kb * 1024 bytes for consecutive bank numbers
--- from zero through math.floor(prg_size_kb / bank_size_kb) - 1.
+-- from zero through prg_size_kb // bank_size_kb - 1.
 -- @param filename string Path to the binary ROM file.
 -- @param prg_size_kb number Total PRG ROM size in kilobytes.
 -- @param bank_size_kb number Optional bank size in kilobytes (default: 16).
@@ -627,7 +627,7 @@ end
 -- below 0x10000, or nil if no complete table is found.
 local function find_bank_table_in_last_bank(filename, prg_size_kb, bank_size_kb)
   local last_bank_size_kb = bank_size_kb or 16 -- use 16KB bank by default
-  local banks = math.floor(prg_size_kb / last_bank_size_kb)
+  local banks = prg_size_kb // last_bank_size_kb
   local bytes_found = 0
   local bank_table_base = 0
   local bank_size = last_bank_size_kb * 1024
@@ -671,13 +671,13 @@ end
 
 --- Find a sequential bank-number table shared by all 32 KB PRG ROM banks.
 -- Searches for consecutive bank numbers from zero through
--- math.floor(prg_size_kb / 32) - 1 at identical offsets in every bank.
+-- prg_size_kb // 32 - 1 at identical offsets in every bank.
 -- @param filename string Path to the binary ROM file.
 -- @param prg_size_kb number Total PRG ROM size in kilobytes.
 -- @return number|nil CPU address of the table with banks mapped at 0x8000,
 -- or nil if no complete table is found.
 local function find_bank_table_32(filename, prg_size_kb)
-  local banks = math.floor(prg_size_kb / 32)
+  local banks = prg_size_kb // 32
   local bytes_found = 0
   local bank_table_base = 0
   local bank_size = 32 * 1024

@@ -196,7 +196,7 @@ end
 local function prg_rom_dump(file, rom_size_kb)
   -- PRG-ROM dump 32KB at a time in 32KB bank mode
   local kb_per_read = 32
-  local num_banks = math.floor(rom_size_kb / kb_per_read)
+  local num_banks = rom_size_kb // kb_per_read
   local cur_bank = 0
   local addr_base = 0x80 -- $8000
 
@@ -239,9 +239,9 @@ local function prg_rom_flash(file, rom_size_kb)
   log.section("Programming PRG-ROM")
   log.info("PRG-ROM size", rom_size_kb .. "KB")
 
-  local bank_size_kb = 32 -- MMC1 32KByte bank mode
+  local bank_size_kb = 32 -- 32KByte bank mode
   local cur_bank = 0
-  local num_banks = math.floor(rom_size_kb / bank_size_kb)
+  local num_banks = rom_size_kb // bank_size_kb
 
   while cur_bank < num_banks do
     if DEBUG then
@@ -323,7 +323,7 @@ end
 -- @param rom_size_kb integer CHR size in kilobytes
 local function chr_dump(file, rom_size_kb)
   local kb_per_read = 8
-  local num_banks = math.floor(rom_size_kb / kb_per_read)
+  local num_banks = rom_size_kb // kb_per_read
   local cur_bank = 0
   local addr_base = 0x00 -- $0000
 
@@ -359,7 +359,7 @@ local function chr_rom_flash(file, rom_size_kb)
 
   local bank_size_kb = 4 -- MMC1 always write to PT0
   local cur_bank = 0
-  local num_banks = math.floor(rom_size_kb / bank_size_kb)
+  local num_banks = rom_size_kb // bank_size_kb
 
   while cur_bank < num_banks do
     if DEBUG then
@@ -399,7 +399,7 @@ local function prg_ram_dump(file, ram_size_kb)
   init_mapper()
 
   local kb_per_read = 8
-  local num_banks = math.floor(ram_size_kb / kb_per_read)
+  local num_banks = ram_size_kb // kb_per_read
   local addr_base = 0x60 -- $6000
   local cur_bank = 0
 
@@ -435,7 +435,7 @@ local function prg_ram_write(file, ram_size_kb)
 
   local bank_size_kb = 8
   local cur_bank = 0
-  local num_banks = math.floor(ram_size_kb / bank_size_kb)
+  local num_banks = ram_size_kb // bank_size_kb
 
   -- enable save ram ??????
   -- nes.cpu_wr(PRG_BANK, 0x00, { opcode = "NES_MMC1_WR" })  -- bit4 RAM enable 0-enabled 1-disabled
@@ -529,7 +529,7 @@ local function prg_ram_get_size()
   -- so we'll check 8 8K banks and see if we can write to each
 
   local prg_ram_size_kb = 32
-  local num_banks = math.floor(prg_ram_size_kb / 8)
+  local num_banks = prg_ram_size_kb // 8
   local cur_bank = num_banks - 1
 
   log.section("Detecting PRG-RAM size")
@@ -591,7 +591,7 @@ local function prg_ram_exercise(wram_size_kb, retroprog_id)
   dict.stuff("RESET_LFSR") -- sets it to 1
 
   local cur_bank = 0
-  local num_banks = math.floor(wram_size_kb / 8)
+  local num_banks = wram_size_kb // 8
 
   log.section("Exercising PRG-RAM")
   log.info("PRG-RAM size", wram_size_kb .. "KB")
@@ -672,7 +672,7 @@ local function chr_ram_get_size()
   -- so we'll check 8 4K banks and see if we can write to each
 
   local chr_ram_size_kb = 32
-  local num_banks = math.floor(chr_ram_size_kb / 4)
+  local num_banks = chr_ram_size_kb // 4
   local cur_bank = num_banks - 1
 
   log.section("Detecting CHR-RAM size")
@@ -720,7 +720,7 @@ local function chr_ram_exercise(chr_ram_size_kb, retroprog_id)
   dict.stuff("RESET_LFSR") -- sets it to 1
 
   local cur_bank = 0
-  local num_banks = math.floor(chr_ram_size_kb / 8)
+  local num_banks = chr_ram_size_kb // 8
 
   log.section("Exercising CHR-RAM")
   log.info("CHR-RAM size", chr_ram_size_kb .. "KB")

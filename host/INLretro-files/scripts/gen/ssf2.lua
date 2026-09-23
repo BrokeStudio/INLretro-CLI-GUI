@@ -105,7 +105,7 @@ end
 local function rom_dump(file, rom_size_kb)
   local kb_per_bank = 2 * 64 -- 2 bytes per address, 64K addresses
   local addr_base = 0x0000   -- control signals are manually controlled
-  local num_banks = math.floor(rom_size_kb / kb_per_bank)
+  local num_banks = rom_size_kb // kb_per_bank
   local cur_bank = 0
 
   log.info("ROM size", rom_size_kb .. "KB")
@@ -148,7 +148,7 @@ local function rom_flash(file, rom_size_kb)
   log.info("ROM size", rom_size_kb .. "KB")
 
   local kb_per_bank = 2 * 64 -- 2 bytes per address, 64K addresses
-  local num_banks = math.floor(rom_size_kb / kb_per_bank)
+  local num_banks = rom_size_kb // kb_per_bank
   local cur_bank = 0
 
   local options
@@ -200,7 +200,7 @@ end
 local function ram_dump(file, addr_hi, ram_size_kb)
   local kb_per_bank =
       ram_size_kb        -- TODO: FIXME? => -- 128KByte addressable per bank, but only use lower byte of each 16bit word
-  local num_banks = math.floor(ram_size_kb / kb_per_bank)
+  local num_banks = ram_size_kb // kb_per_bank
   local addr_base = 0x00 -- A15-8 address of ram start
   local cur_bank = 0
 
@@ -232,7 +232,7 @@ end
 -- @param ram_size_kb integer SRAM size in kilobytes
 local function ram_write(file, addr_hi, ram_size_kb)
   local kb_per_bank = 32 -- 128KByte addressable per bank, but only use lower byte of each 16bit word
-  local num_banks = math.floor(ram_size_kb / kb_per_bank)
+  local num_banks = ram_size_kb // kb_per_bank
   local cur_bank = 0
 
   log.section("Programming SRAM")
@@ -562,7 +562,7 @@ local function process(process_opts, console_opts)
         -- [[
         log.info("erasing only needed sectors because erasing full chip takes 4 min...")
 
-        local sectors = math.floor(rom_size_kb / 128)
+        local sectors = rom_size_kb // 128
         local addr
         -- size_to_erase = sectors * 128
 

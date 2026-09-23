@@ -136,7 +136,7 @@ local function snes_exec(process_opts, console_opts)
 
     if (header.file_size / 1024) ~= header:get_rom_size() then
       log.warning("ROM file size (" ..
-        math.floor(header.file_size / 1024) .. ") is LESS than header value (" .. header:get_rom_size() .. ")")
+        header.file_size // 1024 .. ") is LESS than header value (" .. header:get_rom_size() .. ")")
     end
   end
 
@@ -387,8 +387,8 @@ local function nes_exec(process_opts, console_opts)
       log.section("Creating binary file to be flashed")
 
       local binfile
-      local prg_nes_rom_size_kb = math.floor(nes.header.prg_rom_size / 1024)
-      local chr_nes_rom_size_kb = math.floor(nes.header.chr_rom_size / 1024)
+      local prg_nes_rom_size_kb = nes.header.prg_rom_size // 1024
+      local chr_nes_rom_size_kb = nes.header.chr_rom_size // 1024
       -- local mult = 0
       local bytes_to_copy = 0
       local flash_file_bin = process_opts.rom_write_file.path ..

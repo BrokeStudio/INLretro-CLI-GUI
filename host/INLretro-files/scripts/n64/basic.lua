@@ -34,7 +34,7 @@ local function rom_dump(file, rom_size_kb)
   local kb_per_bank = 64   -- AD0-15 = 64K address space, A0 ignored so 1Byte per address!
   local addr_base = 0x0000 -- control signals are manually controlled
   local bank_base = 0x1000 -- N64 roms start at address 0x1000_0000
-  local num_banks = math.floor(rom_size_kb / kb_per_bank)
+  local num_banks = rom_size_kb // kb_per_bank
   local cur_bank = 0
   --  local cur_bank = 512 --second half of RE2
 

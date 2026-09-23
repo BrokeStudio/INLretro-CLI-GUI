@@ -86,9 +86,8 @@ end
 -- @param file file* Open binary output file
 -- @param rom_size_kb integer PRG-ROM size in kilobytes
 local function prg_rom_dump(file, rom_size_kb)
-  -- PRG-ROM dump 4KB at a time through MMC3 reg6&7 in mode 0
   local kb_per_read = 4
-  local num_banks = math.floor(rom_size_kb / kb_per_read)
+  local num_banks = rom_size_kb // kb_per_read
   local cur_bank = 0
   local addr_base = 0x80 -- $8000
 
@@ -123,7 +122,7 @@ local function prg_rom_flash(file, rom_size_kb)
 
   local bank_size_kb = 4
   local cur_bank = 0
-  local num_banks = math.floor(rom_size_kb / bank_size_kb)
+  local num_banks = rom_size_kb // bank_size_kb
 
   local options
   if prg_flash_chip.buffer == true then
@@ -169,7 +168,7 @@ end
 -- @param rom_size_kb integer CHR size in kilobytes
 local function chr_dump(file, rom_size_kb)
   local kb_per_read = 8
-  local num_banks = math.floor(rom_size_kb / kb_per_read)
+  local num_banks = rom_size_kb // kb_per_read
   local cur_bank = 0
   local addr_base = 0x00 -- $0000
 
@@ -197,7 +196,7 @@ local function chr_ram_exercise(chrram_size_kb, retroprog_id)
   -- dict.stuff("SET_LFSR_L", 2) -- give different seed for testing fails
 
   local cur_bank = 0
-  local num_banks = math.floor(chrram_size_kb / 8)
+  local num_banks = chrram_size_kb // 8
 
   log.section("Exercising CHR-RAM")
   log.info("CHR-RAM size\t" .. chrram_size_kb .. "KB")

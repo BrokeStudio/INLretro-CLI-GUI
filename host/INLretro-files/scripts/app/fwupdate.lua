@@ -195,7 +195,7 @@ local function update_firmware(newbuild, skip, forceup)
       data = (data << 8) + data_l
 
       if (byte_num % (4 * 1024)) == 0 then
-        log.point("flashing KB", math.floor(byte_num / 1024))
+        log.point("flashing KB", byte_num // 1024)
       end
 
       -- log.info("writing:", string.format("%X", data), "addr:", string.format("%X", byte_num))

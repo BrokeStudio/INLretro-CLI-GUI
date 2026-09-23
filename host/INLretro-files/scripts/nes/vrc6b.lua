@@ -184,7 +184,7 @@ end
 local function prg_rom_dump(file, rom_size_kb)
   -- PRG-ROM dump 16KB at a time
   local kb_per_read = 16
-  local num_banks = math.floor(rom_size_kb / kb_per_read)
+  local num_banks = rom_size_kb // kb_per_read
   local cur_bank = 0
   local addr_base = 0x80 -- $8000
 
@@ -217,9 +217,9 @@ local function prg_rom_flash(file, rom_size_kb)
   log.section("Programming PRG-ROM")
   log.info("PRG-ROM size", rom_size_kb .. "KB")
 
-  local bank_size_kb = 8 -- VRC6 8KByte per PRG bank
+  local bank_size_kb = 8 -- 8KByte per PRG bank
   local cur_bank = 0
-  local num_banks = math.floor(rom_size_kb / bank_size_kb)
+  local num_banks = rom_size_kb // bank_size_kb
 
   local options
   if prg_flash_chip.buffer == true then
@@ -307,7 +307,7 @@ end
 -- @param rom_size_kb integer CHR size in kilobytes
 local function chr_dump(file, rom_size_kb)
   local kb_per_read = 4 -- 1KByte bank x 4
-  local num_banks = math.floor(rom_size_kb / kb_per_read)
+  local num_banks = rom_size_kb // kb_per_read
   local cur_bank = 0
   local addr_base = 0x00 -- $0000
 
@@ -351,7 +351,7 @@ local function chr_rom_flash(file, rom_size_kb)
 
   local bank_size_kb = 4 -- 1KByte per lower CHR bank and we're using 4 of them..
   local cur_bank = 0
-  local num_banks = math.floor(rom_size_kb / bank_size_kb)
+  local num_banks = rom_size_kb // bank_size_kb
 
   while cur_bank < num_banks do
     if DEBUG then
@@ -391,7 +391,7 @@ end
 -- @param ram_size_kb integer PRG-RAM size in kilobytes
 local function prg_ram_dump(file, ram_size_kb)
   local kb_per_read = 8
-  local num_banks = math.floor(ram_size_kb / kb_per_read)
+  local num_banks = ram_size_kb // kb_per_read
   local cur_bank = 0
   local addr_base = 0x60 -- $6000
 
@@ -424,7 +424,7 @@ local function prg_ram_write(file, ram_size_kb)
 
   local bank_size_kb = 8
   local cur_bank = 0
-  local num_banks = math.floor(ram_size_kb / bank_size_kb)
+  local num_banks = ram_size_kb // bank_size_kb
 
   -- enable PRG-RAM
   nes.cpu_wr(PPU_BANKING, 0x80)
@@ -499,7 +499,7 @@ local function prg_ram_exercise(wram_size_kb, retroprog_id)
   dict.stuff("RESET_LFSR") -- sets it to 1
 
   local cur_bank = 0
-  local num_banks = math.floor(wram_size_kb / 8)
+  local num_banks = wram_size_kb // 8
 
   log.section("Exercising PRG-RAM")
   log.info("PRG-RAM size", wram_size_kb .. "KB")
@@ -569,7 +569,7 @@ local function chr_ram_exercise(chr_ram_size_kb, retroprog_id)
   dict.stuff("RESET_LFSR") -- sets it to 1
 
   local cur_bank = 0
-  local num_banks = math.floor(chr_ram_size_kb / 4)
+  local num_banks = chr_ram_size_kb // 4
 
   log.section("Exercising CHR-RAM")
   log.info("CHR-RAM size", chr_ram_size_kb .. "KB")

@@ -225,7 +225,7 @@ local function prg_rom_dump(file, rom_size_kb)
   -- PRG-ROM dump 32KB at a time
   -- using PRG mode 0
   local kb_per_read = 32
-  local num_banks = math.floor(rom_size_kb / kb_per_read)
+  local num_banks = rom_size_kb // kb_per_read
   local cur_bank = 0
   local addr_base = 0x80 -- $8000
 
@@ -262,7 +262,7 @@ local function prg_rom_flash(file, rom_size_kb)
 
   local bank_size_kb = 32 -- 32KByte per PRG bank
   local cur_bank = 0
-  local num_banks = math.floor(rom_size_kb / bank_size_kb)
+  local num_banks = rom_size_kb // bank_size_kb
 
   -- local byte_num -- byte number gets reset for each bank
   -- local byte_str, data, readdata
@@ -291,7 +291,7 @@ local function prg_rom_flash(file, rom_size_kb)
     -- flash data
 
     --[[  This version of the code programs a single byte at a time but doesn't require
-    --  MMC3 specific functions in the firmware
+    --  mapper specific functions in the firmware
     print("This is slow as molasses, but gets the job done")
     byte_num = 0  -- current byte within the bank
     while byte_num < bank_size_kb do
@@ -301,10 +301,10 @@ local function prg_rom_flash(file, rom_size_kb)
       data = string.unpack("B", byte_str, 1)
 
       -- write the data
-      -- SLOWEST OPTION: no firmware MMC3 specific functions 100% host flash algo:
+      -- SLOWEST OPTION: no firmware mapper specific functions 100% host flash algo:
       -- wr_prg_flash_byte(base_addr+byte_num, data, false)   -- 0.7KBps
 
-      -- EASIEST FIRMWARE SPEEDUP: 5x faster, create MMC3 write byte function:
+      -- EASIEST FIRMWARE SPEEDUP: 5x faster, create mapper write byte function:
       dict.nes("RNBW_PRG_FLASH_WR", base_addr+byte_num, data)  -- 3.8KBps (5.5x faster than above)
       -- NEXT STEP: firmware write page/bank function can use function pointer for the function above
       --  this may cause issues with more complex algos
@@ -420,7 +420,7 @@ end
 -- @param rom_size_kb integer CHR size in kilobytes
 local function chr_dump(file, rom_size_kb)
   local kb_per_read = 8
-  local num_banks = math.floor(rom_size_kb / kb_per_read)
+  local num_banks = rom_size_kb // kb_per_read
   local addr_base = 0x00 -- $0000
   local cur_bank = 0
 
@@ -459,7 +459,7 @@ local function chr_rom_flash(file, rom_size_kb)
 
   local bank_size_kb = 8 -- 8KByte per CHR bank
   local cur_bank = 0
-  local num_banks = math.floor(rom_size_kb / bank_size_kb)
+  local num_banks = rom_size_kb // bank_size_kb
 
   local options
   if prg_flash_chip.buffer == true then
@@ -537,7 +537,7 @@ end
 -- @param ram_size_kb integer PRG-RAM size in kilobytes
 local function prg_ram_dump(file, ram_size_kb)
   local kb_per_read = 8
-  local num_banks = math.floor(ram_size_kb / kb_per_read)
+  local num_banks = ram_size_kb // kb_per_read
   local addr_base = 0x60 -- $6000
   local cur_bank = 0
 
@@ -577,11 +577,11 @@ local function write_ram(file, ram_size_kb)
 
 
   local base_addr = 0x6000   -- writes occur $6000-7FFF
-  local bank_size_kb = 8     -- MMC5 8KByte per RAM bank
-  local bank_size = 8 * 1024 -- MMC5 8KByte per RAM bank
+  local bank_size_kb = 8     -- 8KByte per RAM bank
+  local bank_size = 8 * 1024 -- 8KByte per RAM bank
   local buff_size = 1        -- number of bytes to write at a time
   local cur_bank = 0
-  local num_banks = math.floor(ram_size_kb / bank_size_kb)
+  local num_banks = ram_size_kb // bank_size_kb
 
   local byte_num -- byte number gets reset for each bank
   local byte_str, data, readdata
@@ -694,7 +694,7 @@ local function prg_ram_get_size()
   -- so we'll check sixteen (16) 8K banks and see if we can write to each
 
   local prg_ram_size_kb = 128 -- let's use 32K as default value for now
-  local num_banks = math.floor(prg_ram_size_kb / 8)
+  local num_banks = prg_ram_size_kb // 8
   local cur_bank = num_banks - 1
 
   log.section("Detecting PRG-RAM size")
@@ -753,7 +753,7 @@ local function prg_ram_exercise(wram_size_kb, retroprog_id)
   dict.stuff("RESET_LFSR") -- sets it to 1
 
   local cur_bank = 0
-  local num_banks = math.floor(wram_size_kb / 8)
+  local num_banks = wram_size_kb // 8
 
   log.section("Exercising PRG-RAM")
   log.info("PRG-RAM size", wram_size_kb .. "KB")
