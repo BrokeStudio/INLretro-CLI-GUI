@@ -51,7 +51,8 @@ const char* HELP = "Usage: INLretro [options]\n\n"
                    "  --nes_chr_rom_size_kbyte=size, -y size       NES-only, size of CHR-ROM in kilobytes\n"
                    "  --rom_size_kbyte=size, -k size               Size of ROM in kilobytes, non-NES systems\n"
                    "  --rom_size_mbit=size, -z size                Size of ROM in megabits, non-NES systems\n"
-                   "  --wram_size_kbyte=size, -w size              NES-only, size of WRAM in kilobytes\n"
+                   "  --ram_size_kbyte=size, -r size               Size of RAM in kilobytes\n"
+                   "  --wram_size_kbyte=size, -w size              Size of WRAM in kilobytes (deprecated, use ram_size_kbyte instead)\n"
                    "  --additional_opts=opts, -o opts              Can be used to provide more options/data to a specific mapper script\n"
                    "  --lua_file=filename, -s filename             If provided, use this script for main application logic\n"
                    "  --debug, -g                                  Debug mode, displays more details\n";
@@ -94,7 +95,8 @@ bool parseOptions(int argc, char* argv[], t_INLoptions_std* opts)
     { "rom_write_file", required_argument, NULL, 'p' },
     { "lua_file", required_argument, NULL, 's' },
     { "verify", no_argument, NULL, 'v' }, // optional_argument
-    { "wram_size_kbyte", required_argument, NULL, 'w' },
+    { "ram_size_kbyte", required_argument, NULL, 'r' },
+    { "wram_size_kbyte", required_argument, NULL, 'w' }, // legacy alias
     { "nes_prg_rom_size_kbyte", required_argument, NULL, 'x' },
     { "nes_chr_rom_size_kbyte", required_argument, NULL, 'y' },
     { "rom_size_mbit", required_argument, NULL, 'z' },
@@ -104,7 +106,7 @@ bool parseOptions(int argc, char* argv[], t_INLoptions_std* opts)
   char buf[256];
 
   // FLAG_FORMAT must be kept in sync with any short options used in longopts.
-  const char* FLAG_FORMAT = "a:b:c:d:ghi:k:m:o:p:s:vw:x:y:z:";
+  const char* FLAG_FORMAT = "a:b:c:d:ghi:k:m:o:p:r:s:vw:x:y:z:";
   int index = 0;
   int rv = 0;
   int kbyte = 0;
@@ -181,6 +183,10 @@ bool parseOptions(int argc, char* argv[], t_INLoptions_std* opts)
         opts->rom_write_file.assign(optarg);
         break;
 
+      case 'r':
+        opts->ram_size_kb = atoi(optarg);
+        break;
+
       case 's':
         opts->lua_file.assign(optarg);
         break;
@@ -190,7 +196,7 @@ bool parseOptions(int argc, char* argv[], t_INLoptions_std* opts)
         break;
 
       case 'w':
-        opts->wram_size_kb = atoi(optarg);
+        opts->ram_size_kb = atoi(optarg);
         break;
 
       case 'x':
@@ -330,8 +336,8 @@ std::string get_cli(t_INLoptions_std INLoptions)
   }
 
   // ram size?
-  if(INLoptions.wram_size_kb != 0) {
-    cli += " -w " + std::to_string(INLoptions.wram_size_kb);
+  if(INLoptions.ram_size_kb != 0) {
+    cli += " -r " + std::to_string(INLoptions.ram_size_kb);
   }
 
   // ram dump file?

@@ -69,20 +69,20 @@ end
 -- @param process_opts table Parsed operation options from the main application
 -- @param console_opts table Console/cartridge size options
 local function process(process_opts, console_opts)
-  local test         = process_opts["test"]
-  local read         = process_opts["read"]
-  local erase        = process_opts["erase"]
-  local program      = process_opts["program"]
-  local verify       = process_opts["verify"]
-  local dumpfile     = process_opts["dump_filename"]
-  local flashfile    = process_opts["flash_filename"]
-  local verifyfile   = process_opts["verify_filename"]
+  local test        = process_opts["test"]
+  local read        = process_opts["read"]
+  local erase       = process_opts["erase"]
+  local program     = process_opts["program"]
+  local verify      = process_opts["verify"]
+  local dumpfile    = process_opts["dump_filename"]
+  local flashfile   = process_opts["flash_filename"]
+  local verifyfile  = process_opts["verify_filename"]
 
-  local rv           = nil
+  local rv          = nil
   local file
-  local rom_size_kb  = console_opts["rom_size_kb"]
-  local wram_size_kb = console_opts["wram_size_kb"]
-  local mirror       = console_opts["mirror"]
+  local rom_size_kb = console_opts["rom_size_kb"]
+  local ram_size_kb = console_opts["ram_size_kb"]
+  local mirror      = console_opts["mirror"]
 
   --initialize device i/o for NES
   dict.io("IO_RESET")

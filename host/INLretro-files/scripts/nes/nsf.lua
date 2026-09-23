@@ -187,19 +187,19 @@ end
 
 --- Exercise CHR-RAM with an LFSR pattern and compare the dumped result.
 -- Overwrites CHR-RAM contents with the test pattern.
--- @param chrram_size_kb integer CHR-RAM size in kilobytes
+-- @param chr_ram_size_kb integer CHR-RAM size in kilobytes
 -- @param retroprog_id string|integer Identifier used in the temporary dump filename
 -- @return boolean success True when the CHR-RAM dump matches the expected LFSR data
-local function chr_ram_exercise(chrram_size_kb, retroprog_id)
+local function chr_ram_exercise(chr_ram_size_kb, retroprog_id)
   dict.stuff("RESET_LFSR") -- sets it to 1
   -- dict.stuff("SET_LFSR_L", 0) -- lock it up to clear ram
   -- dict.stuff("SET_LFSR_L", 2) -- give different seed for testing fails
 
   local cur_bank = 0
-  local num_banks = chrram_size_kb // 8
+  local num_banks = chr_ram_size_kb // 8
 
   log.section("Exercising CHR-RAM")
-  log.info("CHR-RAM size\t" .. chrram_size_kb .. "KB")
+  log.info("CHR-RAM size\t" .. chr_ram_size_kb .. "KB")
 
   -- write random data to all banks
   log.point("Writing random data to CHR-RAM")
@@ -214,7 +214,7 @@ local function chr_ram_exercise(chrram_size_kb, retroprog_id)
   local filename = opts.write_path .. "./ignore/nes_chr_ram_dump-" .. retroprog_id .. ".bin"
   local file = assert(io.open(filename, "wb"))
   log.point("Dumping CHR-RAM")
-  chr_dump(file, chrram_size_kb)
+  chr_dump(file, chr_ram_size_kb)
 
   -- close the file
   assert(file:close())
@@ -273,7 +273,7 @@ local function process(process_opts, console_opts)
   -- console options
   local prg_size_kb      = console_opts.prg_rom_size_kb
   local chr_size_kb      = console_opts.chr_rom_size_kb
-  local wram_size_kb     = console_opts.wram_size_kb
+  local ram_size_kb      = console_opts.ram_size_kb
 
   -- Initialize device i/o
   dict.io("IO_RESET")

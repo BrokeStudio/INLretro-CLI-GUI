@@ -442,17 +442,17 @@ local function prg_ram_detect()
 end
 
 --- Test PRG-RAM by overwriting it with pseudo-random data and comparing the dump.
--- @param wram_size_kb integer PRG-RAM size in kilobytes
+-- @param ram_size_kb integer PRG-RAM size in kilobytes
 -- @param retroprog_id string Programmer identifier used in the RAM dump filename
 -- @return boolean success True when the dumped data matches the reference pattern
-local function prg_ram_test(wram_size_kb, retroprog_id)
+local function prg_ram_test(ram_size_kb, retroprog_id)
   dict.stuff("RESET_LFSR") -- sets it to 1
 
   local cur_bank = 0
-  local num_banks = wram_size_kb // 8
+  local num_banks = ram_size_kb // 8
 
   log.section("Exercising PRG-RAM")
-  log.info("PRG-RAM size", wram_size_kb .. "KB")
+  log.info("PRG-RAM size", ram_size_kb .. "KB")
 
   -- write random data to all banks
   log.point("Writing random data to PRG-RAM")
@@ -476,7 +476,7 @@ local function prg_ram_test(wram_size_kb, retroprog_id)
 
   -- dump PRG-RAM
   log.point("Dumping PRG-RAM")
-  prg_ram_dump(file, wram_size_kb)
+  prg_ram_dump(file, ram_size_kb)
 
   -- close file
   assert(file:close())
@@ -535,7 +535,7 @@ local function process(process_opts, console_opts)
   -- console options
   local prg_size_kb      = console_opts.prg_rom_size_kb
   local chr_size_kb      = console_opts.chr_rom_size_kb
-  local wram_size_kb     = console_opts.wram_size_kb
+  local ram_size_kb      = console_opts.ram_size_kb
 
   -- Initialize device i/o
   dict.io("IO_RESET")
@@ -605,8 +605,8 @@ local function process(process_opts, console_opts)
           log.warning("ROM header settings implies PRG-RAM")
           log.error("PRG-RAM not detected")
           return false
-        elseif wram_size_kb ~= 0 then
-          log.warning("CLI options specify " .. wram_size_kb .. "KB of PRG-RAM")
+        elseif ram_size_kb ~= 0 then
+          log.warning("CLI options specify " .. ram_size_kb .. "KB of PRG-RAM")
           log.error("PRG-RAM not detected")
           return false
         else
@@ -616,21 +616,21 @@ local function process(process_opts, console_opts)
     else -- PRG RAM found
       log.success("PRG-RAM detected")
 
-      -- force wram size to 8KB because it's mapper maximum
-      wram_size_kb = 8
+      -- force ram size to 8KB because it's mapper maximum
+      ram_size_kb = 8
 
       if options.force_ram_test and (do_rom_dump or do_ram_dump) then
         log.warning("Additional option 'force_ram_test' is ignored when dumping PRG-ROM or PRG-RAM")
       elseif do_rom_write or do_ram_write then
         if options.force_ram_test or do_ram_write then
-          rv = prg_ram_test(wram_size_kb, retroprog_id)
+          rv = prg_ram_test(ram_size_kb, retroprog_id)
           if not rv then return false end
         elseif nes.header.is_valid and nes.header.has_prg_ram then
           if nes.header.has_battery then
             log.warning("Can't test PRG-RAM because ROM header specifies battery backed data")
             log.warning("Use additional option 'force_ram_test' to force PRG-RAM test")
           else
-            rv = prg_ram_test(wram_size_kb, retroprog_id)
+            rv = prg_ram_test(ram_size_kb, retroprog_id)
             if not rv then return false end
           end
         else
@@ -657,7 +657,7 @@ local function process(process_opts, console_opts)
     file = assert(io.open(ram_dump_file.filename, "wb"))
 
     -- dump cart to file
-    prg_ram_dump(file, wram_size_kb)
+    prg_ram_dump(file, ram_size_kb)
 
     -- close file
     assert(file:close())
@@ -680,7 +680,7 @@ local function process(process_opts, console_opts)
 
     file = assert(io.open(ram_write_file.filename, "rb"))
 
-    flash.write_file(file, wram_size_kb, { mapper = "NOVAR", mem_type = "NES_PRG_RAM" })
+    flash.write_file(file, ram_size_kb, { mapper = "NOVAR", mem_type = "NES_PRG_RAM" })
 
     -- close file
     assert(file:close())

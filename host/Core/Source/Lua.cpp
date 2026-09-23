@@ -93,8 +93,8 @@ lua_State* Lua::init(const t_INLoptions_std& opts)
   lua_pushinteger(this->L, opts.rom_size_kb);
   lua_setfield(this->L, -2, "rom_size_kb");
 
-  lua_pushinteger(this->L, opts.wram_size_kb);
-  lua_setfield(this->L, -2, "nes_wram_size_kb");
+  lua_pushinteger(this->L, opts.ram_size_kb);
+  lua_setfield(this->L, -2, "ram_size_kb");
 
   lua_pushinteger(this->L, opts.prg_rom_size_kb);
   lua_setfield(this->L, -2, "nes_prg_rom_size_kb");

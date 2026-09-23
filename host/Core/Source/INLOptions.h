@@ -17,10 +17,10 @@ struct t_INLoptions_std
   // NES Functionality
   int chr_rom_size_kb = 0;
   int prg_rom_size_kb = 0;
-  int wram_size_kb = 0;
 
   // General Functionality
   int rom_size_kb = 0;
+  int ram_size_kb = 0;
   std::string rom_dump_file;
   std::string rom_write_file;
   std::string ram_dump_file;
@@ -40,8 +40,8 @@ struct t_INLoptions_std
     this->gui = false;
     this->chr_rom_size_kb = 0;
     this->prg_rom_size_kb = 0;
-    this->wram_size_kb = 0;
     this->rom_size_kb = 0;
+    this->ram_size_kb = 0;
     this->rom_dump_file = "";
     this->rom_write_file = "";
     this->ram_dump_file = "";

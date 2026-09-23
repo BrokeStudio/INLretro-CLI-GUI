@@ -360,7 +360,7 @@ local function process(process_opts, console_opts)
 
   -- console options
   local rom_size_kb    = console_opts.rom_size_kb
-  local ram_size_kb    = console_opts.wram_size_kb
+  local ram_size_kb    = console_opts.ram_size_kb
 
   -- Initialize device i/o
   dict.io("IO_RESET")
@@ -406,10 +406,10 @@ local function process(process_opts, console_opts)
           log.print()
           log.warning("Can't exercise RAM because ROM has battery backed data")
         else
-          -- if wram_size_kb == 0 then
-          --   wram_size_kb = ram_get_size()
+          -- if ram_size_kb == 0 then
+          --   ram_size_kb = ram_get_size()
           -- end
-          -- if wram_size_kb ~= 0 then
+          -- if ram_size_kb ~= 0 then
           rv = ram_exercise(8, retroprog_id)
           -- exit script if test fails
           if not rv then return end

@@ -118,7 +118,7 @@ local function process(process_opts, console_opts)
 
   -- console options
   local rom_size_kb    = console_opts.rom_size_kb
-  local ram_size_kb    = console_opts.wram_size_kb
+  local ram_size_kb    = console_opts.ram_size_kb
 
   -- initialize device i/o
   dict.io("IO_RESET")
@@ -224,7 +224,7 @@ local function process(process_opts, console_opts)
     --  erase_flash()
   end
 
-  --write to wram on the cart
+  --write to ram on the cart
   if writeram then
     --    print("\nwriting to SAVE RAM...")
     --

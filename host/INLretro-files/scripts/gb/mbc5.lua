@@ -366,17 +366,17 @@ end
 
 --- Exercise RAM with an LFSR pattern and compare the dumped result.
 -- Overwrites RAM contents with the test pattern.
--- @param wram_size_kb integer RAM size in kilobytes
+-- @param ram_size_kb integer RAM size in kilobytes
 -- @param retroprog_id string|integer Identifier used in the temporary dump filename
 -- @return boolean success True when the RAM dump matches the expected LFSR data
-local function ram_exercise(wram_size_kb, retroprog_id)
+local function ram_exercise(ram_size_kb, retroprog_id)
   dict.stuff("RESET_LFSR") -- sets it to 1
 
   local cur_bank = 0
-  local num_banks = wram_size_kb // 8
+  local num_banks = ram_size_kb // 8
 
   log.section("Exercising RAM")
-  log.info("RAM size", wram_size_kb .. "KB")
+  log.info("RAM size", ram_size_kb .. "KB")
 
   -- enable RAM
   gb.rom_wr(0x0000, 0x0A)
@@ -411,7 +411,7 @@ local function ram_exercise(wram_size_kb, retroprog_id)
 
   -- dump RAM
   log.point("Dumping RAM")
-  ram_dump(file, wram_size_kb)
+  ram_dump(file, ram_size_kb)
 
   -- disable RAM
   gb.rom_wr(0x0000, 0x00)
@@ -469,7 +469,7 @@ local function process(process_opts, console_opts)
 
   -- console options
   local rom_size_kb    = console_opts.rom_size_kb
-  local wram_size_kb   = console_opts.wram_size_kb
+  local ram_size_kb    = console_opts.ram_size_kb
 
   -- Initialize device i/o
   dict.io("IO_RESET")
@@ -517,8 +517,8 @@ local function process(process_opts, console_opts)
           log.warning("ROM header settings implies RAM")
           log.error("RAM not detected")
           -- return false
-        elseif wram_size_kb ~= 0 then
-          log.warning("CLI options specify " .. wram_size_kb .. "KB of RAM")
+        elseif ram_size_kb ~= 0 then
+          log.warning("CLI options specify " .. ram_size_kb .. "KB of RAM")
           log.error("RAM not detected")
           return false
         else
@@ -529,25 +529,25 @@ local function process(process_opts, console_opts)
       end
     else -- RAM found
       log.success("RAM detected")
-      if wram_size_kb == 0 then
-        wram_size_kb = ram_get_size()
+      if ram_size_kb == 0 then
+        ram_size_kb = ram_get_size()
       end
       if (do_rom_dump or do_ram_dump) and options.force_ram_test then
         log.warning("Additional option 'force_ram_test' is ignored when dumping ROM or RAM")
       elseif do_rom_write then
-        if wram_size_kb < gb.file_header:get_ram_size() then
+        if ram_size_kb < gb.file_header:get_ram_size() then
           log.error("On board RAM size (" ..
-            wram_size_kb .. ") is less than ROM header RAM size (" .. gb.file_header:get_ram_size() .. ")")
+            ram_size_kb .. ") is less than ROM header RAM size (" .. gb.file_header:get_ram_size() .. ")")
           return false
         elseif options.force_ram_test then
-          rv = ram_exercise(wram_size_kb, retroprog_id)
+          rv = ram_exercise(ram_size_kb, retroprog_id)
           if not rv then return false end
         else
           log.warning("Can't test RAM because data could be battery backed")
           log.warning("Use additional option 'force_ram_test' to force RAM test")
         end
       elseif do_ram_write then
-        rv = ram_exercise(wram_size_kb, retroprog_id)
+        rv = ram_exercise(ram_size_kb, retroprog_id)
         if not rv then return false end
       end
     end
@@ -569,11 +569,11 @@ local function process(process_opts, console_opts)
     gb.rom_wr(0x0000, 0x0A)
 
     -- dump cart to file
-    if wram_size_kb ~= 0 then
+    if ram_size_kb ~= 0 then
       log.section("Dumping RAM")
       time.start()
-      ram_dump(file, wram_size_kb)
-      time.report(wram_size_kb)
+      ram_dump(file, ram_size_kb)
+      time.report(ram_size_kb)
       log.success("RAM dumping done")
     else
       log.error("RAM size not provided")
@@ -603,10 +603,10 @@ local function process(process_opts, console_opts)
     gb.rom_wr(0x0000, 0x0A)
 
     -- flash cart
-    if wram_size_kb ~= 0 then
+    if ram_size_kb ~= 0 then
       time.start()
-      ram_write(file, wram_size_kb)
-      time.report(wram_size_kb)
+      ram_write(file, ram_size_kb)
+      time.report(ram_size_kb)
     else
       log.error("RAM size not provided")
       return

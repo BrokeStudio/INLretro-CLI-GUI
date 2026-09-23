@@ -386,7 +386,7 @@ local function process(process_opts, console_opts)
   -- console options
   local prg_size_kb      = console_opts.prg_rom_size_kb
   local chr_size_kb      = console_opts.chr_rom_size_kb
-  local wram_size_kb     = console_opts.wram_size_kb
+  local ram_size_kb      = console_opts.ram_size_kb
 
   -- Initialize device i/o
   dict.io("IO_RESET")

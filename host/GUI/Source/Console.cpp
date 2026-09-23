@@ -496,7 +496,7 @@ void Console::render_ram_dump(std::string droppedFilename)
     ImGui::TextUnformatted("RAM size (KB)");
     ImGui::TableSetColumnIndex(1);
     ImGui::SetNextItemWidth(-FLT_MIN);
-    ImGui::InputInt("##ram_dump_wram_size_kb", &ram_dump_INLOptions.wram_size_kb);
+    ImGui::InputInt("##ram_dump_ram_size_kb", &ram_dump_INLOptions.ram_size_kb);
 
     // Additional options
     ImGui::TableNextRow();
@@ -599,7 +599,7 @@ void Console::render_ram_write(std::string droppedFilename)
     ImGui::TextUnformatted("RAM size (KB)");
     ImGui::TableSetColumnIndex(1);
     ImGui::SetNextItemWidth(-FLT_MIN);
-    ImGui::InputInt("##ram_write_wram_size_kb", &ram_write_INLOptions.wram_size_kb);
+    ImGui::InputInt("##ram_write_ram_size_kb", &ram_write_INLOptions.ram_size_kb);
 
     // Additional options
     ImGui::TableNextRow();

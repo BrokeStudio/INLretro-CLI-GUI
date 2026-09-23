@@ -741,11 +741,11 @@ end
 
 --- Exercise PRG-RAM with an LFSR pattern and compare the dumped result.
 -- Overwrites PRG-RAM contents with the test pattern.
--- @param wram_size_kb integer PRG-RAM size in kilobytes
+-- @param ram_size_kb integer PRG-RAM size in kilobytes
 -- @param retroprog_id string|integer Identifier used in the temporary dump filename
 -- @return boolean success True when the PRG-RAM dump matches the expected LFSR data
-local function prg_ram_exercise(wram_size_kb, retroprog_id)
-  if wram_size_kb == 0 or wram_size_kb == nil then
+local function prg_ram_exercise(ram_size_kb, retroprog_id)
+  if ram_size_kb == 0 or ram_size_kb == nil then
     log.error("PRG-RAM size invalid")
     return false
   end
@@ -753,10 +753,10 @@ local function prg_ram_exercise(wram_size_kb, retroprog_id)
   dict.stuff("RESET_LFSR") -- sets it to 1
 
   local cur_bank = 0
-  local num_banks = wram_size_kb // 8
+  local num_banks = ram_size_kb // 8
 
   log.section("Exercising PRG-RAM")
-  log.info("PRG-RAM size", wram_size_kb .. "KB")
+  log.info("PRG-RAM size", ram_size_kb .. "KB")
 
   -- disable write protection
   nes.cpu_wr(PRG_RAM_PROTECT_1, 0x02) -- bits 1&0 must be '10' (ie 0x02) to allow writes to PRG-RAM
@@ -787,7 +787,7 @@ local function prg_ram_exercise(wram_size_kb, retroprog_id)
 
   -- dump PRG-RAM
   log.point("Dumping PRG-RAM")
-  prg_ram_dump(file, wram_size_kb)
+  prg_ram_dump(file, ram_size_kb)
 
   -- close file
   assert(file:close())
@@ -1140,7 +1140,7 @@ local function process(process_opts, console_opts)
   -- console options
   local prg_size_kb      = console_opts.prg_rom_size_kb
   local chr_size_kb      = console_opts.chr_rom_size_kb
-  local wram_size_kb     = console_opts.wram_size_kb
+  local ram_size_kb      = console_opts.ram_size_kb
 
   -- Initialize device i/o
   dict.io("IO_RESET")
@@ -1214,11 +1214,11 @@ local function process(process_opts, console_opts)
           log.print()
           log.warning("Can't exercise PRG-RAM because NES ROM has battery backed data")
         else
-          if wram_size_kb == 0 then
-            wram_size_kb = prg_ram_get_size()
+          if ram_size_kb == 0 then
+            ram_size_kb = prg_ram_get_size()
           end
-          if wram_size_kb ~= 0 then
-            rv = prg_ram_exercise(wram_size_kb, retroprog_id)
+          if ram_size_kb ~= 0 then
+            rv = prg_ram_exercise(ram_size_kb, retroprog_id)
             -- exit script if test fails
             if not rv then return end
           end
@@ -1246,10 +1246,10 @@ local function process(process_opts, console_opts)
     file = assert(io.open(ram_dump_file.filename, "wb"))
 
     -- dump cart to file
-    if wram_size_kb ~= 0 then
+    if ram_size_kb ~= 0 then
       time.start()
-      prg_ram_dump(file, wram_size_kb)
-      time.report(wram_size_kb)
+      prg_ram_dump(file, ram_size_kb)
+      time.report(ram_size_kb)
       log.success("PRG-RAM dumping done")
     else
       log.error("PRG-RAM size not provided")
@@ -1275,11 +1275,11 @@ local function process(process_opts, console_opts)
     file = assert(io.open(ram_write_file.filename, "rb"))
 
     -- flash cart
-    if wram_size_kb ~= 0 then
+    if ram_size_kb ~= 0 then
       time.start()
-      -- prg_ram_write(file, wram_size_kb)
+      -- prg_ram_write(file, ram_size_kb)
       log.warning("TODO: ADD RAM WRITE SUPPORT")
-      time.report(wram_size_kb)
+      time.report(ram_size_kb)
     else
       log.error("PRG-RAM size not provided")
       return
@@ -1289,7 +1289,7 @@ local function process(process_opts, console_opts)
     assert(file:close())
   end
 
-  -- write to wram on the cart
+  -- write to ram on the cart
   if writeram then
     print("\nwriting to PRG-RAM...")
 
@@ -1315,9 +1315,9 @@ local function process(process_opts, console_opts)
 
     file = assert(io.open(ramwritefile, "rb"))
 
-    write_ram(file, wram_size_kb)
-    -- flash.write_file(file, wram_size_kb, { mapper = "NOVAR", mem_type = "NES_PRG_RAM" })
-    -- flash.write_file(file, wram_size_kb, { mapper = "MMC5", mem_type = "NES_PRG_RAM" })
+    write_ram(file, ram_size_kb)
+    -- flash.write_file(file, ram_size_kb, { mapper = "NOVAR", mem_type = "NES_PRG_RAM" })
+    -- flash.write_file(file, ram_size_kb, { mapper = "MMC5", mem_type = "NES_PRG_RAM" })
 
     -- for save data safety disable PRG-RAM writes
     -- nes.cpu_wr(PRG_RAM_PROTECT_1, 0x01) -- bits 1&0 must be '01' (ie 0x02) to allow writes to PRG-RAM

@@ -54,7 +54,7 @@ end
 -- leaves $8000 control reg selected to IRQ value selected so $A000 writes don't affect banking
 local function init_mapper()
   -- set $8000 16k bank register for flashing purpose
-  nes.cpu_wr(FLASH_ENABLE, 0x00) -- disable prgram flashing
+  nes.cpu_wr(FLASH_ENABLE, 0x00) -- disable prg ram flashing
   nes.cpu_wr(PRG_16K, 0x00)
 
   -- set $C000 8k bank register for flashing purpose
@@ -146,7 +146,7 @@ local function prg_rom_flash_byte(addr, value, bank)
   addr = addr | 0x6000
 
   -- select bank
-  -- nes.cpu_wr(FLASH_ENABLE, 0x01)  --enable prgram flashing -- must be done by caller
+  -- nes.cpu_wr(FLASH_ENABLE, 0x01)  --enable prg ram flashing -- must be done by caller
   nes.cpu_wr(RAM_8K, bank)
 
   -- send unlock command and write byte
@@ -171,7 +171,7 @@ local function prg_rom_flash_byte(addr, value, bank)
     log.info("Done writing byte,", i .. " naks")
   end
 
-  --nes.cpu_wr(FLASH_ENABLE, 0x00)  --disable prgram flashing -- must be done by caller
+  --nes.cpu_wr(FLASH_ENABLE, 0x00)  --disable prg ram flashing -- must be done by caller
 
   --TODO handle timeout for problems
 
@@ -233,7 +233,7 @@ local function prg_rom_flash(file, rom_size_kb)
   -- this is a custom register
   -- that allow flashing data
   -- in the $6000-$7FFF area
-  nes.cpu_wr(FLASH_ENABLE, 0x01) -- enable prgram flashing
+  nes.cpu_wr(FLASH_ENABLE, 0x01) -- enable prg ram flashing
 
   while cur_bank < num_banks do
     if DEBUG then
@@ -258,7 +258,7 @@ local function prg_rom_flash(file, rom_size_kb)
   spinner.clear()
   log.success("Done programming PRG-ROM")
 
-  nes.cpu_wr(FLASH_ENABLE, 0x02) -- disable prgram flashing
+  nes.cpu_wr(FLASH_ENABLE, 0x02) -- disable prg ram flashing
 end
 
 --[[
@@ -492,17 +492,17 @@ end
 
 --- Exercise PRG-RAM with an LFSR pattern and compare the dumped result.
 -- Overwrites PRG-RAM contents with the test pattern.
--- @param wram_size_kb integer PRG-RAM size in kilobytes
+-- @param ram_size_kb integer PRG-RAM size in kilobytes
 -- @param retroprog_id string|integer Identifier used in the temporary dump filename
 -- @return boolean success True when the PRG-RAM dump matches the expected LFSR data
-local function prg_ram_exercise(wram_size_kb, retroprog_id)
+local function prg_ram_exercise(ram_size_kb, retroprog_id)
   dict.stuff("RESET_LFSR") -- sets it to 1
 
   local cur_bank = 0
-  local num_banks = wram_size_kb // 8
+  local num_banks = ram_size_kb // 8
 
   log.section("Exercising PRG-RAM")
-  log.info("PRG-RAM size", wram_size_kb .. "KB")
+  log.info("PRG-RAM size", ram_size_kb .. "KB")
 
   -- enable PRG-RAM
   nes.cpu_wr(PPU_BANKING, 0x80)
@@ -529,7 +529,7 @@ local function prg_ram_exercise(wram_size_kb, retroprog_id)
 
   -- dump PRG-RAM
   log.point("Dumping PRG-RAM")
-  prg_ram_dump(file, wram_size_kb)
+  prg_ram_dump(file, ram_size_kb)
 
   -- close file
   assert(file:close())
@@ -668,7 +668,7 @@ local function process(process_opts, console_opts)
   -- console options
   local prg_size_kb      = console_opts.prg_rom_size_kb
   local chr_size_kb      = console_opts.chr_rom_size_kb
-  local wram_size_kb     = console_opts.wram_size_kb
+  local ram_size_kb      = console_opts.ram_size_kb
 
   -- Initialize device i/o
   dict.io("IO_RESET")
@@ -726,17 +726,17 @@ local function process(process_opts, console_opts)
         log.print()
         log.warning("Flag 'force_ram_test' enabled")
       end
-      -- force wram size to 8KB
-      if wram_size_kb == 0 then
-        wram_size_kb = 8
+      -- force ram size to 8KB
+      if ram_size_kb == 0 then
+        ram_size_kb = 8
       end
       if options.force_ram_test or nes.header.is_valid then
         if not options.force_ram_test and nes.header.has_battery then
           log.print()
           log.warning("Can't exercise PRG-RAM because NES ROM has battery backed data")
         else
-          if wram_size_kb ~= 0 then
-            rv = prg_ram_exercise(wram_size_kb, retroprog_id)
+          if ram_size_kb ~= 0 then
+            rv = prg_ram_exercise(ram_size_kb, retroprog_id)
             -- exit script if test fails
             if not rv then return end
           end
@@ -783,7 +783,7 @@ local function process(process_opts, console_opts)
     file = assert(io.open(ram_dump_file.filename, "wb"))
 
     -- dump cart to file
-    prg_ram_dump(file, wram_size_kb)
+    prg_ram_dump(file, ram_size_kb)
 
     -- disable PRG-RAM
     nes.cpu_wr(PPU_BANKING, 0x00)
@@ -812,7 +812,7 @@ local function process(process_opts, console_opts)
 
     file = assert(io.open(ram_write_file.filename, "rb"))
 
-    flash.write_file(file, wram_size_kb, { mapper = "NOVAR", mem_type = "NES_PRG_RAM" })
+    flash.write_file(file, ram_size_kb, { mapper = "NOVAR", mem_type = "NES_PRG_RAM" })
 
     -- disable PRG-RAM
     nes.cpu_wr(PPU_BANKING, 0x00)

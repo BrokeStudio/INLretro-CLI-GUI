@@ -101,7 +101,7 @@ class Console : public t_Console
     std::ifstream file(ram_write_INLOptions.ram_write_file, std::fstream::binary);
     // TODO: check if file is valid
     file.seekg(0, file.end);
-    ram_write_INLOptions.wram_size_kb = static_cast<int>(file.tellg() >> 10);
+    ram_write_INLOptions.ram_size_kb = static_cast<int>(file.tellg() >> 10);
     file.seekg(0, file.beg);
     file.close();
   }

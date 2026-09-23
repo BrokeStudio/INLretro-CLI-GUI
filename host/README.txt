@@ -73,9 +73,9 @@ Common arguments:
   -v, --verify                  Verify the ROM after programming
   -x, --nes_prg_rom_size_kbyte  NES PRG-ROM size in kilobytes
   -y, --nes_chr_rom_size_kbyte  NES CHR-ROM size in kilobytes
-  -w, --wram_size_kbyte         NES cartridge RAM size in kilobytes
   -k, --rom_size_kbyte          ROM size for non-NES systems, in kilobytes
   -z, --rom_size_mbit           ROM size for non-NES systems, in megabits
+  -r, --ram_size_kbyte          Cartridge RAM size in kilobytes
   -o, --additional_opts         Comma-separated advanced options
   -i, --retroprog_id            Select a specific programmer
   -g, --debug                   Display additional diagnostic information

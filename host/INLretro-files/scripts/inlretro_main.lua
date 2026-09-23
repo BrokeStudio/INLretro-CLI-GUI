@@ -36,7 +36,7 @@ local function default_exec(process_opts, console_opts)
   -- Defensively filter out any console options that aren't standard.
   local default_opts = {
     rom_size_kb = console_opts.rom_size_kb,
-    wram_size_kb = console_opts.wram_size_kb,
+    ram_size_kb = console_opts.ram_size_kb,
   }
   console_opts.console_process_script.process(process_opts, default_opts)
 end
@@ -83,7 +83,7 @@ local function n64_exec(process_opts, console_opts)
   -- Defensively filter out any console options that aren't standard.
   local n64_console_opts = {
     rom_size_kb = console_opts.rom_size_kb,
-    wram_size_kb = console_opts.wram_size_kb,
+    ram_size_kb = console_opts.ram_size_kb,
   }
 
   local mappers = {
@@ -167,7 +167,7 @@ local function snes_exec(process_opts, console_opts)
   -- Defensively filter out any console options that aren't standard.
   local snes_console_opts = {
     rom_size_kb = console_opts.rom_size_kb,
-    wram_size_kb = console_opts.wram_size_kb,
+    ram_size_kb = console_opts.ram_size_kb,
   }
 
   local mappers = {
@@ -253,8 +253,8 @@ local function gb_exec(process_opts, console_opts)
 
   -- Defensively filter out any console options that aren't standard.
   local gb_console_opts = {
-    rom_size_kb  = console_opts.rom_size_kb,
-    wram_size_kb = console_opts.wram_size_kb,
+    rom_size_kb = console_opts.rom_size_kb,
+    ram_size_kb = console_opts.ram_size_kb,
   }
 
   local mappers = {
@@ -334,8 +334,8 @@ local function gen_exec(process_opts, console_opts)
 
   -- Defensively filter out any console options that aren't standard.
   local gen_console_opts = {
-    rom_size_kb  = console_opts.rom_size_kb,
-    wram_size_kb = console_opts.wram_size_kb,
+    rom_size_kb = console_opts.rom_size_kb,
+    ram_size_kb = console_opts.ram_size_kb,
   }
 
   local mappers = {
@@ -471,7 +471,7 @@ local function nes_exec(process_opts, console_opts)
   -- This will matter more when software support exists for other consoles.
 
   local nes_console_opts = {
-    wram_size_kb    = console_opts.wram_size_kb,
+    ram_size_kb     = console_opts.ram_size_kb,
     prg_rom_size_kb = console_opts.prg_rom_size_kb,
     chr_rom_size_kb = console_opts.chr_rom_size_kb,
   }
@@ -537,7 +537,7 @@ local function main()
   --  ram_write_file:       string, filename containing data to write to ram on cartridge.
   --  nes_prg_rom_size_kb:  int, size of cartridge PRG-ROM in kilobytes.
   --  nes_chr_rom_size_kb:  int, size of cartridge CHR-ROM in kilobytes.
-  --  nes_wram_size_kb:     int, size of cartridge WRAM in kilobytes.
+  --  ram_size_kb:          int, size of cartridge RAM in kilobytes.
   --  rom_size_kb:          int, size of cartridge ROM in kilobytes.
   --  additional_opts:      string, additional options (ex: for NES, bank table address for BxROM mapper).
   --  lua_path:             string, needed for macOS app package.
@@ -550,7 +550,7 @@ local function main()
 
   -- Sanitize + control
   if opts.rom_size_kb < 0 then opts.rom_size_kb = 0 end
-  if opts.nes_wram_size_kb < 0 then opts.nes_wram_size_kb = 0 end
+  if opts.ram_size_kb < 0 then opts.ram_size_kb = 0 end
   if opts.nes_prg_rom_size_kb < 0 then opts.nes_prg_rom_size_kb = 0 end
   if opts.nes_chr_rom_size_kb < 0 then opts.nes_chr_rom_size_kb = 0 end
 
@@ -698,10 +698,10 @@ local function main()
     log.error("UNSUPPORTED CONSOLE: ", opts.console_name)
   else
     local console_opts = {
-      wram_size_kb    = opts.nes_wram_size_kb,
       prg_rom_size_kb = opts.nes_prg_rom_size_kb,
       chr_rom_size_kb = opts.nes_chr_rom_size_kb,
       rom_size_kb     = opts.rom_size_kb,
+      ram_size_kb     = opts.ram_size_kb,
       -- console_process_script  = opts.console_process_script,
       mapper          = opts.mapper_name,
     }
