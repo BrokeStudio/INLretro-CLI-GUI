@@ -53,7 +53,6 @@ const char* HELP = "Usage: INLretro [options]\n\n"
                    "  --rom_size_mbit=size, -z size                Size of ROM in megabits, non-NES systems\n"
                    "  --wram_size_kbyte=size, -w size              NES-only, size of WRAM in kilobytes\n"
                    "  --additional_opts=opts, -o opts              Can be used to provide more options/data to a specific mapper script\n"
-                   "                                               NES: used for bank table address for mapper BxROM\n"
                    "  --lua_file=filename, -s filename             If provided, use this script for main application logic\n"
                    "  --debug, -g                                  Debug mode, displays more details\n";
 

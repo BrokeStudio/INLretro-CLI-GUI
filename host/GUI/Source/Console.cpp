@@ -114,8 +114,8 @@ void Console::render_additional_options_popup(t_INLoptions_std* INLoptions, Cons
   if(ImGui::BeginPopupContextItem("additional_options_popup")) {
     trim(INLoptions->additional_opts);
     if(consoleAction == ConsoleActions_RomWrite || consoleAction == ConsoleActions_RamWrite) {
-      if(ImGui::Selectable("force_wram_test")) {
-        INLoptions->additional_opts += ",force_wram_test";
+      if(ImGui::Selectable("force_ram_test")) {
+        INLoptions->additional_opts += ",force_ram_test";
       }
     }
 

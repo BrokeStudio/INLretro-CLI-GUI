@@ -585,16 +585,16 @@ local function process(process_opts, console_opts)
     -- PRG-RAM tests
     rv = prg_ram_test()
     if rv == true then
-      if options.force_wram_test then
+      if options.force_ram_test then
         log.print()
-        log.warning("Flag 'force_wram_test' enabled")
+        log.warning("Flag 'force_ram_test' enabled")
       end
       -- force wram size to 8KB
       if wram_size_kb == 0 then
         wram_size_kb = 8
       end
-      if options.force_wram_test or nes.header.is_valid then
-        if not options.force_wram_test and nes.header.has_battery then
+      if options.force_ram_test or nes.header.is_valid then
+        if not options.force_ram_test and nes.header.has_battery then
           log.print()
           log.warning("Can't exercise PRG-RAM because NES ROM has battery backed data")
         else

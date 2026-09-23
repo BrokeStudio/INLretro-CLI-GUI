@@ -564,8 +564,8 @@ local function process(process_opts, console_opts)
         log.error("RAM not detected")
         return false
       elseif do_rom_write then
-        if options.force_wram_test then
-          log.warning("Additional option 'force_wram_test' implies RAM presence")
+        if options.force_ram_test then
+          log.warning("Additional option 'force_ram_test' implies RAM presence")
           log.error("RAM not detected")
           return false
         elseif gb.file_header.is_valid and gb.file_header:get_ram_size() ~= 0 then
@@ -587,19 +587,19 @@ local function process(process_opts, console_opts)
       if wram_size_kb == 0 then
         wram_size_kb = ram_get_size()
       end
-      if (do_rom_dump or do_ram_dump) and options.force_wram_test then
-        log.warning("Additional option 'force_wram_test' is ignored when dumping ROM or RAM")
+      if (do_rom_dump or do_ram_dump) and options.force_ram_test then
+        log.warning("Additional option 'force_ram_test' is ignored when dumping ROM or RAM")
       elseif do_rom_write then
         if wram_size_kb < gb.file_header:get_ram_size() then
           log.error("On board RAM size (" ..
             wram_size_kb .. ") is less than ROM header RAM size (" .. gb.file_header:get_ram_size() .. ")")
           return false
-        elseif options.force_wram_test then
+        elseif options.force_ram_test then
           rv = ram_exercise(wram_size_kb, retroprog_id)
           if not rv then return false end
         else
           log.warning("Can't test RAM because data could be battery backed")
-          log.warning("Use additional option 'force_wram_test' to force RAM test")
+          log.warning("Use additional option 'force_ram_test' to force RAM test")
         end
       elseif do_ram_write then
         rv = ram_exercise(wram_size_kb, retroprog_id)

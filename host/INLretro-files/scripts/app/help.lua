@@ -250,7 +250,8 @@ local function parse_additional_opts(str)
   -- cleanup some options if needed
   for k, v in pairs(t) do
     if k == "force_debug" and type(v) ~= "boolean" then t[k] = false end
-    if k == "force_wram_test" and type(v) ~= "boolean" then t[k] = false end
+    if k == "force_wram_test" and type(v) ~= "boolean" then t[k] = false end -- legacy
+    if k == "force_ram_test" and type(v) ~= "boolean" then t[k] = false end
     if k == "force_flash_test" and type(v) ~= "boolean" then t[k] = false end
     if k == "no_bin_regen" and type(v) ~= "boolean" then t[k] = false end
     if k == "flash_cic" and type(v) ~= "boolean" then t[k] = false end

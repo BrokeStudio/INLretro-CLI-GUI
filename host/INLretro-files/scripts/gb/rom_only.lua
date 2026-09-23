@@ -395,14 +395,14 @@ local function process(process_opts, console_opts)
     -- RAM tests
     rv = ram_test()
     if rv == true then
-      if options.force_wram_test then
+      if options.force_ram_test then
         log.print()
-        log.warning("Flag 'force_wram_test' enabled")
+        log.warning("Flag 'force_ram_test' enabled")
       end
       local is_header_valid = gb.file_header.is_valid or gb.cart_header.is_valid
       local has_battery = gb.file_header:has_battery() or gb.cart_header:has_battery()
-      if options.force_wram_test or is_header_valid then
-        if not options.force_wram_test and has_battery then
+      if options.force_ram_test or is_header_valid then
+        if not options.force_ram_test and has_battery then
           log.print()
           log.warning("Can't exercise RAM because ROM has battery backed data")
         else

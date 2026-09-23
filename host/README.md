@@ -1,4 +1,4 @@
-﻿# INLretro host software
+# INLretro host software
 
 This directory contains the desktop software for the INLretro programmer-dumper: a command-line interface (CLI), a graphical user interface (GUI), and their shared core library.
 
@@ -8,11 +8,11 @@ For supported systems and mappers, screenshots, firmware update instructions, an
 
 The host software is split into three projects:
 
-| Project | Purpose | Output |
-| --- | --- | --- |
-| `Core` | Shared code for communicating with INLretro hardware. | Static library |
-| `CLI` | Command-line interface, linked against `Core`. | `INLretro` executable |
-| `GUI` | Graphical interface, linked against `Core`, using SDL2 and Dear ImGui. | `INLretroGUI` executable |
+| Project | Purpose                                                                | Output                   |
+| ------- | ---------------------------------------------------------------------- | ------------------------ |
+| `Core`  | Shared code for communicating with INLretro hardware.                  | Static library           |
+| `CLI`   | Command-line interface, linked against `Core`.                         | `INLretro` executable    |
+| `GUI`   | Graphical interface, linked against `Core`, using SDL2 and Dear ImGui. | `INLretroGUI` executable |
 
 Lua scripts in `INLretro-files/scripts/` implement cartridge operations and firmware updates.
 
@@ -53,6 +53,27 @@ The CI workflows also document the automated build and packaging process:
 - [Host build](../.github/workflows/build-host.yml)
 - [Firmware build](../.github/workflows/build-firmware.yml)
 - [Build and release pipeline](../.github/workflows/pipeline.yml)
+
+## Additional options
+
+The CLI accepts mapper and operation-specific options through `-o` or `--additional_opts`. The GUI exposes the same options in its **Additional Options** field.
+
+Write options as a comma-separated list with no spaces. Options that take a value use the `key=value` format:
+
+```text
+-o bank_table=0x8000,force_ram_test=true
+--additional_opts=bank_table=0x8000,force_ram_test
+```
+
+Boolean options accept `true` or `false`. Omitting the value enables the option, so `force_ram_test` and `force_ram_test=true` are equivalent. Any other value is treated as `false`.
+
+| Option                 | Description                                                                                                                                                                                                                        |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bank_table=<address>` | Sets the bank-table address used to handle bus conflicts with NES mappers such as BNROM and UNROM. The address may be decimal (`bank_table=32768`) or hexadecimal (`bank_table=0x8000`).                                           |
+| `force_ram_test`       | Forces cartridge RAM (SRAM/WRAM/PRG-RAM) tests even when the ROM header indicates battery-backed data or when a raw binary file is used as the source.                                                                             |
+| `force_flash_test`     | Forces ROM-chip identification even when no data is being flashed.                                                                                                                                                                 |
+| `no_bin_regen`         | NES only for now. Reuses an existing generated binary instead of regenerating it when **Write** is selected. This can save time with large ROM files; delete the generated file or remove this option when regeneration is needed. |
+| `flash_cic`            | NES only. Attempts to flash an ATtiny13A CIC chip whose pin 1 is connected to EXP5 (pin 55 of the NES connector). Reflashing may fail depending on the fuse settings used during the first programming.                            |
 
 ## Runtime files
 

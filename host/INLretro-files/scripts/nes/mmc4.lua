@@ -585,9 +585,9 @@ local function process(process_opts, console_opts)
     end
 
     -- PRG-RAM tests
-    if options.force_wram_test then
+    if options.force_ram_test then
       log.print()
-      log.warning("Additional option 'force_wram_test' enabled")
+      log.warning("Additional option 'force_ram_test' enabled")
     end
 
     rv = prg_ram_detect()
@@ -597,8 +597,8 @@ local function process(process_opts, console_opts)
         log.error("PRG-RAM not detected")
         return false
       elseif do_rom_write then
-        if options.force_wram_test then
-          log.warning("Additional option 'force_wram_test' implies PRG-RAM presence")
+        if options.force_ram_test then
+          log.warning("Additional option 'force_ram_test' implies PRG-RAM presence")
           log.error("PRG-RAM not detected")
           return false
         elseif nes.header.is_valid and nes.header.has_prg_ram then
@@ -619,23 +619,23 @@ local function process(process_opts, console_opts)
       -- force wram size to 8KB because it's MMC3 maximum
       wram_size_kb = 8
 
-      if options.force_wram_test and (do_rom_dump or do_ram_dump) then
-        log.warning("Additional option 'force_wram_test' is ignored when dumping PRG-ROM or PRG-RAM")
+      if options.force_ram_test and (do_rom_dump or do_ram_dump) then
+        log.warning("Additional option 'force_ram_test' is ignored when dumping PRG-ROM or PRG-RAM")
       elseif do_rom_write or do_ram_write then
-        if options.force_wram_test or do_ram_write then
+        if options.force_ram_test or do_ram_write then
           rv = prg_ram_test(wram_size_kb, retroprog_id)
           if not rv then return false end
         elseif nes.header.is_valid and nes.header.has_prg_ram then
           if nes.header.has_battery then
             log.warning("Can't test PRG-RAM because ROM header specifies battery backed data")
-            log.warning("Use additional option 'force_wram_test' to force PRG-RAM test")
+            log.warning("Use additional option 'force_ram_test' to force PRG-RAM test")
           else
             rv = prg_ram_test(wram_size_kb, retroprog_id)
             if not rv then return false end
           end
         else
           log.warning("Can't test PRG-RAM because data could be battery backed")
-          log.warning("Use additional option 'force_wram_test' to force PRG-RAM test")
+          log.warning("Use additional option 'force_ram_test' to force PRG-RAM test")
         end
       end
     end
