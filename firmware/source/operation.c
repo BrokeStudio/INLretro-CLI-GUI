@@ -92,8 +92,8 @@ uint8_t* operation_usb_call(setup_packet* spacket, uint8_t* rv, uint8_t* rlen)
 //{
 //	if ( dict == DICT_NES ) {
 //		switch( func_num ) {
-//			case DISCRETE_EXP0_PRGROM_WR:
-//				return discrete_exp0_prgrom_wr;
+//			case DISCRETE_EXP0_PRG_ROM_WR:
+//				return discrete_exp0_prg_rom_wr;
 //			case NES_CPU_WR:
 //				return nes_cpu_wr;
 //			case NES_PPU_WR:

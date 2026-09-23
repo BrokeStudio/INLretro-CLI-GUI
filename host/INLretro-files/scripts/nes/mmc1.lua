@@ -251,7 +251,7 @@ local function prg_rom_flash(file, rom_size_kb)
     end
 
     -- select bank to flash
-    -- used by mmc1_prgrom_flash_wr to select CHR16 for SUROM/SXROM compatibility
+    -- used by mmc1_prg_rom_flash_wr to select CHR16 for SUROM/SXROM compatibility
     dict.nes("SET_CUR_BANK", cur_bank)
 
     -- write the current bank to the mapper register

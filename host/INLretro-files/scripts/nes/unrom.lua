@@ -106,11 +106,11 @@ local function prg_rom_flash_byte(addr, value, bank)
   end
 
   nes.cpu_wr(bank_table_base, 0x00)
-  nes.cpu_wr(0x5555, 0xAA, { opcode = "DISCRETE_EXP0_PRGROM_WR" })
-  nes.cpu_wr(0x2AAA, 0x55, { opcode = "DISCRETE_EXP0_PRGROM_WR" })
-  nes.cpu_wr(0x5555, 0xA0, { opcode = "DISCRETE_EXP0_PRGROM_WR" })
+  nes.cpu_wr(0x5555, 0xAA, { opcode = "DISCRETE_EXP0_PRG_ROM_WR" })
+  nes.cpu_wr(0x2AAA, 0x55, { opcode = "DISCRETE_EXP0_PRG_ROM_WR" })
+  nes.cpu_wr(0x5555, 0xA0, { opcode = "DISCRETE_EXP0_PRG_ROM_WR" })
   nes.cpu_wr(bank_table_base + bank, bank)
-  nes.cpu_wr(addr, value, { opcode = "DISCRETE_EXP0_PRGROM_WR" })
+  nes.cpu_wr(addr, value, { opcode = "DISCRETE_EXP0_PRG_ROM_WR" })
 
   local rv = nes.cpu_rd(addr)
 
@@ -455,11 +455,11 @@ local function process(process_opts, console_opts)
     if do_rom_write and prg_size_kb ~= 0 then
       -- ROMSEL controls PRG-ROM /OE which needs to be low for flash writes
       -- So unlock commands need to be addressed below $8000
-      -- DISCRETE_EXP0_PRGROM_WR doesn't toggle /ROMSEL by definition though, so A15 is unused
+      -- DISCRETE_EXP0_PRG_ROM_WR doesn't toggle /ROMSEL by definition though, so A15 is unused
       --        15 14 13 12
       --  0x5 = 0b  0  1  0  1  -> $5555
       --  0x2 = 0b  0  0  1  0  -> $2AAA
-      rv, prg_flash_chip = nes.prg_rom_get_chip({ opcode = "DISCRETE_EXP0_PRGROM_WR" })
+      rv, prg_flash_chip = nes.prg_rom_get_chip({ opcode = "DISCRETE_EXP0_PRG_ROM_WR" })
       if not rv then
         log.error("Couldn't identify flash chip")
         return false
@@ -521,7 +521,7 @@ local function process(process_opts, console_opts)
     -- erase PRG-ROM only if needed
     if prg_size_kb ~= 0 then
       init_mapper()
-      rv = nes.prg_rom_erase(prg_flash_chip, { opcode = "DISCRETE_EXP0_PRGROM_WR" })
+      rv = nes.prg_rom_erase(prg_flash_chip, { opcode = "DISCRETE_EXP0_PRG_ROM_WR" })
       if not rv then
         log.error("PRG-ROM couldn't be erased")
         return false

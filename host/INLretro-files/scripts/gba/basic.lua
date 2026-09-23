@@ -96,9 +96,9 @@ local function process(process_opts, console_opts)
 
     -- nes.detect_mapper_mirroring(true)
     -- print("EXP0 pull-up test:", dict.io("EXP0_PULLUP_TEST"))
-    -- --nes.read_flashID_prgrom_exp0(true)
+    -- --nes.read_flashID_prg_rom_exp0(true)
     -- rom_manf_id(true)
-    -- --nes.read_flashID_chrrom_8K(true)
+    -- --nes.read_flashID_chr_rom_8K(true)
     -- chr_rom_manf_id(true)
   end
 

@@ -27,7 +27,7 @@
 // mapper '161 /LOAD <- PRG R/W
 // wValueMSB: data
 // wIndex: address
-#define DISCRETE_EXP0_PRGROM_WR 0x00
+#define DISCRETE_EXP0_PRG_ROM_WR 0x00
 
 #define NES_PPU_WR 0x01
 
@@ -42,7 +42,7 @@
 
 #define NES_DUALPORT_WR 0x05
 
-#define DISC_PUSH_EXP0_PRGROM_WR 0x06
+#define DISC_PUSH_EXP0_PRG_ROM_WR 0x06
 
 #define MMC3_PRG_FLASH_WR 0x07 // TODO set return lengths for all these functions
 #define MMC3_CHR_FLASH_WR 0x08
