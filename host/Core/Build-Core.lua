@@ -11,6 +11,7 @@ files
   "./include/**.h",
 
   "../../shared/**.h",
+
   "../External/lua/**.h", "../External/lua/**.c",
   "../External/libusb/INL/include/**.h",
   "../External/termcolor/*.hpp",
@@ -18,9 +19,9 @@ files
 
 vpaths {
   ["Lua"] = { "../External/lua/**.h", "../External/lua/**.c" },
-  ["libusb"] = {"../External/libusb/include/**.h"},
-  ["shared"] = {"../../shared/**.h"},
-  ["termcolor"] = {"../External/termcolor/*.hpp"},
+  ["libusb"] = { "../External/libusb/include/**.h" },
+  ["shared"] = { "../../shared/**.h" },
+  ["termcolor"] = { "../External/termcolor/*.hpp" },
 }
 
 includedirs

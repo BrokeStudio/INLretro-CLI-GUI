@@ -82,7 +82,9 @@ filter "configurations:Debug or Release or Dist"
   {
     "{MKDIR} \"%{cfg.targetdir}/shared\"",
 
-    "{COPYDIR} \"../INLretro-files/\" \"%{cfg.targetdir}\"",
+    "{COPYDIR} \"../INLretro-files/ignore\" \"%{cfg.targetdir}/ignore\"",
+    "{COPYDIR} \"../INLretro-files/scripts\" \"%{cfg.targetdir}/scripts\"",
+    "{COPY} \"../INLretro-files/inlretro.ini\" \"%{cfg.targetdir}/inlretro.ini\"",
     "{COPYDIR} \"../../shared/\" \"%{cfg.targetdir}/shared\"",
     "{COPY} \"../README.txt\" \"%{cfg.targetdir}/README.txt\""
   }

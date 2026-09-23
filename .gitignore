@@ -7,7 +7,6 @@ dist/
 
 # VSCode Metadata
 .vscode
-clang-format.exe
 
 ##### FIRMWARE
 

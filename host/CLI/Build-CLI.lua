@@ -13,7 +13,7 @@ files
 }
 
 vpaths {
-  ["termcolor"] = {"../External/termcolor/*.hpp"},
+  ["termcolor"] = { "../External/termcolor/*.hpp" },
 }
 
 includedirs
@@ -74,7 +74,9 @@ filter { "configurations:Dist", "system:macosx" }
 filter "configurations:*"
   postbuildcommands
   {
-    "{COPYDIR} \"../INLretro-files\\.\" \"%{cfg.targetdir}\"",
+    "{COPYDIR} \"../INLretro-files/ignore\" \"%{cfg.targetdir}/ignore\"",
+    "{COPYDIR} \"../INLretro-files/scripts\" \"%{cfg.targetdir}/scripts\"",
+    "{COPY} \"../INLretro-files/inlretro.ini\" \"%{cfg.targetdir}/inlretro.ini\"",
     "{COPY} \"../README.txt\" \"%{cfg.targetdir}/README.txt\""
   }
 
