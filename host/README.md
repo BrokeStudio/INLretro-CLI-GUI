@@ -1,4 +1,4 @@
-# INLretro host software
+﻿# INLretro host software
 
 This directory contains the desktop software for the INLretro programmer-dumper: a command-line interface (CLI), a graphical user interface (GUI), and their shared core library.
 
@@ -34,7 +34,8 @@ host/
 ├── macOS/                # macOS-specific files and app resources
 ├── tests/                # Automated checks
 ├── Build.lua             # Premake workspace configuration
-└── COMPILING.md          # Build instructions
+├── COMPILING.md          # Build instructions
+└── readme.txt            # Quick-start manual included with releases
 ```
 
 Related directories at the repository root:

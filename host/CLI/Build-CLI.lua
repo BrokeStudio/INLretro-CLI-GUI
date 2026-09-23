@@ -74,7 +74,8 @@ filter { "configurations:Dist", "system:macosx" }
 filter "configurations:*"
   postbuildcommands
   {
-    "{COPYDIR} \"../INLretro-files\\.\" \"%{cfg.targetdir}\""
+    "{COPYDIR} \"../INLretro-files\\.\" \"%{cfg.targetdir}\"",
+    "{COPY} \"../README.txt\" \"%{cfg.targetdir}/README.txt\""
   }
 
 filter "configurations:Debug or Release"

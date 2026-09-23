@@ -237,10 +237,14 @@ jobs:
 
       - name: Package macOS app
         run: |
+          PACKAGE_DIR="$RUNNER_TEMP/INLretro-package/INLretro"
+          mkdir -p "$PACKAGE_DIR"
+          ditto "$APP_PATH" "$PACKAGE_DIR/INLretroGUI.app"
+          cp README.txt "$PACKAGE_DIR/README.txt"
           tar -czf \
             "$RUNNER_TEMP/INLretroGUI-${{ matrix.artifact_suffix }}.tar.gz" \
-            -C "$(dirname "$APP_PATH")" \
-            "$(basename "$APP_PATH")"
+            -C "$RUNNER_TEMP/INLretro-package" \
+            INLretro
 
       - name: Upload INLretroGUI app
         uses: actions/upload-artifact@v7
