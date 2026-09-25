@@ -35,6 +35,8 @@ int main(int argc, char** argv)
 
   AppLog::log.cliOutput = true;
 
+  bool ok = true;
+
   // Setup USB
   int usb_init = libusb_init(NULL);
   // if (usb_init < 0)
@@ -49,8 +51,6 @@ int main(int argc, char** argv)
   check(&AppLog::log, usb_init == LIBUSB_SUCCESS, "Failed to initialize libusb: %s", libusb_strerror((libusb_error)usb_init));
 
   // Parse command-line options and flags.
-  bool ok = true;
-
   if(!parseOptions(argc, argv, opts)) {
     goto error;
   } else {

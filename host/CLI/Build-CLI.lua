@@ -76,7 +76,7 @@ filter "configurations:*"
   {
     "{COPYDIR} \"../INLretro-files/ignore\" \"%{cfg.targetdir}/ignore\"",
     "{COPYDIR} \"../INLretro-files/scripts\" \"%{cfg.targetdir}/scripts\"",
-    "{COPY} \"../INLretro-files/inlretro.ini\" \"%{cfg.targetdir}\"",
+    "{COPY} \"../INLretro-files/INLretro.ini\" \"%{cfg.targetdir}\"",
     "{COPY} \"../README.txt\" \"%{cfg.targetdir}\""
   }
 
