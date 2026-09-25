@@ -36,7 +36,9 @@ jobs:
           cp INLretro-files/firmware/inlretro_stm6_AV04.bin INLretro-files/firmware/inlretro_stm6.bin
           cp INLretro-files/firmware/inlretro_stmn_AV04.bin INLretro-files/firmware/inlretro_stmn.bin
 
-      - uses: abel0b/setup-premake@v2.4
+      # - uses: abel0b/setup-premake@v2.4
+      # Node 24 support; no release newer than v2.4 yet
+      - uses: abel0b/setup-premake@de7d79047789622064f7a2d251e929fadd166707
         with:
           version: "5.0.0-beta8"
 
@@ -91,7 +93,9 @@ jobs:
           cp INLretro-files/firmware/inlretro_stm6_AV04.bin INLretro-files/firmware/inlretro_stm6.bin
           cp INLretro-files/firmware/inlretro_stmn_AV04.bin INLretro-files/firmware/inlretro_stmn.bin
 
-      - uses: abel0b/setup-premake@v2.4
+      # - uses: abel0b/setup-premake@v2.4
+      # Node 24 support; no release newer than v2.4 yet
+      - uses: abel0b/setup-premake@de7d79047789622064f7a2d251e929fadd166707
         with:
           version: "5.0.0-beta2"
 
@@ -153,7 +157,9 @@ jobs:
           cp INLretro-files/firmware/inlretro_stm6_AV04.bin INLretro-files/firmware/inlretro_stm6.bin
           cp INLretro-files/firmware/inlretro_stmn_AV04.bin INLretro-files/firmware/inlretro_stmn.bin
 
-      - uses: abel0b/setup-premake@v2.4
+      # - uses: abel0b/setup-premake@v2.4
+      # Node 24 support; no release newer than v2.4 yet
+      - uses: abel0b/setup-premake@de7d79047789622064f7a2d251e929fadd166707
         with:
           version: ${{ matrix.premake_version }}
 
