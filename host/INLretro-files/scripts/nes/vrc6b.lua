@@ -653,16 +653,18 @@ local function process(process_opts, console_opts)
   local do_test          = process_opts.do_test
   local do_erase         = process_opts.do_erase
   local do_rom_write     = process_opts.do_rom_write
-  local do_verify        = process_opts.do_verify
+  local do_rom_verify    = process_opts.do_rom_verify
   local do_rom_dump      = process_opts.do_rom_dump
   local do_ram_dump      = process_opts.do_ram_dump
   local do_ram_write     = process_opts.do_ram_write
+  local do_ram_verify    = process_opts.do_ram_verify
   local nes_file         = process_opts.nes_file
   local rom_write_file   = process_opts.rom_write_file
-  local verify_file      = process_opts.verify_file
+  local rom_verify_file  = process_opts.rom_verify_file
   local rom_dump_file    = process_opts.rom_dump_file
   local ram_dump_file    = process_opts.ram_dump_file
   local ram_write_file   = process_opts.ram_write_file
+  local ram_verify_file  = process_opts.ram_verify_file
   local options          = process_opts.additional_opts
 
   -- console options
@@ -929,11 +931,11 @@ local function process(process_opts, console_opts)
   --]]
 
   -- verify what we just flashed
-  if do_verify then
+  if do_rom_verify then
     init_mapper()
 
     -- open file
-    file = assert(io.open(verify_file.filename, "wb"))
+    file = assert(io.open(rom_verify_file.filename, "wb"))
 
     -- dump cart to file
     if prg_size_kb ~= 0 then
@@ -957,7 +959,7 @@ local function process(process_opts, console_opts)
 
     -- compare the flash file vs post dump file
     log.section("Verifying data")
-    if files.compare(verify_file.filename, rom_write_file.filename, true) then
+    if files.compare(rom_verify_file.filename, rom_write_file.filename, true) then
       log.success("Flash successfully verified")
     else
       log.error("Flash verification did not match")

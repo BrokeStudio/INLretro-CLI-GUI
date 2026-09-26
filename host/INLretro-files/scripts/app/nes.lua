@@ -1332,9 +1332,9 @@ nes.cic = {
     assert(file:close())
   end,
 
-  verify_flash = function(self, verify_file, dump_file)
+  verify_flash = function(self, rom_verify_file, dump_file)
     log.point("Verifying data")
-    if files.compare(verify_file, dump_file, true) then
+    if files.compare(rom_verify_file, dump_file, true) then
       log.success("Flash successfully verified")
       return true
     else

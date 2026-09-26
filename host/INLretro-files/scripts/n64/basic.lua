@@ -98,28 +98,30 @@ end
 -- @return boolean result True on success, false on failure
 local function process(process_opts, console_opts)
   -- some local variables
-  local rv             = nil
+  local rv              = nil
   local file
 
   -- process options
-  local retroprog_id   = process_opts.retroprog_id
-  local do_test        = process_opts.do_test
-  local do_erase       = process_opts.do_erase
-  local do_rom_write   = process_opts.do_rom_write
-  local do_verify      = process_opts.do_verify
-  local do_rom_dump    = process_opts.do_rom_dump
-  local do_ram_dump    = process_opts.do_ram_dump
-  local do_ram_write   = process_opts.do_ram_write
-  local rom_write_file = process_opts.rom_write_file
-  local verify_file    = process_opts.verify_file
-  local rom_dump_file  = process_opts.rom_dump_file
-  local ram_dump_file  = process_opts.ram_dump_file
-  local ram_write_file = process_opts.ram_write_file
-  local options        = process_opts.additional_opts
+  local retroprog_id    = process_opts.retroprog_id
+  local do_test         = process_opts.do_test
+  local do_erase        = process_opts.do_erase
+  local do_rom_write    = process_opts.do_rom_write
+  local do_rom_verify   = process_opts.do_rom_verify
+  local do_rom_dump     = process_opts.do_rom_dump
+  local do_ram_dump     = process_opts.do_ram_dump
+  local do_ram_write    = process_opts.do_ram_write
+  local do_ram_verify   = process_opts.do_ram_verify
+  local rom_write_file  = process_opts.rom_write_file
+  local rom_verify_file = process_opts.rom_verify_file
+  local rom_dump_file   = process_opts.rom_dump_file
+  local ram_dump_file   = process_opts.ram_dump_file
+  local ram_write_file  = process_opts.ram_write_file
+  local ram_verify_file = process_opts.ram_verify_file
+  local options         = process_opts.additional_opts
 
   -- console options
-  local rom_size_kb    = console_opts.rom_size_kb
-  local ram_size_kb    = console_opts.ram_size_kb
+  local rom_size_kb     = console_opts.rom_size_kb
+  local ram_size_kb     = console_opts.ram_size_kb
 
   -- initialize device i/o
   dict.io("IO_RESET")

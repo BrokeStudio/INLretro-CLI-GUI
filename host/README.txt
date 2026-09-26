@@ -70,7 +70,7 @@ Common arguments:
   -p, --rom_write_file          ROM file to program
   -a, --ram_dump_file           RAM/save dump destination
   -b, --ram_write_file          RAM/save file to restore
-  -v, --verify                  Verify the ROM after programming
+  -v, --verify                  Verify the ROM/RAM after programming
   -x, --nes_prg_rom_size_kbyte  NES PRG-ROM size in kilobytes
   -y, --nes_chr_rom_size_kbyte  NES CHR-ROM size in kilobytes
   -k, --rom_size_kbyte          ROM size for non-NES systems, in kilobytes

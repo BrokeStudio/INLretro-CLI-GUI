@@ -543,9 +543,9 @@ local function main()
   --  mapper_name:          string, name of mapper.
   --  rom_dump_file:        string, filename used for writing dumped data.
   --  rom_write_file:       string, filename containing data to write cartridge.
-  --  do_verify:            bool, 0: don't verify data flashed, anything else: verify data flashed.
   --  ram_dump_file:        string, filename used for writing dumped ram data.
   --  ram_write_file:       string, filename containing data to write to ram on cartridge.
+  --  verify:               bool, 0: don't verify data flashed, anything else: verify data flashed.
   --  nes_prg_rom_size_kb:  int, size of cartridge PRG-ROM in kilobytes.
   --  nes_chr_rom_size_kb:  int, size of cartridge CHR-ROM in kilobytes.
   --  ram_size_kb:          int, size of cartridge RAM in kilobytes.
@@ -605,12 +605,12 @@ local function main()
   -- If writing, always erase.
   local do_erase = do_rom_write
 
-  -- If the verify flag was provided, dump data from cartridge after flash to a file and compare it to flashed file.
-  -- TODO: verify also for ram write? use do_rom_verify and do_ram_verify?
-  local do_verify = do_rom_write and opts.verify
-
   local do_ram_dump = not isempty(opts.ram_dump_file)
   local do_ram_write = not isempty(opts.ram_write_file)
+
+  -- If the verify flag was provided, dump data from cartridge after flash to a file and compare it to flashed file.
+  local do_rom_verify = do_rom_write and opts.verify
+  local do_ram_verify = do_ram_write and opts.verify
 
   -- split filenames to get basename and extension
   if opts.rom_dump_file ~= "" then opts.rom_dump_file = help.parse_filename(opts.rom_dump_file) end
@@ -618,37 +618,42 @@ local function main()
   if opts.ram_dump_file ~= "" then opts.ram_dump_file = help.parse_filename(opts.ram_dump_file) end
   if opts.ram_write_file ~= "" then opts.ram_write_file = help.parse_filename(opts.ram_write_file) end
 
-  -- prepare verify file if needed
-  if do_rom_write then
+  -- prepare ROM verify file if needed
+  if do_rom_verify then
     local verify_ext = opts.rom_write_file.ext
     if opts.rom_write_file.ext == "nes" then verify_ext = "bin" end
-    local verify_file = opts.rom_write_file.path ..
+    local rom_verify_file = opts.rom_write_file.path ..
         opts.rom_write_file.base .. "-verify-" .. opts.retroprog_id .. "." .. verify_ext
-    opts.verify_file = help.parse_filename(verify_file)
-  elseif do_ram_write then
+    opts.rom_verify_file = help.parse_filename(rom_verify_file)
+  end
+
+  -- prepare RAM verify file if needed
+  if do_ram_verify then
     local verify_ext = opts.ram_write_file.ext
-    local verify_file = opts.ram_write_file.path ..
+    local ram_verify_file = opts.ram_write_file.path ..
         opts.ram_write_file.base .. "-verify-" .. opts.retroprog_id .. "." .. verify_ext
-    opts.verify_file = help.parse_filename(verify_file)
+    opts.ram_verify_file = help.parse_filename(ram_verify_file)
   end
 
   -- Pack main process state into table.
   local process_opts = {
-    retroprog_id   = opts.retroprog_id,
+    retroprog_id    = opts.retroprog_id,
     -- console_name    = opts.console_name,
-    do_test        = do_test,
-    do_erase       = do_erase,
-    do_rom_dump    = do_rom_dump,
-    do_rom_write   = do_rom_write,
-    do_verify      = do_verify,
-    do_ram_dump    = do_ram_dump,
-    do_ram_write   = do_ram_write,
-    rom_dump_file  = opts.rom_dump_file,
-    rom_write_file = opts.rom_write_file,
-    ram_dump_file  = opts.ram_dump_file,
-    ram_write_file = opts.ram_write_file,
-    verify_file    = opts.verify_file,
-    path           = opts.lua_path,
+    do_test         = do_test,
+    do_erase        = do_erase,
+    do_rom_dump     = do_rom_dump,
+    do_rom_write    = do_rom_write,
+    do_rom_verify   = do_rom_verify,
+    do_ram_dump     = do_ram_dump,
+    do_ram_write    = do_ram_write,
+    do_ram_verify   = do_ram_verify,
+    rom_dump_file   = opts.rom_dump_file,
+    rom_write_file  = opts.rom_write_file,
+    ram_dump_file   = opts.ram_dump_file,
+    ram_write_file  = opts.ram_write_file,
+    rom_verify_file = opts.rom_verify_file,
+    ram_verify_file = opts.ram_verify_file,
+    path            = opts.lua_path,
   }
 
   -- parse additional options

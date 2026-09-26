@@ -336,28 +336,30 @@ end
 -- @return false|nil result False on explicitly reported failure; otherwise no value
 local function process(process_opts, console_opts)
   -- some local variables
-  local rv             = nil
+  local rv              = nil
   local file
 
   -- process options
-  local retroprog_id   = process_opts.retroprog_id
-  local do_test        = process_opts.do_test
-  local do_erase       = process_opts.do_erase
-  local do_rom_write   = process_opts.do_rom_write
-  local do_verify      = process_opts.do_verify
-  local do_rom_dump    = process_opts.do_rom_dump
-  local do_ram_dump    = process_opts.do_ram_dump
-  local do_ram_write   = process_opts.do_ram_write
-  local rom_write_file = process_opts.rom_write_file
-  local verify_file    = process_opts.verify_file
-  local rom_dump_file  = process_opts.rom_dump_file
-  local ram_dump_file  = process_opts.ram_dump_file
-  local ram_write_file = process_opts.ram_write_file
-  local options        = process_opts.additional_opts
+  local retroprog_id    = process_opts.retroprog_id
+  local do_test         = process_opts.do_test
+  local do_erase        = process_opts.do_erase
+  local do_rom_write    = process_opts.do_rom_write
+  local do_rom_verify   = process_opts.do_rom_verify
+  local do_rom_dump     = process_opts.do_rom_dump
+  local do_ram_dump     = process_opts.do_ram_dump
+  local do_ram_write    = process_opts.do_ram_write
+  local do_ram_verify   = process_opts.do_ram_verify
+  local rom_write_file  = process_opts.rom_write_file
+  local rom_verify_file = process_opts.rom_verify_file
+  local rom_dump_file   = process_opts.rom_dump_file
+  local ram_dump_file   = process_opts.ram_dump_file
+  local ram_write_file  = process_opts.ram_write_file
+  local ram_verify_file = process_opts.ram_verify_file
+  local options         = process_opts.additional_opts
 
   -- console options
-  local rom_size_kb    = console_opts.rom_size_kb
-  local ram_size_kb    = console_opts.ram_size_kb
+  local rom_size_kb     = console_opts.rom_size_kb
+  local ram_size_kb     = console_opts.ram_size_kb
 
   -- initialize device i/o
   dict.io("IO_RESET")
@@ -487,22 +489,25 @@ local function process(process_opts, console_opts)
   if do_ram_write then
     log.section("Programming RAM")
 
+    if ram_size_kb == 0 then
+      log.error("RAM size not provided")
+      return DONE(false)
+    end
+
+    -- open file
+    file = assert(io.open(ram_write_file.filename, "rb"))
+
     -- flash cart
-    if ram_size_kb ~= 0 then
+    time.start()
+    ram_write(file, ram_size_kb)
+    time.report(ram_size_kb)
+
+    -- close file
+    assert(file:close())
+
+    if do_ram_verify then
       -- open file
-      file = assert(io.open(ram_write_file.filename, "rb"))
-
-      time.start()
-      ram_write(file, ram_size_kb)
-      time.report(ram_size_kb)
-
-      -- close file
-      assert(file:close())
-
-      -- verify data
-
-      -- open file
-      file = assert(io.open(verify_file.filename, "wb"))
+      file = assert(io.open(ram_verify_file.filename, "wb"))
 
       -- dump cart to file
       log.section("Dumping RAM")
@@ -516,14 +521,11 @@ local function process(process_opts, console_opts)
 
       -- compare the flash file vs post dump file
       log.section("Verifying data")
-      if files.compare(verify_file.filename, ram_write_file.filename, true) then
+      if files.compare(ram_verify_file.filename, ram_write_file.filename, true) then
         log.success("Flash successfully verified")
       else
         log.error("Flash verification did not match")
       end
-    else
-      log.error("RAM size not provided")
-      return DONE(false)
     end
   end
 
@@ -592,25 +594,29 @@ local function process(process_opts, console_opts)
 
   -- program file to the cart
   if do_rom_write then
-    if rom_size_kb ~= 0 then
+    -- check rom size
+    if rom_size_kb == 0 then
+      log.error("ROM size not provided")
+      return DONE(false)
+    end
+
+    -- open file
+    file = assert(io.open(rom_write_file.filename, "rb"))
+
+    local romDataOffset = snes.file_header.has_smc_header and 0x200 or 0
+    file:seek("set", romDataOffset)
+
+    -- flash cart
+    time.start()
+    rom_flash(file, rom_size_kb)
+    time.report(rom_size_kb)
+
+    -- close file
+    assert(file:close())
+
+    if do_rom_verify then
       -- open file
-      file = assert(io.open(rom_write_file.filename, "rb"))
-
-      local romDataOffset = snes.file_header.has_smc_header and 0x200 or 0
-      file:seek("set", romDataOffset)
-
-      -- flash cart
-      time.start()
-      rom_flash(file, rom_size_kb)
-      time.report(rom_size_kb)
-
-      -- close file
-      assert(file:close())
-
-      -- verify written data
-
-      -- open file
-      file = assert(io.open(verify_file.filename, "wb"))
+      file = assert(io.open(rom_verify_file.filename, "wb"))
 
       -- dump cart to file
       log.section("Dumping ROM")
@@ -624,7 +630,7 @@ local function process(process_opts, console_opts)
 
       -- compare the flash file vs post dump file
       log.section("Verifying data")
-      if files.compare(verify_file.filename, rom_write_file.filename, true, 0, romDataOffset) then
+      if files.compare(rom_verify_file.filename, rom_write_file.filename, true, 0, romDataOffset) then
         log.success("Flash successfully verified")
       else
         log.error("Flash verification did not match")

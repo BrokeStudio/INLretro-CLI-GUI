@@ -48,6 +48,7 @@ Console::Console(const t_Console& console) : t_Console(console)
   ram_write_INLOptions.console_name = console.name;
 
   rom_write_INLOptions.verify = true;
+  ram_write_INLOptions.verify = true;
 
   // TODO: should it be done only in the flasher file?
   rom_dump_INLOptions.gui = true;
@@ -607,6 +608,13 @@ void Console::render_ram_write(std::string droppedFilename)
     ImGui::TableSetColumnIndex(1);
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
     AdditionalOptions("##ram_write_additional_opts", &ram_write_INLOptions, ConsoleActions_RamWrite);
+
+    // Verify
+    ImGui::TableNextRow();
+    ImGui::TableSetColumnIndex(0);
+    ImGui::TextUnformatted("Verify");
+    ImGui::TableSetColumnIndex(1);
+    ImGui::Checkbox("##ram_write_verify", &ram_write_INLOptions.verify);
 
     // Command line
     ImGui::TableNextRow();
