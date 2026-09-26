@@ -247,7 +247,6 @@ local function process(process_opts, console_opts)
 
   -- process options
   local retroprog_id     = process_opts.retroprog_id
-  local do_test          = process_opts.do_test
   local do_rom_erase     = process_opts.do_rom_erase
   local do_rom_write     = process_opts.do_rom_write
   local do_rom_verify    = process_opts.do_rom_verify
@@ -281,66 +280,64 @@ local function process(process_opts, console_opts)
   --]]
 
   -- test cart
-  if do_test then
-    log.section("Testing", mapname)
-    log.info("EXP0 pull-up test", dict.io("EXP0_PULLUP_TEST"))
+  log.section("Testing", mapname)
+  log.info("EXP0 pull-up test", dict.io("EXP0_PULLUP_TEST"))
 
-    local mirroring = nes.detect_mapper_mirroring()
-    log.bullet("PCB mirroring sensed:", mirroring)
-    if nes.header.is_valid then
-      log.bullet("NES ROM mirroring:", nes.MIRRORING_TYPE_STRING[nes.header.mirroring_type + 1])
-      if nes.header.mirroring_type == nes.MIRRORING_TYPE_HORIZONTAL and mirroring ~= "HORZ"
-          or nes.header.mirroring_type == nes.MIRRORING_TYPE_VERTICAL and mirroring ~= "VERT"
-      -- or  nes.header.mirroring_type == nes.MIRRORING_TYPE_ONE_SCREEN and ( mirroring ~= "1SCRNA" or mirroring ~= "1SCRNB" )
-      -- or  nes.header.mirroring_type == nes.MIRRORING_TYPE_FOUR_SCREENS and mirroring ~= "4SCRN"
-      then
-        log.error("PCB mirroring setting doesn't match NES ROM header")
+  local mirroring = nes.detect_mapper_mirroring()
+  log.bullet("PCB mirroring sensed:", mirroring)
+  if nes.header.is_valid then
+    log.bullet("NES ROM mirroring:", nes.MIRRORING_TYPE_STRING[nes.header.mirroring_type + 1])
+    if nes.header.mirroring_type == nes.MIRRORING_TYPE_HORIZONTAL and mirroring ~= "HORZ"
+        or nes.header.mirroring_type == nes.MIRRORING_TYPE_VERTICAL and mirroring ~= "VERT"
+    -- or  nes.header.mirroring_type == nes.MIRRORING_TYPE_ONE_SCREEN and ( mirroring ~= "1SCRNA" or mirroring ~= "1SCRNB" )
+    -- or  nes.header.mirroring_type == nes.MIRRORING_TYPE_FOUR_SCREENS and mirroring ~= "4SCRN"
+    then
+      log.error("PCB mirroring setting doesn't match NES ROM header")
+      return DONE(false)
+    end
+  else
+    log.warning("Can't verify mirroring setting because you're using a binary file as the flash file")
+  end
+
+  -- attempt to read PRG-ROM flash ID
+  if options.force_flash_test or (do_rom_write and prg_size_kb ~= 0) then
+    --ROMSEL controls PRG-ROM /OE which needs to be low for flash writes
+    --So unlock commands need to be addressed below $8000
+    --DISCRETE_EXP0_PRG_ROM_WR doesn't toggle /ROMSEL by definition though, so A15 is unused
+    --      15 14 13 12
+    -- 0x5 = 0b  0  1  0  1 -> $5555
+    -- 0x2 = 0b  0  0  1  0 -> $2AAA
+    rv, prg_flash_chip = nes.prg_rom_get_chip({ opcode = "DISCRETE_EXP0_PRG_ROM_WR" })
+    if not rv then
+      if do_rom_write then
+        log.error("Couldn't identify flash chip")
         return DONE(false)
-      end
-    else
-      log.warning("Can't verify mirroring setting because you're using a binary file as the flash file")
-    end
-
-    -- attempt to read PRG-ROM flash ID
-    if options.force_flash_test or (do_rom_write and prg_size_kb ~= 0) then
-      --ROMSEL controls PRG-ROM /OE which needs to be low for flash writes
-      --So unlock commands need to be addressed below $8000
-      --DISCRETE_EXP0_PRG_ROM_WR doesn't toggle /ROMSEL by definition though, so A15 is unused
-      --      15 14 13 12
-      -- 0x5 = 0b  0  1  0  1 -> $5555
-      -- 0x2 = 0b  0  0  1  0 -> $2AAA
-      rv, prg_flash_chip = nes.prg_rom_get_chip({ opcode = "DISCRETE_EXP0_PRG_ROM_WR" })
-      if not rv then
-        if do_rom_write then
-          log.error("Couldn't identify flash chip")
-          return DONE(false)
-        else
-          log.warning("Couldn't identify flash chip")
-        end
+      else
+        log.warning("Couldn't identify flash chip")
       end
     end
+  end
 
-    -- attempt to read CHR-ROM flash ID
-    if options.force_flash_test or (do_rom_write and chr_size_kb ~= 0) then
-      --NROM has A13 tied to A11, and A14 tied to A12.
-      --So only A0-12 needs to be valid
-      --A13 needs to be low to address CHR-ROM
-      --      15 14 13 12
-      -- 0x5 = 0b  0  1  0  1 -> $1555
-      -- 0x2 = 0b  0  0  1  0 -> $0AAA
-      rv, chr_flash_chip = nes.chr_rom_get_chip(
-        {
-          unlock_profile_name = "long",
-          unlock_addr1 = 0x1555,
-          unlock_addr2 = 0x0AAA
-        })
-      if not rv then
-        if do_rom_write then
-          log.error("Couldn't identify flash chip")
-          return DONE(false)
-        else
-          log.warning("Couldn't identify flash chip")
-        end
+  -- attempt to read CHR-ROM flash ID
+  if options.force_flash_test or (do_rom_write and chr_size_kb ~= 0) then
+    --NROM has A13 tied to A11, and A14 tied to A12.
+    --So only A0-12 needs to be valid
+    --A13 needs to be low to address CHR-ROM
+    --      15 14 13 12
+    -- 0x5 = 0b  0  1  0  1 -> $1555
+    -- 0x2 = 0b  0  0  1  0 -> $0AAA
+    rv, chr_flash_chip = nes.chr_rom_get_chip(
+      {
+        unlock_profile_name = "long",
+        unlock_addr1 = 0x1555,
+        unlock_addr2 = 0x0AAA
+      })
+    if not rv then
+      if do_rom_write then
+        log.error("Couldn't identify flash chip")
+        return DONE(false)
+      else
+        log.warning("Couldn't identify flash chip")
       end
     end
   end

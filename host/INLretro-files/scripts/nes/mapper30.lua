@@ -368,7 +368,6 @@ local function process(process_opts, console_opts)
 
   -- process options
   local retroprog_id     = process_opts.retroprog_id
-  local do_test          = process_opts.do_test
   local do_rom_erase     = process_opts.do_rom_erase
   local do_rom_write     = process_opts.do_rom_write
   local do_rom_verify    = process_opts.do_rom_verify
@@ -402,55 +401,53 @@ local function process(process_opts, console_opts)
   --]]
 
   -- test cart
-  if do_test then
-    log.section("Testing " .. mapname)
-    log.info("EXP0 pull-up test", dict.io("EXP0_PULLUP_TEST"))
+  log.section("Testing " .. mapname)
+  log.info("EXP0 pull-up test", dict.io("EXP0_PULLUP_TEST"))
 
-    local mirroring = nes.detect_mapper_mirroring()
-    log.bullet("PCB mirroring sensed:", mirroring)
-    if nes.header.is_valid then
-      log.bullet("NES ROM mirroring:", nes.MIRRORING_TYPE_STRING[nes.header.mirroring_type + 1])
-      if (nes.header.mirroring_type == nes.MIRRORING_TYPE_HORIZONTAL and mirroring ~= "HORZ")
-          or (nes.header.mirroring_type == nes.MIRRORING_TYPE_VERTICAL and mirroring ~= "VERT")
-          or (nes.header.mirroring_type == nes.MIRRORING_TYPE_ONE_SCREEN and not (mirroring == "1SCRNA" or mirroring == "1SCRNB"))
-      -- or  (nes.header.mirroring_type == nes.MIRRORING_TYPE_FOUR_SCREENS and mirroring ~= "4SCRN")
-      then
-        log.error("PCB mirroring setting doesn't match NES ROM header")
-        return DONE(false)
-      end
-    else
-      log.warning("Can't verify mirroring setting because you're using a binary file as the flash file")
-    end
-
-    if do_rom_write and prg_size_kb ~= 0 then
-      rv = prg_rom_manf_id()
-      if not rv then
-        log.error("Couldn't identify flash chip")
-        return DONE(false)
-      end
-    end
-
-    chr_ram_detected = nes.ppu_ram_sense(0x1000)
-    if not chr_ram_detected then
-      log.error("CHR-RAM not detected")
+  local mirroring = nes.detect_mapper_mirroring()
+  log.bullet("PCB mirroring sensed:", mirroring)
+  if nes.header.is_valid then
+    log.bullet("NES ROM mirroring:", nes.MIRRORING_TYPE_STRING[nes.header.mirroring_type + 1])
+    if (nes.header.mirroring_type == nes.MIRRORING_TYPE_HORIZONTAL and mirroring ~= "HORZ")
+        or (nes.header.mirroring_type == nes.MIRRORING_TYPE_VERTICAL and mirroring ~= "VERT")
+        or (nes.header.mirroring_type == nes.MIRRORING_TYPE_ONE_SCREEN and not (mirroring == "1SCRNA" or mirroring == "1SCRNB"))
+    -- or  (nes.header.mirroring_type == nes.MIRRORING_TYPE_FOUR_SCREENS and mirroring ~= "4SCRN")
+    then
+      log.error("PCB mirroring setting doesn't match NES ROM header")
       return DONE(false)
     end
-
-    -- CHR-RAM tests
-    -- test CHR-RAM banking and try to detect size
-    chr_ram_size_kb = chr_ram_get_size()
-
-    -- test CHR-RAM
-    if chr_ram_size_kb ~= 0 then
-      rv = chr_ram_exercise(chr_ram_size_kb, retroprog_id)
-      -- exit script if test fails
-      if not rv then return DONE(false) end
-    end
-
-    -- test software mirroring switch
-    -- rv = test_soft_mir_switch()
-    -- if not rv then return end
+  else
+    log.warning("Can't verify mirroring setting because you're using a binary file as the flash file")
   end
+
+  if do_rom_write and prg_size_kb ~= 0 then
+    rv = prg_rom_manf_id()
+    if not rv then
+      log.error("Couldn't identify flash chip")
+      return DONE(false)
+    end
+  end
+
+  chr_ram_detected = nes.ppu_ram_sense(0x1000)
+  if not chr_ram_detected then
+    log.error("CHR-RAM not detected")
+    return DONE(false)
+  end
+
+  -- CHR-RAM tests
+  -- test CHR-RAM banking and try to detect size
+  chr_ram_size_kb = chr_ram_get_size()
+
+  -- test CHR-RAM
+  if chr_ram_size_kb ~= 0 then
+    rv = chr_ram_exercise(chr_ram_size_kb, retroprog_id)
+    -- exit script if test fails
+    if not rv then return DONE(false) end
+  end
+
+  -- test software mirroring switch
+  -- rv = test_soft_mir_switch()
+  -- if not rv then return end
 
   --[[
   88""Yb  dP"Yb  8b    d8     8888b.  88   88 8b    d8 88""Yb

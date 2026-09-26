@@ -103,7 +103,6 @@ local function process(process_opts, console_opts)
 
   -- process options
   local retroprog_id    = process_opts.retroprog_id
-  local do_test         = process_opts.do_test
   local do_rom_erase    = process_opts.do_rom_erase
   local do_rom_write    = process_opts.do_rom_write
   local do_rom_verify   = process_opts.do_rom_verify
@@ -135,50 +134,48 @@ local function process(process_opts, console_opts)
 --]]
 
   -- test cart
-  if do_test then
-    log.section("Testing")
+  log.section("Testing")
 
-    -- --read rom header
-    -- print("\nN64 attempt to read in rom header:")
+  -- --read rom header
+  -- print("\nN64 attempt to read in rom header:")
 
-    -- local bank_base = 0x1000  --N64 roms start at address 0x1000_0000
-    -- dict.n64("N64_SET_BANK", bank_base + 0)
+  -- local bank_base = 0x1000  --N64 roms start at address 0x1000_0000
+  -- dict.n64("N64_SET_BANK", bank_base + 0)
 
-    -- local i = 0, rv
+  -- local i = 0, rv
 
-    -- local header = {}
-    -- local header_start = 0x0020
-    -- dict.n64("N64_LATCH_ADDR", header_start)
+  -- local header = {}
+  -- local header_start = 0x0020
+  -- dict.n64("N64_LATCH_ADDR", header_start)
 
-    -- local header_len = 32
-    -- while i < header_len do
+  -- local header_len = 32
+  -- while i < header_len do
 
-    --   rv = dict.n64("N64_RD")
-    --   header[i+1] = rv>>8
-    --   i = i+1
-    --   header[i+1] = (rv & 0x00FF)
-    --   i = i+1
-    -- end
+  --   rv = dict.n64("N64_RD")
+  --   header[i+1] = rv>>8
+  --   i = i+1
+  --   header[i+1] = (rv & 0x00FF)
+  --   i = i+1
+  -- end
 
-    -- i = 1
-    -- while header[i] do
-    --   io.write(string.char(header[i]))
-    --   --io.write("B-",i,"=",header[i], " ")
-    --   i = i+1
-    -- end
-    -- print("\n")
+  -- i = 1
+  -- while header[i] do
+  --   io.write(string.char(header[i]))
+  --   --io.write("B-",i,"=",header[i], " ")
+  --   i = i+1
+  -- end
+  -- print("\n")
 
 
-    --    print("Testing SNES board")
-    --
-    --    --SNES detect HiROM or LoROM & RAM
-    --
-    --    --SNES detect if able to read flash ID's
-    --    if not rom_manf_id(true) then
-    --      print("ERROR unable to read flash ID")
-    --      return
-    --    end
-  end
+  --    print("Testing SNES board")
+  --
+  --    --SNES detect HiROM or LoROM & RAM
+  --
+  --    --SNES detect if able to read flash ID's
+  --    if not rom_manf_id(true) then
+  --      print("ERROR unable to read flash ID")
+  --      return
+  --    end
 
   --dump the ram to file
   if dumpram then

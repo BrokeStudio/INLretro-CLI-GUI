@@ -341,7 +341,6 @@ local function process(process_opts, console_opts)
 
   -- process options
   local retroprog_id    = process_opts.retroprog_id
-  local do_test         = process_opts.do_test
   local do_rom_erase    = process_opts.do_rom_erase
   local do_rom_write    = process_opts.do_rom_write
   local do_rom_verify   = process_opts.do_rom_verify
@@ -373,80 +372,78 @@ local function process(process_opts, console_opts)
   --]]
 
   -- test cart
-  if do_test then
-    log.section("Testing", mapname)
+  log.section("Testing", mapname)
 
-    -- attempt to read ROM flash ID
-    if options.force_flash_test or (do_rom_write and rom_size_kb ~= 0) then
-      rv, rom_flash_chip = snes.rom_get_chip({ bank = 0x00, addr_base = 0x8000 })
-      if not rv then
-        if do_rom_write then
-          log.error("Couldn't identify flash chip")
-          return DONE(false)
-        else
-          log.warning("Couldn't identify flash chip")
-        end
-      end
-    end
-
-    -- RAM tests
-    if options.force_ram_test then
-      log.print()
-      log.warning("Additional option 'force_ram_test' enabled")
-    end
-
-    rv = ram_detect()
-
-    if rv == false then -- RAM not found
-      if do_ram_dump or do_ram_write then
-        log.error("RAM not detected")
+  -- attempt to read ROM flash ID
+  if options.force_flash_test or (do_rom_write and rom_size_kb ~= 0) then
+    rv, rom_flash_chip = snes.rom_get_chip({ bank = 0x00, addr_base = 0x8000 })
+    if not rv then
+      if do_rom_write then
+        log.error("Couldn't identify flash chip")
         return DONE(false)
-      elseif do_rom_write then
-        if options.force_ram_test then
-          log.warning("Additional option 'force_ram_test' implies RAM presence")
-          log.error("RAM not detected")
-          return DONE(false)
-        elseif snes.file_header.is_valid and snes.file_header:has_sram() then
-          log.warning("ROM header settings implies RAM")
-          log.error("RAM not detected")
-          return DONE(false)
-        elseif ram_size_kb ~= 0 then
-          log.warning("CLI options specify " .. ram_size_kb .. "KB of RAM")
-          log.error("RAM not detected")
-          return DONE(false)
-        else
-          log.info("RAM not detected")
-        end
-      end
-    else -- PRG RAM found
-      log.success("RAM detected")
-
-      if ram_size_kb == 0 then
-        ram_size_kb = ram_get_size()
-      end
-
-      if options.force_ram_test and (do_rom_dump or do_ram_dump) then
-        log.warning("Additional option 'force_ram_test' is ignored when dumping ROM or RAM")
-      elseif do_rom_write or do_ram_write then
-        if options.force_ram_test then
-          rv = ram_test(ram_size_kb, retroprog_id)
-          if not rv then return DONE(false) end
-        elseif snes.file_header.is_valid and snes.file_header:has_sram() then
-          if snes.file_header:has_battery() then
-            log.warning("Can't test RAM because ROM header specifies battery backed data")
-            log.warning("Use additional option 'force_ram_test' to force RAM test")
-          else
-            rv = ram_test(ram_size_kb, retroprog_id)
-            if not rv then return DONE(false) end
-          end
-        else
-          log.warning("Can't test RAM because data could be battery backed")
-          log.warning("Use additional option 'force_ram_test' to force RAM test")
-        end
+      else
+        log.warning("Couldn't identify flash chip")
       end
     end
   end
 
+  -- RAM tests
+  if options.force_ram_test then
+    log.print()
+    log.warning("Additional option 'force_ram_test' enabled")
+  end
+
+  rv = ram_detect()
+
+  if rv == false then -- RAM not found
+    if do_ram_dump or do_ram_write then
+      log.error("RAM not detected")
+      return DONE(false)
+    elseif do_rom_write then
+      if options.force_ram_test then
+        log.warning("Additional option 'force_ram_test' implies RAM presence")
+        log.error("RAM not detected")
+        return DONE(false)
+      elseif snes.file_header.is_valid and snes.file_header:has_sram() then
+        log.warning("ROM header settings implies RAM")
+        log.error("RAM not detected")
+        return DONE(false)
+      elseif ram_size_kb ~= 0 then
+        log.warning("CLI options specify " .. ram_size_kb .. "KB of RAM")
+        log.error("RAM not detected")
+        return DONE(false)
+      else
+        log.info("RAM not detected")
+      end
+    end
+  else -- PRG RAM found
+    log.success("RAM detected")
+
+    if ram_size_kb == 0 then
+      ram_size_kb = ram_get_size()
+    end
+
+    if options.force_ram_test and (do_rom_dump or do_ram_dump) then
+      log.warning("Additional option 'force_ram_test' is ignored when dumping ROM or RAM")
+    elseif do_rom_write or do_ram_write then
+      if options.force_ram_test then
+        rv = ram_test(ram_size_kb, retroprog_id)
+        if not rv then return DONE(false) end
+      elseif snes.file_header.is_valid and snes.file_header:has_sram() then
+        if snes.file_header:has_battery() then
+          log.warning("Can't test RAM because ROM header specifies battery backed data")
+          log.warning("Use additional option 'force_ram_test' to force RAM test")
+        else
+          rv = ram_test(ram_size_kb, retroprog_id)
+          if not rv then return DONE(false) end
+        end
+      else
+        log.warning("Can't test RAM because data could be battery backed")
+        log.warning("Use additional option 'force_ram_test' to force RAM test")
+      end
+    end
+    end
+  end
 
   --[[
   88""Yb    db    8b    d8     8888b.  88   88 8b    d8 88""Yb

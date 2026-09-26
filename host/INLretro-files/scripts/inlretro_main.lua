@@ -591,9 +591,6 @@ local function main()
   --      print("new firmware has been released, recommend upgrading")
   --    end
 
-  -- Always test!
-  local do_test = true
-
   -- If a dump filename was provided, dump data from cartridge to a file.
   local do_rom_dump = not isempty(opts.rom_dump_file)
 
@@ -640,7 +637,6 @@ local function main()
   local process_opts = {
     retroprog_id    = opts.retroprog_id,
     -- console_name    = opts.console_name,
-    do_test         = do_test,
     do_rom_erase    = do_rom_erase,
     do_rom_dump     = do_rom_dump,
     do_rom_write    = do_rom_write,

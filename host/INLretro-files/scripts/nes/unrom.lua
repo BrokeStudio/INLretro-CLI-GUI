@@ -370,7 +370,6 @@ local function process(process_opts, console_opts)
 
   -- process options
   local retroprog_id     = process_opts.retroprog_id
-  local do_test          = process_opts.do_test
   local do_rom_erase     = process_opts.do_rom_erase
   local do_rom_write     = process_opts.do_rom_write
   local do_rom_verify    = process_opts.do_rom_verify
@@ -407,81 +406,79 @@ local function process(process_opts, console_opts)
   --]]
 
   -- test cart
-  if do_test then
-    log.section("Testing " .. mapname)
+  log.section("Testing " .. mapname)
 
-    if bank_table_base == nil then
-      if do_rom_write then
-        log.info("Bank table is missing from the command line arguments, trying to automatically find it")
-        bank_table_base = nes.find_bank_table_in_last_bank(rom_write_file.filename, prg_size_kb, 16)
-        if bank_table_base == nil then
-          log.error("Couldn't find bank table, use 'bank_table' additional option to specify it manually")
-          return DONE(false)
-        else
-          log.success("Bank table found at address:", help.hex_0x4(bank_table_base))
-        end
-      elseif do_rom_dump then
-        bank_table_base = find_bank_table(prg_size_kb)
-        if bank_table_base == nil then
-          log.error("Couldn't find bank table, use 'bank_table' additional option to specify it manually")
-          return DONE(false)
-        else
-          log.success("Bank table found at address:", help.hex_0x4(bank_table_base))
-        end
+  if bank_table_base == nil then
+    if do_rom_write then
+      log.info("Bank table is missing from the command line arguments, trying to automatically find it")
+      bank_table_base = nes.find_bank_table_in_last_bank(rom_write_file.filename, prg_size_kb, 16)
+      if bank_table_base == nil then
+        log.error("Couldn't find bank table, use 'bank_table' additional option to specify it manually")
+        return DONE(false)
       else
-        log.error("Bank table is missing from the command line arguments")
+        log.success("Bank table found at address:", help.hex_0x4(bank_table_base))
+      end
+    elseif do_rom_dump then
+      bank_table_base = find_bank_table(prg_size_kb)
+      if bank_table_base == nil then
+        log.error("Couldn't find bank table, use 'bank_table' additional option to specify it manually")
         return DONE(false)
+      else
+        log.success("Bank table found at address:", help.hex_0x4(bank_table_base))
       end
     else
-      log.info("Bank table address provided:", help.hex_0x4(bank_table_base))
-    end
-
-    log.info("EXP0 pull-up test", dict.io("EXP0_PULLUP_TEST"))
-
-    local mirroring = nes.detect_mapper_mirroring()
-    log.bullet("PCB mirroring sensed:", mirroring)
-    if nes.header.is_valid then
-      log.bullet("NES ROM mirroring:", nes.MIRRORING_TYPE_STRING[nes.header.mirroring_type + 1])
-      if (nes.header.mirroring_type == nes.MIRRORING_TYPE_HORIZONTAL and mirroring ~= "HORZ")
-          or (nes.header.mirroring_type == nes.MIRRORING_TYPE_VERTICAL and mirroring ~= "VERT")
-      -- or (nes.header.mirroring_type == nes.MIRRORING_TYPE_VERTICAL and (mirroring ~= "1SCRNA" or mirroring ~= "1SCRNB"))
-      -- or  (nes.header.mirroring_type == nes.MIRRORING_TYPE_FOUR_SCREENS and mirroring ~= "4SCRN")
-      then
-        log.error("PCB mirroring setting doesn't match NES ROM header")
-        return DONE(false)
-      end
-    else
-      log.warning("Can't verify mirroring setting because you're using a binary file as the flash file")
-    end
-
-    if do_rom_write and prg_size_kb ~= 0 then
-      -- ROMSEL controls PRG-ROM /OE which needs to be low for flash writes
-      -- So unlock commands need to be addressed below $8000
-      -- DISCRETE_EXP0_PRG_ROM_WR doesn't toggle /ROMSEL by definition though, so A15 is unused
-      --        15 14 13 12
-      --  0x5 = 0b  0  1  0  1  -> $5555
-      --  0x2 = 0b  0  0  1  0  -> $2AAA
-      rv, prg_flash_chip = nes.prg_rom_get_chip({ opcode = "DISCRETE_EXP0_PRG_ROM_WR" })
-      if not rv then
-        log.error("Couldn't identify flash chip")
-        return DONE(false)
-      end
-    end
-
-    -- force CHR-RAM size to 8KB
-    -- since UxROM doesn't exist with CHR-ROM
-    chr_ram_detected = nes.ppu_ram_sense(0x1000)
-    if not chr_ram_detected then
-      log.error("CHR-RAM not detected")
+      log.error("Bank table is missing from the command line arguments")
       return DONE(false)
     end
-    chr_ram_size_kb = 8
-
-    -- test CHR-RAM
-    rv = chr_ram_exercise(chr_ram_size_kb, retroprog_id)
-    -- exit script if test fails
-    if not rv then return DONE(false) end
+  else
+    log.info("Bank table address provided:", help.hex_0x4(bank_table_base))
   end
+
+  log.info("EXP0 pull-up test", dict.io("EXP0_PULLUP_TEST"))
+
+  local mirroring = nes.detect_mapper_mirroring()
+  log.bullet("PCB mirroring sensed:", mirroring)
+  if nes.header.is_valid then
+    log.bullet("NES ROM mirroring:", nes.MIRRORING_TYPE_STRING[nes.header.mirroring_type + 1])
+    if (nes.header.mirroring_type == nes.MIRRORING_TYPE_HORIZONTAL and mirroring ~= "HORZ")
+        or (nes.header.mirroring_type == nes.MIRRORING_TYPE_VERTICAL and mirroring ~= "VERT")
+    -- or (nes.header.mirroring_type == nes.MIRRORING_TYPE_VERTICAL and (mirroring ~= "1SCRNA" or mirroring ~= "1SCRNB"))
+    -- or  (nes.header.mirroring_type == nes.MIRRORING_TYPE_FOUR_SCREENS and mirroring ~= "4SCRN")
+    then
+      log.error("PCB mirroring setting doesn't match NES ROM header")
+      return DONE(false)
+    end
+  else
+    log.warning("Can't verify mirroring setting because you're using a binary file as the flash file")
+  end
+
+  if do_rom_write and prg_size_kb ~= 0 then
+    -- ROMSEL controls PRG-ROM /OE which needs to be low for flash writes
+    -- So unlock commands need to be addressed below $8000
+    -- DISCRETE_EXP0_PRG_ROM_WR doesn't toggle /ROMSEL by definition though, so A15 is unused
+    --        15 14 13 12
+    --  0x5 = 0b  0  1  0  1  -> $5555
+    --  0x2 = 0b  0  0  1  0  -> $2AAA
+    rv, prg_flash_chip = nes.prg_rom_get_chip({ opcode = "DISCRETE_EXP0_PRG_ROM_WR" })
+    if not rv then
+      log.error("Couldn't identify flash chip")
+      return DONE(false)
+    end
+  end
+
+  -- force CHR-RAM size to 8KB
+  -- since UxROM doesn't exist with CHR-ROM
+  chr_ram_detected = nes.ppu_ram_sense(0x1000)
+  if not chr_ram_detected then
+    log.error("CHR-RAM not detected")
+    return DONE(false)
+  end
+  chr_ram_size_kb = 8
+
+  -- test CHR-RAM
+  rv = chr_ram_exercise(chr_ram_size_kb, retroprog_id)
+  -- exit script if test fails
+  if not rv then return DONE(false) end
 
   --[[
   88""Yb  dP"Yb  8b    d8     8888b.  88   88 8b    d8 88""Yb

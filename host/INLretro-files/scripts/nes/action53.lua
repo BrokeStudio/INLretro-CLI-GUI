@@ -515,7 +515,6 @@ local function process(process_opts, console_opts)
 
   -- process options
   local retroprog_id     = process_opts.retroprog_id
-  local do_test          = process_opts.do_test
   local do_rom_erase     = process_opts.do_rom_erase
   local do_rom_write     = process_opts.do_rom_write
   local do_rom_verify    = process_opts.do_rom_verify
@@ -552,47 +551,45 @@ local function process(process_opts, console_opts)
   --]]
 
   -- test cart
-  if do_test then
-    log.section("Testing " .. mapname)
+  log.section("Testing " .. mapname)
 
-    chr_ram_detected = nes.ppu_ram_sense(0x1000)
+  chr_ram_detected = nes.ppu_ram_sense(0x1000)
 
-    -- verify mirroring is behaving as expected
-    rv = mirror_test(chr_size_kb, chr_ram_detected, retroprog_id)
-    if not rv then return DONE(false) end
+  -- verify mirroring is behaving as expected
+  rv = mirror_test(chr_size_kb, chr_ram_detected, retroprog_id)
+  if not rv then return DONE(false) end
 
-    if options.force_flash_test or (do_rom_write and prg_size_kb ~= 0) then
-      init_mapper()
-      rv, prg_flash_chip = nes.prg_rom_get_chip()
-      if not rv then
-        log.error("Couldn't identify flash chip")
-        return DONE(false)
-      end
+  if options.force_flash_test or (do_rom_write and prg_size_kb ~= 0) then
+    init_mapper()
+    rv, prg_flash_chip = nes.prg_rom_get_chip()
+    if not rv then
+      log.error("Couldn't identify flash chip")
+      return DONE(false)
     end
-
-    -- CHR-RAM tests
-    if chr_ram_detected then
-      -- test CHR-RAM banking and try to detect size
-      chr_ram_size_kb = chr_ram_get_size()
-
-      -- test CHR-RAM
-      if chr_ram_size_kb ~= 0 then
-        rv = chr_ram_exercise(chr_ram_size_kb, retroprog_id)
-        -- exit script if test fails
-        if not rv then return DONE(false) end
-      end
-    end
-
-    -- -- manipulate gift message
-    -- local base = 0x8BD0
-    -- local start_offset = 0xC
-    -- local len = 80
-    -- -- read_gift(base, len)
-
-    -- -- write_gift(base, start_offset)
-
-    -- read_gift(base, len)
   end
+
+  -- CHR-RAM tests
+  if chr_ram_detected then
+    -- test CHR-RAM banking and try to detect size
+    chr_ram_size_kb = chr_ram_get_size()
+
+    -- test CHR-RAM
+    if chr_ram_size_kb ~= 0 then
+      rv = chr_ram_exercise(chr_ram_size_kb, retroprog_id)
+      -- exit script if test fails
+      if not rv then return DONE(false) end
+    end
+  end
+
+  -- -- manipulate gift message
+  -- local base = 0x8BD0
+  -- local start_offset = 0xC
+  -- local len = 80
+  -- -- read_gift(base, len)
+
+  -- -- write_gift(base, start_offset)
+
+  -- read_gift(base, len)
 
   --[[
   88""Yb    db    8b    d8     8888b.  88   88 8b    d8 88""Yb

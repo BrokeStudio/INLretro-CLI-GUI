@@ -447,7 +447,6 @@ local function process(process_opts, console_opts)
 
   -- process options
   local retroprog_id     = process_opts.retroprog_id
-  local do_test          = process_opts.do_test
   local do_rom_erase     = process_opts.do_rom_erase
   local do_rom_write     = process_opts.do_rom_write
   local do_rom_verify    = process_opts.do_rom_verify
@@ -481,37 +480,35 @@ local function process(process_opts, console_opts)
   --]]
 
   -- test cart
-  if do_test then
-    log.section("Testing " .. mapname)
-    log.info("EXP0 pull-up test", dict.io("EXP0_PULLUP_TEST"))
+  log.section("Testing " .. mapname)
+  log.info("EXP0 pull-up test", dict.io("EXP0_PULLUP_TEST"))
 
-    -- verify mirroring is behaving as expected
-    rv = mirror_test(retroprog_id)
-    if not rv then return DONE(false) end
+  -- verify mirroring is behaving as expected
+  rv = mirror_test(retroprog_id)
+  if not rv then return DONE(false) end
 
-    if do_rom_write and prg_size_kb ~= 0 then
-      rv = prg_rom_manf_id()
-      if not rv then
-        log.error("Couldn't identify flash chip")
-        return DONE(false)
-      end
-    end
-
-    chr_ram_detected = nes.ppu_ram_sense(0x1000)
-    if not chr_ram_detected then
-      log.error("CHR-RAM not detected")
+  if do_rom_write and prg_size_kb ~= 0 then
+    rv = prg_rom_manf_id()
+    if not rv then
+      log.error("Couldn't identify flash chip")
       return DONE(false)
     end
+  end
 
-    -- CHR-RAM tests
-    chr_ram_size_kb = 16
+  chr_ram_detected = nes.ppu_ram_sense(0x1000)
+  if not chr_ram_detected then
+    log.error("CHR-RAM not detected")
+    return DONE(false)
+  end
 
-    -- test CHR-RAM
-    if chr_ram_size_kb ~= 0 then
-      rv = chr_ram_exercise(chr_ram_size_kb, retroprog_id)
-      -- exit script if test fails
-      if not rv then return DONE(false) end
-    end
+  -- CHR-RAM tests
+  chr_ram_size_kb = 16
+
+  -- test CHR-RAM
+  if chr_ram_size_kb ~= 0 then
+    rv = chr_ram_exercise(chr_ram_size_kb, retroprog_id)
+    -- exit script if test fails
+    if not rv then return DONE(false) end
   end
 
   --[[

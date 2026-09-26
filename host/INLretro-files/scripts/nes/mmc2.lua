@@ -510,7 +510,6 @@ local function process(process_opts, console_opts)
 
   -- process options
   local retroprog_id     = process_opts.retroprog_id
-  local do_test          = process_opts.do_test
   local do_rom_erase     = process_opts.do_rom_erase
   local do_rom_write     = process_opts.do_rom_write
   local do_rom_verify    = process_opts.do_rom_verify
@@ -544,71 +543,69 @@ local function process(process_opts, console_opts)
   --]]
 
   -- test cart by reading manf/prod ID
-  if do_test then
+  init_mapper()
+
+  log.section("Testing ", mapname)
+
+  -- verify mirroring is behaving as expected
+  rv = mirror_test()
+  if not rv then return DONE(false) end
+
+  chr_ram_detected = nes.ppu_ram_sense(0x1000)
+  -- print("EXP0 pull-up test:", dict.io("EXP0_PULLUP_TEST"))
+
+  -- attempt to read PRG-ROM flash ID
+  if options.force_flash_test or (do_rom_write and prg_size_kb ~= 0) then
     init_mapper()
-
-    log.section("Testing ", mapname)
-
-    -- verify mirroring is behaving as expected
-    rv = mirror_test()
-    if not rv then return DONE(false) end
-
-    chr_ram_detected = nes.ppu_ram_sense(0x1000)
-    -- print("EXP0 pull-up test:", dict.io("EXP0_PULLUP_TEST"))
-
-    -- attempt to read PRG-ROM flash ID
-    if options.force_flash_test or (do_rom_write and prg_size_kb ~= 0) then
-      init_mapper()
-      rv, prg_flash_chip = nes.prg_rom_get_chip({ unlock_addr1 = 0xD555, unlock_addr2 = 0xEAAA })
-      if not rv then
-        if do_rom_write then
-          log.error("Couldn't identify flash chip")
-          return DONE(false)
-        else
-          log.warning("Couldn't identify flash chip")
-        end
-      end
-    end
-
-    -- attempt to read CHR-ROM flash ID
-    if options.force_flash_test or (do_rom_write and chr_size_kb ~= 0) then
-      init_mapper()
-      rv, chr_flash_chip = nes.chr_rom_get_chip({ unlock_addr1 = 0x1555, unlock_addr2 = 0x0AAA })
-      if not rv then
-        if do_rom_write then
-          log.error("Couldn't identify flash chip")
-          return DONE(false)
-        else
-          log.warning("Couldn't identify flash chip")
-        end
-      end
-    end
-
-    -- PRG-RAM tests
-    rv = prg_ram_test()
-    if rv == true then
-      if options.force_ram_test then
-        log.print()
-        log.warning("Flag 'force_ram_test' enabled")
-      end
-      -- force ram size to 8KB
-      if ram_size_kb == 0 then
-        ram_size_kb = 8
-      end
-      if options.force_ram_test or nes.header.is_valid then
-        if not options.force_ram_test and nes.header.has_battery then
-          log.print()
-          log.warning("Can't exercise PRG-RAM because NES ROM has battery backed data")
-        else
-          if ram_size_kb ~= 0 then
-            rv = prg_ram_exercise(ram_size_kb, retroprog_id)
-            -- exit script if test fails
-            if not rv then return DONE(false) end
-          end
-        end
+    rv, prg_flash_chip = nes.prg_rom_get_chip({ unlock_addr1 = 0xD555, unlock_addr2 = 0xEAAA })
+    if not rv then
+      if do_rom_write then
+        log.error("Couldn't identify flash chip")
+        return DONE(false)
       else
-        log.warning("Can't exercise PRG-RAM because data could be battery backed")
+        log.warning("Couldn't identify flash chip")
       end
+    end
+  end
+
+  -- attempt to read CHR-ROM flash ID
+  if options.force_flash_test or (do_rom_write and chr_size_kb ~= 0) then
+    init_mapper()
+    rv, chr_flash_chip = nes.chr_rom_get_chip({ unlock_addr1 = 0x1555, unlock_addr2 = 0x0AAA })
+    if not rv then
+      if do_rom_write then
+        log.error("Couldn't identify flash chip")
+        return DONE(false)
+      else
+        log.warning("Couldn't identify flash chip")
+      end
+    end
+  end
+
+  -- PRG-RAM tests
+  rv = prg_ram_test()
+  if rv == true then
+    if options.force_ram_test then
+      log.print()
+      log.warning("Flag 'force_ram_test' enabled")
+    end
+    -- force ram size to 8KB
+    if ram_size_kb == 0 then
+      ram_size_kb = 8
+    end
+    if options.force_ram_test or nes.header.is_valid then
+      if not options.force_ram_test and nes.header.has_battery then
+        log.print()
+        log.warning("Can't exercise PRG-RAM because NES ROM has battery backed data")
+      else
+        if ram_size_kb ~= 0 then
+          rv = prg_ram_exercise(ram_size_kb, retroprog_id)
+          -- exit script if test fails
+          if not rv then return DONE(false) end
+        end
+      end
+    else
+      log.warning("Can't exercise PRG-RAM because data could be battery backed")
     end
   end
   --[[

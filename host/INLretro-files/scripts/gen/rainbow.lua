@@ -612,7 +612,6 @@ local function process(process_opts, console_opts)
 
   -- process options
   local retroprog_id    = process_opts.retroprog_id
-  local do_test         = process_opts.do_test
   local do_rom_erase    = process_opts.do_rom_erase
   local do_rom_write    = process_opts.do_rom_write
   local do_rom_verify   = process_opts.do_rom_verify
@@ -647,65 +646,63 @@ local function process(process_opts, console_opts)
   --]]
 
   -- test cart
-  if do_test then
-    log.section("Testing Rainbow")
+  log.section("Testing Rainbow")
 
-    -- attempt to read ROM flash ID
-    if options.force_flash_test or (do_rom_write and rom_size_kb ~= 0) then
-      rv, flash_chip = gen.rom_get_chip()
-      if not rv then
-        if do_rom_write then
-          log.error("Couldn't identify flash chip")
-          return DONE(false)
-        else
-          log.warning("Couldn't identify flash chip")
-        end
+  -- attempt to read ROM flash ID
+  if options.force_flash_test or (do_rom_write and rom_size_kb ~= 0) then
+    rv, flash_chip = gen.rom_get_chip()
+    if not rv then
+      if do_rom_write then
+        log.error("Couldn't identify flash chip")
+        return DONE(false)
+      else
+        log.warning("Couldn't identify flash chip")
       end
     end
+  end
 
-    -- TEST
-    -- rv = gen.time_rd(0xAA)
-    -- log.print(help.hex_0x2(rv))
-    -- gen.dbg_rom_rd(0xA130AA)
-    -- test_wifi()
-    -- test_bootrom()
+  -- TEST
+  -- rv = gen.time_rd(0xAA)
+  -- log.print(help.hex_0x2(rv))
+  -- gen.dbg_rom_rd(0xA130AA)
+  -- test_wifi()
+  -- test_bootrom()
 
-    -- FPGA_RAM tests
-    -- rv = fpga_ram_test()
-    -- if rv == true then
-    --   rv = fpga_ram_exercise(retroprog_id)
-    --   -- exit script if test fails
-    --   if not rv then return end
-    -- else
-    --   log.error("Couldn't detect FPGA-RAM")
-    -- end
+  -- FPGA_RAM tests
+  -- rv = fpga_ram_test()
+  -- if rv == true then
+  --   rv = fpga_ram_exercise(retroprog_id)
+  --   -- exit script if test fails
+  --   if not rv then return end
+  -- else
+  --   log.error("Couldn't detect FPGA-RAM")
+  -- end
 
-    -- RAM tests
-    rv = ram_test()
-    if rv == true then
-      if options.force_ram_test then
+  -- RAM tests
+  rv = ram_test()
+  if rv == true then
+    if options.force_ram_test then
+      log.print()
+      log.warning("Flag 'force_ram_test' enabled")
+    end
+    if ram_size_kb == 0 then
+      ram_size_kb = 32
+    end
+    local is_header_valid = gen.file_header.is_valid or gen.cart_header.is_valid
+    local has_battery = gen.file_header:has_battery() or gen.cart_header:has_battery()
+    if options.force_ram_test or is_header_valid then
+      if not options.force_ram_test and has_battery then
         log.print()
-        log.warning("Flag 'force_ram_test' enabled")
-      end
-      if ram_size_kb == 0 then
-        ram_size_kb = 32
-      end
-      local is_header_valid = gen.file_header.is_valid or gen.cart_header.is_valid
-      local has_battery = gen.file_header:has_battery() or gen.cart_header:has_battery()
-      if options.force_ram_test or is_header_valid then
-        if not options.force_ram_test and has_battery then
-          log.print()
-          log.warning("Can't exercise RAM because ROM has battery backed data")
-        else
-          if ram_size_kb ~= 0 then
-            rv = ram_exercise(ram_size_kb, retroprog_id)
-            -- exit script if test fails
-            if not rv then return DONE(false) end
-          end
-        end
+        log.warning("Can't exercise RAM because ROM has battery backed data")
       else
-        log.warning("Can't exercise RAM because data could be battery backed")
+        if ram_size_kb ~= 0 then
+          rv = ram_exercise(ram_size_kb, retroprog_id)
+          -- exit script if test fails
+          if not rv then return DONE(false) end
+        end
       end
+    else
+      log.warning("Can't exercise RAM because data could be battery backed")
     end
   end
 

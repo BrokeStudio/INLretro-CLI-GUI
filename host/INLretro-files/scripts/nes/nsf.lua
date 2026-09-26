@@ -255,7 +255,6 @@ local function process(process_opts, console_opts)
 
   -- process options
   local retroprog_id     = process_opts.retroprog_id
-  local do_test          = process_opts.do_test
   local do_rom_erase     = process_opts.do_rom_erase
   local do_rom_write     = process_opts.do_rom_write
   local do_rom_verify    = process_opts.do_rom_verify
@@ -289,38 +288,36 @@ local function process(process_opts, console_opts)
   --]]
 
   -- test cart
-  if do_test then
-    log.section("Testing ", mapname)
+  log.section("Testing ", mapname)
 
-    -- attempt to read PRG-ROM flash ID
-    if options.force_flash_test or (do_rom_write and prg_size_kb ~= 0) then
-      init_mapper()
-      rv, prg_flash_chip = nes.prg_rom_get_chip()
-      if not rv then
-        if do_rom_write then
-          log.error("Couldn't identify flash chip")
-          return DONE(false)
-        else
-          log.warning("Couldn't identify flash chip")
-        end
+  -- attempt to read PRG-ROM flash ID
+  if options.force_flash_test or (do_rom_write and prg_size_kb ~= 0) then
+    init_mapper()
+    rv, prg_flash_chip = nes.prg_rom_get_chip()
+    if not rv then
+      if do_rom_write then
+        log.error("Couldn't identify flash chip")
+        return DONE(false)
+      else
+        log.warning("Couldn't identify flash chip")
       end
     end
-
-    -- try to detect CHR-RAM
-    chr_ram_detected = nes.ppu_ram_sense(0x1000)
-    if not chr_ram_detected then
-      log.error("CHR-RAM not detected")
-      return DONE(false)
-    end
-
-    -- force CHR-RAM size to 8KB
-    chr_ram_size_kb = 8
-
-    -- test CHR-RAM
-    rv = chr_ram_exercise(chr_ram_size_kb, retroprog_id)
-    -- exit script if test fails
-    if not rv then return DONE(false) end
   end
+
+  -- try to detect CHR-RAM
+  chr_ram_detected = nes.ppu_ram_sense(0x1000)
+  if not chr_ram_detected then
+    log.error("CHR-RAM not detected")
+    return DONE(false)
+  end
+
+  -- force CHR-RAM size to 8KB
+  chr_ram_size_kb = 8
+
+  -- test CHR-RAM
+  rv = chr_ram_exercise(chr_ram_size_kb, retroprog_id)
+  -- exit script if test fails
+  if not rv then return DONE(false) end
 
   --[[
   88""Yb  dP"Yb  8b    d8     8888b.  88   88 8b    d8 88""Yb
