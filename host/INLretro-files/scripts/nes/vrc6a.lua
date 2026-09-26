@@ -639,7 +639,7 @@ end
 --- Process all requested operations for this cartridge board/mapper.
 -- @param process_opts table Parsed operation options from the main application
 -- @param console_opts table Console/cartridge size options
--- @return false|nil result False on explicitly reported failure; otherwise no value
+-- @return boolean result True on success, false on failure
 local function process(process_opts, console_opts)
   -- some local variables
   local rv               = nil
@@ -686,7 +686,7 @@ local function process(process_opts, console_opts)
 
     -- verify mirroring is behaving as expected
     rv = mirror_test()
-    if not rv then return false end
+    if not rv then return DONE(false) end
 
     chr_ram_detected = nes.ppu_ram_sense(0x1000)
     -- print("EXP0 pull-up test:", dict.io("EXP0_PULLUP_TEST"))
@@ -698,7 +698,7 @@ local function process(process_opts, console_opts)
       if not rv then
         if do_rom_write then
           log.error("Couldn't identify flash chip")
-          return false
+          return DONE(false)
         else
           log.warning("Couldn't identify flash chip")
         end
@@ -711,7 +711,7 @@ local function process(process_opts, console_opts)
       if not rv then
         if do_rom_write then
           log.error("Couldn't identify flash chip")
-          return false
+          return DONE(false)
         else
           log.warning("Couldn't identify flash chip")
         end
@@ -737,7 +737,7 @@ local function process(process_opts, console_opts)
           if ram_size_kb ~= 0 then
             rv = prg_ram_exercise(ram_size_kb, retroprog_id)
             -- exit script if test fails
-            if not rv then return end
+            if not rv then return DONE(false) end
           end
         end
       else
@@ -748,7 +748,7 @@ local function process(process_opts, console_opts)
     -- CHR-RAM tests
     if chr_ram_detected then
       log.error("TODO: CHR-RAM tests...")
-      do return end
+      do return DONE(false) end
 
       -- force size to 8KB
       chr_ram_size_kb = 8
@@ -757,7 +757,7 @@ local function process(process_opts, console_opts)
       if chr_ram_size_kb ~= 0 then
         rv = chr_ram_exercise(chr_ram_size_kb, retroprog_id)
         -- exit script if test fails
-        if not rv then return end
+        if not rv then return DONE(false) end
       end
     end
   end
@@ -877,7 +877,7 @@ local function process(process_opts, console_opts)
       rv = nes.prg_rom_erase(prg_flash_chip)
       if not rv then
         log.error("PRG-ROM couldn't be erased")
-        return false
+        return DONE(false)
       end
     end
 
@@ -886,7 +886,7 @@ local function process(process_opts, console_opts)
       rv = nes.chr_rom_erase(chr_flash_chip)
       if not rv then
         log.error("CHR-ROM couldn't be erased")
-        return false
+        return DONE(false)
       end
     end
   end
@@ -963,7 +963,7 @@ local function process(process_opts, console_opts)
     end
   end
 
-  dict.io("IO_RESET")
+  return DONE(true)
 end
 
 

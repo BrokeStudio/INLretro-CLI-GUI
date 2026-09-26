@@ -68,6 +68,7 @@ end
 --- Process all requested operations for this cartridge board/mapper.
 -- @param process_opts table Parsed operation options from the main application
 -- @param console_opts table Console/cartridge size options
+-- @return boolean result True on success, false on failure
 local function process(process_opts, console_opts)
   local test        = process_opts["test"]
   local read        = process_opts["read"]
@@ -160,7 +161,7 @@ local function process(process_opts, console_opts)
     print("DONE post dumping ROM")
   end
 
-  dict.io("IO_RESET")
+  return DONE(true)
 end
 
 

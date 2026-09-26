@@ -372,6 +372,7 @@ end
 -- The cartridge should be in reset state before calling.
 -- @param process_opts table Parsed operation options from the main application
 -- @param console_opts table Console/cartridge size options
+-- @return boolean result True on success, false on failure
 local function process(process_opts, console_opts)
   -- some local variables
   local rv             = nil
@@ -418,7 +419,7 @@ local function process(process_opts, console_opts)
       if not rv then
         if do_rom_write then
           log.error("Couldn't identify flash chip")
-          return false
+          return DONE(false)
         else
           log.warning("Couldn't identify flash chip")
         end
@@ -445,7 +446,7 @@ local function process(process_opts, console_opts)
           if ram_size_kb ~= 0 then
             rv = ram_exercise(ram_size_kb, retroprog_id)
             -- exit script if test fails
-            if not rv then return end
+            if not rv then return DONE(false) end
           end
         end
       else
@@ -669,7 +670,7 @@ local function process(process_opts, console_opts)
     end
   end
 
-  dict.io("IO_RESET")
+  return DONE(true)
 end
 
 -- global variables so other modules can use them

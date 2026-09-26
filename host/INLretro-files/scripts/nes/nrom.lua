@@ -237,7 +237,7 @@ end
 --- Process all requested operations for this cartridge board/mapper.
 -- @param process_opts table Parsed operation options from the main application
 -- @param console_opts table Console/cartridge size options
--- @return false|nil result False on explicitly reported failure; otherwise no value
+-- @return boolean result True on success, false on failure
 local function process(process_opts, console_opts)
   -- some local variables
   local rv               = nil
@@ -293,7 +293,7 @@ local function process(process_opts, console_opts)
       -- or  nes.header.mirroring_type == nes.MIRRORING_TYPE_FOUR_SCREENS and mirroring ~= "4SCRN"
       then
         log.error("PCB mirroring setting doesn't match NES ROM header")
-        return false
+        return DONE(false)
       end
     else
       log.warning("Can't verify mirroring setting because you're using a binary file as the flash file")
@@ -311,7 +311,7 @@ local function process(process_opts, console_opts)
       if not rv then
         if do_rom_write then
           log.error("Couldn't identify flash chip")
-          return false
+          return DONE(false)
         else
           log.warning("Couldn't identify flash chip")
         end
@@ -335,7 +335,7 @@ local function process(process_opts, console_opts)
       if not rv then
         if do_rom_write then
           log.error("Couldn't identify flash chip")
-          return false
+          return DONE(false)
         else
           log.warning("Couldn't identify flash chip")
         end
@@ -395,7 +395,7 @@ local function process(process_opts, console_opts)
       rv = nes.prg_rom_erase(prg_flash_chip, { opcode = "DISCRETE_EXP0_PRG_ROM_WR" })
       if not rv then
         log.error("PRG-ROM couldn't be erased")
-        return false
+        return DONE(false)
       end
     end
 
@@ -409,7 +409,7 @@ local function process(process_opts, console_opts)
         })
       if not rv then
         log.error("CHR-ROM couldn't be erased")
-        return false
+        return DONE(false)
       end
     end
   end
@@ -484,7 +484,7 @@ local function process(process_opts, console_opts)
     end
   end
 
-  dict.io("IO_RESET")
+  return DONE(true)
 end
 
 -- global variables so other modules can use them

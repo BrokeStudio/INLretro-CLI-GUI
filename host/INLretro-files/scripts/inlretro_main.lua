@@ -45,7 +45,7 @@ local function default_exec(process_opts, console_opts)
     rom_size_kb = console_opts.rom_size_kb,
     ram_size_kb = console_opts.ram_size_kb,
   }
-  console_opts.console_process_script.process(process_opts, default_opts)
+  return console_opts.console_process_script.process(process_opts, default_opts)
 end
 
 --[[

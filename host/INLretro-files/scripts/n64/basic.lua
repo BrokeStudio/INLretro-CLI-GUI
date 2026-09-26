@@ -95,6 +95,7 @@ end
 --- Process all requested operations for this cartridge board/mapper.
 -- @param process_opts table Parsed operation options from the main application
 -- @param console_opts table Console/cartridge size options
+-- @return boolean result True on success, false on failure
 local function process(process_opts, console_opts)
   -- some local variables
   local rv             = nil
@@ -270,7 +271,7 @@ local function process(process_opts, console_opts)
     --    print("DONE Post dumping SNES ROM")
   end
 
-  dict.io("IO_RESET")
+  return DONE(true)
 end
 
 

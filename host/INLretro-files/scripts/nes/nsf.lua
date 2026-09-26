@@ -245,7 +245,7 @@ end
 --- Process all requested operations for this cartridge board/mapper.
 -- @param process_opts table Parsed operation options from the main application
 -- @param console_opts table Console/cartridge size options
--- @return false|nil result False on explicitly reported failure; otherwise no value
+-- @return boolean result True on success, false on failure
 local function process(process_opts, console_opts)
   -- some local variables
   local rv               = nil
@@ -297,7 +297,7 @@ local function process(process_opts, console_opts)
       if not rv then
         if do_rom_write then
           log.error("Couldn't identify flash chip")
-          return false
+          return DONE(false)
         else
           log.warning("Couldn't identify flash chip")
         end
@@ -308,7 +308,7 @@ local function process(process_opts, console_opts)
     chr_ram_detected = nes.ppu_ram_sense(0x1000)
     if not chr_ram_detected then
       log.error("CHR-RAM not detected")
-      return
+      return DONE(false)
     end
 
     -- force CHR-RAM size to 8KB
@@ -317,7 +317,7 @@ local function process(process_opts, console_opts)
     -- test CHR-RAM
     rv = chr_ram_exercise(chr_ram_size_kb, retroprog_id)
     -- exit script if test fails
-    if not rv then return end
+    if not rv then return DONE(false) end
   end
 
   --[[
@@ -375,7 +375,7 @@ local function process(process_opts, console_opts)
       rv = nes.prg_rom_erase(prg_flash_chip)
       if not rv then
         log.error("PRG-ROM couldn't be erased")
-        return false
+        return DONE(false)
       end
     end
   end
@@ -446,7 +446,7 @@ local function process(process_opts, console_opts)
     end
   end
 
-  dict.io("IO_RESET")
+  return DONE(true)
 end
 
 -- global variables so other modules can use them
