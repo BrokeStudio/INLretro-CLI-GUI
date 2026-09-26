@@ -7,6 +7,8 @@ local dump = require "scripts.app.dump"
 local help = require "scripts.app.help"
 local log  = require "scripts.app.log"
 
+local snes = require "scripts.app.snes"
+
 -- local functions
 
 --[[
@@ -339,11 +341,11 @@ local function read_reset_vector(bank)
   dict.snes("SNES_SET_BANK", bank)
 
   --read reset vector high byte
-  vector = dict.snes("SNES_ROM_RD", RESET_VECT_HI)
+  vector = dict.snes("SNES_RD", RESET_VECT_HI, snes.ROMSEL_LO)
   --shift high byte of vector to where it belongs
   vector = vector << 8
   --read low byte of vector
-  vector = vector | dict.snes("SNES_ROM_RD", RESET_VECT_LO)
+  vector = vector | dict.snes("SNES_RD", RESET_VECT_LO, snes.ROMSEL_LO)
 
   if DEBUG then print("SNES bank:", bank, "reset vector", string.format("$%x", vector)) end
 
@@ -366,30 +368,30 @@ local function read_flashID()
   --v3.0 boards don't use EXP0 for program mode, must use SWIM via CIC
   prgm_mode()
 
-  dict.snes("SNES_ROM_WR", 0x0AAA, 0xAA)
-  dict.snes("SNES_ROM_WR", 0x0555, 0x55)
-  dict.snes("SNES_ROM_WR", 0x0AAA, 0x90)
+  dict.snes("SNES_WR_LO", 0x0AAA, 0xAA)
+  dict.snes("SNES_WR_LO", 0x0555, 0x55)
+  dict.snes("SNES_WR_LO", 0x0AAA, 0x90)
 
   --exit program mode
   play_mode()
 
   --read manf ID
-  local manf_id = dict.snes("SNES_ROM_RD", 0x0000)
+  local manf_id = dict.snes("SNES_RD", 0x0000, snes.ROMSEL_LO)
   if DEBUG then print("attempted read SNES ROM manf ID:", string.format("%X", manf_id)) end
 
   --read prod ID
-  local prod_id = dict.snes("SNES_ROM_RD", 0x0002)
+  local prod_id = dict.snes("SNES_RD", 0x0002, snes.ROMSEL_LO)
   if DEBUG then print("attempted read SNES ROM prod ID:", string.format("%X", prod_id)) end
-  local density_id = dict.snes("SNES_ROM_RD", 0x001C)
+  local density_id = dict.snes("SNES_RD", 0x001C, snes.ROMSEL_LO)
   if DEBUG then print("attempted read SNES density ID: ", string.format("%X", density_id)) end
-  local boot_sect = dict.snes("SNES_ROM_RD", 0x001E)
+  local boot_sect = dict.snes("SNES_RD", 0x001E, snes.ROMSEL_LO)
   if DEBUG then print("attempted read SNES boot sect ID:", string.format("%X", boot_sect)) end
 
   --put cart in program mode
   prgm_mode()
 
   -- exit software
-  dict.snes("SNES_ROM_WR", 0x0000, 0xF0)
+  dict.snes("SNES_WR_LO", 0x0000, 0xF0)
 
   --exit program mode
   play_mode()

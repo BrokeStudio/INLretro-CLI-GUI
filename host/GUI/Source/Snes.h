@@ -37,9 +37,10 @@ class Snes : public Console
     }
 
     if(mappers.size() != 0) {
-      int mapperIndex = get_mapper_index_by_mapper_name(header.get_mapper_name());
+      int mapperIndex = get_mapper_index_by_mapper_name(header.get_map_mode());
       if(mapperIndex == -1) {
-        APP_LOG(LogTypes_Warning, "[%s] Mapper unknown: %s", this->short_name.c_str(), header.get_mapper_name().c_str());
+        APP_LOG(LogTypes_Warning, "[%s] Mapper unknown: %s", this->short_name.c_str(), header.get_map_mode().c_str());
+        rom_write_INLOptions.mapper_name = mappers[0].script_name; // set 'auto' by default
       } else {
         rom_write_INLOptions.mapper_name = mappers[mapperIndex].script_name;
       }
@@ -260,11 +261,6 @@ class Snes : public Console
     uint16_t fileChecksum;
     std::streamoff fileSize;
 
-    std::string get_mapper_name()
-    {
-      return "auto";
-    }
-
     std::string get_map_mode()
     {
       auto it = mapModes.find(this->romType.mode);
@@ -314,47 +310,27 @@ class Snes : public Console
 
     bool has_sram()
     {
-      if(
-        (this->chipset & 0x0F) == 0x01 ||
-        (this->chipset & 0x0F) == 0x02 ||
-        (this->chipset & 0x0F) == 0x04 ||
-        (this->chipset & 0x0F) == 0x05) {
-        return true;
-      } else {
-        return false;
-      }
+      uint8_t chipset = this->chipset & 0x0F;
+      return chipset == 0x01 || chipset == 0x02 || chipset == 0x04 || chipset == 0x05;
     }
 
     // return true or false
     bool has_battery()
     {
-      if((this->chipset & 0x0F) == 0x02 ||
-        (this->chipset & 0x0F) == 0x05 ||
-        (this->chipset & 0x0F) == 0x06) {
-        return true;
-      }
-
-      return false;
+      uint8_t chipset = this->chipset & 0x0F;
+      return chipset == 0x02 || chipset == 0x05 || chipset == 0x06;
     }
 
     // return true or false
     bool check_romChecksum()
     {
-      if(this->checksum == this->fileChecksum) {
-        return true;
-      } else {
-        return false;
-      }
+      return this->checksum == this->fileChecksum;
     }
 
     // return true or false
     bool check_rom_size()
     {
-      if(this->get_rom_size() == (this->fileSize >> 10)) {
-        return true;
-      } else {
-        return false;
-      }
+      return this->get_rom_size() == (this->fileSize >> 10);
     }
   };
 
@@ -433,10 +409,10 @@ class Snes : public Console
       return false;
     }
 
-    // // check if it's HiROM/LoROM/ExHiRom
+    // // check if it's HiROM/LoROM/ExHiROM
     // bool isLoRom = false;
-    // bool isHiRom = false;
-    // bool isExHiRom = false;
+    // bool isHiROM = false;
+    // bool isExHiROM = false;
     // uint16_t headerStartAddress;
     // uint16_t checksumComplement;
     // uint16_t checksum;
@@ -477,7 +453,7 @@ class Snes : public Console
     //   checksum |= (uint8_t)rom.get() << 8;
     //   if (checksum + checksumComplement == 0xFFFF && checksum != 0 && checksumComplement != 0)
     //   {
-    //     isHiRom = true;
+    //     isHiROM = true;
     //     headerStartAddress = 0xFFC0;
     //   }
     //   else

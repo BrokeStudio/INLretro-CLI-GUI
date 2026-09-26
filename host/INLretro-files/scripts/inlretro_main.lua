@@ -1,13 +1,14 @@
 -- Main application flow for interacting with cartridges via USB device.
 -- Refactored version that doesn't require commenting/uncommenting to change functionality.
 
-local help = require "scripts.app.help"
-local log  = require "scripts.app.log"
-local nes  = require "scripts.app.nes"
+local dict = require "scripts.app.dict"
 local gb   = require "scripts.app.gb"
 local gen  = require "scripts.app.gen"
-local snes = require "scripts.app.snes"
+local help = require "scripts.app.help"
+local log  = require "scripts.app.log"
 local n64  = require "scripts.app.n64"
+local nes  = require "scripts.app.nes"
+local snes = require "scripts.app.snes"
 
 -- Just to avoid warnings in VS Code
 if opts == nil then opts = {} end
@@ -15,6 +16,12 @@ if opts == nil then opts = {} end
 -- Global DEBUG variable so every script can access it,
 -- and we don't have to pass it to each function
 DEBUG = opts and opts.debug or false
+
+-- Global return function so every script can access it
+function DONE(result)
+  dict.io("IO_RESET")
+  return result
+end
 
 -- Helper function that checks if a string is empty or nil.
 local function isempty(s)
@@ -101,7 +108,7 @@ local function n64_exec(process_opts, console_opts)
   else
     -- Attempt requested operations with hardware!
     -- TODO: Do plumbing for interacting with RAM.
-    m.process(process_opts, n64_console_opts)
+    return m.process(process_opts, n64_console_opts)
   end
 end
 
@@ -140,12 +147,25 @@ local function snes_exec(process_opts, console_opts)
     end
   end
 
-  -- if a rom dump file is provided, parse the cartridge ROM header
-  if process_opts.rom_dump_file ~= "" then
+  local mappers = {
+    auto = require "scripts.snes.auto",
+    lorom = require "scripts.snes.lorom",
+    hirom = require "scripts.snes.hirom"
+  }
+
+  -- if no mapper provided, use default one (LoROM / HiROM auto detection)
+  if console_opts.mapper == "" then
+    console_opts.mapper = "auto"
+  end
+
+  -- if mapper auto is selected, then try to parse cartridge ROM header
+  if console_opts.mapper == "auto" then
     -- parse cartridge ROM header
     log.section("Parsing cartridge ROM header")
     if not snes.parse_header_cart() then
-      log.warning("Failed to parse cartridge ROM header")
+      log.error("Failed to parse cartridge ROM header to detect mapper")
+      log.error("Please specify it manually")
+      return false
     else
       log.success("Cartridge ROM header parsed successfully")
     end
@@ -170,22 +190,13 @@ local function snes_exec(process_opts, console_opts)
     ram_size_kb = console_opts.ram_size_kb,
   }
 
-  local mappers = {
-    auto = require "scripts.snes.auto"
-  }
-
-  -- if no mapper provided, use default one (LoRom / HiRom auto detection)
-  if console_opts.mapper == "" then
-    console_opts.mapper = "auto"
-  end
-
   local m = mappers[console_opts.mapper]
   if m == nil then
     log.error("UNSUPPORTED MAPPER: ", console_opts.mapper)
   else
     -- Attempt requested operations with hardware!
     -- TODO: Do plumbing for interacting with RAM.
-    m.process(process_opts, snes_console_opts)
+    return m.process(process_opts, snes_console_opts)
   end
 end
 
@@ -274,7 +285,7 @@ local function gb_exec(process_opts, console_opts)
     log.error("UNSUPPORTED MAPPER: ", console_opts.mapper)
   else
     -- Attempt requested operations with hardware!
-    m.process(process_opts, gb_console_opts)
+    return m.process(process_opts, gb_console_opts)
   end
 end
 
@@ -354,7 +365,7 @@ local function gen_exec(process_opts, console_opts)
     log.error("UNSUPPORTED MAPPER: ", console_opts.mapper)
   else
     -- Attempt requested operations with hardware!
-    m.process(process_opts, gen_console_opts)
+    return m.process(process_opts, gen_console_opts)
   end
 end
 
@@ -510,7 +521,7 @@ local function nes_exec(process_opts, console_opts)
     log.error("UNSUPPORTED MAPPER: ", console_opts.mapper)
   else
     -- Attempt requested operations with hardware!
-    m.process(process_opts, nes_console_opts)
+    return m.process(process_opts, nes_console_opts)
   end
 end
 
@@ -608,11 +619,16 @@ local function main()
   if opts.ram_write_file ~= "" then opts.ram_write_file = help.parse_filename(opts.ram_write_file) end
 
   -- prepare verify file if needed
-  if do_verify then
+  if do_rom_write then
     local verify_ext = opts.rom_write_file.ext
     if opts.rom_write_file.ext == "nes" then verify_ext = "bin" end
     local verify_file = opts.rom_write_file.path ..
         opts.rom_write_file.base .. "-verify-" .. opts.retroprog_id .. "." .. verify_ext
+    opts.verify_file = help.parse_filename(verify_file)
+  elseif do_ram_write then
+    local verify_ext = opts.ram_write_file.ext
+    local verify_file = opts.ram_write_file.path ..
+        opts.ram_write_file.base .. "-verify-" .. opts.retroprog_id .. "." .. verify_ext
     opts.verify_file = help.parse_filename(verify_file)
   end
 

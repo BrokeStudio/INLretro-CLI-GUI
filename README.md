@@ -54,14 +54,15 @@ See the compatibility table below for supported systems, mappers, and operations
 | Genesis / MD     | 32 Mb (4 MB)         | ✓        | ✓         | ✓        | ✓         |
 |                  | SSF2                 | ✓        | ✓         | ✓        | ✓         |
 |                  |                      |          |           |          |           |
-| SNES / SFC       | LoROM                | ✓        | ✓         | ✗        | ✗         |
-|                  | HiROM                | ✓        | ✓         | ✗        | ✗         |
+| SNES / SFC       | LoROM                | ✓        | ✓         | ✓        | ✓         |
+|                  | HiROM                | ✓        | ✓         | ✓        | ✓         |
 |                  |                      |          |           |          |           |
 | N64              |                      | ✓        | ✗         | ✗        | ✗         |
 
 ✓: supported / ✗: not supported yet / −: not applicable
 
 ROM writing requires a compatible flash cartridge or development board.  
+Flash support was developed and tested primarily using Broke Studio PCBs.  
 Support may vary depending on the cartridge hardware.
 
 Need support for another system or mapper? [Let us know by opening an issue](https://github.com/BrokeStudio/INLretro/issues).

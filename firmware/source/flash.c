@@ -307,6 +307,18 @@ static uint8_t write_page_mm2(uint8_t bank, uint8_t addrH, uint16_t unlock1, uin
 
 #ifdef SNES_CONN
 
+static uint8_t snes_ram_wr_verify_lo(uint16_t addr, uint8_t data)
+{
+  snes_wr(addr, data, 0);
+  return snes_rd(addr, 0);
+}
+
+static uint8_t snes_ram_wr_verify_hi(uint16_t addr, uint8_t data)
+{
+  snes_wr(addr, data, 1);
+  return snes_rd(addr, 1);
+}
+
 #endif
 
 #ifdef GB_CONN
@@ -771,10 +783,12 @@ uint8_t flash_buff(buffer* buff)
       } else if(buff->mapper == HIROM) {
         // HIROM banks start at $XX:0000
         addrH = 0x00 | buff->page_num;
-      }
+      } else {
+          return ERR_BUFF_PART_NUM_RANGE;
+        }
 
       if(buff->part_num == USE_BUFFER) {
-        result = write_page_buffer_verify_8(addrH, buff, snes_wr_romsel_0, snes_rd_romsel_0);
+        result = write_page_buffer_verify_8(addrH, buff, snes_wr_romsel_lo, snes_rd_romsel_lo);
       } else if(buff->part_num == USE_UNLOCK_BYPASS) {
         // enter unlock bypass mode
         snes_wr(0x8AAA, 0xAA, 0);
@@ -794,9 +808,31 @@ uint8_t flash_buff(buffer* buff)
         result = write_page_verify_8(addrH, buff, snes_flash_wr);
       }
 
-    case SNES_RAM:
-      // warn      addrX = ((buff->page_num)>>8);
       break;
+
+    case SNES_RAM:
+      if(buff->mapper == LOROM) {
+        // LoROM SRAM: $70-7D:0000-7FFF
+        addrH = (uint8_t)buff->page_num;
+
+        result = write_page_verify_8(
+          addrH,
+          buff,
+          snes_ram_wr_verify_lo);
+      } else if(buff->mapper == HIROM) {
+        // HiROM SRAM: $20-3F:6000-7FFF
+        addrH = 0x60 | ((uint8_t)buff->page_num & 0x1F);
+
+        result = write_page_verify_8(
+          addrH,
+          buff,
+          snes_ram_wr_verify_hi);
+      } else {
+        return ERR_BUFF_PART_NUM_RANGE;
+      }
+
+      break;
+
 #endif
 
 #ifdef GEN_CONN
