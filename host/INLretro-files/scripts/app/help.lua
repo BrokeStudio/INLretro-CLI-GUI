@@ -165,17 +165,37 @@ local function file_wr_bin(file, data)
   file:write(string.char(data))
 end
 
---- Create a shallow copy of a table with the same metatable.
--- Nested tables and other referenced values remain shared with the original.
--- @param orig Table to copy; raises an assertion error for other types.
--- @return New table containing the original entries and metatable.
+--- Create a deep copy of a table.
+-- Nested tables are copied recursively.
+-- Functions, userdata and threads remain shared.
+-- Cyclic references are preserved.
+-- @param orig table Table to copy
+-- @return table copy Independent copy with the same metatable
 local function copy_table(orig)
   assert(type(orig) == "table", "copy_table expects a table")
-  local copy = {}
-  for orig_key, orig_value in pairs(orig) do
-    copy[orig_key] = orig_value
+
+  local copies = {}
+
+  local function copy_value(value)
+    if type(value) ~= "table" then
+      return value
+    end
+
+    if copies[value] then
+      return copies[value]
+    end
+
+    local copy = {}
+    copies[value] = copy
+
+    for key, nestedValue in pairs(value) do
+      copy[copy_value(key)] = copy_value(nestedValue)
+    end
+
+    return setmetatable(copy, getmetatable(value))
   end
-  return setmetatable(copy, getmetatable(orig))
+
+  return copy_value(orig)
 end
 
 --- Format a value as text, recursively expanding tables.
