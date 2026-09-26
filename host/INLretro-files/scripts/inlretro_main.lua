@@ -603,7 +603,8 @@ local function main()
   local do_rom_write = not isempty(opts.rom_write_file)
 
   -- If writing, always erase.
-  local do_erase = do_rom_write
+  -- NOTE: Keep this until all scripts have moved their erase code into do_rom_write.
+  local do_rom_erase = do_rom_write
 
   local do_ram_dump = not isempty(opts.ram_dump_file)
   local do_ram_write = not isempty(opts.ram_write_file)
@@ -640,7 +641,7 @@ local function main()
     retroprog_id    = opts.retroprog_id,
     -- console_name    = opts.console_name,
     do_test         = do_test,
-    do_erase        = do_erase,
+    do_rom_erase    = do_rom_erase,
     do_rom_dump     = do_rom_dump,
     do_rom_write    = do_rom_write,
     do_rom_verify   = do_rom_verify,

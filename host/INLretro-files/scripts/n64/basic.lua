@@ -104,7 +104,7 @@ local function process(process_opts, console_opts)
   -- process options
   local retroprog_id    = process_opts.retroprog_id
   local do_test         = process_opts.do_test
-  local do_erase        = process_opts.do_erase
+  local do_rom_erase    = process_opts.do_rom_erase
   local do_rom_write    = process_opts.do_rom_write
   local do_rom_verify   = process_opts.do_rom_verify
   local do_rom_dump     = process_opts.do_rom_dump

@@ -374,6 +374,28 @@ end
 
 --]]
 
+--- Validate ROM and RAM sizes for the requested Game Boy operations.
+-- Logs an error when a dump or write operation has no corresponding size.
+-- @param process_opts table Process options controlling the requested operations
+-- @param rom_size_kb integer ROM size in kilobytes
+-- @param ram_size_kb integer RAM size in kilobytes
+-- @return boolean valid True when all requested operations have a non-zero size
+local function check_rom_ram_size(process_opts, rom_size_kb, ram_size_kb)
+  -- check rom size
+  if (process_opts.do_rom_dump or process_opts.do_rom_write) and rom_size_kb == 0 then
+    log.error("ROM size not provided")
+    return false
+  end
+
+  -- check ram size
+  if (process_opts.do_ram_dump or process_opts.do_ram_write) and ram_size_kb == 0 then
+    log.error("RAM size not provided")
+    return false
+  end
+
+  return true
+end
+
 --- Write a byte to the Game Boy cartridge ROM bus.
 -- When global debug logging is enabled, logs the opcode, address, value, and comment.
 -- @param addr integer ROM bus address
@@ -419,16 +441,18 @@ end
 --]]
 
 -- vars
-gb.file_header       = file_header
-gb.cart_header       = cart_header
+gb.file_header        = file_header
+gb.cart_header        = cart_header
 
 -- functions
-gb.parse_header      = parse_header
-gb.parse_header_file = parse_header_file
-gb.parse_header_cart = parse_header_cart
+gb.parse_header       = parse_header
+gb.parse_header_file  = parse_header_file
+gb.parse_header_cart  = parse_header_cart
 
-gb.rom_wr            = rom_wr
-gb.rom_rd            = rom_rd
+gb.rom_wr             = rom_wr
+gb.rom_rd             = rom_rd
+
+gb.check_rom_ram_size = check_rom_ram_size
 
 -- return the module's table
 return gb

@@ -1,20 +1,20 @@
 -- create the module's table
-local romonly = {}
+local rom_only = {}
 
 -- import required modules
-local dict    = require "scripts.app.dict"
-local gb      = require "scripts.app.gb"
-local dump    = require "scripts.app.dump"
-local flash   = require "scripts.app.flash"
-local chips   = require "scripts.app.chips"
-local time    = require "scripts.app.time"
-local log     = require "scripts.app.log"
-local spinner = require "scripts.app.spinner"
-local files   = require "scripts.app.files"
-local help    = require "scripts.app.help"
+local dict     = require "scripts.app.dict"
+local gb       = require "scripts.app.gb"
+local dump     = require "scripts.app.dump"
+local flash    = require "scripts.app.flash"
+local chips    = require "scripts.app.chips"
+local time     = require "scripts.app.time"
+local log      = require "scripts.app.log"
+local spinner  = require "scripts.app.spinner"
+local files    = require "scripts.app.files"
+local help     = require "scripts.app.help"
 
 -- file constants and global variables
-local mapname = "ROMONLY"
+local mapname  = "ROMONLY"
 
 -- local functions
 
@@ -344,8 +344,6 @@ local function process(process_opts, console_opts)
 
   -- process options
   local retroprog_id    = process_opts.retroprog_id
-  local do_test         = process_opts.do_test
-  local do_erase        = process_opts.do_erase
   local do_rom_write    = process_opts.do_rom_write
   local do_rom_verify   = process_opts.do_rom_verify
   local do_rom_dump     = process_opts.do_rom_dump
@@ -378,49 +376,52 @@ local function process(process_opts, console_opts)
   --]]
 
   -- test cart
-  if do_test then
-    log.section("Testing", mapname)
+  log.section("Testing", mapname)
 
-    -- attempt to read ROM flash ID
-    if options.force_flash_test or (do_rom_write and rom_size_kb ~= 0) then
-      rv = rom_manf_id()
-      if not rv then
-        if do_rom_write then
-          log.error("Couldn't identify flash chip")
-          return DONE(false)
-        else
-          log.warning("Couldn't identify flash chip")
-        end
-      end
-    end
-
-    -- RAM tests
-    rv = ram_test()
-    if rv == true then
-      if options.force_ram_test then
-        log.print()
-        log.warning("Flag 'force_ram_test' enabled")
-      end
-      local is_header_valid = gb.file_header.is_valid or gb.cart_header.is_valid
-      local has_battery = gb.file_header:has_battery() or gb.cart_header:has_battery()
-      if options.force_ram_test or is_header_valid then
-        if not options.force_ram_test and has_battery then
-          log.print()
-          log.warning("Can't exercise RAM because ROM has battery backed data")
-        else
-          -- if ram_size_kb == 0 then
-          --   ram_size_kb = ram_get_size()
-          -- end
-          -- if ram_size_kb ~= 0 then
-          rv = ram_exercise(8, retroprog_id)
-          -- exit script if test fails
-          if not rv then return DONE(false) end
-          -- end
-        end
+  -- attempt to read ROM flash ID
+  if options.force_flash_test or (do_rom_write and rom_size_kb ~= 0) then
+    rv = rom_manf_id()
+    if not rv then
+      if do_rom_write then
+        log.error("Couldn't identify flash chip")
+        return DONE(false)
       else
-        log.warning("Can't exercise RAM because data could be battery backed")
+        log.warning("Couldn't identify flash chip")
       end
     end
+  end
+
+  -- RAM tests
+  rv = ram_test()
+  if rv == true then
+    if options.force_ram_test then
+      log.print()
+      log.warning("Flag 'force_ram_test' enabled")
+    end
+    local is_header_valid = gb.file_header.is_valid or gb.cart_header.is_valid
+    local has_battery = gb.file_header:has_battery() or gb.cart_header:has_battery()
+    if options.force_ram_test or is_header_valid then
+      if not options.force_ram_test and has_battery then
+        log.print()
+        log.warning("Can't exercise RAM because ROM has battery backed data")
+      else
+        -- if ram_size_kb == 0 then
+        --   ram_size_kb = ram_get_size()
+        -- end
+        -- if ram_size_kb ~= 0 then
+        rv = ram_exercise(8, retroprog_id)
+        -- exit script if test fails
+        if not rv then return DONE(false) end
+        -- end
+      end
+    else
+      log.warning("Can't exercise RAM because data could be battery backed")
+    end
+  end
+
+  -- check rom/ram sizes
+  if not gb.check_rom_ram_size(process_opts, rom_size_kb, ram_size_kb) then
+    return DONE(false)
   end
 
   --[[
@@ -436,16 +437,11 @@ local function process(process_opts, console_opts)
     file = assert(io.open(ram_dump_file.filename, "wb"))
 
     -- dump cart to file
-    if ram_size_kb ~= 0 then
-      log.section("Dumping RAM")
-      time.start()
-      ram_dump(file, ram_size_kb)
-      time.report(ram_size_kb)
-      log.success("RAM dumping done")
-    else
-      log.error("RAM size not provided")
-      return DONE(false)
-    end
+    log.section("Dumping RAM")
+    time.start()
+    ram_dump(file, ram_size_kb)
+    time.report(ram_size_kb)
+    log.success("RAM dumping done")
 
     -- close file
     assert(file:close())
@@ -464,17 +460,36 @@ local function process(process_opts, console_opts)
     file = assert(io.open(ram_write_file.filename, "rb"))
 
     -- flash cart
-    if ram_size_kb ~= 0 then
-      time.start()
-      ram_write(file, ram_size_kb)
-      time.report(ram_size_kb)
-    else
-      log.error("RAM size not provided")
-      return DONE(false)
-    end
+    time.start()
+    ram_write(file, ram_size_kb)
+    time.report(ram_size_kb)
 
     -- close file
     assert(file:close())
+
+    -- verify what we just flashed
+    if do_ram_verify then
+      -- open file
+      file = assert(io.open(ram_verify_file.filename, "wb"))
+
+      -- dump cart to file
+      log.section("Dumping RAM")
+      time.start()
+      ram_dump(file, ram_size_kb)
+      time.report(ram_size_kb)
+      log.success("RAM dumping done")
+
+      -- close file
+      assert(file:close())
+
+      -- compare the flash file vs post dump file
+      log.section("Verifying data")
+      if files.compare(ram_verify_file.filename, ram_write_file.filename, true) then
+        log.success("Flash successfully verified")
+      else
+        log.error("Flash verification did not match")
+      end
+    end
   end
 
   --[[
@@ -486,37 +501,18 @@ local function process(process_opts, console_opts)
 
   -- dump cart ROM to file
   if do_rom_dump then
-    if rom_size_kb ~= 0 then
-      -- open file
-      file = assert(io.open(rom_dump_file.filename, "wb"))
+    -- open file
+    file = assert(io.open(rom_dump_file.filename, "wb"))
 
-      -- dump cart to file
-      log.section("Dumping ROM")
-      time.start()
-      rom_dump(file, rom_size_kb)
-      time.report(rom_size_kb)
-      log.success("ROM dumping done")
+    -- dump cart to file
+    log.section("Dumping ROM")
+    time.start()
+    rom_dump(file, rom_size_kb)
+    time.report(rom_size_kb)
+    log.success("ROM dumping done")
 
-      -- close file
-      assert(file:close())
-    end
-  end
-
-  --[[
-  88""Yb  dP"Yb  8b    d8     888888 88""Yb    db    .dP"Y8 888888
-  88__dP dP   Yb 88b  d88     88__   88__dP   dPYb   `Ybo." 88__
-  88"Yb  Yb   dP 88YbdP88     88""   88"Yb   dP__Yb  o.`Y8b 88""
-  88  Yb  YbodP  88 YY 88     888888 88  Yb dP""""Yb 8bodP' 888888
-  --]]
-
-  -- erase the cart
-  if do_erase then
-    -- erase ROM only if needed
-    if rom_size_kb ~= 0 then
-      time.start()
-      rom_erase()
-      time.report(rom_size_kb)
-    end
+    -- close file
+    assert(file:close())
   end
 
   --[[
@@ -531,28 +527,21 @@ local function process(process_opts, console_opts)
     -- open file
     file = assert(io.open(rom_write_file.filename, "rb"))
 
+    -- erase ROM
+    time.start()
+    rom_erase()
+    time.report(rom_size_kb)
+
     -- flash cart
-    if rom_size_kb ~= 0 then
-      time.start()
-      rom_flash(file, rom_size_kb)
-      time.report(rom_size_kb)
-    end
+    time.start()
+    rom_flash(file, rom_size_kb)
+    time.report(rom_size_kb)
 
     -- close file
     assert(file:close())
-  end
 
-
-  --[[
-  Yb    dP 888888 88""Yb 88 888888 Yb  dP
-   Yb  dP  88__   88__dP 88 88__    YbdP
-    YbdP   88""   88"Yb  88 88""     8P
-     YP    888888 88  Yb 88 88      dP
-  --]]
-
-  -- verify what we just flashed
-  if do_rom_verify then
-    if rom_size_kb ~= 0 then
+    -- verify what we just flashed
+    if do_rom_verify then
       -- open file
       file = assert(io.open(rom_verify_file.filename, "wb"))
 
@@ -580,13 +569,11 @@ local function process(process_opts, console_opts)
 end
 
 -- global variables so other modules can use them
---    NONE
 
 -- call functions desired to run when script is called/imported
---    NONE
 
 -- functions other modules are able to call
-romonly.process = process
+rom_only.process = process
 
 -- return the module's table
-return romonly
+return rom_only
