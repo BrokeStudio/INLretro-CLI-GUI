@@ -61,10 +61,11 @@ end
 --- Program one byte to ROM flash and poll for completion.
 -- @param addr integer Address to program, 0x0000-0x7FFF
 -- @param value integer 8-bit value to write
+-- @return boolean success True when the byte was programmed
 local function rom_flash_byte(addr, value)
   if addr < 0x0000 or addr > 0x7FFF then
     log.error("ERROR! flash write to ROM", help.hex_0x4(addr), "must be $0000-$7FFF")
-    return
+    return false
   end
 
   if DEBUG then
@@ -80,18 +81,15 @@ local function rom_flash_byte(addr, value)
 
   local i = 0
 
-  while rv ~= gb.rom_rd(addr) do
+  while (rv ~= value) do
     rv = gb.rom_rd(addr)
     i = i + 1
   end
-
-  if DEBUG then
-    log.info("Done writing byte,", i .. " naks")
-  end
+  if DEBUG then log.info(i, "naks, done writing byte.") end
 
   -- TODO handle timeout for problems
 
-  -- TODO return pass/fail/info
+  return true
 end
 
 --- Erase the entire ROM flash chip and poll until consecutive reads match.
@@ -99,7 +97,6 @@ local function rom_erase()
   local i = 0
   local rv
 
-  log.section("Erasing ROM")
   gb.rom_wr(0x2000, 0x01)
   gb.rom_wr(0x5555, 0xAA, { opcode = "GB_PIN31_WR" })
   gb.rom_wr(0x2AAA, 0x55, { opcode = "GB_PIN31_WR" })
@@ -117,7 +114,7 @@ local function rom_erase()
     i = i + 1
   end
   spinner.clear()
-  log.success("Done erasing ROM", i .. " naks")
+  log.info(i .. " naks")
 end
 
 --- Dump ROM contents to an already-open output file.
@@ -169,7 +166,6 @@ end
 -- @param file file* Open binary input file
 -- @param rom_size_kb integer ROM size in kilobytes
 local function rom_flash(file, rom_size_kb)
-  log.section("Programming ROM")
   log.info("ROM size", rom_size_kb .. "KB")
 
   local bank_size_kb = 16
@@ -205,7 +201,6 @@ local function rom_flash(file, rom_size_kb)
   end
 
   spinner.clear()
-  log.success("Done programming ROM")
 end
 
 --[[
@@ -252,7 +247,6 @@ end
 -- @param file file* Open binary input file
 -- @param ram_size_kb integer RAM size in kilobytes
 local function ram_write(file, ram_size_kb)
-  log.section("Programming RAM")
   log.info("RAM size", ram_size_kb .. "KB")
 
   local bank_size_kb = 8
@@ -282,7 +276,6 @@ local function ram_write(file, ram_size_kb)
   gb.rom_wr(0x0000, 0x00)
 
   spinner.clear()
-  log.success("Done programming RAM")
 end
 
 --- Detect RAM by writing and reading back a test byte.
@@ -513,7 +506,7 @@ local function process(process_opts, console_opts)
   -- RAM tests
   rv = ram_detect()
 
-  if rv == false then   -- RAM not found
+  if rv == false then -- RAM not found
     if do_ram_dump or do_ram_write then
       log.error("RAM not detected")
       return DONE(false)
@@ -536,7 +529,7 @@ local function process(process_opts, console_opts)
     else
       log.error("RAM not detected")
     end
-  else   -- RAM found
+  else -- RAM found
     log.success("RAM detected")
     if ram_size_kb == 0 then
       ram_size_kb = ram_get_size()
@@ -578,12 +571,12 @@ local function process(process_opts, console_opts)
     -- open file
     file = assert(io.open(ram_dump_file.filename, "wb"))
 
-    -- dump cart to file
+    -- dump cart
     log.section("Dumping RAM")
     time.start()
     ram_dump(file, ram_size_kb)
     time.report(ram_size_kb)
-    log.success("RAM dumping done")
+    log.success("Done dumping RAM")
 
     -- close file
     assert(file:close())
@@ -602,9 +595,11 @@ local function process(process_opts, console_opts)
     file = assert(io.open(ram_write_file.filename, "rb"))
 
     -- flash cart
+    log.section("Programming RAM")
     time.start()
     ram_write(file, ram_size_kb)
     time.report(ram_size_kb)
+    log.success("Done programming RAM")
 
     -- close file
     assert(file:close())
@@ -615,11 +610,11 @@ local function process(process_opts, console_opts)
       file = assert(io.open(ram_verify_file.filename, "wb"))
 
       -- dump cart to file
-      log.section("Dumping RAM")
+      log.point("Dumping RAM")
       time.start()
       ram_dump(file, ram_size_kb)
       time.report(ram_size_kb)
-      log.success("RAM dumping done")
+      log.success("Done dumping RAM")
 
       -- close file
       assert(file:close())
@@ -651,7 +646,7 @@ local function process(process_opts, console_opts)
     time.start()
     rom_dump(file, rom_size_kb)
     time.report(rom_size_kb)
-    log.success("ROM dumping done")
+    log.success("Done dumping ROM")
 
     -- close file
     assert(file:close())
@@ -670,14 +665,18 @@ local function process(process_opts, console_opts)
     file = assert(io.open(rom_write_file.filename, "rb"))
 
     -- erase ROM
+    log.section("Erasing ROM")
     time.start()
     rom_erase()
     time.report(rom_size_kb)
+    log.success("Done erasing ROM")
 
     -- flash cart
+    log.section("Flashing ROM")
     time.start()
     rom_flash(file, rom_size_kb)
     time.report(rom_size_kb)
+    log.success("Done flashing ROM")
 
     -- close file
     assert(file:close())
@@ -688,11 +687,11 @@ local function process(process_opts, console_opts)
       file = assert(io.open(rom_verify_file.filename, "wb"))
 
       -- dump cart to file
-      log.section("Dumping ROM")
+      log.point("Dumping ROM")
       time.start()
       rom_dump(file, rom_size_kb)
       time.report(rom_size_kb)
-      log.success("ROM dumping done")
+      log.success("Done dumping ROM")
 
       -- close file
       assert(file:close())
