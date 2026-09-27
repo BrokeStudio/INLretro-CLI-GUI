@@ -176,7 +176,7 @@ local function prg_rom_dump_no_bank_table(file, rom_size_kb)
     end
 
     -- search for a byte maching next bank to bankswitch
-    for i = 0, bank_size_kb - 1, 1 do
+    for i = 0, bank_size - 1, 1 do
       rv = string.unpack("B", file:read(1), 1)
       if rv == cur_bank then
         search_pos = i & 0x7fff
@@ -207,12 +207,12 @@ local function prg_rom_dump_no_bank_table(file, rom_size_kb)
   cur_bank = 0
   while cur_bank < num_banks do
     banks[cur_bank + 1] = {}
-    file:seek("set", cur_bank * bank_size_kb)
-    search_data = file:read(bank_size_kb)
+    file:seek("set", cur_bank * bank_size)
+    search_data = file:read(bank_size)
 
     -- search for the banktable in the bank content
     local offset = 1
-    while offset < bank_size_kb do
+    while offset < bank_size do
       local position_in_fixed_bank = string.find(search_data, searched_sequence, offset, true)
       if position_in_fixed_bank == nil then
         break
@@ -273,7 +273,6 @@ end
 -- @param file file* Open binary input file
 -- @param rom_size_kb integer PRG-ROM size in kilobytes
 local function prg_rom_flash(file, rom_size_kb)
-  log.section("Programming PRG-ROM")
   log.info("PRG-ROM size", rom_size_kb .. "KB")
 
   local bank_size_kb = 32 -- 32KByte per PRG bank
@@ -297,7 +296,6 @@ local function prg_rom_flash(file, rom_size_kb)
   end
 
   spinner.clear()
-  log.success("Done programming PRG-ROM")
 end
 
 --- Program a bank-selection table at the same address in every PRG-ROM bank.
@@ -307,7 +305,6 @@ local function write_bank_table(addr_base, entries)
   -- BNROM needs to have a bank table present in each and every bank
   -- it should also be at the same location in every bank
 
-  log.section("Writing bank table to PRG-ROM")
   log.info("Bank table address:", help.hex_0x4(addr_base))
 
   local cur_bank = entries - 1 -- 16 minus 1 is 15 = 0x0F
@@ -335,7 +332,6 @@ local function write_bank_table(addr_base, entries)
   end
 
   spinner.clear()
-  log.success("Done writing bank table to PRG-ROM")
 end
 
 --[[
@@ -451,7 +447,6 @@ local function process(process_opts, console_opts)
 
   -- process options
   local retroprog_id     = process_opts.retroprog_id
-  local do_rom_erase     = process_opts.do_rom_erase
   local do_rom_write     = process_opts.do_rom_write
   local do_rom_verify    = process_opts.do_rom_verify
   local do_rom_dump      = process_opts.do_rom_dump
@@ -549,6 +544,37 @@ local function process(process_opts, console_opts)
   -- exit script if test fails
   if not rv then return DONE(false) end
 
+  -- check rom/ram sizes
+  if not nes.check_rom_ram_size(process_opts, {
+        prg_size_kb = prg_size_kb,
+        chr_rom_required = false }) then
+    return DONE(false)
+  end
+
+  --[[
+  88""Yb    db    8b    d8     8888b.  88   88 8b    d8 88""Yb
+  88__dP   dPYb   88b  d88      8I  Yb 88   88 88b  d88 88__dP
+  88"Yb   dP__Yb  88YbdP88      8I  dY Y8   8P 88YbdP88 88"""
+  88  Yb dP""""Yb 88 YY 88     8888Y"  `YbodP' 88 YY 88 88
+  --]]
+
+  if do_ram_dump then
+    log.section("Dumping PRG-RAM")
+    log.warning("Not supported for this mapper")
+  end
+
+  --[[
+  88""Yb    db    8b    d8     Yb        dP 88""Yb 88 888888 888888
+  88__dP   dPYb   88b  d88      Yb  db  dP  88__dP 88   88   88__
+  88"Yb   dP__Yb  88YbdP88       YbdPYbdP   88"Yb  88   88   88""
+  88  Yb dP""""Yb 88 YY 88        YP  YP    88  Yb 88   88   888888
+  --]]
+
+  if do_ram_write then
+    log.section("Programming PRG-RAM")
+    log.warning("Not supported for this mapper")
+  end
+
   --[[
   88""Yb  dP"Yb  8b    d8     8888b.  88   88 8b    d8 88""Yb
   88__dP dP   Yb 88b  d88      8I  Yb 88   88 88b  d88 88__dP
@@ -556,7 +582,6 @@ local function process(process_opts, console_opts)
   88  Yb  YbodP  88 YY 88     8888Y"  `YbodP' 88 YY 88 88
   --]]
 
-  -- dump cart ROM to file
   if do_rom_dump then
     local result
 
@@ -568,7 +593,7 @@ local function process(process_opts, console_opts)
       create_header(file, prg_size_kb, chr_size_kb)
     end
 
-    -- dump cart to file
+    -- dump PRG-ROM
     log.section("Dumping PRG-ROM")
     time.start()
     if bank_table_base ~= nil then
@@ -578,32 +603,13 @@ local function process(process_opts, console_opts)
     end
     time.report(prg_size_kb)
     if result then
-      log.success("PRG-ROM dumping done")
+      log.success("Done dumping PRG-ROM")
     else
-      log.error("PRG-ROM dumping failed")
+      log.error("Failed dumping PRG-ROM")
     end
 
     -- close file
     assert(file:close())
-  end
-
-  --[[
-  88""Yb  dP"Yb  8b    d8     888888 88""Yb    db    .dP"Y8 888888
-  88__dP dP   Yb 88b  d88     88__   88__dP   dPYb   `Ybo." 88__
-  88"Yb  Yb   dP 88YbdP88     88""   88"Yb   dP__Yb  o.`Y8b 88""
-  88  Yb  YbodP  88 YY 88     888888 88  Yb dP""""Yb 8bodP' 888888
-  --]]
-
-  -- erase the cart
-  if do_rom_erase then
-    -- erase PRG-ROM only if needed
-    if prg_size_kb ~= 0 then
-      rv = nes.prg_rom_erase(prg_flash_chip, { opcode = "DISCRETE_EXP0_PRG_ROM_WR" })
-      if not rv then
-        log.error("PRG-ROM couldn't be erased")
-        return DONE(false)
-      end
-    end
   end
 
   --[[
@@ -613,51 +619,51 @@ local function process(process_opts, console_opts)
   88  Yb  YbodP  88 YY 88        YP  YP    88  Yb 88   88   888888
   --]]
 
-  -- program file to the cart
   if do_rom_write then
-    if prg_size_kb ~= 0 then
-      -- open file
-      file = assert(io.open(rom_write_file.filename, "rb"))
-
-      -- flash PRG-ROM
-      time.start()
-      write_bank_table(bank_table_base, prg_size_kb // 32)
-      prg_rom_flash(file, prg_size_kb)
-      time.report(prg_size_kb)
-
-      -- close file
-      assert(file:close())
-    end
-  end
-
-  --[[
-  Yb    dP 888888 88""Yb 88 888888 Yb  dP
-   Yb  dP  88__   88__dP 88 88__    YbdP
-    YbdP   88""   88"Yb  88 88""     8P
-     YP    888888 88  Yb 88 88      dP
-  --]]
-
-  -- verify what we just flashed
-  if do_rom_verify then
     -- open file
-    file = assert(io.open(rom_verify_file.filename, "wb"))
+    file = assert(io.open(rom_write_file.filename, "rb"))
 
-    -- dump cart to file
-    log.section("Dumping PRG-ROM")
+    -- erase PRG-ROM
+    rv = nes.prg_rom_erase(prg_flash_chip, { opcode = "DISCRETE_EXP0_PRG_ROM_WR" })
+    if not rv then
+      assert(file:close())
+      return DONE(false)
+    end
+
+    -- flash PRG-ROM
+    log.section("Flashing PRG-ROM")
     time.start()
-    prg_rom_dump(file, prg_size_kb)
+    log.bullet("Writing bank table to PRG-ROM")
+    write_bank_table(bank_table_base, prg_size_kb // 32)
+    log.success("Done writing bank table to PRG-ROM")
+    prg_rom_flash(file, prg_size_kb)
     time.report(prg_size_kb)
-    log.success("PRG-ROM dumping done")
+    log.success("Done flashing PRG-ROM")
 
     -- close file
     assert(file:close())
 
-    -- compare the flash file vs post dump file
-    log.section("Verifying data")
-    if files.compare(rom_verify_file.filename, rom_write_file.filename, true) then
-      log.success("Flash successfully verified")
-    else
-      log.error("Flash verification did not match")
+    if do_rom_verify then
+      -- open file
+      file = assert(io.open(rom_verify_file.filename, "wb"))
+
+      -- dump PRG-ROM
+      log.section("Dumping PRG-ROM")
+      time.start()
+      prg_rom_dump(file, prg_size_kb)
+      time.report(prg_size_kb)
+      log.success("Done dumping PRG-ROM")
+
+      -- close file
+      assert(file:close())
+
+      -- compare the flash file vs post dump file
+      log.section("Verifying data")
+      if files.compare(rom_verify_file.filename, rom_write_file.filename, true) then
+        log.success("Flash successfully verified")
+      else
+        log.error("Flash verification did not match")
+      end
     end
   end
 

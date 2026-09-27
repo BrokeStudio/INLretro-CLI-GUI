@@ -939,8 +939,9 @@ local function prg_rom_erase(device, options)
     i = i + 1
   end
   spinner.clear()
-  log.success("Done erasing PRG-ROM", i .. " naks")
+  if DEBUG then log.info(i .. " naks") end
   time.report(device.size)
+  log.success("Done erasing PRG-ROM")
 
   return true
 end
@@ -1170,8 +1171,48 @@ local function chr_rom_erase(device, options)
     i = i + 1
   end
   spinner.clear()
-  log.success("Done erasing CHR-ROM", i .. " naks")
+  if DEBUG then log.info(i .. " naks") end
   time.report(device.size)
+  log.success("Done erasing CHR-ROM")
+
+  return true
+end
+
+--- Validate PRG-ROM, CHR-ROM, and PRG-RAM sizes for the requested NES operations.
+-- Logs an error when a dump or write operation has no corresponding size.
+-- @param process_opts table Process options controlling the requested operations
+-- @param options? table Size validation options
+-- @param options.prg_size_kb? integer PRG-ROM size in kilobytes; defaults to 0
+-- @param options.chr_size_kb? integer CHR-ROM size in kilobytes; defaults to 0
+-- @param options.ram_size_kb? integer PRG-RAM size in kilobytes; defaults to 0
+-- @param options.prg_rom_required? boolean Whether ROM operations require PRG-ROM; defaults to true
+-- @param options.chr_rom_required? boolean Whether ROM operations require CHR-ROM; defaults to true
+-- @return boolean valid True when all required sizes are non-zero
+local function check_rom_ram_size(process_opts, options)
+  options = options or {}
+  local prg_rom_size_kb = options.prg_size_kb or 0
+  local chr_rom_size_kb = options.chr_size_kb or 0
+  local ram_size_kb = options.ram_size_kb or 0
+  local prg_rom_required = options.prg_rom_required ~= false
+  local chr_rom_required = options.chr_rom_required ~= false
+
+  -- check rom size
+  if (process_opts.do_rom_dump or process_opts.do_rom_write) then
+    if prg_rom_required and prg_rom_size_kb == 0 then
+      log.error("PRG-ROM size not provided")
+      return false
+    end
+    if chr_rom_required and chr_rom_size_kb == 0 then
+      log.error("CHR-ROM size not provided")
+      return false
+    end
+  end
+
+  -- check ram size
+  if (process_opts.do_ram_dump or process_opts.do_ram_write) and ram_size_kb == 0 then
+    log.error("PRG-RAM size not provided")
+    return false
+  end
 
   return true
 end
@@ -1367,6 +1408,8 @@ nes.prg_rom_erase = prg_rom_erase
 
 nes.chr_rom_get_chip = chr_rom_get_chip
 nes.chr_rom_erase = chr_rom_erase
+
+nes.check_rom_ram_size = check_rom_ram_size
 
 nes.cpu_rd = cpu_rd
 nes.cpu_wr = cpu_wr

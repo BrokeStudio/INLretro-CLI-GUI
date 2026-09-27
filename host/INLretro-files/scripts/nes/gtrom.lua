@@ -15,6 +15,7 @@ local help        = require "scripts.app.help"
 
 -- file constants and global variables
 local mapname     = "GTROM"
+local prg_flash_chip
 
 -- registers
 local BANK_SELECT = 0x5000
@@ -148,40 +149,6 @@ end
 
 --]]
 
---- Read and identify the PRG-ROM flash manufacturer/device ID.
--- @return boolean found True when the flash chip is recognized
--- @return table device Flash chip information, or an empty table when unknown
-local function prg_rom_manf_id()
-  local manufacturer_id
-  local device_id
-  local found
-  local device
-
-  log.section("Reading PRG-ROM manufacturer/device ID")
-
-  -- no bus conflicts
-  -- $5000-5FFF / $7000-7FFF writes to mapper
-  -- $8000-FFFF writes to mapper
-  --
-  -- A15 14 - 13 12
-  --  1   1    0  1  : 0x5555 -> $D555
-  --  1   0    1  0  : 0x2AAA -> $AAAA
-  nes.cpu_wr(0xD555, 0xAA)
-  nes.cpu_wr(0xAAAA, 0x55)
-  nes.cpu_wr(0xD555, 0x90)
-
-  manufacturer_id = nes.cpu_rd(0x8000)
-  chips.display_manufacturer(manufacturer_id)
-
-  device_id = nes.cpu_rd(0x8001)
-  found, device = chips.display_device(manufacturer_id, device_id)
-
-  -- exit software
-  nes.cpu_wr(0x8000, 0xF0)
-
-  return found, device
-end
-
 --- Program one byte to PRG-ROM flash and poll for completion.
 -- @param addr integer Address to program, 0x8000-0xBFFF
 -- @param value integer 8-bit value to write
@@ -249,7 +216,6 @@ end
 -- @param file file* Open binary input file
 -- @param rom_size_kb integer PRG-ROM size in kilobytes
 local function prg_rom_flash(file, rom_size_kb)
-  log.section("Programming PRG-ROM")
   log.info("PRG-ROM size", rom_size_kb .. "KB")
 
   local bank_size_kb = 32
@@ -257,20 +223,15 @@ local function prg_rom_flash(file, rom_size_kb)
   local num_banks = rom_size_kb // bank_size_kb
 
   while cur_bank < num_banks do
-    -- select bank to flash
-    nes.cpu_wr(BANK_SELECT, cur_bank)
-    dict.nes("SET_CUR_BANK", cur_bank)
-
     if DEBUG then
       log.point("writing PRG-ROM bank", cur_bank, "of", num_banks - 1)
     else
       spinner.update("Flashing", cur_bank, "/", num_banks - 1)
     end
 
-
-    -- if DEBUG then
-    --  log.info("get bank\t" .. dict.nes("GET_CUR_BANK"))
-    -- end
+    -- select bank to flash
+    nes.cpu_wr(BANK_SELECT, cur_bank)
+    dict.nes("SET_CUR_BANK", cur_bank)
 
     -- flash data
     flash.write_file(file, bank_size_kb, { mapper = mapname, mem_type = "NES_PRG_ROM" })
@@ -279,7 +240,6 @@ local function prg_rom_flash(file, rom_size_kb)
   end
 
   spinner.clear()
-  log.success("Done programming PRG-ROM")
 end
 
 --[[
@@ -447,7 +407,6 @@ local function process(process_opts, console_opts)
 
   -- process options
   local retroprog_id     = process_opts.retroprog_id
-  local do_rom_erase     = process_opts.do_rom_erase
   local do_rom_write     = process_opts.do_rom_write
   local do_rom_verify    = process_opts.do_rom_verify
   local do_rom_dump      = process_opts.do_rom_dump
@@ -488,7 +447,7 @@ local function process(process_opts, console_opts)
   if not rv then return DONE(false) end
 
   if do_rom_write and prg_size_kb ~= 0 then
-    rv = prg_rom_manf_id()
+    rv, prg_flash_chip = nes.prg_rom_get_chip()
     if not rv then
       log.error("Couldn't identify flash chip")
       return DONE(false)
@@ -511,6 +470,37 @@ local function process(process_opts, console_opts)
     if not rv then return DONE(false) end
   end
 
+  -- check rom/ram sizes
+  if not nes.check_rom_ram_size(process_opts, {
+        prg_size_kb = prg_size_kb,
+        chr_rom_required = false }) then
+    return DONE(false)
+  end
+
+  --[[
+  88""Yb    db    8b    d8     8888b.  88   88 8b    d8 88""Yb
+  88__dP   dPYb   88b  d88      8I  Yb 88   88 88b  d88 88__dP
+  88"Yb   dP__Yb  88YbdP88      8I  dY Y8   8P 88YbdP88 88"""
+  88  Yb dP""""Yb 88 YY 88     8888Y"  `YbodP' 88 YY 88 88
+  --]]
+
+  if do_ram_dump then
+    log.section("Dumping PRG-RAM")
+    log.warning("Not supported for this mapper")
+  end
+
+  --[[
+  88""Yb    db    8b    d8     Yb        dP 88""Yb 88 888888 888888
+  88__dP   dPYb   88b  d88      Yb  db  dP  88__dP 88   88   88__
+  88"Yb   dP__Yb  88YbdP88       YbdPYbdP   88"Yb  88   88   88""
+  88  Yb dP""""Yb 88 YY 88        YP  YP    88  Yb 88   88   888888
+  --]]
+
+  if do_ram_write then
+    log.section("Programming PRG-RAM")
+    log.warning("Not supported for this mapper")
+  end
+
   --[[
   88""Yb  dP"Yb  8b    d8     8888b.  88   88 8b    d8 88""Yb
   88__dP dP   Yb 88b  d88      8I  Yb 88   88 88b  d88 88__dP
@@ -518,7 +508,6 @@ local function process(process_opts, console_opts)
   88  Yb  YbodP  88 YY 88     8888Y"  `YbodP' 88 YY 88 88
   --]]
 
-  -- dump cart ROM to file
   if do_rom_dump then
     -- open file
     file = assert(io.open(rom_dump_file.filename, "wb"))
@@ -540,90 +529,54 @@ local function process(process_opts, console_opts)
   end
 
   --[[
-  88""Yb  dP"Yb  8b    d8     888888 88""Yb    db    .dP"Y8 888888
-  88__dP dP   Yb 88b  d88     88__   88__dP   dPYb   `Ybo." 88__
-  88"Yb  Yb   dP 88YbdP88     88""   88"Yb   dP__Yb  o.`Y8b 88""
-  88  Yb  YbodP  88 YY 88     888888 88  Yb dP""""Yb 8bodP' 888888
-  --]]
-
-  -- erase the cart
-  if do_rom_erase then
-    local i = 0
-
-    -- erase PRG-ROM only if needed
-    if prg_size_kb ~= 0 then
-      log.section("Erasing PRG-ROM")
-      time.start()
-      nes.cpu_wr(0xD555, 0xAA)
-      nes.cpu_wr(0xAAAA, 0x55)
-      nes.cpu_wr(0xD555, 0x80)
-      nes.cpu_wr(0xD555, 0xAA)
-      nes.cpu_wr(0xAAAA, 0x55)
-      nes.cpu_wr(0xD555, 0x10)
-
-      -- TODO create some function to pass the read value
-      -- that's smart enough to figure out if the board is actually erasing or not
-      rv = nes.cpu_rd(0x8000)
-      while rv ~= nes.cpu_rd(0x8000) do
-        spinner.update("Erasing")
-        rv = nes.cpu_rd(0x8000)
-        i = i + 1
-      end
-      spinner.clear()
-      log.success("Done erasing PRG-ROM", i .. " naks")
-      time.report(prg_size_kb)
-    end
-  end
-
-  --[[
   88""Yb  dP"Yb  8b    d8     Yb        dP 88""Yb 88 888888 888888
   88__dP dP   Yb 88b  d88      Yb  db  dP  88__dP 88   88   88__
   88"Yb  Yb   dP 88YbdP88       YbdPYbdP   88"Yb  88   88   88""
   88  Yb  YbodP  88 YY 88        YP  YP    88  Yb 88   88   888888
   --]]
 
-  -- program file to the cart
   if do_rom_write then
     -- open file
     file = assert(io.open(rom_write_file.filename, "rb"))
 
-    -- flash cart
+    -- erase PRG-ROM
+    rv = nes.prg_rom_erase(prg_flash_chip)
+    if not rv then
+      assert(file:close())
+      return DONE(false)
+    end
+
+    -- flash PRG-ROM
+    log.section("Flashing PRG-ROM")
     time.start()
     prg_rom_flash(file, prg_size_kb)
     time.report(prg_size_kb)
-
-    -- close file
-    assert(file:close())
-  end
-
-  --[[
-  Yb    dP 888888 88""Yb 88 888888 Yb  dP
-   Yb  dP  88__   88__dP 88 88__    YbdP
-    YbdP   88""   88"Yb  88 88""     8P
-     YP    888888 88  Yb 88 88      dP
-  --]]
-
-  -- verify what we just flashed
-  if do_rom_verify then
-    -- open file
-    file = assert(io.open(rom_verify_file.filename, "wb"))
-
-    -- dump cart to file
-    log.section("Dumping PRG-ROM")
-    time.start()
-    prg_rom_dump(file, prg_size_kb)
-    time.report(prg_size_kb)
-    log.success("PRG-ROM dumping done")
+    log.success("Done flashing PRG-ROM")
 
     -- close file
     assert(file:close())
 
-    -- compare the flash file vs post dump file
-    log.section("Verifying data")
-    if files.compare(rom_verify_file.filename, rom_write_file.filename, true) then
-      log.success("Flash successfully verified")
-    else
-      log.error("Flash verification did not match")
+    if do_rom_verify then
+      -- open file
+      file = assert(io.open(rom_verify_file.filename, "wb"))
+
+      -- dump PRG-ROM
+      log.section("Dumping PRG-ROM")
+      time.start()
+      prg_rom_dump(file, prg_size_kb)
+      time.report(prg_size_kb)
+      log.success("Done dumping PRG-ROM")
+
+      -- close file
+      assert(file:close())
+
+      -- compare the flash file vs post dump file
+      log.section("Verifying data")
+      if files.compare(rom_verify_file.filename, rom_write_file.filename, true) then
+        log.success("Flash successfully verified")
+      else
+        log.error("Flash verification did not match")
+      end
     end
   end
 
