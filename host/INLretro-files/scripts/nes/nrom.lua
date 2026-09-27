@@ -463,8 +463,6 @@ local function process(process_opts, console_opts)
 
     -- verify what we just flashed
     if do_rom_verify then
-      init_mapper()
-
       -- open file
       file = assert(io.open(rom_verify_file.filename, "wb"))
 

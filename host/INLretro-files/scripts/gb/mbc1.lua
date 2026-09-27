@@ -601,7 +601,6 @@ local function process(process_opts, console_opts)
   88  Yb dP""""Yb 88 YY 88     8888Y"  `YbodP' 88 YY 88 88
   --]]
 
-  -- dump cart RAM to file
   if do_ram_dump then
     -- open file
     file = assert(io.open(ram_dump_file.filename, "wb"))
@@ -609,7 +608,7 @@ local function process(process_opts, console_opts)
     -- RAM banking mode
     gb.rom_wr(0x6000, 0x01)
 
-    -- dump cart
+    -- dump RAM
     log.section("Dumping RAM")
     time.start()
     ram_dump(file, ram_size_kb)
@@ -630,12 +629,11 @@ local function process(process_opts, console_opts)
   88  Yb dP""""Yb 88 YY 88        YP  YP    88  Yb 88   88   888888
   --]]
 
-  -- write file to the cart RAM
   if do_ram_write then
     -- open file
     file = assert(io.open(ram_write_file.filename, "rb"))
 
-    -- flash cart
+    -- flash RAM
     log.section("Programming RAM")
     time.start()
     ram_write(file, ram_size_kb)
@@ -653,8 +651,8 @@ local function process(process_opts, console_opts)
       -- RAM banking mode
       gb.rom_wr(0x6000, 0x01)
 
-      -- dump cart to file
-      log.point("Dumping RAM")
+      -- dump RAM
+      log.section("Dumping RAM")
       time.start()
       ram_dump(file, ram_size_kb)
       time.report(ram_size_kb)
@@ -683,7 +681,6 @@ local function process(process_opts, console_opts)
   88  Yb  YbodP  88 YY 88     8888Y"  `YbodP' 88 YY 88 88
   --]]
 
-  -- dump cart ROM to file
   if do_rom_dump then
     -- open file
     file = assert(io.open(rom_dump_file.filename, "wb"))
@@ -706,7 +703,6 @@ local function process(process_opts, console_opts)
   88  Yb  YbodP  88 YY 88        YP  YP    88  Yb 88   88   888888
   --]]
 
-  -- program file to the cart
   if do_rom_write then
     -- open file
     file = assert(io.open(rom_write_file.filename, "rb"))
@@ -734,7 +730,7 @@ local function process(process_opts, console_opts)
       file = assert(io.open(rom_verify_file.filename, "wb"))
 
       -- dump cart to file
-      log.point("Dumping ROM")
+      log.section("Dumping ROM")
       time.start()
       rom_dump(file, rom_size_kb)
       time.report(rom_size_kb)
