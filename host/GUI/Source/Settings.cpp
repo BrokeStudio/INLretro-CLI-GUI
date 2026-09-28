@@ -26,7 +26,7 @@ namespace Settings
 
   t_Settings settings = {
     "dark",                          // theme
-    "scripts/inlretro.lua",          // main_script (default)
+    "scripts/inlretro_main.lua",     // main_script (default)
     "scripts/inlretro_fwupdate.lua", // firmware_update_script (default)
     0,                               // Roboto Mono Regular as default font
     true,                            // save_on_exit
@@ -124,13 +124,17 @@ namespace Settings
         ImGui::TableSetupColumn("Action");
         ImGui::TableHeadersRow();
 
+        char label[64];
+
         // Flashers
         for(auto& flasher : Flasher::list) {
+          snprintf(label, sizeof(label), "flasher_id_%s", flasher->id.c_str());
+          ImGui::PushID(label);
+
           ImGui::BeginDisabled(flasher->isFlashing);
 
           ImGui::TableNextRow();
           ImGui::TableSetColumnIndex(0);
-          char label[32];
           snprintf(label, sizeof(label), "INL Retro-Pro%s", flasher->id.c_str());
           if(flasher->hardwareType == HW_UNKW) {
             ImGui::BeginGroup();
@@ -143,7 +147,7 @@ namespace Settings
             ImGui::TextUnformatted(label);
           }
           ImGui::TableSetColumnIndex(1);
-          snprintf(label, sizeof(label), "##flasher_is_active%s", flasher->id.c_str());
+          snprintf(label, sizeof(label), "##flasher_is_active");
           ImGui::Checkbox(label, &flasher->isActive);
           ImGui::TableSetColumnIndex(2);
           ImGui::Text("%s", Flasher::MODELS[flasher->hardwareType]);
@@ -164,7 +168,9 @@ namespace Settings
             ImGui::BeginDisabled();
           }
 
-          snprintf(label, sizeof(label), "Update firmware...##inlretropro%s", flasher->id.c_str());
+          if(ImGui::Button("Update firmware...")) {
+            ImGui::OpenPopup("custom update firmware");
+          }
 
           if(ImGui::BeginPopupContextItem("custom update firmware")) {
             ImGui::Text("Select your flasher model:");
@@ -180,7 +186,6 @@ namespace Settings
                 flasher->update_firmware(STMN_FIRMWARE, settings.firmware_update_script);
               }
             }
-
             // ImGui::BeginDisabled(true);
             // ImGui::Selectable("INL Kazzo");
             // ImGui::EndDisabled();
@@ -196,15 +201,12 @@ namespace Settings
             ImGui::EndPopup();
           }
 
-          if(ImGui::Button(label)) {
-            ImGui::OpenPopup("custom update firmware");
-          }
-
           if(!flasher->isActive) {
             ImGui::EndDisabled();
           }
 
           ImGui::EndDisabled();
+          ImGui::PopID();
         }
 
         ImGui::EndTable();
@@ -334,5 +336,4 @@ namespace Settings
 
     ImGui::EndChild();
   }
-
 }

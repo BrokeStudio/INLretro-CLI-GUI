@@ -72,7 +72,7 @@ int Flasher::count_flashing()
 void Flasher::exec_all(t_INLoptions_std opts, const std::string& main_script)
 {
   for(auto& flasher : list) {
-    if(flasher->isActive && !flasher->isFlashing) {
+    if(flasher->isActive && !flasher->isFlashing && flasher->isFirmwareValid) {
       flasher->exec(opts, main_script);
     }
   }
