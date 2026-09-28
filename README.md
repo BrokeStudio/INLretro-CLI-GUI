@@ -92,6 +92,7 @@ If you own an INLretro programmer-dumper and want to use this CLI/GUI solution, 
   - Using the CLI: run one of these commands:
     - 6-connector flasher: `INLretro -s scripts/inlretro_fwupdate.lua -p firmware/inlretro_stm6.bin`
     - NESmaker flasher: `INLretro -s scripts/inlretro_fwupdate.lua -p firmware/inlretro_stmn.bin`
+    - AVR Kazzo flasher (Windows only): run `avr_bootloader/click to load v1 INLkazzo with INLretro v2.bat`
   - Using the GUI:
     - Go to the `Flashers` menu
     - Make sure your flasher is plugged in

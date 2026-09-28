@@ -68,6 +68,21 @@ jobs:
             -Destination "Binaries/windows-${{ matrix.platform.binPath }}/Dist/INLretro/DriverPackages" `
             -Recurse
 
+      - name: Verify AVR updater payload
+        shell: pwsh
+        run: |
+          $packageDir = "Binaries/windows-${{ matrix.platform.binPath }}/Dist/INLretro"
+          $requiredFiles = @(
+            "$packageDir/firmware/avr_kazzo.hex",
+            "$packageDir/avr_bootloader/click to load v1 INLkazzo with INLretro v2.bat",
+            "$packageDir/avr_bootloader/commandline/bootloadHID.exe"
+          )
+          foreach ($requiredFile in $requiredFiles) {
+            if (-not (Test-Path -LiteralPath $requiredFile -PathType Leaf)) {
+              throw "Missing AVR updater file: $requiredFile"
+            }
+          }
+
       - name: Upload INLretroGUI
         uses: actions/upload-artifact@v7
         with:

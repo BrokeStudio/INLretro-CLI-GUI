@@ -34,6 +34,10 @@ All platforms:
   NESmaker flasher:
     INLretro -s scripts/inlretro_fwupdate.lua -p firmware/inlretro_stmn.bin
 
+  AVR Kazzo (Windows only):
+
+    Run "avr_bootloader\click to load v1 INLkazzo with INLretro v2.bat".
+
 
 2. USING THE GUI
 ----------------

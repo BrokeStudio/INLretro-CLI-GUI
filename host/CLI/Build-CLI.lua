@@ -105,6 +105,14 @@ filter "system:windows"
     "libusb-1.0"
   }
 
+filter { "system:windows", "configurations:Dist" }
+  postbuildcommands
+  {
+    "{MKDIR} \"%{cfg.targetdir}/avr_bootloader/commandline\"",
+    "{COPY} \"../../firmware/avr_bootloader/click to load v1 INLkazzo with INLretro v2.bat\" \"%{cfg.targetdir}/avr_bootloader\"",
+    "{COPY} \"../../firmware/avr_bootloader/commandline/bootloadHID.exe\" \"%{cfg.targetdir}/avr_bootloader/commandline\""
+  }
+
 filter { "system:windows", "configurations:Debug", "platforms:x86" }
   links { "libusb-1.0" }
   libdirs { "../External/libusb/VS2022/MS32/static" }
