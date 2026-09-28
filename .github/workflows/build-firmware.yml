@@ -40,20 +40,20 @@ jobs:
       - name: Update firmware binary file
         run: |
           mkdir -p release
-          echo -n "AV04" | dd of=build_stm6/inlretro_stm.bin bs=1 seek=$((0x800)) conv=notrunc
-          cp build_stm6/inlretro_stm.bin release/inlretro_stm6_AV04.bin
-          echo -n "AV04" | dd of=build_stmn/inlretro_stm.bin bs=1 seek=$((0x800)) conv=notrunc
-          cp build_stmn/inlretro_stm.bin release/inlretro_stmn_AV04.bin
+          cp build_stm6/inlretro_stm.bin release/inlretro_stm6.bin
+          echo -n "AV04" | dd of=release/inlretro_stm6.bin bs=1 seek=$((0x800)) conv=notrunc
+          cp build_stmn/inlretro_stm.bin release/inlretro_stmn.bin
+          echo -n "AV04" | dd of=release/inlretro_stmn.bin bs=1 seek=$((0x800)) conv=notrunc
           cp build_avr/*.hex release/
 
       - name: Create STM32 DfuSe files
         run: |
-          python3 dfuse-pack.py -b 0x08000000:release/inlretro_stm6_AV04.bin -D 0x0483:0xdf11 release/inlretro_stm6_AV04.dfu
-          python3 dfuse-pack.py -b 0x08000000:release/inlretro_stmn_AV04.bin -D 0x0483:0xdf11 release/inlretro_stmn_AV04.dfu
+          python3 dfuse-pack.py -b 0x08000000:release/inlretro_stm6.bin -D 0x0483:0xdf11 release/inlretro_stm6.dfu
+          python3 dfuse-pack.py -b 0x08000000:release/inlretro_stmn.bin -D 0x0483:0xdf11 release/inlretro_stmn.dfu
 
       - name: Upload INLretro firmware
         uses: actions/upload-artifact@v7
         with:
-          name: INLretro-firmware-AV04
+          name: INLretro-firmware
           path: firmware/release
           if-no-files-found: error

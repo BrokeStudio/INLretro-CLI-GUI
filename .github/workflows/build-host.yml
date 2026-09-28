@@ -27,14 +27,8 @@ jobs:
       - name: Download freshly built firmware
         uses: actions/download-artifact@v8
         with:
-          name: INLretro-firmware-AV04
+          name: INLretro-firmware
           path: host/INLretro-files/firmware
-
-      - name: Prepare firmware
-        shell: bash
-        run: |
-          cp INLretro-files/firmware/inlretro_stm6_AV04.bin INLretro-files/firmware/inlretro_stm6.bin
-          cp INLretro-files/firmware/inlretro_stmn_AV04.bin INLretro-files/firmware/inlretro_stmn.bin
 
       # - uses: abel0b/setup-premake@v2.4
       # Node 24 support; no release newer than v2.4 yet
@@ -99,14 +93,8 @@ jobs:
       - name: Download freshly built firmware
         uses: actions/download-artifact@v8
         with:
-          name: INLretro-firmware-AV04
+          name: INLretro-firmware
           path: host/INLretro-files/firmware
-
-      - name: Prepare firmware
-        shell: bash
-        run: |
-          cp INLretro-files/firmware/inlretro_stm6_AV04.bin INLretro-files/firmware/inlretro_stm6.bin
-          cp INLretro-files/firmware/inlretro_stmn_AV04.bin INLretro-files/firmware/inlretro_stmn.bin
 
       # - uses: abel0b/setup-premake@v2.4
       # Node 24 support; no release newer than v2.4 yet
@@ -163,14 +151,8 @@ jobs:
       - name: Download freshly built firmware
         uses: actions/download-artifact@v8
         with:
-          name: INLretro-firmware-AV04
+          name: INLretro-firmware
           path: host/INLretro-files/firmware
-
-      - name: Prepare firmware
-        shell: bash
-        run: |
-          cp INLretro-files/firmware/inlretro_stm6_AV04.bin INLretro-files/firmware/inlretro_stm6.bin
-          cp INLretro-files/firmware/inlretro_stmn_AV04.bin INLretro-files/firmware/inlretro_stmn.bin
 
       # - uses: abel0b/setup-premake@v2.4
       # Node 24 support; no release newer than v2.4 yet

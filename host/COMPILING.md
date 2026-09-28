@@ -32,7 +32,7 @@ INLretro-files/firmware/inlretro_stm6.bin
 INLretro-files/firmware/inlretro_stmn.bin
 ```
 
-Use the packaged firmware binaries for the corresponding hardware models. The CI downloads the `INLretro-firmware-AV04` artifact and copies `inlretro_stm6_AV04.bin` and `inlretro_stmn_AV04.bin` to the names above.
+Use the packaged firmware binaries for the corresponding hardware models. The CI downloads the `INLretro-firmware` artifact, which already contains the files under the names above.
 
 For building firmware from source in `../firmware/` and preparing its version signature, see the [firmware build guide](../firmware/COMPILING.md). Compiling the host applications does not build the firmware.
 
