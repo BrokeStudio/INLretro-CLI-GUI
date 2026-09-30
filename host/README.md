@@ -32,7 +32,6 @@ host/
 ├── Vendor/               # Build tools, including Premake
 ├── Windows/              # Windows-specific files
 ├── macOS/                # macOS-specific files and app resources
-├── tests/                # Automated checks
 ├── Build.lua             # Premake workspace configuration
 ├── COMPILING.md          # Build instructions
 └── readme.txt            # Quick-start manual included with releases
