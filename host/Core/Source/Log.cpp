@@ -18,7 +18,10 @@ Log::~Log(void)
 
 void Log::clear(void)
 {
+  std::lock_guard<std::mutex> lock(stateMutex);
+
   Items.clear();
+  spinner.clear();
   showSpinner = false;
 }
 
@@ -54,8 +57,8 @@ void Log::add(LogTypes type, const char* fmt, ...)
 void Log::add(LogTypes type, const std::string& message)
 {
   if(!cliOutput) {
-    std::unique_lock<std::shared_mutex> lock(itemsMutex); // block reads during writes
-    Items.push_back(LogMessage({ type, message }));
+    std::lock_guard<std::mutex> lock(stateMutex);
+    Items.push_back({ type, message });
   } else {
     switch(type) {
       case LogTypes_Section:
@@ -97,16 +100,34 @@ void Log::add(LogTypes type, const std::string& message)
 
 void Log::spinner_update(const char* fmt, ...)
 {
-  // FIXME-OPT
+  char buffer[LOG_SPINNER_SIZE];
+
   va_list args;
   va_start(args, fmt);
-  vsnprintf(spinner, LOG_SPINNER_SIZE, fmt, args);
-  spinner[LOG_SPINNER_SIZE - 1] = 0;
+  vsnprintf(buffer, sizeof(buffer), fmt, args);
   va_end(args);
+
+  buffer[sizeof(buffer) - 1] = '\0';
+
+  std::lock_guard<std::mutex> lock(stateMutex);
+  spinner = buffer;
   showSpinner = true;
 }
 
-void Log::spinner_clear(void)
+void Log::spinner_clear()
 {
+  std::lock_guard<std::mutex> lock(stateMutex);
+  spinner.clear();
   showSpinner = false;
+}
+
+LogSnapshot Log::get_snapshot()
+{
+  std::lock_guard<std::mutex> lock(stateMutex);
+
+  return {
+    Items,
+    showSpinner,
+    spinner,
+  };
 }

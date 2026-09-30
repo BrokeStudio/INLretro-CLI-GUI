@@ -1,9 +1,9 @@
 #pragma once
 #ifndef LOG_H
   #define LOG_H
+  #include <mutex>
   #include <string>
   #include <vector>
-  #include <shared_mutex>
 
   #define LOG_BUF_SIZE 2048
   #define LOG_SPINNER_SIZE 256
@@ -37,20 +37,22 @@ struct LogMessage
   std::string message;
 };
 
+struct LogSnapshot
+{
+  std::vector<LogMessage> items;
+  bool showSpinner;
+  std::string spinner;
+};
+
 class Log
 {
   private:
   std::vector<LogMessage> Items;
-  std::shared_mutex itemsMutex;
+  bool showSpinner = false;
+  std::string spinner;
+  std::mutex stateMutex;
 
-  std::vector<LogMessage> getCopy()
-  {
-    std::shared_lock<std::shared_mutex> lock(itemsMutex);
-    return Items;
-  }
-
-  bool showSpinner;
-  char spinner[LOG_SPINNER_SIZE];
+  LogSnapshot get_snapshot();
 
   public:
   bool cliOutput = false;

@@ -42,7 +42,7 @@ void Log::render()
         copyToClipboard = true;
       }
       if(ImGui::Selectable("Clear")) {
-        Items.clear();
+        clear();
       }
       ImGui::EndPopup();
     }
@@ -77,10 +77,9 @@ void Log::render()
       ImGui::LogToClipboard();
     }
 
-    // make a safe copy of Items
-    std::vector<LogMessage> ItemsCopy = getCopy();
+    LogSnapshot snapshot = get_snapshot();
 
-    for(const LogMessage item : ItemsCopy) {
+    for(const LogMessage& item : snapshot.items) {
       ImVec4 color = LogColors[item.type];
       ImGui::PushStyleColor(ImGuiCol_Text, color);
       ImGui::TextUnformatted(LogSymbols[item.type]);
@@ -93,7 +92,7 @@ void Log::render()
       ImGui::LogFinish();
     }
 
-    if(showSpinner) {
+    if(snapshot.showSpinner) {
       ImDrawList* draw_list = ImGui::GetWindowDrawList();
       ImVec2 pos = ImGui::GetCursorScreenPos();
       ImGuiStyle& style = ImGui::GetStyle();
@@ -104,10 +103,10 @@ void Log::render()
       ImVec4 color = ImColor(0, 0, 0, 255);
       ImGui::PushStyleColor(ImGuiCol_Text, color);
       float windowWidth = ImGui::GetWindowSize().x;
-      float textWidth = ImGui::CalcTextSize(spinner).x;
+      float textWidth = ImGui::CalcTextSize(snapshot.spinner.c_str()).x;
 
       ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
-      ImGui::TextUnformatted(spinner);
+      ImGui::TextUnformatted(snapshot.spinner.c_str());
       ImGui::PopStyleColor();
     }
 
