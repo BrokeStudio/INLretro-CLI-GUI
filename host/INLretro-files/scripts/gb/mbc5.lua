@@ -476,7 +476,7 @@ local function process(process_opts, console_opts)
     if not rv then
       if do_rom_write then
         log.error("Couldn't identify flash chip")
-        return DONE(false)
+        return false
       else
         log.warning("Couldn't identify flash chip")
       end
@@ -489,12 +489,12 @@ local function process(process_opts, console_opts)
   if rv == false then -- RAM not found
     if do_ram_dump or do_ram_write then
       log.error("RAM not detected")
-      return DONE(false)
+      return false
     elseif do_rom_write then
       if options.force_ram_test then
         log.warning("Additional option 'force_ram_test' implies RAM presence")
         log.error("RAM not detected")
-        return DONE(false)
+        return false
       elseif gb.file_header.is_valid and gb.file_header:get_ram_size() ~= 0 then
         log.warning("ROM header settings implies RAM")
         log.error("RAM not detected")
@@ -502,7 +502,7 @@ local function process(process_opts, console_opts)
       elseif ram_size_kb ~= 0 then
         log.warning("CLI options specify " .. ram_size_kb .. "KB of RAM")
         log.error("RAM not detected")
-        return DONE(false)
+        return false
       else
         log.info("RAM not detected")
       end
@@ -520,23 +520,23 @@ local function process(process_opts, console_opts)
       if ram_size_kb < gb.file_header:get_ram_size() then
         log.error("On board RAM size (" ..
           ram_size_kb .. ") is less than ROM header RAM size (" .. gb.file_header:get_ram_size() .. ")")
-        return DONE(false)
+        return false
       elseif options.force_ram_test then
         rv = ram_exercise(ram_size_kb, retroprog_id)
-        if not rv then return DONE(false) end
+        if not rv then return false end
       else
         log.warning("Can't test RAM because data could be battery backed")
         log.warning("Use additional option 'force_ram_test' to force RAM test")
       end
     elseif do_ram_write then
       rv = ram_exercise(ram_size_kb, retroprog_id)
-      if not rv then return DONE(false) end
+      if not rv then return false end
     end
   end
 
   -- check rom/ram sizes
   if not gb.check_rom_ram_size(process_opts, rom_size_kb, ram_size_kb) then
-    return DONE(false)
+    return false
   end
 
   --[[
@@ -701,7 +701,7 @@ local function process(process_opts, console_opts)
     end
   end
 
-  return DONE(true)
+  return true
 end
 
 -- global variables so other modules can use them

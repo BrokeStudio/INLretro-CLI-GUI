@@ -50,7 +50,7 @@ local function process(process_opts, console_opts)
     log.error("Couldn't detect mapper")
   end
 
-  return DONE(true)
+  return true
 end
 
 -- global variables so other modules can use them

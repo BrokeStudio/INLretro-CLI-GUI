@@ -412,7 +412,7 @@ local function process(process_opts, console_opts)
     -- or  (nes.header.mirroring_type == nes.MIRRORING_TYPE_FOUR_SCREENS and mirroring ~= "4SCRN")
     then
       log.error("PCB mirroring setting doesn't match NES ROM header")
-      return DONE(false)
+      return false
     end
   else
     log.warning("Can't verify mirroring setting because you're using a binary file as the flash file")
@@ -422,14 +422,14 @@ local function process(process_opts, console_opts)
     rv = prg_rom_manf_id()
     if not rv then
       log.error("Couldn't identify flash chip")
-      return DONE(false)
+      return false
     end
   end
 
   chr_ram_detected = nes.ppu_ram_sense(0x1000)
   if not chr_ram_detected then
     log.error("CHR-RAM not detected")
-    return DONE(false)
+    return false
   end
 
   -- CHR-RAM tests
@@ -440,7 +440,7 @@ local function process(process_opts, console_opts)
   if chr_ram_size_kb ~= 0 then
     rv = chr_ram_exercise(chr_ram_size_kb, retroprog_id)
     -- exit script if test fails
-    if not rv then return DONE(false) end
+    if not rv then return false end
   end
 
   -- test software mirroring switch
@@ -451,7 +451,7 @@ local function process(process_opts, console_opts)
   if not nes.check_rom_ram_size(process_opts, {
         prg_size_kb = prg_size_kb,
         chr_rom_required = false }) then
-    return DONE(false)
+    return false
   end
 
   --[[
@@ -520,7 +520,7 @@ local function process(process_opts, console_opts)
     rv = prg_rom_erase(prg_size_kb)
     if not rv then
       assert(file:close())
-      return DONE(false)
+      return false
     end
 
     -- flash PRG-ROM
@@ -557,7 +557,7 @@ local function process(process_opts, console_opts)
     end
   end
 
-  return DONE(true)
+  return true
 end
 
 -- global variables so other modules can use them

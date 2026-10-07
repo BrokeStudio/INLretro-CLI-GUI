@@ -288,7 +288,7 @@ local function process(process_opts, console_opts)
     -- or  nes.header.mirroring_type == nes.MIRRORING_TYPE_FOUR_SCREENS and mirroring ~= "4SCRN"
     then
       log.error("PCB mirroring setting doesn't match NES ROM header")
-      return DONE(false)
+      return false
     end
   else
     log.warning("Can't verify mirroring setting because you're using a binary file as the flash file")
@@ -306,7 +306,7 @@ local function process(process_opts, console_opts)
     if not rv then
       if do_rom_write then
         log.error("Couldn't identify flash chip")
-        return DONE(false)
+        return false
       else
         log.warning("Couldn't identify flash chip")
       end
@@ -330,7 +330,7 @@ local function process(process_opts, console_opts)
     if not rv then
       if do_rom_write then
         log.error("Couldn't identify flash chip")
-        return DONE(false)
+        return false
       else
         log.warning("Couldn't identify flash chip")
       end
@@ -342,7 +342,7 @@ local function process(process_opts, console_opts)
         prg_size_kb = prg_size_kb,
         chr_size_kb = chr_size_kb,
         chr_rom_required = false }) then
-    return DONE(false)
+    return false
   end
 
   --[[
@@ -423,7 +423,7 @@ local function process(process_opts, console_opts)
       rv = nes.prg_rom_erase(prg_flash_chip, { opcode = "DISCRETE_EXP0_PRG_ROM_WR" })
       if not rv then
         assert(file:close())
-        return DONE(false)
+        return false
       end
     end
 
@@ -436,7 +436,7 @@ local function process(process_opts, console_opts)
       })
       if not rv then
         assert(file:close())
-        return DONE(false)
+        return false
       end
     end
 
@@ -497,7 +497,7 @@ local function process(process_opts, console_opts)
     end
   end
 
-  return DONE(true)
+  return true
 end
 
 -- global variables so other modules can use them

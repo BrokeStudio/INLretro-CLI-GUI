@@ -476,8 +476,8 @@ local function nes_exec(process_opts, console_opts)
     process_opts.nes_file = process_opts.rom_write_file
     log.section("Parsing NES flash file header")
     log.bullet("Filename", process_opts.nes_file.filename)
-    local nesfile = assert(io.open(process_opts.nes_file.filename, "rb"))
-    if not nes.parse_header(nesfile) then
+    local nes_file = assert(io.open(process_opts.nes_file.filename, "rb"))
+    if not nes.parse_header(nes_file) then
       log.error("Failed to parse NES flash file header")
       return false
     else
@@ -486,7 +486,7 @@ local function nes_exec(process_opts, console_opts)
       -- convert nes file to bin file with padding if needed
       log.section("Creating binary file to be flashed")
 
-      local binfile
+      local bin_file
       local prg_nes_rom_size_kb = nes.header.prg_rom_size // 1024
       local chr_nes_rom_size_kb = nes.header.chr_rom_size // 1024
       -- local mult = 0
@@ -502,7 +502,7 @@ local function nes_exec(process_opts, console_opts)
         log.warning("Please delete it if you want it to be regenerated")
         log.warning("Or remove 'no_bin_regen' option")
       else
-        binfile = assert(io.open(flash_file_bin, "w+b"))
+        bin_file = assert(io.open(flash_file_bin, "w+b"))
 
         -- copy PRG data if needed
         if prg_nes_rom_size_kb > console_opts.prg_rom_size_kb then
@@ -513,17 +513,17 @@ local function nes_exec(process_opts, console_opts)
         end
         if console_opts.prg_rom_size_kb ~= 0 and prg_nes_rom_size_kb ~= 0 then
           bytes_to_copy = console_opts.prg_rom_size_kb * 1024
-          nesfile:seek("set", 16) -- skip ROM header
+          nes_file:seek("set", 16) -- skip ROM header
           for j = 1, bytes_to_copy, 1 do
-            binfile:write(nesfile:read(1))
-            if (j % nes.header.prg_rom_size == 0) then nesfile:seek("set", 16) end
+            bin_file:write(nes_file:read(1))
+            if (j % nes.header.prg_rom_size == 0) then nes_file:seek("set", 16) end
           end
 
           -- mult = console_opts.prg_rom_size_kb / prg_nes_rom_size_kb
           -- for i = 1, mult, 1 do
-          --   nesfile:seek("set", 16)
+          --   nes_file:seek("set", 16)
           --   for j = 1, prg_nes_rom_size_kb * 1024, 1 do
-          --     binfile:write(nesfile:read(1))
+          --     bin_file:write(nes_file:read(1))
           --   end
           -- end
         end
@@ -537,27 +537,27 @@ local function nes_exec(process_opts, console_opts)
         end
         if console_opts.chr_rom_size_kb ~= 0 and chr_nes_rom_size_kb ~= 0 then
           bytes_to_copy = console_opts.chr_rom_size_kb * 1024
-          nesfile:seek("set", 16 + nes.header.prg_rom_size)
+          nes_file:seek("set", 16 + nes.header.prg_rom_size)
           for j = 1, bytes_to_copy, 1 do
-            binfile:write(nesfile:read(1))
-            if (j % nes.header.chr_rom_size == 0) then nesfile:seek("set", 16 + nes.header.prg_rom_size) end
+            bin_file:write(nes_file:read(1))
+            if (j % nes.header.chr_rom_size == 0) then nes_file:seek("set", 16 + nes.header.prg_rom_size) end
           end
 
           -- mult = console_opts.chr_rom_size_kb / chr_nes_rom_size_kb
           -- for i = 1, mult, 1 do
-          --   nesfile:seek("set", 16 + prgNesRomSizeKb * 1024)
+          --   nes_file:seek("set", 16 + prgNesRomSizeKb * 1024)
           --   for j = 1, chr_nes_rom_size_kb * 1024, 1 do
-          --     binfile:write(nesfile:read(1))
+          --     bin_file:write(nes_file:read(1))
           --   end
           -- end
         end
 
-        if nesfile then assert(nesfile:close()) end
-        if binfile then assert(binfile:close()) end
+        if bin_file then assert(bin_file:close()) end
 
         log.success("Binary file successfully created")
       end
     end
+    if nes_file then assert(nes_file:close()) end
   end
 
   -- flash CIC here to avoid having this piece of code in every mapper scripts
@@ -818,5 +818,13 @@ local function main()
   end
 end
 
--- Don't do this. Next iteration will call a function, not the whole script.
-return main()
+-- Call main and catch errors.
+local status, err = xpcall(main, debug.traceback)
+
+if not status then
+  dict.io("IO_RESET")
+  log.error(err)
+  return false
+else
+  return true
+end

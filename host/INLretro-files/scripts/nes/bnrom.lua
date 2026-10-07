@@ -490,14 +490,14 @@ local function process(process_opts, console_opts)
       bank_table_base = nes.find_bank_table_32(rom_write_file.filename, prg_size_kb)
       if bank_table_base == nil then
         log.error("Couldn't find bank table, use 'bank_table' additional option to specify it manually")
-        return DONE(false)
+        return false
       else
         log.success("Bank table found at address:", help.hex_0x4(bank_table_base))
       end
     else
       if not do_rom_dump then
         log.error("Bank table is missing from the command line arguments")
-        return DONE(false)
+        return false
       end
     end
   else
@@ -516,7 +516,7 @@ local function process(process_opts, console_opts)
     -- or  (nes.header.mirroring_type == nes.MIRRORING_TYPE_FOUR_SCREENS and mirroring ~= "4SCRN")
     then
       log.error("PCB mirroring setting doesn't match NES ROM header")
-      return DONE(false)
+      return false
     end
   else
     log.warning("Can't verify mirroring setting because you're using a binary file as the flash file")
@@ -526,7 +526,7 @@ local function process(process_opts, console_opts)
     rv, prg_flash_chip = nes.prg_rom_get_chip({ opcode = "DISCRETE_EXP0_PRG_ROM_WR" })
     if not rv then
       log.error("Couldn't identify flash chip")
-      return DONE(false)
+      return false
     end
   end
 
@@ -535,20 +535,20 @@ local function process(process_opts, console_opts)
   chr_ram_detected = nes.ppu_ram_sense(0x1000)
   if not chr_ram_detected then
     log.error("CHR-RAM not detected")
-    return DONE(false)
+    return false
   end
   chr_ram_size_kb = 8
 
   -- test CHR-RAM
   rv = chr_ram_exercise(chr_ram_size_kb, retroprog_id)
   -- exit script if test fails
-  if not rv then return DONE(false) end
+  if not rv then return false end
 
   -- check rom/ram sizes
   if not nes.check_rom_ram_size(process_opts, {
         prg_size_kb = prg_size_kb,
         chr_rom_required = false }) then
-    return DONE(false)
+    return false
   end
 
   --[[
@@ -627,7 +627,7 @@ local function process(process_opts, console_opts)
     rv = nes.prg_rom_erase(prg_flash_chip, { opcode = "DISCRETE_EXP0_PRG_ROM_WR" })
     if not rv then
       assert(file:close())
-      return DONE(false)
+      return false
     end
 
     -- flash PRG-ROM
@@ -667,7 +667,7 @@ local function process(process_opts, console_opts)
     end
   end
 
-  return DONE(true)
+  return true
 end
 
 -- global variables so other modules can use them

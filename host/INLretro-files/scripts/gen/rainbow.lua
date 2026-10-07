@@ -654,7 +654,7 @@ local function process(process_opts, console_opts)
     if not rv then
       if do_rom_write then
         log.error("Couldn't identify flash chip")
-        return DONE(false)
+        return false
       else
         log.warning("Couldn't identify flash chip")
       end
@@ -698,7 +698,7 @@ local function process(process_opts, console_opts)
         if ram_size_kb ~= 0 then
           rv = ram_exercise(ram_size_kb, retroprog_id)
           -- exit script if test fails
-          if not rv then return DONE(false) end
+          if not rv then return false end
         end
       end
     else
@@ -800,7 +800,6 @@ local function process(process_opts, console_opts)
   88  Yb dP""""Yb 88 YY 88     8888Y"  `YbodP' 88 YY 88 88
   --]]
 
-  -- dump cart RAM to file
   if do_ram_dump then
     -- enable RAM
     gen.ram_enable()
@@ -830,7 +829,6 @@ local function process(process_opts, console_opts)
   88  Yb dP""""Yb 88 YY 88        YP  YP    88  Yb 88   88   888888
   --]]
 
-  -- write file to the cart RAM
   if do_ram_write then
     -- open file
     file = assert(io.open(ram_write_file.filename, "rb"))
@@ -851,7 +849,6 @@ local function process(process_opts, console_opts)
   88  Yb  YbodP  88 YY 88     8888Y"  `YbodP' 88 YY 88 88
   --]]
 
-  -- dump cart ROM to file
   if do_rom_dump then
     if rom_size_kb ~= 0 then
       -- open file
@@ -864,7 +861,7 @@ local function process(process_opts, console_opts)
       time.start()
       rom_dump(file, rom_size_kb)
       time.report(rom_size_kb)
-      log.success("ROM dumping done")
+      log.success("Done dumping ROM")
 
       -- close file
       assert(file:close())
@@ -888,7 +885,6 @@ local function process(process_opts, console_opts)
   88  Yb  YbodP  88 YY 88     888888 88  Yb dP""""Yb 8bodP' 888888
   --]]
 
-  -- erase the cart
   if do_rom_erase then
     local i = 0
     local temp
@@ -918,7 +914,7 @@ local function process(process_opts, console_opts)
           temp = rom_erase_sector(addr)
           if temp == false then
             spinner.clear()
-            return DONE(false)
+            return false
           end
         end
         spinner.clear()
@@ -956,7 +952,6 @@ local function process(process_opts, console_opts)
   88  Yb  YbodP  88 YY 88        YP  YP    88  Yb 88   88   888888
   --]]
 
-  -- program file to the cart
   if do_rom_write then
     if rom_size_kb ~= 0 then
       --open file
@@ -1020,7 +1015,7 @@ local function process(process_opts, console_opts)
   --   log.bullet(help.hex_0x6(a), help.hex_0x4(gen.rom_rd()))
   -- end
 
-  return DONE(true)
+  return true
 end
 
 -- global variables so other modules can use them

@@ -1262,14 +1262,14 @@ local function process(process_opts, console_opts)
 
   -- verify mirroring is behaving as expected
   rv = mirror_test(chr_size_kb, chr_ram_detected, retroprog_id)
-  if not rv then return DONE(false) end
+  if not rv then return false end
 
   if options.force_flash_test or (do_rom_write and prg_size_kb ~= 0) then
     rv, prg_flash_chip = nes.prg_rom_get_chip()
     if not rv then
       if do_rom_write and prg_size_kb ~= 0 then
         log.error("Couldn't identify flash chip")
-        return DONE(false)
+        return false
       else
         log.warning("Couldn't identify flash chip")
       end
@@ -1281,7 +1281,7 @@ local function process(process_opts, console_opts)
     if not rv then
       if do_rom_write and chr_size_kb ~= 0 then
         log.error("Couldn't identify flash chip")
-        return DONE(false)
+        return false
       else
         log.warning("Couldn't identify flash chip")
       end
@@ -1291,7 +1291,7 @@ local function process(process_opts, console_opts)
   -- FPGA-RAM tests
   rv = fpga_ram_exercise(retroprog_id)
   -- exit script if test fails
-  if not rv then return DONE(false) end
+  if not rv then return false end
 
   -- PRG-RAM tests
   rv = prg_ram_test()
@@ -1311,7 +1311,7 @@ local function process(process_opts, console_opts)
         if ram_size_kb ~= 0 then
           rv = prg_ram_exercise(ram_size_kb, retroprog_id)
           -- exit script if test fails
-          if not rv then return DONE(false) end
+          if not rv then return false end
         end
       end
     else
@@ -1328,7 +1328,7 @@ local function process(process_opts, console_opts)
     if chr_ram_size_kb ~= 0 then
       rv = chr_ram_exercise(chr_ram_size_kb, retroprog_id)
       -- exit script if test fails
-      if not rv then return DONE(false) end
+      if not rv then return false end
     end
   end
 
@@ -1337,7 +1337,7 @@ local function process(process_opts, console_opts)
         prg_size_kb = prg_size_kb,
         chr_size_kb = chr_size_kb,
         ram_size_kb = ram_size_kb }) then
-    return DONE(false)
+    return false
   end
 
   --[[
@@ -1487,7 +1487,7 @@ local function process(process_opts, console_opts)
       rv = nes.prg_rom_erase(prg_flash_chip)
       if not rv then
         assert(file:close())
-        return DONE(false)
+        return false
       end
     end
 
@@ -1497,7 +1497,7 @@ local function process(process_opts, console_opts)
       rv = nes.chr_rom_erase(chr_flash_chip)
       if not rv then
         assert(file:close())
-        return DONE(false)
+        return false
       end
     end
 
@@ -1560,7 +1560,7 @@ local function process(process_opts, console_opts)
     end
   end
 
-  return DONE(true)
+  return true
 end
 
 -- global variables so other modules can use them

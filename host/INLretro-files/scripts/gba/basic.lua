@@ -161,7 +161,7 @@ local function process(process_opts, console_opts)
     print("DONE post dumping ROM")
   end
 
-  return DONE(true)
+  return true
 end
 
 

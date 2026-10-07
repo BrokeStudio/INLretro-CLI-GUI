@@ -496,132 +496,132 @@ end
 --]]
 
 
-local function flash_snes(file)
-  -- //make some checks to ensure rom is compatible with cart
-  --
-  -- //first do some checks like ensuring proper areas or sectors are blank
-  --
-  -- //erase sectors or chip as needed
-  --
-  -- //reset, allocate, and initialize device buffers
-  --
-  -- //initialize mapper registers as needed for memory being programmed
-  --
-  -- //set device operation to STARTFLASH
-  --
-  -- //send payload data
-  --
-  -- //run checksums to verify successful flash operation
-  --
-  local buff0 = 0
-  local buff1 = 1
-  local cur_buff_status = 0
-  local data = nil --lua stores data in strings
+-- local function flash_snes(file)
+--   -- //make some checks to ensure rom is compatible with cart
+--   --
+--   -- //first do some checks like ensuring proper areas or sectors are blank
+--   --
+--   -- //erase sectors or chip as needed
+--   --
+--   -- //reset, allocate, and initialize device buffers
+--   --
+--   -- //initialize mapper registers as needed for memory being programmed
+--   --
+--   -- //set device operation to STARTFLASH
+--   --
+--   -- //send payload data
+--   --
+--   -- //run checksums to verify successful flash operation
+--   --
+--   local buff0 = 0
+--   local buff1 = 1
+--   local cur_buff_status = 0
+--   local data = nil --lua stores data in strings
 
-  if DEBUG then print("flashing cart") end
+--   if DEBUG then print("flashing cart") end
 
-  -- //start with reset and init
-  -- dict.io("IO_RESET")
-  dict.io("SNES_INIT")
+--   -- //start with reset and init
+--   -- dict.io("IO_RESET")
+--   dict.io("SNES_INIT")
 
-  -- //start operation at reset
-  dict.operation("SET_OPERATION", op_buffer["RESET"])
+--   -- //start operation at reset
+--   dict.operation("SET_OPERATION", op_buffer["RESET"])
 
-  -- //setup buffers and manager
-  -- //reset buffers first
-  dict.buffer("RAW_BUFFER_RESET")
-  -- //need to allocate some buffers for flashing
-  -- //2x 256Byte buffers
-  local num_buffers = 2
-  local buff_size = 256
-  print("allocating buffers")
-  assert(buffers.allocate(num_buffers, buff_size), "fail to allocate buffers")
+--   -- //setup buffers and manager
+--   -- //reset buffers first
+--   dict.buffer("RAW_BUFFER_RESET")
+--   -- //need to allocate some buffers for flashing
+--   -- //2x 256Byte buffers
+--   local num_buffers = 2
+--   local buff_size = 256
+--   print("allocating buffers")
+--   assert(buffers.allocate(num_buffers, buff_size), "fail to allocate buffers")
 
-  -- //set mem_type and part_num to designate how to get/write data
-  print("setting map n part")
-  dict.buffer("SET_MEM_N_PART", (op_buffer["SNES_ROM"] << 8 | op_buffer["MASKROM"]), buff0)
-  dict.buffer("SET_MEM_N_PART", (op_buffer["SNES_ROM"] << 8 | op_buffer["MASKROM"]), buff1)
-  -- //set multiple and add_mult only when flashing
-  -- //TODO
-  -- //set mapper, map_var, and function to designate read/write algo
-  --
-  -- //just dump visible NROM memory to start
-  print("setting map n mapvar")
-  dict.buffer("SET_MAP_N_MAPVAR", (op_buffer["LOROM"] << 8 | op_buffer["NOVAR"]), buff0)
-  dict.buffer("SET_MAP_N_MAPVAR", (op_buffer["LOROM"] << 8 | op_buffer["NOVAR"]), buff1)
+--   -- //set mem_type and part_num to designate how to get/write data
+--   print("setting map n part")
+--   dict.buffer("SET_MEM_N_PART", (op_buffer["SNES_ROM"] << 8 | op_buffer["MASKROM"]), buff0)
+--   dict.buffer("SET_MEM_N_PART", (op_buffer["SNES_ROM"] << 8 | op_buffer["MASKROM"]), buff1)
+--   -- //set multiple and add_mult only when flashing
+--   -- //TODO
+--   -- //set mapper, map_var, and function to designate read/write algo
+--   --
+--   -- //just dump visible NROM memory to start
+--   print("setting map n mapvar")
+--   dict.buffer("SET_MAP_N_MAPVAR", (op_buffer["LOROM"] << 8 | op_buffer["NOVAR"]), buff0)
+--   dict.buffer("SET_MAP_N_MAPVAR", (op_buffer["LOROM"] << 8 | op_buffer["NOVAR"]), buff1)
 
-  --set cart in program mode
-  snes.prgm_mode()
+--   --set cart in program mode
+--   snes.prgm_mode()
 
-  print("\n\nsetting operation STARTFLASH")
-  -- //inform buffer manager to start dumping operation now that buffers are initialized
-  dict.operation("SET_OPERATION", op_buffer["STARTFLASH"])
-  print("set operation STARTFLASH") --this prints fine not getting stuck above here
+--   print("\n\nsetting operation STARTFLASH")
+--   -- //inform buffer manager to start dumping operation now that buffers are initialized
+--   dict.operation("SET_OPERATION", op_buffer["STARTFLASH"])
+--   print("set operation STARTFLASH") --this prints fine not getting stuck above here
 
-  cur_buff_status = dict.buffer("GET_CUR_BUFF_STATUS")
-  print("got status")
-  dict.operation("GET_OPERATION")
-  print("got operation")
+--   cur_buff_status = dict.buffer("GET_CUR_BUFF_STATUS")
+--   print("got status")
+--   dict.operation("GET_OPERATION")
+--   print("got operation")
 
-  --think the not responding bug is related to payload out before device is ready..?
+--   --think the not responding bug is related to payload out before device is ready..?
 
-  local tstart = os.clock()
-  local tlast = tstart
+--   local tstart = os.clock()
+--   local tlast = tstart
 
-  local i = 1
-  local nak = 0
-  for bytes in file:lines(buff_size) do
-    dict.buffer_payload_out(buff_size, bytes)
+--   local i = 1
+--   local nak = 0
+--   for bytes in file:lines(buff_size) do
+--     dict.buffer_payload_out(buff_size, bytes)
 
-    cur_buff_status = dict.buffer("GET_CUR_BUFF_STATUS")
-    while (cur_buff_status ~= op_buffer["EMPTY"]) do
-      nak = nak + 1
-      --print(nak, "cur_buff->status: ", cur_buff_status)
-      cur_buff_status = dict.buffer("GET_CUR_BUFF_STATUS")
-    end
-    --if ( i == 2048*1024/buff_size) then break end
-    if (i == 4096 * 1024 / buff_size) then break end
-    --   if ( i == 32*1024/buff_size) then break end
-    i = i + 1
-    --   if ( (i % (2048*1024/buff_size/16)) == 0) then
-    --     local tdelta = os.clock() - tlast
-    --     print("time delta:", tdelta, "seconds, speed:", (2048/16/tdelta), "KBps");
-    --     print("flashed part:", i/512, "of 16 \n")
-    --     tlast = os.clock();
-    if ((i % (4 * 2048 * 1024 / buff_size / 16)) == 0) then
-      local tdelta = os.clock() - tlast
-      print("time delta:", tdelta, "seconds, speed:", (4 * 2048 / 16 / tdelta), "KBps")
-      print("flashed part:", i / (4 * 512), "of 4 \n")
-      tlast = os.clock()
-    end
-  end
-  print("FLASHING DONE")
-  print("number of naks", nak)
-  tstop = os.clock()
-  timediff = (tstop - tstart)
-  print("total time:", timediff, "seconds, average speed:", (2048 / timediff), "KBps")
-  -- //TODO flush file from time to time..?
-  --
-  -- //The device doesn't have a good way to respond if the last buffer is flashing
-  -- //and the current one is full.  We can only send a payload if the current buffer
-  -- //is empty.
+--     cur_buff_status = dict.buffer("GET_CUR_BUFF_STATUS")
+--     while (cur_buff_status ~= op_buffer["EMPTY"]) do
+--       nak = nak + 1
+--       --print(nak, "cur_buff->status: ", cur_buff_status)
+--       cur_buff_status = dict.buffer("GET_CUR_BUFF_STATUS")
+--     end
+--     --if ( i == 2048*1024/buff_size) then break end
+--     if (i == 4096 * 1024 / buff_size) then break end
+--     --   if ( i == 32*1024/buff_size) then break end
+--     i = i + 1
+--     --   if ( (i % (2048*1024/buff_size/16)) == 0) then
+--     --     local tdelta = os.clock() - tlast
+--     --     print("time delta:", tdelta, "seconds, speed:", (2048/16/tdelta), "KBps");
+--     --     print("flashed part:", i/512, "of 16 \n")
+--     --     tlast = os.clock();
+--     if ((i % (4 * 2048 * 1024 / buff_size / 16)) == 0) then
+--       local tdelta = os.clock() - tlast
+--       print("time delta:", tdelta, "seconds, speed:", (4 * 2048 / 16 / tdelta), "KBps")
+--       print("flashed part:", i / (4 * 512), "of 4 \n")
+--       tlast = os.clock()
+--     end
+--   end
+--   print("FLASHING DONE")
+--   print("number of naks", nak)
+--   tstop = os.clock()
+--   timediff = (tstop - tstart)
+--   print("total time:", timediff, "seconds, average speed:", (2048 / timediff), "KBps")
+--   -- //TODO flush file from time to time..?
+--   --
+--   -- //The device doesn't have a good way to respond if the last buffer is flashing
+--   -- //and the current one is full.  We can only send a payload if the current buffer
+--   -- //is empty.
 
-  -- wait till all buffers are done
-  --while flashing buffer manager updates from USB_FULL -> FLASHING -> FLASHED
-  --then next time a USB_FULL buffer comes it it updates the last buffer (above) to EMPTY
-  --the next payload opcode updates from EMPTY -> USB_LOADING
-  --so when complete, buff0 should be EMPTY, and buff1 should be FLASHED
-  --just pass the possible status to exit wait, and buffer numbers we're waiting on
-  buffers.status_wait({ buff0, buff1 }, { "EMPTY", "FLASHED" })
+--   -- wait till all buffers are done
+--   --while flashing buffer manager updates from USB_FULL -> FLASHING -> FLASHED
+--   --then next time a USB_FULL buffer comes it it updates the last buffer (above) to EMPTY
+--   --the next payload opcode updates from EMPTY -> USB_LOADING
+--   --so when complete, buff0 should be EMPTY, and buff1 should be FLASHED
+--   --just pass the possible status to exit wait, and buffer numbers we're waiting on
+--   buffers.status_wait({ buff0, buff1 }, { "EMPTY", "FLASHED" })
 
-  dict.operation("SET_OPERATION", op_buffer["RESET"])
+--   dict.operation("SET_OPERATION", op_buffer["RESET"])
 
-  --set cart in play mode
-  snes.play_mode()
+--   --set cart in play mode
+--   snes.play_mode()
 
-  dict.buffer("RAW_BUFFER_RESET")
-  -- dict.io("IO_RESET")
-end
+--   dict.buffer("RAW_BUFFER_RESET")
+--   -- dict.io("IO_RESET")
+-- end
 
 -- global variables so other modules can use them
 
@@ -631,7 +631,7 @@ end
 
 -- functions other modules are able to call
 -- flash.flash_nes = flash_nes
-flash.flash_snes = flash_snes
+-- flash.flash_snes = flash_snes
 flash.write_file = write_file
 
 -- return the module's table

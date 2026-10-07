@@ -213,7 +213,7 @@ local function process(process_opts, console_opts)
     rom_dump(file, rom_size_kb)
     time.report(rom_size_kb)
 
-    log.success("ROM dumping done")
+    log.success("Done dumping ROM")
 
     -- close file
     assert(file:close())
@@ -270,7 +270,7 @@ local function process(process_opts, console_opts)
     --    print("DONE Post dumping SNES ROM")
   end
 
-  return DONE(true)
+  return true
 end
 
 

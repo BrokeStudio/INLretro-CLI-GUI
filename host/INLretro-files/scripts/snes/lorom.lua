@@ -422,7 +422,7 @@ local function process(process_opts, console_opts)
     if not rv then
       if do_rom_write then
         log.error("Couldn't identify flash chip")
-        return DONE(false)
+        return false
       else
         log.warning("Couldn't identify flash chip")
       end
@@ -440,20 +440,20 @@ local function process(process_opts, console_opts)
   if rv == false then -- RAM not found
     if do_ram_dump or do_ram_write then
       log.error("RAM not detected")
-      return DONE(false)
+      return false
     elseif do_rom_write then
       if options.force_ram_test then
         log.warning("Additional option 'force_ram_test' implies RAM presence")
         log.error("RAM not detected")
-        return DONE(false)
+        return false
       elseif snes.file_header.is_valid and snes.file_header:has_sram() then
         log.warning("ROM header settings implies RAM")
         log.error("RAM not detected")
-        return DONE(false)
+        return false
       elseif ram_size_kb ~= 0 then
         log.warning("CLI options specify " .. ram_size_kb .. "KB of RAM")
         log.error("RAM not detected")
-        return DONE(false)
+        return false
       else
         log.info("RAM not detected")
       end
@@ -470,14 +470,14 @@ local function process(process_opts, console_opts)
     elseif do_rom_write or do_ram_write then
       if options.force_ram_test then
         rv = ram_test(ram_size_kb, retroprog_id)
-        if not rv then return DONE(false) end
+        if not rv then return false end
       elseif snes.file_header.is_valid and snes.file_header:has_sram() then
         if snes.file_header:has_battery() then
           log.warning("Can't test RAM because ROM header specifies battery backed data")
           log.warning("Use additional option 'force_ram_test' to force RAM test")
         else
           rv = ram_test(ram_size_kb, retroprog_id)
-          if not rv then return DONE(false) end
+          if not rv then return false end
         end
       else
         log.warning("Can't test RAM because data could be battery backed")
@@ -488,7 +488,7 @@ local function process(process_opts, console_opts)
 
   -- check rom/ram sizes
   if not snes.check_rom_ram_size(process_opts, rom_size_kb, ram_size_kb) then
-    return DONE(false)
+    return false
   end
 
   --[[
@@ -650,7 +650,7 @@ local function process(process_opts, console_opts)
     end
   end
 
-  return DONE(true)
+  return true
 end
 
 -- global variables so other modules can use them

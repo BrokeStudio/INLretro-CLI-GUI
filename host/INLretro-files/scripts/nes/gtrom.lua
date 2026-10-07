@@ -444,20 +444,20 @@ local function process(process_opts, console_opts)
 
   -- verify mirroring is behaving as expected
   rv = mirror_test(retroprog_id)
-  if not rv then return DONE(false) end
+  if not rv then return false end
 
   if do_rom_write and prg_size_kb ~= 0 then
     rv, prg_flash_chip = nes.prg_rom_get_chip()
     if not rv then
       log.error("Couldn't identify flash chip")
-      return DONE(false)
+      return false
     end
   end
 
   chr_ram_detected = nes.ppu_ram_sense(0x1000)
   if not chr_ram_detected then
     log.error("CHR-RAM not detected")
-    return DONE(false)
+    return false
   end
 
   -- CHR-RAM tests
@@ -467,14 +467,14 @@ local function process(process_opts, console_opts)
   if chr_ram_size_kb ~= 0 then
     rv = chr_ram_exercise(chr_ram_size_kb, retroprog_id)
     -- exit script if test fails
-    if not rv then return DONE(false) end
+    if not rv then return false end
   end
 
   -- check rom/ram sizes
   if not nes.check_rom_ram_size(process_opts, {
         prg_size_kb = prg_size_kb,
         chr_rom_required = false }) then
-    return DONE(false)
+    return false
   end
 
   --[[
@@ -543,7 +543,7 @@ local function process(process_opts, console_opts)
     rv = nes.prg_rom_erase(prg_flash_chip)
     if not rv then
       assert(file:close())
-      return DONE(false)
+      return false
     end
 
     -- flash PRG-ROM
@@ -580,7 +580,7 @@ local function process(process_opts, console_opts)
     end
   end
 
-  return DONE(true)
+  return true
 end
 
 -- global variables so other modules can use them
