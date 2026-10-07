@@ -145,6 +145,8 @@ Programmer reported as incompatible:
   - Update its firmware from the Flashers menu or with the CLI commands in
     section 1.
   - Make sure the firmware matches the programmer model.
+  - Dump and write actions remain disabled until a programmer with compatible
+    firmware is detected.
 
 Dump or write operation fails:
   - Confirm the cartridge system, mapper, memory sizes, and file selection.

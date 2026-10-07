@@ -56,6 +56,8 @@ See the compatibility table below for supported systems, mappers, and operations
 |                  |                      |          |           |          |           |
 | SNES / SFC       | LoROM                | ✓        | ✓         | ✓        | ✓         |
 |                  | HiROM                | ✓        | ✓         | ✓        | ✓         |
+|                  | ExLoROM              | ✓        | ✓         | ✓        | ✓         |
+|                  | ExHiROM              | ✓        | ✓         | ✓        | ✓         |
 |                  |                      |          |           |          |           |
 | N64              |                      | ✓        | ✗         | ✗        | ✗         |
 
