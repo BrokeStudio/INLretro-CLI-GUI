@@ -40,6 +40,7 @@ class Flasher
   // static methods
   static bool detect(const char* retroprog_id);
   static void detect_all();
+  static bool has_valid_firmware();
   static bool is_flashing();
   static int count_flashing();
   static void clear_list();

@@ -31,8 +31,15 @@ void Flasher::detect_all()
 
   // try to detect INL Retro-Prog flasher
   if(detect("g")) {
-    list.push_back(new Flasher("g", true));
+    Flasher* flasher = new Flasher("g", true);
+    list.push_back(flasher);
     APP_LOG(LogTypes_Success, L_SYS "Flasher 'INLretroprog' detected");
+
+    if(!flasher->isFirmwareValid) {
+      APP_LOG(
+        LogTypes_Warning,
+        L_SYS "Flasher 'INLretroprog' firmware is not compatible, please update");
+    }
   }
 
   // try to detect INL Retro-Pro[0-9] flashers
@@ -41,10 +48,28 @@ void Flasher::detect_all()
     id[0] = '0' + (char)i;
     id[1] = 0;
     if(detect(id)) {
-      list.push_back(new Flasher(id, true));
+      Flasher* flasher = new Flasher(id, true);
+      list.push_back(flasher);
       APP_LOG(LogTypes_Success, L_SYS "Flasher 'INLretropro%c' detected", id[0]);
+
+      if(!flasher->isFirmwareValid) {
+        APP_LOG(
+          LogTypes_Warning,
+          L_SYS "Flasher 'INLretropro%c' firmware is not compatible, please update",
+          id[0]);
+      }
     }
   }
+}
+
+bool Flasher::has_valid_firmware()
+{
+  for(auto& flasher : list) {
+    if(flasher->isFirmwareValid) {
+      return true;
+    }
+  }
+  return false;
 }
 
 bool Flasher::is_flashing()

@@ -260,10 +260,13 @@ void Console::render_rom_dump(std::string droppedFilename)
 
   ImGui::EndDisabled();
 
-  ImGui::BeginDisabled(Flasher::count_flashing() == Flasher::list.size());
+  ImGui::BeginDisabled(!Flasher::has_valid_firmware() || Flasher::count_flashing() == Flasher::list.size());
   if(ImGui::Button(ICON_FA_DOWNLOAD " Dump", ImVec2(-FLT_MIN, 50))) {
     trim(rom_dump_INLOptions.additional_opts);
     Flasher::exec_all(rom_dump_INLOptions, Settings::settings.main_script);
+  }
+  if(!Flasher::has_valid_firmware()) {
+    ImGui::SetItemTooltip("Flasher firmware not compatible, please update.");
   }
   ImGui::EndDisabled();
 
@@ -390,7 +393,7 @@ void Console::render_rom_write(std::string droppedFilename)
     ImGui::TextUnformatted("Command line");
     ImGui::TableSetColumnIndex(1);
     std::string cli = get_cli(rom_write_INLOptions);
-    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+    ImGui::SetNextItemWidth(-FLT_MIN);
     ImGui::InputText("##rom_write_command_line", &cli, ImGuiInputTextFlags_ReadOnly);
 
     ImGui::EndTable();
@@ -398,11 +401,13 @@ void Console::render_rom_write(std::string droppedFilename)
 
   ImGui::EndDisabled();
 
-  ImGui::BeginDisabled(Flasher::count_flashing() == Flasher::list.size());
-  snprintf(this->buf, sizeof(this->buf), ICON_FA_UPLOAD " Write");
-  if(ImGui::Button(buf, ImVec2(-FLT_MIN, 50))) {
+  ImGui::BeginDisabled(!Flasher::has_valid_firmware() || Flasher::count_flashing() == Flasher::list.size());
+  if(ImGui::Button(ICON_FA_UPLOAD " Write", ImVec2(-FLT_MIN, 50))) {
     trim(rom_write_INLOptions.additional_opts);
     Flasher::exec_all(rom_write_INLOptions, Settings::settings.main_script);
+  }
+  if(!Flasher::has_valid_firmware()) {
+    ImGui::SetItemTooltip("Flasher firmware not compatible, please update.");
   }
   ImGui::EndDisabled();
 
@@ -416,6 +421,9 @@ void Console::render_rom_write(std::string droppedFilename)
         snprintf(this->buf, sizeof(this->buf), ICON_FA_UPLOAD " Write (%s)##write_btn_%s", flasher->id.c_str(), flasher->id.c_str());
         if(ImGui::Button(buf, ImVec2(-FLT_MIN, 50))) {
           flasher->exec(rom_write_INLOptions, Settings::settings.main_script);
+        }
+        if(!flasher->isFirmwareValid) {
+          ImGui::SetItemTooltip("Flasher firmware not compatible, please update.");
         }
 
         ImGui::EndDisabled();
@@ -520,10 +528,13 @@ void Console::render_ram_dump(std::string droppedFilename)
 
   ImGui::EndDisabled();
 
-  ImGui::BeginDisabled(Flasher::count_flashing() == Flasher::list.size());
+  ImGui::BeginDisabled(!Flasher::has_valid_firmware() || Flasher::count_flashing() == Flasher::list.size());
   if(ImGui::Button(ICON_FA_DOWNLOAD " Dump", ImVec2(-FLT_MIN, 50))) {
     trim(ram_dump_INLOptions.additional_opts);
     Flasher::exec_all(ram_dump_INLOptions, Settings::settings.main_script);
+  }
+  if(!Flasher::has_valid_firmware()) {
+    ImGui::SetItemTooltip("Flasher firmware not compatible, please update.");
   }
 
   ImGui::EndDisabled();
@@ -630,11 +641,13 @@ void Console::render_ram_write(std::string droppedFilename)
 
   ImGui::EndDisabled();
 
-  ImGui::BeginDisabled(Flasher::count_flashing() == Flasher::list.size());
-  snprintf(this->buf, sizeof(this->buf), ICON_FA_UPLOAD " Write");
-  if(ImGui::Button(buf, ImVec2(-FLT_MIN, 50))) {
+  ImGui::BeginDisabled(!Flasher::has_valid_firmware() || Flasher::count_flashing() == Flasher::list.size());
+  if(ImGui::Button(ICON_FA_UPLOAD " Write", ImVec2(-FLT_MIN, 50))) {
     trim(ram_write_INLOptions.additional_opts);
     Flasher::exec_all(ram_write_INLOptions, Settings::settings.main_script);
+  }
+  if(!Flasher::has_valid_firmware()) {
+    ImGui::SetItemTooltip("Flasher firmware not compatible, please update.");
   }
   ImGui::EndDisabled();
 
