@@ -15,12 +15,13 @@ local dict = require "scripts.app.dict"
 -- sets reload to sum of buffers
 -- All other elements set to zero
 -- Rtn: SUCCESS if no errors
-local function allocate(num_buffers, buff_size)
+local function allocate(num_buffers, buff_size, first_page)
   --
   -- //TODO verify number of banks doesn't exceed devices' configuration
   --//  uint8_t rv[RV_DATA0_IDX];
   --//  uint8_t rv;
   local rv = nil
+  first_page = first_page or 0x00
 
   -- //want to allocate buffers as makes sense based on num and size
   -- //Ideally a buffer will be 256Bytes which equals a page size
@@ -51,8 +52,8 @@ local function allocate(num_buffers, buff_size)
     -- // 2 * 128 = 256 -> reload = 1
     reload = 0x01
     -- //set first page
-    buff0_firstpage = 0x0000
-    buff1_firstpage = 0x0000
+    buff0_firstpage = first_page
+    buff1_firstpage = first_page
     --
     -- } else if( (num_buffers == 2) && (buff_size == 256)) {
   elseif ((num_buffers == 2) and (buff_size == 256)) then
@@ -65,8 +66,8 @@ local function allocate(num_buffers, buff_size)
     -- // 2 * 256 = 512 -> reload = 2
     reload = 0x02;
     -- //set first page of each buffer
-    buff0_firstpage = 0x0000;
-    buff1_firstpage = 0x0001;
+    buff0_firstpage = first_page;
+    buff1_firstpage = first_page + 1;
   else
     --   //don't continue
     print("ERROR! Not setup to handle this buffer config")

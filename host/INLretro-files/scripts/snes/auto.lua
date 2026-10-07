@@ -33,13 +33,10 @@ local function process(process_opts, console_opts)
   local do_rom_write = process_opts.do_rom_write
 
   if not do_rom_write and snes.cart_header.is_valid then
-    if snes.cart_header.rom_type.mode == 0 then
+    if snes.cart_header.is_lorom == true then
       mapname = "LOROM"
-    elseif snes.cart_header.rom_type.mode == 1 then
+    elseif snes.cart_header.is_lorom == false then
       mapname = "HIROM"
-    else
-      log.error("Cart ROM header rom type is invalid")
-      return DONE(false)
     end
   end
 

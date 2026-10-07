@@ -47,8 +47,11 @@ local function write_file(file, size_kb, config)
   local mapper = config.mapper
   local mem_type = config.mem_type
   local options = config.options or "NOVAR"
+  local first_page = config.first_page or 0x00
 
   if DEBUG then print("flashing cart") end
+
+  assert(first_page >= 0x00 and first_page <= 0xFF, "Flash first page must be between 0x00 and 0xFF")
 
   --start operation at reset
   dict.operation("SET_OPERATION", op_buffer["RESET"])
@@ -61,7 +64,13 @@ local function write_file(file, size_kb, config)
   local num_buffers = 2
   local buff_size = 256
   if DEBUG then print("allocating buffers") end
-  assert(buffers.allocate(num_buffers, buff_size), "fail to allocate buffers")
+  assert(
+    buffers.allocate(
+      num_buffers,
+      buff_size,
+      first_page
+    ),
+    "fail to allocate buffers")
 
   --set mem_type and part_num to designate how to get/write data
   if DEBUG then print("setting map n part") end

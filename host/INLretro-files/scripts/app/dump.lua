@@ -15,6 +15,8 @@ local function dumptocallback(callback, size_kb, config)
   local cur_buff_status = 0
   local data = nil --lua stores data in strings
 
+  if DEBUG then print("dumping cart") end
+
   --need to handle raw data, or defines being used for mapper
   --op_buffer[map] will be nil for raw values
   local mapper
@@ -30,8 +32,9 @@ local function dumptocallback(callback, size_kb, config)
   end
   local mem_type = config.mem_type
   local options = config.options or op_buffer["NOVAR"]
+  local first_page = config.first_page or 0x00
 
-  if DEBUG then print("dumping cart") end
+  assert(first_page >= 0x00 and first_page <= 0xFF, "Dump first page must be between 0x00 and 0xFF")
 
   dict.operation("SET_OPERATION", op_buffer["RESET"])
   --reset buffers first
@@ -42,7 +45,12 @@ local function dumptocallback(callback, size_kb, config)
   local num_buffers = 2
   local buff_size = 128
   if DEBUG then print("allocating buffers") end
-  assert(buffers.allocate(num_buffers, buff_size), "fail to allocate buffers")
+  assert(
+    buffers.allocate(
+      num_buffers,
+      buff_size,
+      first_page),
+    "fail to allocate buffers")
 
   --set buffer elements as needed
   --set reload which gets added to page_num after each buffer read

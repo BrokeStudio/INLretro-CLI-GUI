@@ -79,25 +79,48 @@ end
 local function rom_dump(file, rom_size_kb)
   -- /ROMSEL is always low for this dump
 
-  local kb_per_bank = 32  -- LOROM has 32KB per bank
-  local first_bank = 0x80 -- LOROM data starts at $8000
-
+  local kb_per_bank = 32 -- LOROM has 32KB per bank
   local num_banks = rom_size_kb // kb_per_bank
   local cur_bank = 0
+
+  -- LOROM data starts at $8000
+  -- If addressing ExLoRom:
+  -- File offset:   $000000–3FFFFF
+  -- SNES address:  $80:8000 to $FF:FFFF
+  -- File offset:   $400000–7FFFFF
+  -- SNES address:  $00:8000 to $7F:FFFF
+  local EMPTY_32KB = string.rep(string.char(0xFF), 32 * 1024)
 
   log.info("ROM size", rom_size_kb .. "KB")
 
   while cur_bank < num_banks do
+    local bank
+    if cur_bank < 0x80 then
+      bank = 0x80 + cur_bank
+    else
+      bank = cur_bank - 0x80
+    end
+
     if DEBUG then
-      log.point("dumping bank", cur_bank, "of", num_banks - 1)
+      log.point("dumping bank", cur_bank, "of", num_banks - 1, "(" .. bank .. ")")
     else
       spinner.update("Dumping", cur_bank, "/", num_banks - 1)
     end
 
     -- select desired bank
-    dict.snes("SNES_SET_BANK", first_bank + cur_bank)
+    dict.snes("SNES_SET_BANK", bank)
 
-    dump.dumptofile(file, kb_per_bank, { mapper = mapname, mem_type = "SNES_ROM" })
+    if cur_bank < 0xFE then
+      dump.dumptofile(file, kb_per_bank,
+        {
+          mapper = mapname,
+          mem_type = "SNES_ROM",
+          first_page = 0x80
+        })
+    else
+      -- pad file with dummy data
+      file:write(EMPTY_32KB)
+    end
 
     cur_bank = cur_bank + 1
   end
@@ -113,10 +136,15 @@ local function rom_flash(file, rom_size_kb)
   log.info("ROM size", rom_size_kb .. "KB")
 
   local kb_per_bank = 32 -- LOROM has 32KB per bank
-  local cur_bank = 0
-  local first_bank = 0x80
-
   local num_banks = rom_size_kb // kb_per_bank
+  local cur_bank = 0
+
+  -- LOROM data starts at $8000
+  -- If addressing ExLoRom:
+  -- File offset:   $000000–3FFFFF
+  -- SNES address:  $80:8000 to $FF:FFFF
+  -- File offset:   $400000–7FFFFF
+  -- SNES address:  $00:8000 to $7F:FFFF
 
   local options
   if rom_flash_chip.buffer == true then
@@ -128,16 +156,31 @@ local function rom_flash(file, rom_size_kb)
   end
 
   while cur_bank < num_banks do
+    local bank
+    if cur_bank < 0x80 then
+      bank = 0x80 + cur_bank
+    else
+      bank = cur_bank - 0x80
+    end
+
     if DEBUG then
-      log.point("writing bank", cur_bank, "of", num_banks - 1)
+      log.point("writing bank", cur_bank, "of", num_banks - 1, "(" .. bank .. ")")
     else
       spinner.update("Flashing", cur_bank, "/", num_banks - 1)
     end
 
     -- select desired bank
-    dict.snes("SNES_SET_BANK", first_bank + cur_bank)
+    dict.snes("SNES_SET_BANK", bank)
 
-    flash.write_file(file, kb_per_bank, { mapper = mapname, mem_type = "SNES_ROM", options = options })
+    if cur_bank < 0xFE then
+      flash.write_file(file, kb_per_bank,
+        {
+          mapper = mapname,
+          mem_type = "SNES_ROM",
+          options = options,
+          first_page = 0x80
+        })
+    end
 
     cur_bank = cur_bank + 1
   end
@@ -341,7 +384,6 @@ local function process(process_opts, console_opts)
 
   -- process options
   local retroprog_id    = process_opts.retroprog_id
-  local do_rom_erase    = process_opts.do_rom_erase
   local do_rom_write    = process_opts.do_rom_write
   local do_rom_verify   = process_opts.do_rom_verify
   local do_rom_dump     = process_opts.do_rom_dump
@@ -442,7 +484,11 @@ local function process(process_opts, console_opts)
         log.warning("Use additional option 'force_ram_test' to force RAM test")
       end
     end
-    end
+  end
+
+  -- check rom/ram sizes
+  if not snes.check_rom_ram_size(process_opts, rom_size_kb, ram_size_kb) then
+    return DONE(false)
   end
 
   --[[
@@ -452,27 +498,24 @@ local function process(process_opts, console_opts)
   88  Yb dP""""Yb 88 YY 88     8888Y"  `YbodP' 88 YY 88 88
   --]]
 
-  -- dump cart RAM to file
   if do_ram_dump then
-    if ram_size_kb ~= 0 then
-      -- open file
-      file = assert(io.open(ram_dump_file.filename, "wb"))
+    -- open file
+    file = assert(io.open(ram_dump_file.filename, "wb"))
 
-      -- dump cart to file
-      local cartridge_title = ""
-      if snes.cart_header.is_valid then
-        cartridge_title = snes.cart_header.cartridge_title
-      end
-      log.section("Dumping RAM", cartridge_title)
-
-      time.start()
-      ram_dump(file, ram_size_kb)
-      time.report(ram_size_kb)
-      log.success("ROM dumping done")
-
-      -- close file
-      assert(file:close())
+    -- dump cart to file
+    local cartridge_title = ""
+    if snes.cart_header.is_valid then
+      cartridge_title = snes.cart_header.cartridge_title
     end
+    log.section("Dumping RAM", cartridge_title)
+
+    time.start()
+    ram_dump(file, ram_size_kb)
+    time.report(ram_size_kb)
+    log.success("Done dumping ROM")
+
+    -- close file
+    assert(file:close())
   end
 
   --[[
@@ -485,11 +528,6 @@ local function process(process_opts, console_opts)
   -- program file to the cart
   if do_ram_write then
     log.section("Programming RAM")
-
-    if ram_size_kb == 0 then
-      log.error("RAM size not provided")
-      return DONE(false)
-    end
 
     -- open file
     file = assert(io.open(ram_write_file.filename, "rb"))
@@ -533,7 +571,6 @@ local function process(process_opts, console_opts)
   88  Yb  YbodP  88 YY 88     8888Y"  `YbodP' 88 YY 88 88
   --]]
 
-  -- dump cart ROM to file
   if do_rom_dump then
     if rom_size_kb ~= 0 then
       -- open file
@@ -549,7 +586,7 @@ local function process(process_opts, console_opts)
       time.start()
       rom_dump(file, rom_size_kb)
       time.report(rom_size_kb)
-      log.success("ROM dumping done")
+      log.success("Done dumping ROM")
 
       -- close file
       assert(file:close())
@@ -568,40 +605,18 @@ local function process(process_opts, console_opts)
   end
 
   --[[
-  88""Yb  dP"Yb  8b    d8     888888 88""Yb    db    .dP"Y8 888888
-  88__dP dP   Yb 88b  d88     88__   88__dP   dPYb   `Ybo." 88__
-  88"Yb  Yb   dP 88YbdP88     88""   88"Yb   dP__Yb  o.`Y8b 88""
-  88  Yb  YbodP  88 YY 88     888888 88  Yb dP""""Yb 8bodP' 888888
-  --]]
-
-  -- erase the cart
-  if do_rom_erase then
-    -- erase ROM only if needed
-    if rom_size_kb ~= 0 then
-      snes.rom_erase(rom_flash_chip, { bank = 0x00, addr_base = 0x8000 })
-    end
-  end
-
-  --[[
   88""Yb  dP"Yb  8b    d8     Yb        dP 88""Yb 88 888888 888888
   88__dP dP   Yb 88b  d88      Yb  db  dP  88__dP 88   88   88__
   88"Yb  Yb   dP 88YbdP88       YbdPYbdP   88"Yb  88   88   88""
   88  Yb  YbodP  88 YY 88        YP  YP    88  Yb 88   88   888888
   --]]
 
-  -- program file to the cart
   if do_rom_write then
-    -- check rom size
-    if rom_size_kb == 0 then
-      log.error("ROM size not provided")
-      return DONE(false)
-    end
-
     -- open file
     file = assert(io.open(rom_write_file.filename, "rb"))
 
-    local romDataOffset = snes.file_header.has_smc_header and 0x200 or 0
-    file:seek("set", romDataOffset)
+    -- erase ROM only if needed
+    snes.rom_erase(rom_flash_chip, { bank = 0x00, addr_base = 0x8000 })
 
     -- flash cart
     time.start()
@@ -620,14 +635,14 @@ local function process(process_opts, console_opts)
       time.start()
       rom_dump(file, rom_size_kb)
       time.report(rom_size_kb)
-      log.success("ROM dumping done")
+      log.success("Done dumping ROM")
 
       -- close file
       assert(file:close())
 
       -- compare the flash file vs post dump file
       log.section("Verifying data")
-      if files.compare(rom_verify_file.filename, rom_write_file.filename, true, 0, romDataOffset) then
+      if files.compare(rom_verify_file.filename, rom_write_file.filename, true) then
         log.success("Flash successfully verified")
       else
         log.error("Flash verification did not match")

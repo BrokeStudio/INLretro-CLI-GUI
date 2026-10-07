@@ -310,8 +310,14 @@ local function parse_header_cart()
   dict.io("IO_RESET")
 
   byte_str = string.sub(byte_str, 0xFFC0 + 1, 0xFFFF + 1)
-  if parse_header(byte_str, cart_header) and cart_header.rom_type.mode == 1 then
-    log.info("HiROM mapper detected")
+  if parse_header(byte_str, cart_header) and (cart_header.rom_type.mode == 1 or cart_header.rom_type.mode == 5) then
+    cart_header.is_lorom = false
+    cart_header.is_exrom = cart_header.rom_type.mode == 5
+    if cart_header.is_exrom then
+      log.info("ExHiROM mapper detected")
+    else
+      log.info("HiROM mapper detected")
+    end
     return true
   end
 
@@ -333,8 +339,15 @@ local function parse_header_cart()
   dict.io("IO_RESET")
 
   byte_str = string.sub(byte_str, 0x7FC0 + 1, 0x7FFF + 1)
-  if parse_header(byte_str, cart_header) and cart_header.rom_type.mode == 0 then
-    log.info("LoROM mapper detected")
+  if parse_header(byte_str, cart_header) and (cart_header.rom_type.mode == 0 or cart_header.rom_type.mode == 2) then
+    cart_header.is_lorom = true
+    cart_header.is_exrom = cart_header.rom_type.mode == 2
+
+    if cart_header.is_exrom then
+      log.info("ExLoROM mapper detected")
+    else
+      log.info("LoROM mapper detected")
+    end
     return true
   end
 
@@ -445,6 +458,38 @@ local function read_flashID()
   else
     return false
   end
+end
+
+--[[
+██╗  ██╗███████╗██╗     ██████╗ ███████╗██████╗ ███████╗
+██║  ██║██╔════╝██║     ██╔══██╗██╔════╝██╔══██╗██╔════╝
+███████║█████╗  ██║     ██████╔╝█████╗  ██████╔╝███████╗
+██╔══██║██╔══╝  ██║     ██╔═══╝ ██╔══╝  ██╔══██╗╚════██║
+██║  ██║███████╗███████╗██║     ███████╗██║  ██║███████║
+╚═╝  ╚═╝╚══════╝╚══════╝╚═╝     ╚══════╝╚═╝  ╚═╝╚══════╝
+
+--]]
+
+--- Validate ROM and RAM sizes for the requested SNES operations.
+-- Logs an error when a dump or write operation has no corresponding size.
+-- @param process_opts table Process options controlling the requested operations
+-- @param rom_size_kb integer ROM size in kilobytes
+-- @param ram_size_kb integer RAM size in kilobytes
+-- @return boolean valid True when all requested operations have a non-zero size
+local function check_rom_ram_size(process_opts, rom_size_kb, ram_size_kb)
+  -- check rom size
+  if (process_opts.do_rom_dump or process_opts.do_rom_write) and rom_size_kb == 0 then
+    log.error("ROM size not provided")
+    return false
+  end
+
+  -- check ram size
+  if (process_opts.do_ram_dump or process_opts.do_ram_write) and ram_size_kb == 0 then
+    log.error("RAM size not provided")
+    return false
+  end
+
+  return true
 end
 
 --- Issue a SNES write using the opcode selected by the access options.
@@ -650,7 +695,7 @@ local function rom_get_chip(options)
       -- exit software
       rom_wr(options.addr_base, 0xF0, { opcode = test_options.opcode })
 
-      dict.snes("SNES_SET_BANK", 0x00)
+      dict.snes("SNES_SET_BANK", options.bank)
 
       -- write sequence
       rom_wr(addr1, 0xAA, { opcode = test_options.opcode })
@@ -739,17 +784,6 @@ local function rom_erase(device, options)
   return true
 end
 
-snes.rom_rd = rom_rd
-snes.rom_wr = rom_wr
-snes.ram_rd = ram_rd
-snes.ram_wr = ram_wr
-
-snes.rom_get_chip = rom_get_chip
-snes.rom_erase = rom_erase
-
-snes.ROMSEL_LO = ROMSEL_LO
-snes.ROMSEL_HI = ROMSEL_HI
-
 -- call functions desired to run when script is called/imported
 
 --[[
@@ -763,18 +797,31 @@ snes.ROMSEL_HI = ROMSEL_HI
 --]]
 
 -- vars
-snes.file_header       = file_header
-snes.cart_header       = cart_header
+snes.file_header        = file_header
+snes.cart_header        = cart_header
+
+snes.ROMSEL_LO          = ROMSEL_LO
+snes.ROMSEL_HI          = ROMSEL_HI
 
 -- functions
-snes.parse_header      = parse_header
-snes.parse_header_file = parse_header_file
-snes.parse_header_cart = parse_header_cart
+snes.parse_header       = parse_header
+snes.parse_header_file  = parse_header_file
+snes.parse_header_cart  = parse_header_cart
 
-snes.read_reset_vector = read_reset_vector
-snes.read_flashID      = read_flashID
-snes.prgm_mode         = prgm_mode
-snes.play_mode         = play_mode
+snes.rom_rd             = rom_rd
+snes.rom_wr             = rom_wr
+snes.ram_rd             = ram_rd
+snes.ram_wr             = ram_wr
+
+snes.rom_get_chip       = rom_get_chip
+snes.rom_erase          = rom_erase
+
+snes.check_rom_ram_size = check_rom_ram_size
+
+snes.read_reset_vector  = read_reset_vector
+snes.read_flashID       = read_flashID
+snes.prgm_mode          = prgm_mode
+snes.play_mode          = play_mode
 
 -- return the module's table
 return snes

@@ -137,7 +137,6 @@ local function snes_exec(process_opts, console_opts)
     else
       log.success("ROM flash file header parsed successfully")
     end
-    assert(snes_file:close())
 
     header = snes.file_header
 
@@ -145,12 +144,102 @@ local function snes_exec(process_opts, console_opts)
       log.warning("ROM file size (" ..
         header.file_size // 1024 .. ") is LESS than header value (" .. header:get_rom_size() .. ")")
     end
+
+    -- skip SMC header if needed
+    if snes.file_header.has_smc_header then
+      snes_file:seek("set", 0x000200)
+    else
+      snes_file:seek("set", 0x000000)
+    end
+
+    -- convert snes file to bin file with padding if needed
+    log.section("Creating binary file to be flashed")
+
+    local bin_file
+    local flash_file_bin = process_opts.rom_write_file.path ..
+        process_opts.rom_write_file.base .. "-" .. process_opts.retroprog_id .. ".bin"
+
+    process_opts.rom_write_file = help.parse_filename(flash_file_bin)
+
+    log.bullet(flash_file_bin)
+    if help.file_exists(flash_file_bin) and process_opts.additional_opts.no_bin_regen then
+      log.warning("Binary file already exists")
+      log.warning("Please delete it if you want it to be regenerated")
+      log.warning("Or remove 'no_bin_regen' option")
+    else
+      bin_file = assert(io.open(flash_file_bin, "w+b"))
+
+      -- copy ROM data
+
+      local isExRom = console_opts.rom_size_kb > 8064 and header:get_rom_size() > 8064
+      local bytes_to_copy
+      if isExRom then
+        bytes_to_copy = 8064 * 1024
+      else
+        bytes_to_copy = console_opts.rom_size_kb * 1024
+      end
+
+      -- $000000-$7DFFFF
+      for j = 1, bytes_to_copy, 1 do
+        bin_file:write(snes_file:read(1))
+      end
+
+      -- if flashing ExROM file then we need to create a binary file correctly padded so dump verification can succeed
+      if isExRom then
+        local dummy_read
+
+        if header.is_lorom then -- ExLoROM
+          bytes_to_copy = 64 * 1024
+
+          -- $7E0000-$7EFFFF - data
+          for j = 1, bytes_to_copy, 1 do
+            bin_file:write(snes_file:read(1))
+          end
+
+          -- $7F0000–$7FFFFF - padding
+          for j = 1, bytes_to_copy, 1 do
+            bin_file:write(string.char(0xFF))
+          end
+        else -- ExHiROM
+          bytes_to_copy = 32 * 1024
+
+          -- $7E0000-$7E7FFF - padding
+          for j = 1, bytes_to_copy, 1 do
+            bin_file:write(string.char(0xFF))
+            dummy_read = snes_file:read(1)
+          end
+
+          -- $7E8000-$7EFFFF - data
+          for j = 1, bytes_to_copy, 1 do
+            bin_file:write(snes_file:read(1))
+          end
+
+          -- $7F0000-$7F7FFF - padding
+          for j = 1, bytes_to_copy, 1 do
+            bin_file:write(string.char(0xFF))
+            dummy_read = snes_file:read(1)
+          end
+
+          -- $7F8000-$7FFFFF - data
+          for j = 1, bytes_to_copy, 1 do
+            bin_file:write(snes_file:read(1))
+          end
+        end
+      end
+
+      if bin_file then assert(bin_file:close()) end
+
+      log.success("Binary file successfully created")
+    end
+    if snes_file then assert(snes_file:close()) end
   end
 
   local mappers = {
-    auto = require "scripts.snes.auto",
-    lorom = require "scripts.snes.lorom",
-    hirom = require "scripts.snes.hirom"
+    auto    = require "scripts.snes.auto",
+    lorom   = require "scripts.snes.lorom",
+    hirom   = require "scripts.snes.hirom",
+    exlorom = require "scripts.snes.lorom",
+    exhirom = require "scripts.snes.hirom"
   }
 
   -- if no mapper provided, use default one (LoROM / HiROM auto detection)

@@ -209,6 +209,15 @@ class Snes : public Console
     //   std::string revision;
     // };
 
+    enum class MapLayout
+    {
+      Unknown,
+      LoROM,
+      HiROM,
+      ExLoROM,
+      ExHiROM
+    };
+
     struct RomType
     {
       uint8_t byte;
@@ -247,6 +256,7 @@ class Snes : public Console
 
     std::string cartridgeTitle;
     RomType romType;
+    MapLayout mapLayout = MapLayout::Unknown;
     uint8_t chipset;
     uint8_t romSize;
     uint8_t sramSize;
@@ -263,11 +273,21 @@ class Snes : public Console
 
     std::string get_map_mode()
     {
-      auto it = mapModes.find(this->romType.mode);
-      if(it != mapModes.end()) {
-        return mapModes.at(this->romType.mode);
-      } else {
-        return "Unknown map mode";
+      switch(mapLayout) {
+        case MapLayout::LoROM:
+          return "LoROM";
+
+        case MapLayout::HiROM:
+          return "HiROM";
+
+        case MapLayout::ExLoROM:
+          return "ExLoROM";
+
+        case MapLayout::ExHiROM:
+          return "ExHiROM";
+
+        default:
+          return "Unknown map mode";
       }
     }
 
@@ -498,6 +518,34 @@ class Snes : public Console
     header.romType.byte = header.bytes[0x15];
     header.romType.mode = header.bytes[0x15] & 0x0F;
     header.romType.speed = header.bytes[0x15] & 0x10;
+
+    // ROM mapper layout
+    const uint8_t mapMode = header.romType.byte;
+
+    switch(mapMode) {
+      case 0x20:
+      case 0x30:
+        header.mapLayout = header.fileSize > 0x400000 ? HeaderProperties::MapLayout::ExLoROM : HeaderProperties::MapLayout::LoROM;
+        break;
+
+      case 0x21:
+      case 0x31:
+        header.mapLayout = HeaderProperties::MapLayout::HiROM;
+        break;
+
+      case 0x25:
+      case 0x35:
+        header.mapLayout = HeaderProperties::MapLayout::ExHiROM;
+        break;
+
+      case 0x32:
+        header.mapLayout = HeaderProperties::MapLayout::ExLoROM;
+        break;
+
+      default:
+        header.mapLayout = HeaderProperties::MapLayout::Unknown;
+        break;
+    }
 
     // chipset
     header.chipset = header.bytes[0x16];

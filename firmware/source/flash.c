@@ -777,16 +777,11 @@ uint8_t flash_buff(buffer* buff)
 
 #ifdef SNES_CONN
     case SNES_ROM:
-      if(buff->mapper == LOROM) {
-        // LOROM banks start at $XX:8000
-        addrH = 0x80 | buff->page_num;
-      } else if(buff->mapper == HIROM) {
-        // HIROM banks start at $XX:0000
-        addrH = 0x00 | buff->page_num;
-      } else {
-          return ERR_BUFF_PART_NUM_RANGE;
-        }
+      if(buff->mapper != LOROM && buff->mapper != HIROM) {
+        return ERR_BUFF_PART_NUM_RANGE;
+      }
 
+      // addrH already set at the top of this function
       if(buff->part_num == USE_BUFFER) {
         result = write_page_buffer_verify_8(addrH, buff, snes_wr_romsel_lo, snes_rd_romsel_lo);
       } else if(buff->part_num == USE_UNLOCK_BYPASS) {

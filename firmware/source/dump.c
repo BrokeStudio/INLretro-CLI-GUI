@@ -175,14 +175,11 @@ uint8_t dump_buff(buffer* buff)
 
 #ifdef SNES_CONN
     case SNES_ROM:
-      if(buff->mapper == LOROM) {
-        addrH = 0x80 | (uint8_t)buff->page_num;
-      } else if(buff->mapper == HIROM) {
-        addrH = (uint8_t)buff->page_num;
-      } else {
+      if(buff->mapper != LOROM && buff->mapper != HIROM) {
         return GEN_FAIL;
       }
 
+      // addrH already set at the top of this function
       buff->cur_byte = snes_page_rd(
         buff->data,
         addrH,
